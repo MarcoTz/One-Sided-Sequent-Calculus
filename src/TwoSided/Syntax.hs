@@ -1,4 +1,4 @@
-module Syntax where 
+module TwoSided.Syntax where 
 
 -- polarity 
 data Pol = Pos | Neg
