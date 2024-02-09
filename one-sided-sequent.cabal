@@ -1,0 +1,25 @@
+cabal-version: 3.0
+name:          one-sided-sequent
+version:       0.1
+synopsis:      one sided sequent calculus language
+category:      Development
+build-type:    Simple
+
+common all
+  ghc-options: -Wall -Wno-orphans
+  default-language: GHC2021
+
+library lang
+  import:           all
+  exposed-modules:  Syntax
+  build-depends:    base ^>=4.18.1.0
+  hs-source-dirs:   src
+
+executable one-sided-sequent
+  import:           all
+  main-is:          Main.hs
+  build-depends:    
+    base ^>=4.18.1.0,
+    one-sided-sequent:lang
+  hs-source-dirs:   app
+
