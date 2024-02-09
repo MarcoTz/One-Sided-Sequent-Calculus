@@ -13,9 +13,10 @@ data Declaration =
   | MkCorec {corecVar :: !Covariable, corecTy :: !Type, corecCons :: !Consumer}
   | Epsilon
   | DeclCons !Declaration !Declaration
---
+
 ---- Signature 
 data Signature = MkSig {sigCons :: !Constructor, sigProdArgs :: ![Type], sigConsArgs :: ![Type]}
 
 -- Interface 
 data Interface = MkInter {interDest :: !Destructor, interProdArgs :: ![Type], interConsArgs :: ![Type]}
+

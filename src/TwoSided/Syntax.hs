@@ -1,7 +1,9 @@
 module TwoSided.Syntax where 
 
+
 -- Polarity 
 data Pol = Pos | Neg
+
 
 --Variables 
 type Variable = String

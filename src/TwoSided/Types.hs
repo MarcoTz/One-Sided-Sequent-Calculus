@@ -1,5 +1,6 @@
 module TwoSided.Types where
 
+
 type TypeVar = String
 type TypeName = String
 
