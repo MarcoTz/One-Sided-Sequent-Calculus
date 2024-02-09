@@ -7,6 +7,7 @@ build-type:    Simple
 
 common all
   ghc-options: -Wall -Wno-orphans
+  default-extensions: DataKinds
   default-language: GHC2021
 
 library lang
@@ -21,6 +22,7 @@ library lang
 executable one-sided-sequent
   import:           all
   main-is:          Main.hs
+  other-modules:    Examples
   build-depends:    
     base ^>=4.18.1.0,
     one-sided-sequent:lang

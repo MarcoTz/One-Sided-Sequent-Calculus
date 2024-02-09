@@ -19,16 +19,11 @@ instance Show Declaration where
   show Epsilon = ""
   show (DeclCons _ _) = ""
 
+instance Show (XtorSig a) where 
+  show MkXtorSig{sigName = nm, sigProdArgs = args, sigConsArgs = coargs} = 
+    show nm <> "(" <> intercalate ", " (show <$> args) <> "; " <> intercalate ", " (show <$> coargs)
 
-instance Show Signature where 
-  show MkSig{sigCons = ct, sigProdArgs = args, sigConsArgs = coargs} = 
-    "{" <> show ct <> ": " <> intercalate ", " (show <$> args) <> ";" <> intercalate ", " (show <$> coargs) <> "}"
-
-instance Show Interface where 
-  show MkInter{interDest=dt, interProdArgs=args, interConsArgs=coargs} = 
-    "{" <> show dt <> ": (" <> intercalate ", " (show <$> args) <> ";" <> intercalate ", " (show <$> coargs) <> "}"
-
-
+--MKXtorSig {sigName :: !XtorName, sigProdArgs :: ![Type], sigConsArgs :: ![Type]} 
 -- Syntax
 instance Show Pol where 
   show Pos = "+"

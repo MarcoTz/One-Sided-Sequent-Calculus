@@ -5,8 +5,8 @@ import TwoSided.Types
 
 -- Declarations 
 data Declaration = 
-    MkDeclaration { declName :: !TypeName, declTypeArgs :: ![(TypeVar, Pol)], declPol :: !Pol, declSig :: !Signature}
-  | MkCodeclaration { codeclName :: !TypeName, codeclTypeArgs :: ![(TypeVar, Pol)], codeclPol :: !Pol, codeclInterface :: !Interface}
+    MkDeclaration { declName :: !TypeName, declTypeArgs :: ![(TypeVar, Pol)], declPol :: !Pol, declSig :: ![XtorSig Ctor]}
+  | MkCodeclaration { codeclName :: !TypeName, codeclTypeArgs :: ![(TypeVar, Pol)], codeclPol :: !Pol, codeclInterface :: ![XtorSig Dtor]}
   | MkVal {valVar :: !Variable, valTy :: !Type, valProd :: !Producer}
   | MkCoval {covalCovar :: !Covariable, covalTy :: !Type, covalCons :: !Consumer}
   | MkRec {recVar :: !Variable, recTy :: !Type, recProd :: !Producer}
@@ -14,9 +14,13 @@ data Declaration =
   | Epsilon
   | DeclCons !Declaration !Declaration
 
+
 ---- Signature 
-data Signature = MkSig {sigCons :: !Constructor, sigProdArgs :: ![Type], sigConsArgs :: ![Type]}
+-- Signature 
+type XtorName = String
+data Xtor = Ctor | Dtor
+data XtorRep xt where 
+  CtorRep :: XtorRep Ctor 
+  DtorRep :: XtorRep Dtor
 
--- Interface 
-data Interface = MkInter {interDest :: !Destructor, interProdArgs :: ![Type], interConsArgs :: ![Type]}
-
+data XtorSig (a::Xtor) = MkXtorSig {sigName :: !XtorName, sigXtor :: !(XtorRep a), sigProdArgs :: ![Type], sigConsArgs :: ![Type]} 
