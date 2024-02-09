@@ -11,7 +11,9 @@ common all
 
 library lang
   import:           all
-  exposed-modules:  TwoSided.Syntax
+  exposed-modules:  TwoSided.Syntax,
+                    TwoSided.Types,
+                    TwoSided.Program
   build-depends:    base ^>=4.18.1.0
   hs-source-dirs:   src
 

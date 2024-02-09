@@ -1,11 +1,15 @@
 module TwoSided.Syntax where 
 
--- polarity 
+-- Polarity 
 data Pol = Pos | Neg
 
---variables 
+--Variables 
 type Variable = String
 type Covariable = String
+
+-- Xtors 
+type Destructor = String 
+type Constructor = String
 
 -- commands 
 data Command = Cut !Producer !Pol !Consumer
@@ -53,27 +57,3 @@ isCovalue (Case _) Neg                    = True
 isCovalue (ShiftCBV _) Neg                = True
 isCovalue _ Neg                           = False
 isCovalue _ Pos                           = True
-
-
--- Declarations 
-type TypeName = String
-type TypeVar = String
-data Declaration = 
-    MkDeclaration { declName :: !TypeName, declTypeArgs :: ![(TypeVar, Pol)], declPol :: !Pol, declSig :: !Signature}
-  | MkCodeclaration { codeclName :: !TypeName, codeclTypeArgs :: ![(TypeVar, Pol)], codeclPol :: !Pol, codeclInterface :: !Interface}
-  | MkVal {valVar :: !Variable, valTy :: !Type, valProd :: !Producer}
-  | MkCoval {covalCovar :: !Covariable, covalTy :: !Type, covalCons :: !Consumer}
-  | MkRec {recVar :: !Variable, recTy :: !Type, recProd :: !Producer}
-  | MkCorec {corecVar :: !Covariable, corecTy :: !Type, corecCons :: !Consumer}
-  | Epsilon
-  | DeclCons !Declaration !Declaration
---
----- Signature 
-type Constructor = String
-data Signature = MkSig {sigCons :: !Constructor, sigProdArgs :: ![Type], sigConsArgs :: ![Type]}
-
--- Interface 
-type Destructor = String 
-data Interface = MkInter {interDest :: !Destructor, interProdArgs :: ![Type], interConsArgs :: ![Type]}
--- Types 
-data Type = TyVar !TypeVar | TyDeclared !TypeName ![Type] | TyDown !Type | TyUp !Type
