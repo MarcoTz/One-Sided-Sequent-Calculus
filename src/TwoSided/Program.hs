@@ -4,9 +4,11 @@ import TwoSided.Syntax
 import TwoSided.Types
 
 -- Declarations 
+data TypeDeclaration (a::Xtor) = MkTyDecl {declName :: !TypeName, declTyArgs :: ![(TypeVar, Pol)], declPol :: !Pol, declSig :: ![XtorSig a]}
+
 data Declaration = 
-    MkDeclaration { declName :: !TypeName, declTypeArgs :: ![(TypeVar, Pol)], declPol :: !Pol, declSig :: ![XtorSig Ctor]}
-  | MkCodeclaration { codeclName :: !TypeName, codeclTypeArgs :: ![(TypeVar, Pol)], codeclPol :: !Pol, codeclInterface :: ![XtorSig Dtor]}
+  DataDecl !(TypeDeclaration Ctor)
+  | CodataDecl !(TypeDeclaration Dtor)
   | MkVal {valVar :: !Variable, valTy :: !Type, valProd :: !Producer}
   | MkCoval {covalCovar :: !Covariable, covalTy :: !Type, covalCons :: !Consumer}
   | MkRec {recVar :: !Variable, recTy :: !Type, recProd :: !Producer}

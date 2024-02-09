@@ -7,11 +7,14 @@ import TwoSided.Syntax
 import TwoSided.Types
 
 --Program
+
+instance Show (TypeDeclaration a) where 
+  show MkTyDecl{declName = tyn, declTyArgs = args, declPol = pol, declSig = sigs} = 
+      show pol <> tyn <> "(" <> intercalate ", " ( (\(var,pol') -> show pol' <> var) <$> args) <> ") { \n\t" <> intercalate ", \n\t" (show <$> sigs) <> "\n}"
+
 instance Show Declaration where 
-  show MkDeclaration{declName = nm, declTypeArgs=args, declPol = pol, declSig=sig}=
-    "data " <> show nm <> "(" <> intercalate ", " ( (\(v,p) -> show v <> ":" <> show p) <$> args) <> ") : " <> show pol <> " where " <> show sig
-  show MkCodeclaration{codeclName=nm, codeclTypeArgs=args, codeclPol=pol, codeclInterface=inter} = 
-    "codata " <> show nm <> "(" <> intercalate ", " ((\(v,p) -> show v <> ":" <> show p) <$> args) <> ") : " <> show pol <> " where " <> show inter
+  show (DataDecl decl) = "data " <> show decl
+  show (CodataDecl decl) = "codata " <> show decl
   show MkVal{} = ""
   show MkCoval{} = ""
   show MkRec{} = ""
@@ -20,8 +23,9 @@ instance Show Declaration where
   show (DeclCons _ _) = ""
 
 instance Show (XtorSig a) where 
+  show MkXtorSig{sigName = nm, sigProdArgs = [], sigConsArgs = []} = nm
   show MkXtorSig{sigName = nm, sigProdArgs = args, sigConsArgs = coargs} = 
-    show nm <> "(" <> intercalate ", " (show <$> args) <> "; " <> intercalate ", " (show <$> coargs)
+    nm <> "(" <> intercalate ", " (show <$> args) <> "; " <> intercalate ", " (show <$> coargs) <> ")"
 
 --MKXtorSig {sigName :: !XtorName, sigProdArgs :: ![Type], sigConsArgs :: ![Type]} 
 -- Syntax
@@ -39,7 +43,7 @@ instance Show a => Show (Pattern a) where
     <> " => " <> show cmd
 
 instance Show Producer where 
-  show (Var v) = show v
+  show (Var v) = v
   show (Mu cv cmd) = "Mu " <> show cv <> ". " <> show cmd
   show (Constr ct prodargs consargs) = 
     show ct <> "( " <> intercalate ", " (show <$> prodargs) <> "; " <> intercalate ", " (show <$> consargs) <> ")"
@@ -48,7 +52,7 @@ instance Show Producer where
   show (Lambda cv cmd) = "Lambda " <> show cv <> "." <> show cmd
 
 instance Show Consumer where 
-  show (Covar cv) = show cv
+  show (Covar cv) = cv
   show (MuTilde v cmd) = "TildeMu " <> show v <> ". " <> show cmd 
   show (Destr dt prodargs consargs) = show dt <> "( " <> intercalate ", " (show <$> prodargs) <> "; " <> intercalate ", " (show <$> consargs) <> ")"
   show (Case pts) = "Case { "<> intercalate ", " (show <$> pts) <> "}"
@@ -57,7 +61,7 @@ instance Show Consumer where
 
 -- Types
 instance Show Type where 
-  show (TyVar v) = show v
-  show (TyDeclared nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (TyVar v) = v
+  show (TyDeclared nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (TyDown ty) = "down( " <> show ty <> ")"
   show (TyUp ty) = "up( " <> show ty <> ")"
