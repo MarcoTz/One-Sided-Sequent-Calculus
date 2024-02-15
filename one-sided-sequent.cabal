@@ -19,8 +19,11 @@ library lang
                     Syntax,
                     Types,
                     Program,
-                    Pretty
-  build-depends:    base ^>=4.18.1.0
+                    Pretty,
+                    Eval,
+                    Substitution
+  build-depends:    base ^>=4.18.1.0,
+                    containers
   hs-source-dirs:   src
 
 executable one-sided-sequent
@@ -29,6 +32,7 @@ executable one-sided-sequent
   other-modules:    Examples
   build-depends:    
     base ^>=4.18.1.0,
-    one-sided-sequent:lang
+    one-sided-sequent:lang,
+    containers
   hs-source-dirs:   app
 
