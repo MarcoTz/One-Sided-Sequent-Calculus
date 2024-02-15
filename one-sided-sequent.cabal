@@ -15,7 +15,11 @@ library lang
   exposed-modules:  TwoSided.Syntax,
                     TwoSided.Types,
                     TwoSided.Program,
-                    TwoSided.Pretty
+                    TwoSided.Pretty,
+                    Syntax,
+                    Types,
+                    Program,
+                    Pretty
   build-depends:    base ^>=4.18.1.0
   hs-source-dirs:   src
 
