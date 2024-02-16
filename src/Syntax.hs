@@ -1,6 +1,9 @@
 module Syntax where 
 
 data Pol = Pos | Neg 
+flipPol :: Pol -> Pol 
+flipPol Pos = Neg 
+flipPol Neg = Pos 
 
 data Command = Cut !Term !Pol !Term
 
