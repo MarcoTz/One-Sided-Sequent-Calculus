@@ -7,8 +7,13 @@ build-type:    Simple
 
 common all
   ghc-options: -Wall -Wno-orphans
-  default-extensions: DataKinds
-  default-language: GHC2021
+  default-extensions: DataKinds,
+                      DerivingStrategies
+  default-language:  GHC2021
+  build-depends:     base ^>=4.18.1.0,
+                     containers,
+                     mtl
+
 
 library lang
   import:           all
@@ -17,12 +22,11 @@ library lang
                     TwoSided.Program,
                     TwoSided.Pretty,
                     Syntax,
-                    Types,
+                    TypeInference.Types,
+                    TypeInference.GenerateConstraints,
                     Pretty,
                     Eval,
                     Substitution
-  build-depends:    base ^>=4.18.1.0,
-                    containers
   hs-source-dirs:   src
 
 executable one-sided-sequent
@@ -30,9 +34,6 @@ executable one-sided-sequent
   main-is:          Main.hs
   other-modules:    Examples,
                     TwoSidedExamples
-  build-depends:    
-    base ^>=4.18.1.0,
-    one-sided-sequent:lang,
-    containers
+  build-depends:    lang
   hs-source-dirs:   app
 

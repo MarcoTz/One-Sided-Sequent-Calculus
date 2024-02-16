@@ -12,11 +12,12 @@ multPol Pos Neg = Neg
 multPol Neg Pos = Neg 
 multPol Neg Neg = Pos
 
-data Command = Cut !Term !Pol !Term
 
 type Variable = String
 data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
 type XtorName = String
+
+data Command = Cut !Term !Pol !Term
 
 data Term = 
   Var !Variable

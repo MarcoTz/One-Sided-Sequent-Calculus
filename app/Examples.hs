@@ -1,6 +1,6 @@
 module Examples where 
 
-import Types
+import TypeInference.Types
 import Syntax
 
 nilSig :: XtorSig 

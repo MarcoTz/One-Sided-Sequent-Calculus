@@ -1,9 +1,8 @@
 module Pretty where 
 
 import Syntax 
-import Types
+import TypeInference.Types
 import Data.List (intercalate) 
-import Data.Map qualified as M
 
 instance Show Pol where 
   show Pos = "+"
@@ -41,9 +40,3 @@ instance Show Decl where
 
 instance Show XtorSig where 
   show MkXtorSig{sigName = nm, sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
-
-instance Show Env where 
-  show MkEnv{envVars=vars, envTyVars=tyvars, envDecls=decls} = 
-    intercalate ", " ((\(var,(pol,ty)) -> var <> ":" <> show pol <> show ty) <$> M.toList vars) <> 
-    intercalate ", " ((\(tv,pol) -> tv <> ":" <> show pol) <$> M.toList tyvars) <>
-    intercalate ", " (show <$> decls)
