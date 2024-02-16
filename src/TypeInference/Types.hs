@@ -12,7 +12,7 @@ data Ty =
   deriving (Eq)
 
 type KindVar = String
-data Kind = MkKind !Pol | MkKindVar !KindVar | MkFlipKind !Kind | MkProdKind !Kind !Kind
+data Kind = MkKind !Pol | MkKindVar !KindVar 
 
 data Decl = 
   MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 

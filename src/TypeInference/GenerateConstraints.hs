@@ -10,6 +10,8 @@ import Control.Monad
 data Constraint = 
   MkTyEq !Ty !Ty
   | MkKindEq !Kind !Kind
+  | MkFlipEq !Kind !Kind
+  | MkProdEq !Kind !Kind !Kind
 
 
 data GenerateState = MkGenState{
@@ -89,8 +91,8 @@ genConstraintsCmd (Cut t pol u) = do
   (ty1,pol1) <- genConstraintsTerm t
   (ty2,pol2) <- genConstraintsTerm u
   pol3 <- genConstraintsType ty1
-  addConstraint (MkKindEq pol1 (MkFlipKind pol2))
-  addConstraint (MkKindEq (MkKind pol) (MkProdKind (MkKind pol3) pol1))
+  addConstraint (MkFlipEq pol2 pol1)
+  addConstraint (MkProdEq (MkKind pol3) pol1 (MkKind pol))
   addConstraint (MkTyEq ty1 ty2)
   
 genConstraintsTerm :: Term -> GenM (Ty,Kind)
@@ -102,11 +104,13 @@ genConstraintsTerm (Var v) = do
    return (TyVar tyV, MkKindVar kndV)
 genConstraintsTerm (Mu v c) = do 
   tyV <- freshTyVar
-  kndV <- freshKndVar 
-  addVar v (TyVar tyV, MkKindVar kndV)
-  addTyVar tyV (MkKindVar kndV)
+  kndV1 <- freshKndVar 
+  kndV2 <- freshKndVar 
+  addConstraint (MkFlipEq (MkKindVar kndV1) (MkKindVar kndV2))
+  addVar v (TyVar tyV, MkKindVar kndV1)
+  addTyVar tyV (MkKindVar kndV1)
   genConstraintsCmd c
-  return (TyVar tyV, MkFlipKind $ MkKindVar kndV)
+  return (TyVar tyV, MkKindVar kndV2)
 
 -- TODO generate new variables for the variables in the data declaration
 -- otherwise we can only have the same type arguments for each time a declaration is used
