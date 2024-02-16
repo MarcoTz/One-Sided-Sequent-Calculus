@@ -11,7 +11,7 @@ data Constraint =
   MkTyEq !Ty !Ty
   | MkKindEq !Kind !Kind
   | MkFlipEq !Kind !Kind
-  | MkProdEq !Kind !Kind !Kind
+  | MkProdEq !Pol !Kind !Kind
 
 
 data GenerateState = MkGenState{
@@ -92,7 +92,7 @@ genConstraintsCmd (Cut t pol u) = do
   (ty2,pol2) <- genConstraintsTerm u
   pol3 <- genConstraintsType ty1
   addConstraint (MkFlipEq pol2 pol1)
-  addConstraint (MkProdEq (MkKind pol3) pol1 (MkKind pol))
+  addConstraint (MkProdEq pol3 pol1 (MkKind pol))
   addConstraint (MkTyEq ty1 ty2)
   
 genConstraintsTerm :: Term -> GenM (Ty,Kind)

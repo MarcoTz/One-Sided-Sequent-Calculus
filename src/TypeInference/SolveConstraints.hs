@@ -81,20 +81,9 @@ unifyFlipKinds (MkKindVar v1) (MkKindVar v2) = do
    (Just p, Nothing) -> addKndVar v2 (flipPol p)
    (Just p1, Just p2) -> if p1 == flipPol p2 then return () else throwError ("cannot unify " <> show p1 <> " and " <> show (flipPol p2))
 
-unifyProdKinds :: Kind -> Kind -> Kind -> SolverM ()
-unifyProdKinds (MkKind p1) (MkKind p2) k3 = unifyKinds (MkKind $ multPol p1 p2) k3
-unifyProdKinds (MkKind Pos) k2 k3 = unifyKinds k2 k3 
-unifyProdKinds (MkKind Neg) k2 k3 = unifyFlipKinds k2 k3
-unifyProdKinds k1 (MkKind p2) k3 = unifyProdKinds (MkKind p2) k1 k3 
-unifyProdKinds (MkKindVar v1) (MkKindVar v2) k3 = do 
-  vars <- gets slvKndVars
-  case (M.lookup v1 vars, M.lookup v2 vars) of 
-    (Nothing, Nothing) -> error "" 
-    (Just Pos, Nothing) -> unifyKinds (MkKindVar v2) k3
-    (Just Neg, Nothing) -> unifyFlipKinds (MkKindVar v2) k3
-    (Nothing, Just Pos) -> unifyKinds (MkKindVar v1) k3
-    (Nothing, Just Neg) -> unifyFlipKinds (MkKindVar v1) k3
-    (Just p1, Just p2) -> unifyKinds (MkKind (multPol p1 p2)) k3
+unifyProdKinds :: Pol -> Kind -> Kind -> SolverM ()
+unifyProdKinds Pos k2 k3 = unifyKinds k2 k3 
+unifyProdKinds Neg k2 k3 = unifyFlipKinds k2 k3
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
 unifyTypeConstraint _ _ = return ()
