@@ -1,9 +1,9 @@
 module Pretty where 
 
-import Program
 import Syntax 
 import Types
 import Data.List (intercalate) 
+import Data.Map qualified as M
 
 instance Show Pol where 
   show Pos = "+"
@@ -36,7 +36,6 @@ instance Show Decl where
     "val " <> v <> ":" <> show ty <> " = " <> show bd
   show MkRecDecl{recVar = v, recTy=ty, recBd=bd} = "rec " <> v <> ": " <> show ty <> " = " <> show bd
   show MkEps = "epsilon"
-  show (MkCons d1 d2) = show d1 <> "; " <> show d2
   show (MkCoDecl d) = "co " <> show d
 
 
@@ -45,6 +44,6 @@ instance Show XtorSig where
 
 instance Show Env where 
   show MkEnv{envVars=vars, envTyVars=tyvars, envDecls=decls} = 
-    intercalate ", " ((\(var,pol,ty) -> var <> ":" <> show pol <> show ty) <$> vars) <> 
-    intercalate ", " ((\(tv,pol) -> tv <> ":" <> show pol) <$> tyvars) <>
+    intercalate ", " ((\(var,(pol,ty)) -> var <> ":" <> show pol <> show ty) <$> M.toList vars) <> 
+    intercalate ", " ((\(tv,pol) -> tv <> ":" <> show pol) <$> M.toList tyvars) <>
     intercalate ", " (show <$> decls)

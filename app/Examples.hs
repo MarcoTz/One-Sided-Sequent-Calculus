@@ -1,6 +1,5 @@
 module Examples where 
 
-import Program
 import Types
 import Syntax
 

@@ -18,7 +18,6 @@ library lang
                     TwoSided.Pretty,
                     Syntax,
                     Types,
-                    Program,
                     Pretty,
                     Eval,
                     Substitution
