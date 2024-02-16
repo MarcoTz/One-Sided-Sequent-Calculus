@@ -29,7 +29,8 @@ library lang
 executable one-sided-sequent
   import:           all
   main-is:          Main.hs
-  other-modules:    Examples
+  other-modules:    Examples,
+                    TwoSidedExamples
   build-depends:    
     base ^>=4.18.1.0,
     one-sided-sequent:lang,

@@ -1,35 +1,55 @@
 module Examples where 
 
-import TwoSided.Program
-import TwoSided.Types
-import TwoSided.Syntax
+import Program
+import Types
+import Syntax
 
-nilSig :: XtorSig Ctor 
-nilSig = MkXtorSig {sigName = "Nil", sigXtor = CtorRep, sigProdArgs = [], sigConsArgs = []}
-consSig :: XtorSig Ctor 
-consSig = MkXtorSig {sigName = "Cons", sigXtor=CtorRep, sigProdArgs = [TyVar "a", TyDeclared "List" [TyVar "a"]], sigConsArgs = []}
-listDecl :: Declaration
-listDecl = DataDecl (MkTyDecl { declName = "List", declTyArgs = [("a",Pos)], declPol = Pos, declSig = [nilSig,consSig] })
+nilSig :: XtorSig 
+nilSig = MkXtorSig{sigName = "Nil", sigArgs = []}
+consSig :: XtorSig
+consSig = MkXtorSig{sigName = "Cons", sigArgs = [TyVar "a", TyDecl "List" [TyVar "a"]]}
+listDecl :: Decl
+listDecl = MkDataDecl{declNm = "List", declArgs = [("a",Pos)], declPol = Pos, declSig = [nilSig,consSig]}
 
-tupSig :: XtorSig Ctor
-tupSig = MkXtorSig {sigName = "Tup", sigXtor=CtorRep, sigProdArgs = [TyVar "a", TyVar "b"], sigConsArgs = []}
-pairDecl :: Declaration
-pairDecl = DataDecl (MkTyDecl { declName = "Pair", declTyArgs = [("a",Pos),("b",Pos)], declPol = Pos, declSig = [tupSig]})
+tupSig :: XtorSig 
+tupSig = MkXtorSig{sigName = "Tup", sigArgs=[TyVar "a",TyVar "b"]}
+pairDecl :: Decl
+pairDecl = MkDataDecl{declNm = "Pair", declArgs = [("a",Pos),("b",Pos)], declPol = Pos, declSig = [tupSig]}
 
-headSig :: XtorSig Dtor 
-headSig = MkXtorSig {sigName ="Head", sigXtor=DtorRep, sigProdArgs = [], sigConsArgs = [TyVar "a"]}
-tailSig :: XtorSig Dtor
-tailSig = MkXtorSig {sigName="Tail", sigXtor=DtorRep, sigProdArgs = [], sigConsArgs = [TyDeclared "Stream" [TyVar "a"]]}
-streamDecl :: Declaration
-streamDecl = CodataDecl (MkTyDecl { declName = "Stream", declTyArgs = [("a",Pos)], declPol = Neg, declSig = [headSig,tailSig]})
 
-fstSig :: XtorSig Dtor
-fstSig = MkXtorSig {sigName = "Fst", sigXtor=DtorRep, sigProdArgs = [], sigConsArgs = [TyVar "a"]}
-sndSig :: XtorSig Dtor 
-sndSig = MkXtorSig {sigName = "Snd", sigXtor=DtorRep, sigProdArgs = [], sigConsArgs = [TyVar "b"]}
-lPairDecl :: Declaration
-lPairDecl = CodataDecl (MkTyDecl { declName = "LPair", declTyArgs = [("a",Pos),("b",Pos)], declPol=Neg, declSig =[fstSig,sndSig]})
+headSig :: XtorSig 
+headSig = MkXtorSig{sigName = "Head", sigArgs=[TyVar "a"]}
+tailSig :: XtorSig 
+tailSig = MkXtorSig{sigName = "Tail", sigArgs=[TyDecl "Stream" [TyVar "a"]]}
+streamDecl :: Decl 
+streamDecl = MkDataDecl{declNm = "Stream", declArgs = [("a",Neg)], declPol = Neg, declSig=[headSig,tailSig]}
 
-tys :: [Declaration]
-tys = [listDecl, pairDecl, streamDecl,lPairDecl]
+fstSig :: XtorSig 
+fstSig = MkXtorSig{sigName = "Fst", sigArgs=[TyVar "a"]}
+sndSig :: XtorSig 
+sndSig = MkXtorSig{sigName = "Snd", sigArgs=[TyVar "b"]}
+lpairDecl :: Decl
+lpairDecl = MkDataDecl{declNm = "LPair", declArgs = [("a",Neg),("b",Neg)], declPol = Neg, declSig=[fstSig,sndSig]}
 
+trueSig :: XtorSig 
+trueSig = MkXtorSig{sigName="True", sigArgs=[]}
+falseSig :: XtorSig
+falseSig = MkXtorSig{sigName="False", sigArgs=[]}
+boolDecl :: Decl
+boolDecl = MkDataDecl{declNm="Bool", declArgs=[], declPol=Pos, declSig=[trueSig,falseSig]}
+
+exList :: Term
+exList = Xtor "Cons" [Xtor "True" [], Xtor "Cons" [Xtor "False" [] , Xtor "Nil" []]]
+exCase :: Term 
+exCase = XCase [MkPattern{ptxt="Nil",ptv=[],ptcmd=Cut (Xtor "False" []) Pos (Var "x")}, MkPattern{ptxt="Cons",ptv=["a","b"], ptcmd=Cut (Var "a") Pos (Var "x") }]
+
+exCmd :: Command 
+exCmd = Cut exList Pos exCase
+
+
+tys :: [Decl]
+tys = [listDecl, pairDecl, streamDecl,lpairDecl]
+terms :: [Term]
+terms = [exList,exCase]
+cmds :: [Command]
+cmds = [exCmd]
