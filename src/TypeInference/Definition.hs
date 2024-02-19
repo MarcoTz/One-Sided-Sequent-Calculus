@@ -28,15 +28,15 @@ data GenerateState = MkGenState{
   constrSet :: ![Constraint]
 }
 
-initialGenState :: GenerateState
-initialGenState = MkGenState M.empty M.empty 0 0 [] []
+initialGenState :: [Decl] -> GenerateState 
+initialGenState decls = MkGenState M.empty M.empty 0 0 decls []
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 
-runGenM :: GenM a -> Either String (a, [Constraint])
-runGenM m = case runExcept (runStateT (getGenM m) initialGenState) of
+runGenM :: [Decl] -> GenM a -> Either String (a, [Constraint])
+runGenM decls m = case runExcept (runStateT (getGenM m) (initialGenState decls)) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
 

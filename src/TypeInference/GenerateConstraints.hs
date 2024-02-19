@@ -20,10 +20,10 @@ checkPts (pt:pts) = do
     Just (MkDataDecl _ _ _ xtors) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return decl else return Nothing
     Just _ -> error "expeceted data declaration but found different declaration (should never happen)"
 
-runGenCmd :: S.Command -> Either String (T.Command,[Constraint])
-runGenCmd cmd = runGenM (genConstraintsCmd cmd)
-runGenT :: S.Term -> Either String (T.Term,[Constraint])
-runGenT t = runGenM (genConstraintsTerm t)
+runGenCmd :: [Decl] -> S.Command -> Either String (T.Command,[Constraint])
+runGenCmd decls cmd = runGenM decls (genConstraintsCmd cmd)
+runGenT :: [Decl] -> S.Term -> Either String (T.Term,[Constraint])
+runGenT decls t = runGenM decls (genConstraintsTerm t)
 
 genConstraintsCmd :: S.Command -> GenM T.Command 
 genConstraintsCmd (S.Cut t pol u) = do 
