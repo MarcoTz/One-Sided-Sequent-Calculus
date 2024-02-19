@@ -35,7 +35,12 @@ library lang
 
 library ex
   import:          all 
-  exposed-modules: Examples
+  exposed-modules: Examples,
+                   List,
+                   Pair,
+                   Stream,
+                   LPair,
+                   Bool
   build-depends:   lang
   hs-source-dirs:  Examples
 
