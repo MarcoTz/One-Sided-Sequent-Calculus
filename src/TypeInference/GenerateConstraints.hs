@@ -17,7 +17,7 @@ checkPts (pt:pts) = do
   decl <- findDataDecl (T.ptxt pt)
   case decl of 
     Nothing -> throwError ("Xtor " <> show (T.ptxt pt) <> " used but not defined") 
-    Just (MkDataDecl _ _ _ xtors) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return decl else return Nothing
+    Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
 runGenCmd :: [DataDecl] -> S.Command -> Either String (T.Command,[Constraint])
 runGenCmd decls cmd = runGenM decls (genConstraintsCmd cmd)
@@ -58,11 +58,10 @@ genConstraintsTerm (S.Xtor nm args) = do
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError ("Xtor " <> show nm <> " was used but not defined")
-    Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl, declSig=_} -> do
+    Just (MkDataDecl{declNm=tyn, declArgs=_, declPol=pl, declSig=_},xtSig) -> do
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
-      let declTys = (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs
-      addConstraintsXtor argTys declTys 
+      addConstraintsXtor nm argTys (sigArgs xtSig)
       let newT = TyDecl tyn argTys (MkKind pl)
       return (T.Xtor nm args' newT)
 genConstraintsTerm (S.XCase pts)  = do 

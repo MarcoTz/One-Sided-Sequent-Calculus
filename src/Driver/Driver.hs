@@ -13,7 +13,7 @@ import Control.Monad
 import Data.List (intercalate)
 
 defaultDebug :: Bool
-defaultDebug = True 
+defaultDebug = True
 
 data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: ![DataDecl] } 
 
@@ -25,7 +25,9 @@ runDriverM :: [DataDecl] -> DriverM a -> IO(Either String (a,DriverState))
 runDriverM decls m = runExceptT $ runStateT (getDriverM m) (MkDriverState defaultDebug decls)
 
 liftErr :: Either String a -> DriverM a
-liftErr (Left err) = throwError err
+liftErr (Left err) = do 
+  debug err
+  throwError err
 liftErr (Right a) = return a 
 
 debugLn :: String
@@ -49,7 +51,11 @@ inferCommand c = do
 inferTerm :: S.Term -> DriverM T.Term
 inferTerm t = do 
   decls <- gets drvEnv 
-  (c',ctrs) <- liftErr (runGenT decls t)
-  (_,_varmap,_kndmap) <- liftErr (runSolve ctrs)
-  return c'
+  debug (" Inferring " <> show t <> " with environment " <> show decls)
+  (t',ctrs) <- liftErr (runGenT decls t)
+  debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
+  (_,varmap,kndmap) <- liftErr (runSolve ctrs)
+  debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
+  debug (" Final Type : " <> show (T.getType t'))
+  return t'
 

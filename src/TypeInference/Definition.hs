@@ -70,22 +70,29 @@ addTyVar tyv knd = do
   tyVars <- gets tyVarEnv 
   modify (\s -> MkGenState (varEnv s) (M.insert tyv knd tyVars) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
 
-findDataDecl :: XtorName -> GenM (Maybe DataDecl)
+findDataDecl :: XtorName -> GenM (Maybe (DataDecl,XtorSig))
 findDataDecl nm = do
   decls <- gets declEnv 
   return $ checkDecl nm decls 
   where
-    checkDecl :: XtorName -> [DataDecl] -> Maybe DataDecl
+    checkDecl :: XtorName -> [DataDecl] -> Maybe (DataDecl,XtorSig)
     checkDecl _ [] = Nothing
-    checkDecl n (d@(MkDataDecl _ _ _ xtors):dcs) = if any (\sig -> sigName sig == n) xtors then Just d else checkDecl n dcs
+    checkDecl n (d@(MkDataDecl _ _ _ xtors):dcs) = 
+      case checkXtor n xtors of 
+        Nothing -> checkDecl n dcs
+        Just sig -> Just (d,sig)
+
+    checkXtor :: XtorName -> [XtorSig] -> Maybe XtorSig
+    checkXtor _ [] = Nothing
+    checkXtor xtn (xt:xts) = if sigName xt == xtn then Just xt else checkXtor nm xts
 
 
-addConstraintsXtor :: [Ty] -> [Ty] -> GenM () 
-addConstraintsXtor [] [] = return () 
-addConstraintsXtor _ [] = throwError "Wrong number of arguments"
-addConstraintsXtor [] _ = throwError "Wrong number of arguments"
-addConstraintsXtor (ty1:tys1) (ty2:tys2) = do 
+addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
+addConstraintsXtor _ [] [] = return () 
+addConstraintsXtor xt _ [] = throwError ("Wrong number of arguments for " <> xt)
+addConstraintsXtor xt [] _ = throwError ("Wrong number of arguments for " <> xt)
+addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
   addConstraint (MkKindEq (getKind ty1) (getKind ty2))
-  addConstraintsXtor tys1 tys2
+  addConstraintsXtor xt tys1 tys2
 

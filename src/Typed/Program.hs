@@ -11,6 +11,3 @@ data VarDecl  = MkValDecl{valVar :: !Variable, valTy :: !Ty, valBd :: !Term}
 data RecDecl  = MkRecDecl{recVar :: !Variable, recTy :: !Ty, recBd :: !Term}
 data Eps = MkEps 
 newtype Codecl = MkCo DataDecl 
-
-
-
