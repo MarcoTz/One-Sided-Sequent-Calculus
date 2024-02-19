@@ -1,6 +1,7 @@
 module Eval.Substitution where 
 
 import Untyped.Syntax
+import Common 
 
 import Data.Set qualified as S
 

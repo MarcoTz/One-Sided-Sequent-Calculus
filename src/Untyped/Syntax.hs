@@ -1,23 +1,12 @@
 module Untyped.Syntax where 
 
-data Pol = Pos | Neg 
-  deriving (Eq)
-flipPol :: Pol -> Pol 
-flipPol Pos = Neg 
-flipPol Neg = Pos 
-
-multPol :: Pol -> Pol -> Pol 
-multPol Pos Pos = Pos 
-multPol Pos Neg = Neg 
-multPol Neg Pos = Neg 
-multPol Neg Neg = Pos
+import Common 
 
 
-type Variable = String
-data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
-type XtorName = String
 
 data Command = Cut !Term !Pol !Term
+
+data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
 
 data Term = 
   Var !Variable

@@ -2,6 +2,7 @@ module Examples where
 
 import Typed.Types
 import Untyped.Syntax
+import Common
 
 nilSig :: XtorSig 
 nilSig = MkXtorSig{sigName = "Nil", sigArgs = []}

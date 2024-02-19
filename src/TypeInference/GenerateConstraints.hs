@@ -3,9 +3,8 @@ module TypeInference.GenerateConstraints where
 import Typed.Types 
 import Untyped.Syntax 
 import TypeInference.Definition
+import Common 
 
-import Data.Map qualified as M
-import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad
 

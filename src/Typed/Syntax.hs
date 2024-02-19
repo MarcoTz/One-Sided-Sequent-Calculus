@@ -1,16 +1,16 @@
 module Typed.Syntax where 
 
-import Untyped.Syntax qualified as S
 import Typed.Types 
+import Common
 
-type XtorName = String
+data Command = Cut !Term !Pol !Term
 
-data Command = Cut !Term !S.Pol !Term
+data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
 
 data Term = 
-  Var !S.Variable !Ty
-  | Mu !S.Variable !Command !Ty
+  Var !Variable !Ty
+  | Mu !Variable !Command !Ty
   | Xtor !XtorName ![Term] !Ty
-  | XCase ![S.Pattern] !Ty
+  | XCase ![Pattern] !Ty
   | Shift !Term !Ty
-  | Lam !S.Variable !Command !Ty
+  | Lam !Variable !Command !Ty

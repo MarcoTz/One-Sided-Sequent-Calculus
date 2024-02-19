@@ -1,9 +1,8 @@
 module Typed.Types where 
 
 import Untyped.Syntax
+import Common 
 
-type TypeVar = String
-type TypeName = String 
 data Ty = 
   TyVar !TypeVar 
   | TyDecl !TypeName ![Ty] 

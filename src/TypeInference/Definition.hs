@@ -1,8 +1,7 @@
 module TypeInference.Definition where 
 
 import Typed.Types
-import Typed.Syntax
-import Untyped.Syntax (Pol, Variable)
+import Common
 
 import Data.Map qualified as M
 import Control.Monad.Except

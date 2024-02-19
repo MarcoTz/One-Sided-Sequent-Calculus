@@ -32,6 +32,7 @@ library lang
                     Eval.Substitution,
                     EmbedTyped,
                     Pretty,
+                    Common
   hs-source-dirs:   src
 
 executable one-sided-sequent

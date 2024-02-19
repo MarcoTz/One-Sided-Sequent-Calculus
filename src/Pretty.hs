@@ -4,12 +4,13 @@ import Untyped.Syntax qualified as S
 import Typed.Syntax qualified as T
 import Typed.Types qualified as T
 import EmbedTyped
+import Common
 
 import Data.List (intercalate) 
 
-instance Show S.Pol where 
-  show S.Pos = "+"
-  show S.Neg = "-"
+instance Show Pol where 
+  show Pos = "+"
+  show Neg = "-"
 
 instance Show S.Command where 
   show (S.Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"
