@@ -12,8 +12,8 @@ main = do
     print ty)
   forM_ terms (\term -> do
     print term
-    print (runInfT tys term))
+    print (runDriverM tys (inferTerm term)))
   forM_ cmds (\cmd -> do
     print cmd
-    print (runInfC tys cmd))
+    print (runDriverM tys (inferCommand cmd)))
 
