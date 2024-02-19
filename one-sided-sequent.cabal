@@ -25,6 +25,7 @@ library lang
                     Untyped.Syntax,
                     Typed.Syntax, 
                     Typed.Types,
+                    TypeInference.Definition,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
                     Eval.Eval,
