@@ -123,7 +123,7 @@ unifyTypeConstraint (TyDecl n1 args1 knd1) (TyDecl n2 args2 knd2) =
   if n1 == n2 && length args1 == length args2 then do 
     forM_ (zip args1 args2) (uncurry addTyEq)
     unifyKinds knd1 knd2
-  else throwError ("Cannot unify " <> show n1 <> " and " <> show n2)
+  else throwError ("Cannot unify " <> n1 <> " and " <> n2 <> " with args " <> show args1 <> " and " <> show args2)
 unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do 
   unifyKinds knd1 knd2 
   unifyTypeConstraint ty1 ty2

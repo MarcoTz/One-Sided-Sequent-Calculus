@@ -9,15 +9,18 @@ common all
   ghc-options: -Wall -Wno-orphans
   default-extensions: DataKinds,
                       DerivingStrategies
-  default-language:  GHC2021
-  build-depends:     base ^>=4.18.1.0,
-                     containers,
-                     mtl
-
+  default-language:   GHC2021
+  build-depends:      base ^>=4.18.1.0,
+                      containers,
+                      megaparsec,
+                      monadplus,
+                      mtl,
+                      text
 
 library lang
   import:           all
   exposed-modules:  Untyped.Syntax,
+                    Untyped.Program,
                     Typed.Syntax, 
                     Typed.Types,
                     Typed.Program,
@@ -27,11 +30,13 @@ library lang
                     Driver.Driver,
                     Eval.Eval,
                     Eval.Substitution,
+                    Parser.Parser,
+                    Parser.Keywords,
+                    Parser.Symbols,
                     EmbedTyped,
                     Pretty,
                     Common,
   hs-source-dirs:   src
-
 
 library ex
   import:          all 
