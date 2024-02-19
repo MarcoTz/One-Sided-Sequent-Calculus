@@ -27,10 +27,10 @@ library lang
                     Typed.Types,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
+                    Eval.Eval,
+                    Eval.Substitution,
                     EmbedTyped,
                     Pretty,
-                    Eval,
-                    Substitution
   hs-source-dirs:   src
 
 executable one-sided-sequent

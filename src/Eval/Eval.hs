@@ -1,7 +1,7 @@
-module Eval where 
+module Eval.Eval where 
 
 import Untyped.Syntax 
-import Substitution 
+import Eval.Substitution 
 
 isValue :: Pol -> Term -> Bool
 isValue Pos (Var _) = True 
