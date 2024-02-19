@@ -6,6 +6,7 @@ import Typed.Types    qualified as T
 import Typed.Program  qualified as T
 import EmbedTyped
 import Common
+import TypeInference.Definition
 
 import Data.List (intercalate) 
 
@@ -24,7 +25,8 @@ instance Show S.Pattern where
 instance Show S.Term where 
   show (S.Var v) = v
   show (S.Mu v cmd) = "mu " <> v <> ". " <> show cmd
-  show (S.Xtor xt args) = xt <> "(" <> intercalate ", " (show <$> args)
+  show (S.Xtor xt []) = xt
+  show (S.Xtor xt args) = xt <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (S.XCase pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
   show (S.Shift t) = "{" <> show t <> "}"
   show (S.Lam v cmd) = "Lambda {" <> v <> "}." <> show cmd
@@ -49,3 +51,14 @@ instance Show T.Decl where
 
 instance Show T.XtorSig where 
   show T.MkXtorSig{T.sigName = nm, T.sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+
+
+instance Show T.Kind where 
+  show (T.MkKind p) = show p
+  show (T.MkKindVar kv) = kv
+
+instance Show Constraint where 
+  show (MkTyEq ty1 ty2) = show ty1 <> " = " <> show ty2
+  show (MkKindEq k1 k2) = show k1 <> " = " <> show k2 
+  show (MkFlipEq k1 k2) = show k1 <> " != " <> show k2
+  show (MkProdEq p k1 k2) = show p <> " * " <> show k1 <> " = " <> show k2

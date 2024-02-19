@@ -8,12 +8,15 @@ import Control.Monad (forM_)
 
 main :: IO()
 main = do
+  print "Declarations "
+  print debugLn
   forM_ tys (\ty -> do 
     print ty)
+  print debugLn
   forM_ terms (\term -> do
     print term
-    print (runDriverM tys (inferTerm term)))
+    runDriverM tys (inferTerm term))
   forM_ cmds (\cmd -> do
     print cmd
-    print (runDriverM tys (inferCommand cmd)))
+    runDriverM tys (inferCommand cmd))
 
