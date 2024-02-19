@@ -1,33 +1,34 @@
 module Examples where 
 
 import Typed.Types
+import Typed.Program
 import Untyped.Syntax
 import Common
 
 nilSig :: XtorSig 
 nilSig = MkXtorSig{sigName = "Nil", sigArgs = []}
 consSig :: XtorSig
-consSig = MkXtorSig{sigName = "Cons", sigArgs = [TyVar "a", TyDecl "List" [TyVar "a"]]}
+consSig = MkXtorSig{sigName = "Cons", sigArgs = [TyVar "a" (MkKind Pos), TyDecl "List" [TyVar "a" (MkKind Pos)] (MkKind Pos)]}
 listDecl :: Decl
 listDecl = MkDataDecl{declNm = "List", declArgs = [("a",Pos)], declPol = Pos, declSig = [nilSig,consSig]}
 
 tupSig :: XtorSig 
-tupSig = MkXtorSig{sigName = "Tup", sigArgs=[TyVar "a",TyVar "b"]}
+tupSig = MkXtorSig{sigName = "Tup", sigArgs=[TyVar "a" (MkKind Pos),TyVar "b" (MkKind Pos)]}
 pairDecl :: Decl
 pairDecl = MkDataDecl{declNm = "Pair", declArgs = [("a",Pos),("b",Pos)], declPol = Pos, declSig = [tupSig]}
 
 
 headSig :: XtorSig 
-headSig = MkXtorSig{sigName = "Head", sigArgs=[TyVar "a"]}
+headSig = MkXtorSig{sigName = "Head", sigArgs=[TyVar "a" (MkKind Neg)]}
 tailSig :: XtorSig 
-tailSig = MkXtorSig{sigName = "Tail", sigArgs=[TyDecl "Stream" [TyVar "a"]]}
+tailSig = MkXtorSig{sigName = "Tail", sigArgs=[TyDecl "Stream" [TyVar "a" (MkKind Neg)] (MkKind Neg)]}
 streamDecl :: Decl 
 streamDecl = MkDataDecl{declNm = "Stream", declArgs = [("a",Neg)], declPol = Neg, declSig=[headSig,tailSig]}
 
 fstSig :: XtorSig 
-fstSig = MkXtorSig{sigName = "Fst", sigArgs=[TyVar "a"]}
+fstSig = MkXtorSig{sigName = "Fst", sigArgs=[TyVar "a" (MkKind Neg)]}
 sndSig :: XtorSig 
-sndSig = MkXtorSig{sigName = "Snd", sigArgs=[TyVar "b"]}
+sndSig = MkXtorSig{sigName = "Snd", sigArgs=[TyVar "b" (MkKind Neg)]}
 lpairDecl :: Decl
 lpairDecl = MkDataDecl{declNm = "LPair", declArgs = [("a",Neg),("b",Neg)], declPol = Neg, declSig=[fstSig,sndSig]}
 

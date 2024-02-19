@@ -1,8 +1,9 @@
 module Pretty where 
 
 import Untyped.Syntax qualified as S
-import Typed.Syntax qualified as T
-import Typed.Types qualified as T
+import Typed.Syntax   qualified as T
+import Typed.Types    qualified as T
+import Typed.Program  qualified as T
 import EmbedTyped
 import Common
 
@@ -31,10 +32,10 @@ instance Show T.Term where
   show t = show $ (embed :: T.Term -> S.Term) t 
 
 instance Show T.Ty where 
-  show (T.TyVar v) = v 
-  show (T.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
-  show (T.TyShift ty) = "{" <> show ty <> "}"
-  show (T.TyCo ty) = "co " <> show ty
+  show (T.TyVar v _) = v 
+  show (T.TyDecl nm args _) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (T.TyShift ty _) = "{" <> show ty <> "}"
+  show (T.TyCo ty _) = "co " <> show ty
 
 instance Show T.Decl where 
   show T.MkDataDecl{T.declNm=nm, T.declArgs=args, T.declPol=pl, T.declSig=sig} = 

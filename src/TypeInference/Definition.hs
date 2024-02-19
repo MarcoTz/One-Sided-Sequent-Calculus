@@ -1,6 +1,7 @@
 module TypeInference.Definition where 
 
 import Typed.Types
+import Typed.Program
 import Common
 
 import Data.Map qualified as M
@@ -19,7 +20,7 @@ data Constraint =
 
 
 data GenerateState = MkGenState{
-  varEnv :: !(M.Map Variable (Ty,Kind)),
+  varEnv :: !(M.Map Variable Ty),
   tyVarEnv :: !(M.Map TypeVar Kind),
   tyVarCnt :: !Int,
   kndVarCnt :: !Int,
@@ -54,10 +55,10 @@ freshKndVar = do
 addConstraint :: Constraint -> GenM () 
 addConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (ctr:constrSet s))
 
-addVar :: Variable -> (Ty,Kind) -> GenM ()
-addVar v (ty,knd) = do 
+addVar :: Variable -> Ty -> GenM ()
+addVar v ty = do 
   vars <- gets varEnv
-  modify (\s -> MkGenState (M.insert v (ty,knd) vars) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (M.insert v ty vars) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
 
 addTyVar :: TypeVar -> Kind -> GenM ()
 addTyVar tyv knd = do
