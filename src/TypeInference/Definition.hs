@@ -1,13 +1,13 @@
 module TypeInference.Definition where 
 
 import Typed.Types
+import Typed.Syntax
 import Typed.Program
 import Common
 
 import Data.Map qualified as M
 import Control.Monad.Except
 import Control.Monad.State
-
 
 ---
 --- Constraint Monad
@@ -31,9 +31,16 @@ data GenerateState = MkGenState{
 initialGenState :: GenerateState
 initialGenState = MkGenState M.empty M.empty 0 0 [] []
 
-newtype GenM a = MkGenM { getGenM :: ExceptT String (State GenerateState) a }
+--newtype GenM a = GenM { getGenM :: ExceptT String (State  GenerateState) a}
+--  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
+
+newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 
+runGenM :: GenM a -> Either String (a, [Constraint])
+runGenM m = case runExcept (runStateT (getGenM m) initialGenState) of
+  Left err -> Left err 
+  Right (x, st) ->  Right (x,constrSet st)
 
 -- Fresh Variables 
 freshTyVar :: GenM TypeVar
@@ -76,6 +83,14 @@ findDataDecl nm = do
     checkDecl n (_:dcs) = checkDecl n dcs
 
 
+addConstraintsXtor :: [Ty] -> [Ty] -> GenM () 
+addConstraintsXtor [] [] = return () 
+addConstraintsXtor _ [] = throwError "Wrong number of arguments"
+addConstraintsXtor [] _ = throwError "Wrong number of arguments"
+addConstraintsXtor (ty1:tys1) (ty2:tys2) = do 
+  addConstraint (MkTyEq ty1 ty2)
+  addConstraint (MkKindEq (getKind ty1) (getKind ty2))
+  addConstraintsXtor tys1 tys2
 --
 -- Solver Monad 
 -- 

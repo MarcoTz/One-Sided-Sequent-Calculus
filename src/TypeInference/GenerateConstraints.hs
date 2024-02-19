@@ -11,15 +11,6 @@ import Control.Monad.Except
 import Control.Monad
 
 
-addConstraintsXtor :: [Ty] -> [Ty] -> GenM () 
-addConstraintsXtor [] [] = return () 
-addConstraintsXtor _ [] = throwError "Wrong number of arguments"
-addConstraintsXtor [] _ = throwError "Wrong number of arguments"
-addConstraintsXtor (ty1:tys1) (ty2:tys2) = do 
-  addConstraint (MkTyEq ty1 ty2)
-  addConstraint (MkKindEq (T.getKind ty1) (T.getKind ty2))
-  addConstraintsXtor tys1 tys2
-
 checkPts :: [T.Pattern] -> GenM (Maybe Decl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
@@ -29,6 +20,10 @@ checkPts (pt:pts) = do
     Just (MkDataDecl _ _ _ xtors) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return decl else return Nothing
     Just _ -> error "expeceted data declaration but found different declaration (should never happen)"
 
+runGenCmd :: S.Command -> Either String (T.Command,[Constraint])
+runGenCmd cmd = runGenM (genConstraintsCmd cmd)
+runGenT :: S.Term -> Either String (T.Term,[Constraint])
+runGenT t = runGenM (genConstraintsTerm t)
 
 genConstraintsCmd :: S.Command -> GenM T.Command 
 genConstraintsCmd (S.Cut t pol u) = do 
