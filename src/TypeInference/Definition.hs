@@ -24,18 +24,18 @@ data GenerateState = MkGenState{
   tyVarEnv :: !(M.Map TypeVar Kind),
   tyVarCnt :: !Int,
   kndVarCnt :: !Int,
-  declEnv :: ![Decl],
+  declEnv :: ![DataDecl],
   constrSet :: ![Constraint]
 }
 
-initialGenState :: [Decl] -> GenerateState 
+initialGenState :: [DataDecl] -> GenerateState 
 initialGenState decls = MkGenState M.empty M.empty 0 0 decls []
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 
-runGenM :: [Decl] -> GenM a -> Either String (a, [Constraint])
+runGenM :: [DataDecl] -> GenM a -> Either String (a, [Constraint])
 runGenM decls m = case runExcept (runStateT (getGenM m) (initialGenState decls)) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
@@ -70,15 +70,14 @@ addTyVar tyv knd = do
   tyVars <- gets tyVarEnv 
   modify (\s -> MkGenState (varEnv s) (M.insert tyv knd tyVars) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
 
-findDataDecl :: XtorName -> GenM (Maybe Decl)
+findDataDecl :: XtorName -> GenM (Maybe DataDecl)
 findDataDecl nm = do
   decls <- gets declEnv 
   return $ checkDecl nm decls 
   where
-    checkDecl :: XtorName -> [Decl] -> Maybe Decl
+    checkDecl :: XtorName -> [DataDecl] -> Maybe DataDecl
     checkDecl _ [] = Nothing
     checkDecl n (d@(MkDataDecl _ _ _ xtors):dcs) = if any (\sig -> sigName sig == n) xtors then Just d else checkDecl n dcs
-    checkDecl n (_:dcs) = checkDecl n dcs
 
 
 addConstraintsXtor :: [Ty] -> [Ty] -> GenM () 

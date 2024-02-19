@@ -39,14 +39,18 @@ instance Show T.Ty where
   show (T.TyShift ty _) = "{" <> show ty <> "}"
   show (T.TyCo ty _) = "co " <> show ty
 
-instance Show T.Decl where 
+instance Show T.DataDecl where 
   show T.MkDataDecl{T.declNm=nm, T.declArgs=args, T.declPol=pl, T.declSig=sig} = 
     "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " where { " <> show sig <> "}"
+instance Show T.VarDecl where 
   show T.MkValDecl{T.valVar = v, T.valTy=ty, T.valBd=bd} = 
     "val " <> v <> ":" <> show ty <> " = " <> show bd
+instance Show T.RecDecl where 
   show T.MkRecDecl{T.recVar = v, T.recTy=ty, T.recBd=bd} = "rec " <> v <> ": " <> show ty <> " = " <> show bd
+instance Show T.Eps where
   show T.MkEps = "epsilon"
-  show (T.MkCoDecl d) = "co " <> show d
+instance Show T.Codecl where 
+  show (T.MkCo d) = "co " <> show d
 
 
 instance Show T.XtorSig where 

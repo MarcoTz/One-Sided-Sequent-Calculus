@@ -11,7 +11,7 @@ import Bool
 
 
 
-tys :: [Decl]
+tys :: [DataDecl]
 tys = [boolDecl, listDecl, pairDecl, streamDecl,lpairDecl]
 terms :: [Term]
 terms = [exList,exCase]

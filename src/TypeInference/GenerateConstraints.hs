@@ -11,18 +11,17 @@ import Control.Monad.Except
 import Control.Monad
 
 
-checkPts :: [T.Pattern] -> GenM (Maybe Decl)
+checkPts :: [T.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
   decl <- findDataDecl (T.ptxt pt)
   case decl of 
     Nothing -> throwError ("Xtor " <> show (T.ptxt pt) <> " used but not defined") 
     Just (MkDataDecl _ _ _ xtors) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return decl else return Nothing
-    Just _ -> error "expeceted data declaration but found different declaration (should never happen)"
 
-runGenCmd :: [Decl] -> S.Command -> Either String (T.Command,[Constraint])
+runGenCmd :: [DataDecl] -> S.Command -> Either String (T.Command,[Constraint])
 runGenCmd decls cmd = runGenM decls (genConstraintsCmd cmd)
-runGenT :: [Decl] -> S.Term -> Either String (T.Term,[Constraint])
+runGenT :: [DataDecl] -> S.Term -> Either String (T.Term,[Constraint])
 runGenT decls t = runGenM decls (genConstraintsTerm t)
 
 genConstraintsCmd :: S.Command -> GenM T.Command 
@@ -69,7 +68,6 @@ genConstraintsTerm (S.Xtor nm args) = do
           addConstraintsXtor argTys declTys 
           let newT = TyDecl tyn argTys (MkKind pl)
           return (T.Xtor nm args' newT)
-    Just _ -> error "expected DataDecl but found different one (should never happen)"
   where 
     findXtor :: XtorName -> [XtorSig] -> Maybe XtorSig
     findXtor _ [] = Nothing 
@@ -85,7 +83,6 @@ genConstraintsTerm (S.XCase pts)  = do
         genConstraintsCmd (S.ptcmd pt))
       let newT = TyDecl tyn ( (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs ) (MkKind pl)
       return (T.XCase pts' newT)
-    Just _ -> error "expected data declaration but got other declaration (should never happen)" 
 genConstraintsTerm (S.Shift t) = do 
   t' <- genConstraintsTerm t 
   addConstraint (MkKindEq (T.getKind t') (MkKind Pos))

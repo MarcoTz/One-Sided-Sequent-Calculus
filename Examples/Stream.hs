@@ -9,5 +9,5 @@ headSig :: XtorSig
 headSig = MkXtorSig{sigName = "Head", sigArgs=[TyVar "a" (MkKind Neg)]}
 tailSig :: XtorSig 
 tailSig = MkXtorSig{sigName = "Tail", sigArgs=[TyDecl "Stream" [TyVar "a" (MkKind Neg)] (MkKind Neg)]}
-streamDecl :: Decl 
+streamDecl :: DataDecl 
 streamDecl = MkDataDecl{declNm = "Stream", declArgs = [("a",Neg)], declPol = Neg, declSig=[headSig,tailSig]}

@@ -9,7 +9,7 @@ nilSig :: XtorSig
 nilSig = MkXtorSig{sigName = "Nil", sigArgs = []}
 consSig :: XtorSig
 consSig = MkXtorSig{sigName = "Cons", sigArgs = [TyVar "a" (MkKind Pos), TyDecl "List" [TyVar "a" (MkKind Pos)] (MkKind Pos)]}
-listDecl :: Decl
+listDecl :: DataDecl
 listDecl = MkDataDecl{declNm = "List", declArgs = [("a",Pos)], declPol = Pos, declSig = [nilSig,consSig]}
 
 

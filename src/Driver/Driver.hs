@@ -15,13 +15,13 @@ import Data.List (intercalate)
 defaultDebug :: Bool
 defaultDebug = True 
 
-data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: ![Decl] } 
+data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: ![DataDecl] } 
 
 newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT String IO) a }
   deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError String, MonadIO)
 
 
-runDriverM :: [Decl] -> DriverM a -> IO(Either String (a,DriverState))
+runDriverM :: [DataDecl] -> DriverM a -> IO(Either String (a,DriverState))
 runDriverM decls m = runExceptT $ runStateT (getDriverM m) (MkDriverState defaultDebug decls)
 
 liftErr :: Either String a -> DriverM a
