@@ -8,16 +8,6 @@ import Control.Monad.Except
 import Control.Monad.State
 import Pretty () 
 
-data SolverState = MkSolverState { slvTyVars :: !(M.Map TypeVar Ty), slvKndVars :: !(M.Map KindVar Pol), slvVarEq :: ![(KindVar, KindVar)], slvVarNeq :: ![(KindVar,KindVar)]}
-
-initialSolverState :: SolverState
-initialSolverState = MkSolverState M.empty M.empty [] []
-
-newtype SolverM a = MkSolveM { getSolveM :: ExceptT String (State SolverState) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError String)
-
-
-
 solve :: [Constraint] -> SolverM () 
 solve [] = return () 
 solve (ctr1:ctrs) = 

@@ -73,3 +73,15 @@ findDataDecl nm = do
     checkDecl _ [] = Nothing
     checkDecl n (d@(MkDataDecl _ _ _ xtors):dcs) = if any (\sig -> sigName sig == n) xtors then Just d else checkDecl n dcs
     checkDecl n (_:dcs) = checkDecl n dcs
+
+
+--
+-- Solver Monad 
+-- 
+data SolverState = MkSolverState { slvTyVars :: !(M.Map TypeVar Ty), slvKndVars :: !(M.Map KindVar Pol), slvVarEq :: ![(KindVar, KindVar)], slvVarNeq :: ![(KindVar,KindVar)]}
+
+initialSolverState :: SolverState
+initialSolverState = MkSolverState M.empty M.empty [] []
+
+newtype SolverM a = MkSolveM { getSolveM :: ExceptT String (State SolverState) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError String)
