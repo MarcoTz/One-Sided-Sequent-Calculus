@@ -58,20 +58,13 @@ genConstraintsTerm (S.Xtor nm args) = do
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError ("Xtor " <> show nm <> " was used but not defined")
-    Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl, declSig=xtors} -> 
-      case findXtor nm xtors of 
-        Nothing -> error "Xtor could not be found in declaration (should never happen)"
-        Just _ -> do
-          args' <- forM args genConstraintsTerm
-          let argTys = T.getType <$> args'
-          let declTys = (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs
-          addConstraintsXtor argTys declTys 
-          let newT = TyDecl tyn argTys (MkKind pl)
-          return (T.Xtor nm args' newT)
-  where 
-    findXtor :: XtorName -> [XtorSig] -> Maybe XtorSig
-    findXtor _ [] = Nothing 
-    findXtor n (sig:sigs) = if n == sigName sig then Just sig else findXtor n sigs
+    Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl, declSig=_} -> do
+      args' <- forM args genConstraintsTerm
+      let argTys = T.getType <$> args'
+      let declTys = (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs
+      addConstraintsXtor argTys declTys 
+      let newT = TyDecl tyn argTys (MkKind pl)
+      return (T.Xtor nm args' newT)
 genConstraintsTerm (S.XCase pts)  = do 
   pts' <- mapM genConstraintsPt pts
   decl <- checkPts pts' 
