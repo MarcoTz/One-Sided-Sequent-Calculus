@@ -1,4 +1,4 @@
-module TwoSidedExamples where 
+module Examples.TwoSidedExamples where 
 
 import TwoSided.Program
 import TwoSided.Types

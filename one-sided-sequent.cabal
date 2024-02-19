@@ -29,18 +29,25 @@ library lang
                     TypeInference.Definition,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
+                    Driver.Driver,
                     Eval.Eval,
                     Eval.Substitution,
                     EmbedTyped,
                     Pretty,
-                    Common
+                    Common,
   hs-source-dirs:   src
+
+
+library ex
+  import:          all 
+  exposed-modules: Examples
+  build-depends:   lang
+  hs-source-dirs:  Examples
 
 executable one-sided-sequent
   import:           all
   main-is:          Main.hs
-  other-modules:    Examples,
-                    TwoSidedExamples
-  build-depends:    lang
+  build-depends:    lang,
+                    ex
   hs-source-dirs:   app
 
