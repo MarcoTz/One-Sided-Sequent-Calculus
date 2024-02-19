@@ -49,7 +49,7 @@ exCmd = Cut exList Pos exCase
 
 
 tys :: [Decl]
-tys = [listDecl, pairDecl, streamDecl,lpairDecl]
+tys = [boolDecl, listDecl, pairDecl, streamDecl,lpairDecl]
 terms :: [Term]
 terms = [exList,exCase]
 cmds :: [Command]
