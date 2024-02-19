@@ -15,7 +15,9 @@ common all
                       megaparsec,
                       monadplus,
                       mtl,
-                      text
+                      text,
+                      directory,
+                      filepath
 
 library lang
   import:           all
@@ -38,21 +40,16 @@ library lang
                     Common,
   hs-source-dirs:   src
 
-library ex
-  import:          all 
-  exposed-modules: Examples,
-                   List,
-                   Pair,
-                   Stream,
-                   LPair,
-                   Bool
-  build-depends:   lang
-  hs-source-dirs:  Examples
 
 executable one-sided-sequent
   import:           all
   main-is:          Main.hs
-  build-depends:    lang,
-                    ex
+  build-depends:    lang
   hs-source-dirs:   app
 
+test-suite one-sided-tests
+  import:         all 
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:  lang
+  hs-source-dirs: test
