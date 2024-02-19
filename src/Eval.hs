@@ -1,6 +1,6 @@
 module Eval where 
 
-import Syntax 
+import Untyped.Syntax 
 import Substitution 
 
 isValue :: Pol -> Term -> Bool

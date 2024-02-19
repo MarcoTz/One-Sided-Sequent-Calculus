@@ -1,4 +1,4 @@
-module Syntax where 
+module Untyped.Syntax where 
 
 data Pol = Pos | Neg 
   deriving (Eq)

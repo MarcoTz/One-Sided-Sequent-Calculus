@@ -21,10 +21,13 @@ library lang
                     TwoSided.Types,
                     TwoSided.Program,
                     TwoSided.Pretty,
-                    Syntax,
-                    TypeInference.Types,
+
+                    Untyped.Syntax,
+                    Typed.Syntax, 
+                    Typed.Types,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
+                    EmbedTyped,
                     Pretty,
                     Eval,
                     Substitution

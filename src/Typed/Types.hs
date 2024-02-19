@@ -1,6 +1,6 @@
-module TypeInference.Types where 
+module Typed.Types where 
 
-import Syntax
+import Untyped.Syntax
 
 type TypeVar = String
 type TypeName = String 

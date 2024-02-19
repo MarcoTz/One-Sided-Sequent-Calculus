@@ -1,6 +1,6 @@
 module Substitution where 
 
-import Syntax
+import Untyped.Syntax
 
 import Data.Set qualified as S
 

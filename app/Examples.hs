@@ -1,7 +1,7 @@
 module Examples where 
 
-import TypeInference.Types
-import Syntax
+import Typed.Types
+import Untyped.Syntax
 
 nilSig :: XtorSig 
 nilSig = MkXtorSig{sigName = "Nil", sigArgs = []}

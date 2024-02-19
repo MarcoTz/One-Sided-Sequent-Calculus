@@ -1,8 +1,8 @@
 module TypeInference.SolveConstraints where 
 
 import TypeInference.GenerateConstraints
-import TypeInference.Types
-import Syntax
+import Typed.Types
+import Untyped.Syntax (Pol(..), flipPol)
 import Data.Map qualified as M
 import Control.Monad.Except
 import Control.Monad.State

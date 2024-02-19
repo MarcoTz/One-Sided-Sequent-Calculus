@@ -1,7 +1,7 @@
 module TypeInference.GenerateConstraints where 
 
-import TypeInference.Types 
-import Syntax 
+import Typed.Types 
+import Untyped.Syntax 
 import Data.Map qualified as M
 import Control.Monad.State
 import Control.Monad.Except

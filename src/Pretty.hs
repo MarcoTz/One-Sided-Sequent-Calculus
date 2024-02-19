@@ -1,42 +1,49 @@
 module Pretty where 
 
-import Syntax 
-import TypeInference.Types
+import Untyped.Syntax qualified as S
+import Typed.Syntax qualified as T
+import Typed.Types qualified as T
+import EmbedTyped
+
 import Data.List (intercalate) 
 
-instance Show Pol where 
-  show Pos = "+"
-  show Neg = "-"
+instance Show S.Pol where 
+  show S.Pos = "+"
+  show S.Neg = "-"
 
-instance Show Command where 
-  show (Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"
+instance Show S.Command where 
+  show (S.Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"
+instance Show T.Command where 
+  show c = show $ (embed :: T.Command -> S.Command) c
 
-instance Show Pattern where 
-  show MkPattern{ptxt=xt, ptv=vars, ptcmd=cmd} = xt <> "(" <> intercalate ", " (show <$> vars) <> ") => " <> show cmd
+instance Show S.Pattern where 
+  show S.MkPattern{S.ptxt=xt, S.ptv=vars, S.ptcmd=cmd} = xt <> "(" <> intercalate ", " (show <$> vars) <> ") => " <> show cmd
 
-instance Show Term where 
-  show (Var v) = v
-  show (Mu v cmd) = "mu " <> v <> ". " <> show cmd
-  show (Xtor xt args) = xt <> "(" <> intercalate ", " (show <$> args)
-  show (XCase pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
-  show (Shift t) = "{" <> show t <> "}"
-  show (Lam v cmd) = "Lambda {" <> v <> "}." <> show cmd
+instance Show S.Term where 
+  show (S.Var v) = v
+  show (S.Mu v cmd) = "mu " <> v <> ". " <> show cmd
+  show (S.Xtor xt args) = xt <> "(" <> intercalate ", " (show <$> args)
+  show (S.XCase pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
+  show (S.Shift t) = "{" <> show t <> "}"
+  show (S.Lam v cmd) = "Lambda {" <> v <> "}." <> show cmd
+instance Show T.Term where 
+  show t = show $ (embed :: T.Term -> S.Term) t 
 
-instance Show Ty where 
-  show (TyVar v) = v 
-  show (TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
-  show (TyShift ty) = "{" <> show ty <> "}"
-  show (TyCo ty) = "co " <> show ty
+instance Show T.Ty where 
+  show (T.TyVar v) = v 
+  show (T.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (T.TyShift ty) = "{" <> show ty <> "}"
+  show (T.TyCo ty) = "co " <> show ty
 
-instance Show Decl where 
-  show MkDataDecl{declNm=nm, declArgs=args, declPol=pl, declSig=sig} = 
+instance Show T.Decl where 
+  show T.MkDataDecl{T.declNm=nm, T.declArgs=args, T.declPol=pl, T.declSig=sig} = 
     "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " where { " <> show sig <> "}"
-  show MkValDecl{valVar = v, valTy=ty, valBd=bd} = 
+  show T.MkValDecl{T.valVar = v, T.valTy=ty, T.valBd=bd} = 
     "val " <> v <> ":" <> show ty <> " = " <> show bd
-  show MkRecDecl{recVar = v, recTy=ty, recBd=bd} = "rec " <> v <> ": " <> show ty <> " = " <> show bd
-  show MkEps = "epsilon"
-  show (MkCoDecl d) = "co " <> show d
+  show T.MkRecDecl{T.recVar = v, T.recTy=ty, T.recBd=bd} = "rec " <> v <> ": " <> show ty <> " = " <> show bd
+  show T.MkEps = "epsilon"
+  show (T.MkCoDecl d) = "co " <> show d
 
 
-instance Show XtorSig where 
-  show MkXtorSig{sigName = nm, sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+instance Show T.XtorSig where 
+  show T.MkXtorSig{T.sigName = nm, T.sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
