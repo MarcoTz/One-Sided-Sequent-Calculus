@@ -31,8 +31,6 @@ data GenerateState = MkGenState{
 initialGenState :: GenerateState
 initialGenState = MkGenState M.empty M.empty 0 0 [] []
 
---newtype GenM a = GenM { getGenM :: ExceptT String (State  GenerateState) a}
---  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
@@ -94,10 +92,20 @@ addConstraintsXtor (ty1:tys1) (ty2:tys2) = do
 --
 -- Solver Monad 
 -- 
-data SolverState = MkSolverState { slvTyVars :: !(M.Map TypeVar Ty), slvKndVars :: !(M.Map KindVar Pol), slvVarEq :: ![(KindVar, KindVar)], slvVarNeq :: ![(KindVar,KindVar)]}
+data SolverState = MkSolverState 
+  { 
+  slvTyVars :: !(M.Map TypeVar Ty), 
+  slvKndVars :: !(M.Map KindVar Pol), 
+  slvVarEq :: ![(KindVar, KindVar)], 
+  slvVarNeq :: ![(KindVar,KindVar)]}
 
 initialSolverState :: SolverState
 initialSolverState = MkSolverState M.empty M.empty [] []
 
-newtype SolverM a = MkSolveM { getSolveM :: ExceptT String (State SolverState) a }
+newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError String)
+
+runSolveM :: SolverM a -> Either String (a,M.Map TypeVar Ty, M.Map KindVar Pol)
+runSolveM m = case runExcept (runStateT (getSolveM m) initialSolverState) of 
+  Left err -> Left err 
+  Right (x,st) -> Right (x,slvTyVars st, slvKndVars st)

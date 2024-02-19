@@ -8,6 +8,9 @@ import Control.Monad.Except
 import Control.Monad.State
 import Pretty () 
 
+runSolve :: [Constraint] -> Either String ((),M.Map TypeVar Ty,M.Map KindVar Pol)
+runSolve ctrs = runSolveM (solve ctrs)
+
 solve :: [Constraint] -> SolverM () 
 solve [] = return () 
 solve (ctr1:ctrs) = 
