@@ -26,8 +26,6 @@ data GenerateState = MkGenState{
 initialGenState :: GenerateState
 initialGenState = MkGenState M.empty M.empty 0 0 [] []
 
---newtype GenM a = State GenerateState
-
 newtype GenM a = MkGenM { getGenM :: ExceptT String (State GenerateState) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 

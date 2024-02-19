@@ -3,6 +3,13 @@ module Eval.Eval where
 import Untyped.Syntax 
 import Eval.Substitution 
 
+import Control.Monad.Except
+
+
+newtype EvalM a = MkEvalM { getGenM :: Except String a }
+  deriving newtype (Functor, Applicative, Monad, MonadError String)
+
+
 isValue :: Pol -> Term -> Bool
 isValue Pos (Var _) = True 
 isValue Pos (Xtor _ args) = all (isValue Pos) args
@@ -15,33 +22,26 @@ isValue Neg _ = True
 coTrans :: Command -> Command
 coTrans (Cut t pol u) = Cut u (flipPol pol) t
 
-evalOnce :: Command -> Command
+evalOnce :: Command -> EvalM Command
 -- beta mu
-evalOnce s@(Cut t pol (Mu v c)) = if isValue pol t then substVar c t v else s
+evalOnce s@(Cut t pol (Mu v c)) = if isValue pol t then return $ substVar c t v else return s
 -- beta shift 
-evalOnce (Cut (Shift t) Pos (Lam v c)) = substVar c t v
+evalOnce (Cut (Shift t) Pos (Lam v c)) = return $ substVar c t v
 -- beta K
 evalOnce s@(Cut (Xtor nm args) _ (XCase pats)) = 
-  if all (isValue Pos) args then
-    case findXtor pats nm of 
-      Nothing -> s 
-      Just MkPattern{ptxt=_,ptv=vars,ptcmd=cmd} -> 
-        if length vars == length vars then foldr (\(v,t) st -> substVar st t v ) cmd (zip vars args)
-        else s
-  else s
-  where 
-    findXtor :: [Pattern] -> String -> Maybe Pattern
-    findXtor [] _ = Nothing
-    findXtor (pt:pts) xt = if ptxt pt == xt then Just pt else findXtor pts xt
+  if all (isValue Pos) args then do 
+    pt <- findXtor nm pats
+    substCase pt args 
+  else return s
 -- eta K
 evalOnce s@(Cut t pol (Xtor nm args)) = 
   if isValue pol t 
   then do
     let frV = freshVar 0 (freeVars s)
     case splitArgs args pol of 
-      (vals,Just t',ts) -> Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ))))
-      (_, Nothing,_) -> s
-  else s
+      (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ))))
+      (_, Nothing,_) -> return s
+  else return s
   where
     splitArgs :: [Term] -> Pol -> ([Term],Maybe Term,[Term])
     splitArgs [] _ = ([],Nothing,[])
@@ -53,3 +53,17 @@ evalOnce s@(Cut t pol (Xtor nm args)) =
           Just t'' ->(vals,Just t,t'':rst)
 -- if no other rule applies, swap producer and consumer
 evalOnce cmd = evalOnce (coTrans cmd)
+
+
+substCase :: Pattern -> [Term] -> EvalM Command
+--MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
+substCase MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
+substCase MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
+  let newcmd = substVar cmd t v 
+  in substCase MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
+substCase MkPattern{ptxt=_, ptv=[],ptcmd=_} (_:_) = throwError "Number of variables and terms mismatched"
+substCase MkPattern{ptxt=_, ptv=(_:_), ptcmd=_} [] = throwError "Number of variables and terms mismatched"
+
+findXtor :: XtorName -> [Pattern] -> EvalM Pattern
+findXtor xt [] = throwError ("Xtor " <> show xt <> " not found in patterns")
+findXtor xt (pt:pts) = if ptxt pt == xt then return pt else findXtor xt pts

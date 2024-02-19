@@ -4,6 +4,8 @@ import Untyped.Syntax
 
 import Data.Set qualified as S
 
+
+-- Free Variables 
 class FreeVars a where 
   freeVars :: a -> S.Set Variable
 
@@ -25,11 +27,21 @@ freshVar :: Int -> S.Set Variable -> Variable
 freshVar n vars = let newV = "x"<> show n in if newV `elem` vars then freshVar (n+1) vars else newV
 
 
+-- Substitution
 class Subst a where 
   substVar :: a -> Term -> Variable -> a 
 
 instance Subst Pattern where 
-  substVar pt _ _ = pt 
+  substVar pt@(MkPattern xt args cmd) t v = 
+    if v `elem` args then pt 
+    else 
+      let fv = freeVars t in 
+      if any (`elem` args) fv then do
+        let constrs = S.union fv (S.fromList args)
+        let (_,freshVars) = foldr (\ov (c,vs) -> let newV = freshVar 0 c in (S.insert newV c,(newV,ov):vs) ) (constrs,[]) args
+        let newc = foldr (\(nv,ov) c -> substVar c (Var nv) ov) cmd freshVars
+        MkPattern xt (fst <$> freshVars) (substVar newc t v)
+    else MkPattern xt args (substVar cmd t v)
 
 instance Subst Term where 
   substVar (Var v1) t v2 = if v1 == v2 then t else Var v1
