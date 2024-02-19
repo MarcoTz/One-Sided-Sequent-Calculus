@@ -1,50 +1,84 @@
 module TypeInference.SolveConstraints where 
 
-import TypeInference.Definition
+import TypeInference.Definition qualified as Df
 import Typed.Types
+import Typed.Syntax
 import Common 
 import Data.Map qualified as M
 import Control.Monad.Except
 import Control.Monad.State
+import Control.Monad
 import Pretty () 
 
-runSolve :: [Constraint] -> Either String ((),M.Map TypeVar Ty,M.Map KindVar Pol)
-runSolve ctrs = runSolveM (solve ctrs)
+--
+-- Solver Monad 
+-- 
+data SolverState = MkSolverState 
+  { 
+  slvTyVars :: !(M.Map TypeVar Ty), 
+  slvKndVars :: !(M.Map KindVar Pol),
+  remConstrs :: ![Df.Constraint]
+}
 
-solve :: [Constraint] -> SolverM () 
-solve [] = return () 
-solve (ctr1:ctrs) = 
-  case ctr1 of 
-    MkTyEq ty1 ty2 -> do 
-      unifyTypeConstraint ty1 ty2 
-      solve ctrs
-      error "not implemented" 
-    MkKindEq knd1 knd2 -> do 
-      unifyKinds knd1 knd2 
-      solve ctrs
-    MkFlipEq knd1 knd2 -> do
-      unifyFlipKinds knd1 knd2
-      solve ctrs
---  | MkProdEq !Kind !Kind !Kind
-    MkProdEq k1 k2 k3 -> do
-      unifyProdKinds k1 k2 k3
-      solve ctrs
+initialSolverState :: [Df.Constraint] -> SolverState
+initialSolverState = MkSolverState M.empty M.empty 
 
+newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except String) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError String)
+
+runSolveM :: [Df.Constraint] -> SolverM a -> Either String (a,M.Map TypeVar Ty, M.Map KindVar Pol)
+runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
+  Left err -> Left err 
+  Right (x,st) -> Right (x,slvTyVars st, slvKndVars st)
+
+runSolve :: [Df.Constraint] -> Either String ((),M.Map TypeVar Ty,M.Map KindVar Pol)
+runSolve ctrs = runSolveM ctrs solve
+
+solve :: SolverM () 
+solve = do
+  ctrs <- gets remConstrs
+  case ctrs of 
+    [] -> return ()
+    (ctr1:ctrs') -> do 
+      modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) ctrs')
+      case ctr1 of 
+        Df.MkTyEq ty1 ty2 -> do 
+          unifyTypeConstraint ty1 ty2 
+          solve
+        Df.MkKindEq knd1 knd2 -> do 
+          unifyKinds knd1 knd2 
+          solve
+        Df.MkFlipEq knd1 knd2 -> do
+          unifyFlipKinds knd1 knd2
+          solve
+        Df.MkProdEq k1 k2 k3 -> do
+          unifyProdKinds k1 k2 k3
+          solve 
+
+addTyVar :: Variable -> Ty -> SolverM ()
+addTyVar v ty = do 
+  vars <- gets slvTyVars
+  modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))
 
 addKndVar :: KindVar -> Pol -> SolverM () 
 addKndVar v p = do 
   vars <- gets slvKndVars 
-  modify (\s -> MkSolverState (slvTyVars s) (M.insert v p vars) (slvVarEq s) (slvVarNeq s))
+  modify (\s -> MkSolverState (slvTyVars s) (M.insert v p vars) (remConstrs s))
 
 addVarEq :: KindVar -> KindVar -> SolverM () 
 addVarEq v1 v2 = do 
-  eqs <- gets slvVarEq 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) ((v1,v2):eqs) (slvVarNeq s))
+  eqs <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkKindEq (MkKindVar v1) (MkKindVar v2) :eqs))
 
 addVarNeq :: KindVar -> KindVar -> SolverM ()
 addVarNeq v1 v2 = do 
-  neqs <- gets slvVarNeq 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (slvVarEq s) ((v1,v2):neqs))
+  neqs <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkFlipEq (MkKindVar v1) (MkKindVar v2) : neqs) )
+
+addTyEq :: Ty -> Ty -> SolverM () 
+addTyEq ty1 ty2 = do 
+  constrs <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkTyEq ty1 ty2 : constrs))
 
 unifyKinds :: Kind -> Kind -> SolverM () 
 unifyKinds (MkKind p1) (MkKind p2) = 
@@ -79,4 +113,21 @@ unifyProdKinds Pos k2 k3 = unifyKinds k2 k3
 unifyProdKinds Neg k2 k3 = unifyFlipKinds k2 k3
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
-unifyTypeConstraint _ _ = return ()
+unifyTypeConstraint (TyVar v knd) ty = do
+  unifyKinds knd (getKind ty)
+  vars <- gets slvTyVars
+  case M.lookup v vars of 
+    Nothing -> addTyVar v ty 
+    Just ty' -> addTyEq ty' ty
+unifyTypeConstraint (TyDecl n1 args1 knd1) (TyDecl n2 args2 knd2) = 
+  if n1 == n2 && length args1 == length args2 then do 
+    forM_ (zip args1 args2) (uncurry addTyEq)
+    unifyKinds knd1 knd2
+  else throwError ("Cannot unify " <> show n1 <> " and " <> show n2)
+unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do 
+  unifyKinds knd1 knd2 
+  unifyTypeConstraint ty1 ty2
+unifyTypeConstraint (TyCo ty1 knd1) (TyCo ty2 knd2) = do 
+  unifyKinds knd1 knd2 
+  unifyTypeConstraint ty1 ty2 
+unifyTypeConstraint ty1 ty2 = throwError ("cannot unify " <> show ty1 <> " and " <> show ty2)

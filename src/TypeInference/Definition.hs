@@ -88,23 +88,4 @@ addConstraintsXtor (ty1:tys1) (ty2:tys2) = do
   addConstraint (MkTyEq ty1 ty2)
   addConstraint (MkKindEq (getKind ty1) (getKind ty2))
   addConstraintsXtor tys1 tys2
---
--- Solver Monad 
--- 
-data SolverState = MkSolverState 
-  { 
-  slvTyVars :: !(M.Map TypeVar Ty), 
-  slvKndVars :: !(M.Map KindVar Pol), 
-  slvVarEq :: ![(KindVar, KindVar)], 
-  slvVarNeq :: ![(KindVar,KindVar)]}
 
-initialSolverState :: SolverState
-initialSolverState = MkSolverState M.empty M.empty [] []
-
-newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except String) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError String)
-
-runSolveM :: SolverM a -> Either String (a,M.Map TypeVar Ty, M.Map KindVar Pol)
-runSolveM m = case runExcept (runStateT (getSolveM m) initialSolverState) of 
-  Left err -> Left err 
-  Right (x,st) -> Right (x,slvTyVars st, slvKndVars st)
