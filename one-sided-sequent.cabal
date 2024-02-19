@@ -17,12 +17,7 @@ common all
 
 library lang
   import:           all
-  exposed-modules:  TwoSided.Syntax,
-                    TwoSided.Types,
-                    TwoSided.Program,
-                    TwoSided.Pretty,
-
-                    Untyped.Syntax,
+  exposed-modules:  Untyped.Syntax,
                     Typed.Syntax, 
                     Typed.Types,
                     Typed.Program,
