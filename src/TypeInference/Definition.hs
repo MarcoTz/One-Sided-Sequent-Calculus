@@ -4,6 +4,7 @@ import Typed.Types
 import Typed.Syntax
 import Typed.Program
 import Common
+import Errors
 
 import Data.Map qualified as M
 import Control.Monad.Except
@@ -32,10 +33,10 @@ initialGenState :: Program -> GenerateState
 initialGenState prog = MkGenState M.empty M.empty 0 0 prog []
 
 
-newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
+newtype GenM a = GenM { getGenM :: StateT GenerateState (Except Error) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError Error)
 
-runGenM :: Program -> GenM a -> Either String (a, [Constraint])
+runGenM :: Program -> GenM a -> Either Error (a, [Constraint])
 runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
@@ -89,10 +90,9 @@ findDataDecl nm = do
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
 addConstraintsXtor _ [] [] = return () 
-addConstraintsXtor xt _ [] = throwError ("Wrong number of arguments for " <> xt)
-addConstraintsXtor xt [] _ = throwError ("Wrong number of arguments for " <> xt)
+addConstraintsXtor xt _ [] = throwError (ErrArity xt)
+addConstraintsXtor xt [] _ = throwError (ErrArity xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
   addConstraint (MkKindEq (getKind ty1) (getKind ty2))
   addConstraintsXtor xt tys1 tys2
-

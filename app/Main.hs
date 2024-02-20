@@ -4,6 +4,7 @@ import Driver.Definition
 import Driver.Driver
 import Utils 
 import Typed.Program
+import Pretty.Errors ()
 
 import Control.Monad
 --import Data.List (isInfixOf)
@@ -22,7 +23,7 @@ parseExample db path = do
   res <- runDriverM drvSt (inferProgram path)
   if db then case res of 
     Left err -> do 
-      putStrLn ( colorError <> "Error Parsing Example: \n\t" <> err <> colorDefault)
+      putStrLn ( colorError <> "Error Parsing Example: \n\t" <> show err <> colorDefault)
       putStrLn "\n=========================================================\n"
     Right _ -> do
       putStrLn (colorSuccess <> "Example " <> path <> " Parsed Successfully" <> colorDefault)

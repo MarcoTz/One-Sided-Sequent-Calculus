@@ -6,6 +6,7 @@ import Untyped.Syntax qualified as S
 import Typed.Syntax qualified as T
 import TypeInference.Definition
 import Common 
+import Errors
 
 import Control.Monad.Except
 import Control.Monad
@@ -16,12 +17,12 @@ checkPts [] = return Nothing
 checkPts (pt:pts) = do 
   decl <- findDataDecl (T.ptxt pt)
   case decl of 
-    Nothing -> throwError ("Xtor " <> show (T.ptxt pt) <> " used but not defined") 
+    Nothing -> throwError (ErrXtorUndefined (T.ptxt pt))
     Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
-runGenCmd :: Program -> S.Command -> Either String (T.Command,[Constraint])
+runGenCmd :: Program -> S.Command -> Either Error (T.Command,[Constraint])
 runGenCmd prog cmd = runGenM prog (genConstraintsCmd cmd)
-runGenT :: Program -> S.Term -> Either String (T.Term,[Constraint])
+runGenT :: Program -> S.Term -> Either Error (T.Term,[Constraint])
 runGenT prog t = runGenM prog (genConstraintsTerm t)
 
 genConstraintsCmd :: S.Command -> GenM T.Command 
@@ -58,7 +59,7 @@ genConstraintsTerm (S.Mu v c) = do
 genConstraintsTerm (S.Xtor nm args) = do 
   decl <- findDataDecl nm
   case decl of
-    Nothing -> throwError ("Xtor " <> show nm <> " was used but not defined")
+    Nothing -> throwError (ErrXtorUndefined nm) 
     Just (MkDataDecl{declNm=tyn, declArgs=_, declPol=pl, declSig=_},xtSig) -> do
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
@@ -69,7 +70,7 @@ genConstraintsTerm (S.XCase pts)  = do
   pts' <- mapM genConstraintsPt pts
   decl <- checkPts pts' 
   case decl of 
-    Nothing -> throwError "Pattern not well-formed"
+    Nothing -> throwError (ErrPatMalformed pts')
     Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl,declSig=_} -> do 
       forM_ pts (\pt -> do 
         forM_ (zip (S.ptv pt) tyArgs) (\(x,(y,z)) -> addVar x (TyVar y (MkKind z)))

@@ -3,12 +3,13 @@ module Eval.Eval where
 import Untyped.Syntax 
 import Eval.Substitution 
 import Common
+import Errors
 
 import Control.Monad.Except
 
 
-newtype EvalM a = MkEvalM { getGenM :: Except String a }
-  deriving newtype (Functor, Applicative, Monad, MonadError String)
+newtype EvalM a = MkEvalM { getGenM :: Except Error a }
+  deriving newtype (Functor, Applicative, Monad, MonadError Error)
 
 
 isValue :: Pol -> Term -> Bool
@@ -22,6 +23,7 @@ isValue Neg _ = True
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
 coTrans (Cut t pol u) = Cut u (flipPol pol) t
+coTrans Done = Done
 
 evalOnce :: Command -> EvalM Command
 -- beta mu
@@ -62,9 +64,9 @@ substCase MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
 substCase MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
   let newcmd = substVar cmd t v 
   in substCase MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
-substCase MkPattern{ptxt=_, ptv=[],ptcmd=_} (_:_) = throwError "Number of variables and terms mismatched"
-substCase MkPattern{ptxt=_, ptv=(_:_), ptcmd=_} [] = throwError "Number of variables and terms mismatched"
+substCase MkPattern{ptxt=xt, ptv=[],ptcmd=_} (_:_) = throwError (ErrArity xt) 
+substCase MkPattern{ptxt=xt, ptv=(_:_), ptcmd=_} [] = throwError (ErrArity xt) 
 
 findXtor :: XtorName -> [Pattern] -> EvalM Pattern
-findXtor xt [] = throwError ("Xtor " <> show xt <> " not found in patterns")
+findXtor xt [] = throwError (ErrNotMatched xt) 
 findXtor xt (pt:pts) = if ptxt pt == xt then return pt else findXtor xt pts

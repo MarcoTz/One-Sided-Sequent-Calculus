@@ -57,9 +57,11 @@ library lang
                     Pretty.Terms,
                     Pretty.TypeInference,
                     Pretty.Types,
+                    Pretty.Errors,
 
                     Common,
-                    Utils
+                    Utils,
+                    Errors
   hs-source-dirs:   src
 
 

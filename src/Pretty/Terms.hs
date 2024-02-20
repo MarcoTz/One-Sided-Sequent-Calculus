@@ -20,6 +20,8 @@ instance Show T.Term where
 
 instance Show S.Pattern where 
   show S.MkPattern{S.ptxt=xt, S.ptv=vars, S.ptcmd=cmd} = xt <> "(" <> intercalate ", " (show <$> vars) <> ") => " <> show cmd
+instance Show T.Pattern where 
+  show t = show $ (embed :: T.Pattern -> S.Pattern) t 
 
 instance Show S.Command where 
   show (S.Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"

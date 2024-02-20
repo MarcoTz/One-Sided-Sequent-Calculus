@@ -4,6 +4,7 @@ import Untyped.Program qualified as S
 import Typed.Program qualified as T 
 import Typed.Types qualified as T
 import Common
+import Errors
 
 import Control.Monad
 import Control.Monad.State
@@ -15,11 +16,11 @@ data DeclState = MkDeclState { declVars :: !(M.Map Variable Pol), declPol :: !Po
 initialDeclState :: DeclState
 initialDeclState = MkDeclState M.empty Pos
 
-newtype DeclM a = DeclM { getDeclM :: StateT DeclState (Except String) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DeclState, MonadError String)
+newtype DeclM a = DeclM { getDeclM :: StateT DeclState (Except Error) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState DeclState, MonadError Error)
 
 
-runDeclM :: DeclM a -> Either String a 
+runDeclM :: DeclM a -> Either Error a 
 runDeclM m = case runExcept (runStateT (getDeclM m) initialDeclState) of
   Left err -> Left err 
   Right (a,_) ->  Right a 
@@ -34,8 +35,8 @@ checkDecls decls = do
   let declNms = S.declNm <$> decls 
   let declXtors = S.sigName <$> concatMap S.declSig decls
   case (checkDups declNms, checkDups declXtors) of 
-    (Just tn,_) -> throwError ("Type " <> tn <> " declared multiple times")
-    (_,Just xtn) -> throwError ("Xtor " <> xtn <> " declared multiple times")
+    (Just tn,_) -> throwError (ErrDeclExists tn)
+    (_,Just xtn) -> throwError (ErrXtorExists xtn) 
     (Nothing,Nothing) -> forM decls inferDecl
   where 
     checkDups :: Eq a => [a] -> Maybe a 
@@ -57,7 +58,7 @@ inferTy :: S.Ty -> DeclM T.Ty
 inferTy (S.TyVar v) = do 
   vars <- gets declVars 
   case M.lookup v vars of 
-    Nothing -> throwError ("Variable " <> v <> " used but not defined")
+    Nothing -> throwError (ErrVarUndefined v)
     Just pol -> return $ T.TyVar v (T.MkKind pol)
 inferTy (S.TyDecl nm args) = do 
   newArgs <- forM args inferTy 
