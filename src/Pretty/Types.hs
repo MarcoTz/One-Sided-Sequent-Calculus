@@ -11,9 +11,9 @@ instance Show S.Ty where
   show (S.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
 
 instance Show T.Ty where 
-  show (T.TyVar v _) = v 
-  show (T.TyDecl nm args _) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
-  show (T.TyShift ty _) = "{" <> show ty <> "}"
+  show (T.TyVar v knd ) = v  <> " : " <> show knd
+  show (T.TyDecl nm args knd) = nm <> "(" <> intercalate ", " (show <$> args) <> ") : " <> show knd 
+  show (T.TyShift ty knd) = "{" <> show ty <> "} : " <>  show knd
   show (T.TyCo ty _) = "co " <> show ty
 
 instance Show T.Kind where 

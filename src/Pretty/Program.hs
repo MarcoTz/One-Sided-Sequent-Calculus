@@ -14,13 +14,15 @@ instance Show S.XtorSig where
   show S.MkXtorSig{S.sigName = nm, S.sigArgs = []} = nm
   show S.MkXtorSig{S.sigName = nm, S.sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
 instance Show T.XtorSig where 
-  show t = show $ (embed::T.XtorSig -> S.XtorSig) t
+  show (T.MkXtorSig n []) = n
+  show (T.MkXtorSig n args) = n <> "(" <> intercalate ", " (show <$> args) <> ")"
 
 instance Show S.DataDecl where 
-  show S.MkDataDecl{S.declNm=nm, S.declArgs=args, S.declPol=pl, S.declSig=sig} = 
-    "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " { " <> intercalate ", "  (show <$> sig) <> " }"
+  show (S.MkDataDecl n args pol sigs) =  
+    "data " <> n <> "(" <> intercalate ", " ((\(v,p) -> v <> show p) <$> args) <> ") : " <> show pol <> " {" <> intercalate ",\n\t " (show <$> sigs) <> "}"
 instance Show T.DataDecl where 
-  show t = show $ (embed :: T.DataDecl -> S.DataDecl) t
+  show (T.MkDataDecl n vars pol sigs) = 
+    "data " <> n <> "(" <> intercalate ", " ((\(v,p) -> v <> show p) <$> vars) <> ") : " <> show pol <> " {" <> intercalate ",\n\t" (show <$> sigs) <> "}"
 
 instance Show S.VarDecl where 
   show (S.MkVarDecl n t) = "val " <> n <> " = " <> show t

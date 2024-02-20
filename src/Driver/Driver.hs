@@ -30,7 +30,8 @@ inferProgram path = do
   debug ("parsed declarations " <> show (S.progDecls prog))
   debug ("parsed terms " <> show (S.progVars prog))
   debug "Checking for well-formed program"
-  let checkedDecls = checkDecls (S.progDecls prog)
+  let checked = runDeclM (checkDecls (S.progDecls prog))
+  checkedDecls <- liftErr checked
   debug ("checked Declarations " <> show checkedDecls)
   forM_ checkedDecls addDecl
 
