@@ -11,7 +11,6 @@ import Control.Monad.Plus
 import Data.Text qualified as T
 import Control.Applicative (Alternative)
 
-import Debug.Trace
 import Pretty ()
 
 newtype Parser a = Parser { getParser :: Parsec String T.Text a }
@@ -25,44 +24,33 @@ runFileParser fp p input = case runParser (getParser p) fp input of
 parseKeyword :: Keyword -> Parser () 
 parseKeyword kw = do
  _ <- string (T.pack (show kw))
- trace ("parsed keyword " <> show kw) $ return ()
  return () 
 
 parseSymbol :: Sym -> Parser () 
 parseSymbol sym = do 
   _ <- string (T.pack (show sym))
-  trace ("parsed symbol " <> show sym) $ return ()
   return ()
 
 
 parsePol :: Parser Pol 
-parsePol = do 
-  pl <- (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
-  trace ("parsed polarity " <> show pl) $ return ()
-  return pl
+parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
 
 parsePolVar :: Parser (Variable,Pol)
 parsePolVar = do 
   nm <- some alphaNumChar
   parseSymbol SymColon
   pol <- parsePol
-  trace ("parsed polvar " <> show nm <> ":" <> show pol) $ return () 
   return (nm,pol)
 
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
- trace "parsing xtorsig" $ return ()
  nm <- some alphaNumChar
- trace ("parsed name " <> nm) $ return ()
- args <- parseXtorArgs
- trace ("parsed args " <> show args) $ return () 
- return (MkXtorSig nm args)
+ MkXtorSig nm <$> parseXtorArgs
  
 parseXtorArgs :: Parser [Ty]
 parseXtorArgs = (do 
   parseSymbol SymParensO
   vars <- parseTy `sepBy` (parseSymbol SymComma >> optional space1) 
-  trace ("parsed args" <> show vars ) $ return () 
   parseSymbol SymParensC
   return vars)
   <|>
@@ -73,9 +61,7 @@ parseTy = try parseTyDecl <|> parseTyVar
 
 parseTyDecl :: Parser Ty
 parseTyDecl = do
-  trace "parsing decl type" $ return ()
   tyn <- some alphaNumChar
-  trace ("parsed name " <> tyn) $ return ()
   parseSymbol SymParensO 
   args <- parseTy `sepBy` (parseSymbol SymComma >> optional space1)
   parseSymbol SymParensC
@@ -84,7 +70,7 @@ parseTyDecl = do
 parseTyVar :: Parser Ty
 parseTyVar = do 
     var <- some alphaNumChar
-    trace ("parsed var" <> var) $ return (TyVar var)
+    return (TyVar var)
 
 
 parseTyArgs :: Parser [(Variable, Pol)]
@@ -106,9 +92,7 @@ parseDecl :: Parser DataDecl
 parseDecl = do 
   parseKeyword KwData
   space1
-  trace "parsing declaration " $ return () 
   nm <- some alphaNumChar
-  trace ("parsed name " <> nm) $ return () 
   args <- parseTyArgs
   space1
   parseSymbol SymColon
@@ -120,7 +104,6 @@ parseDecl = do
   _ <- optional eol
   space1 
   xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> optional space1)
-  trace "parsed xtors" $ return ()
   space1
   _ <- optional eol
   parseSymbol SymBrackC
