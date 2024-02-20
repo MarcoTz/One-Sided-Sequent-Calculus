@@ -1,4 +1,4 @@
 data Stream(a:-):-{
-  head(a),
-  tail(Stream(a))
+  Head(a),
+  Tail(Stream(a))
 }

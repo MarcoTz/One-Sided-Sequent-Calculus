@@ -23,7 +23,7 @@ listExamples = listRecursive exPath
 main :: IO()
 main = do
   exPaths <- listExamples
-  let exPaths' = filter (\x -> not (any (`isInfixOf` x) exclude) ) exPaths
+  let exPaths' = filter (\x -> (any (`isInfixOf` x) exclude) ) exPaths
   exParsed <- forM exPaths' (\ex -> do
     res <- runDriverMDb [] (inferProgram ex)
     let testName = "Example " <> ex

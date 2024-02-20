@@ -16,7 +16,7 @@ parseTyDecl :: Parser Ty
 parseTyDecl = do
   tyn <- some alphaNumChar
   parseSymbol SymParensO 
-  args <- parseTy `sepBy` (parseSymbol SymComma >> optional space1)
+  args <- parseTy `sepBy` (parseSymbol SymComma >> space)
   parseSymbol SymParensC
   return (TyDecl tyn args)
 
@@ -29,7 +29,7 @@ parseTyVar = do
 parseTyArgs :: Parser [(Variable, Pol)]
 parseTyArgs = (do 
   parseSymbol SymParensO
-  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> optional space1)
+  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> space)
   parseSymbol SymParensC
   return vars)
   <|>

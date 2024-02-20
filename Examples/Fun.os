@@ -1,3 +1,4 @@
-data Fun(a:+,b:-):- {
+data Fun(a:+,b:-):- 
+{
   Ap(a,b)
 }

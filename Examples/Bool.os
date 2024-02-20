@@ -1,5 +1,4 @@
-data Bool : + 
-{ 
+data Bool : + { 
   True,
   False
 }

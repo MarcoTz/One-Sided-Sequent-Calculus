@@ -19,19 +19,17 @@ parseDecl = do
   parseKeyword KwData
   space1
   nm <- some alphaNumChar
+  space
   args <- parseTyArgs
-  space1
+  space
   parseSymbol SymColon
-  space1
+  space
   pol <- parsePol
-  space1
-  _ <- optional eol
-  parseSymbol SymBrackO
-  _ <- optional eol
-  space1 
-  xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> optional space1)
-  space1
-  _ <- optional eol
+  space
+  parseSymbol SymBrackO 
+  space 
+  xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> space)
+  space
   parseSymbol SymBrackC
   return MkDataDecl{declNm=nm, declArgs=args,declPol=pol, declSig=xtors}
 
@@ -44,7 +42,7 @@ parseXtorSig = do
 parseXtorArgs :: Parser [Ty]
 parseXtorArgs = (do 
   parseSymbol SymParensO
-  vars <- parseTy `sepBy` (parseSymbol SymComma >> optional space1) 
+  vars <- parseTy `sepBy` (parseSymbol SymComma >> space) 
   parseSymbol SymParensC
   return vars)
   <|>

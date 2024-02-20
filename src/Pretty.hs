@@ -48,7 +48,7 @@ instance Show T.Ty where
 
 instance Show S.DataDecl where 
   show S.MkDataDecl{S.declNm=nm, S.declArgs=args, S.declPol=pl, S.declSig=sig} = 
-    "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " where { " <> show sig <> "}"
+    "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " { " <> intercalate ", "  (show <$> sig) <> "}"
 instance Show T.DataDecl where 
   show t = show $ (embed :: T.DataDecl -> S.DataDecl) t
 

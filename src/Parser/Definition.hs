@@ -1,10 +1,7 @@
 module Parser.Definition where 
 
-import Parser.Symbols
-import Common
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
 import Control.Monad.Plus
 import Data.Text qualified as T
 import Control.Applicative (Alternative)
