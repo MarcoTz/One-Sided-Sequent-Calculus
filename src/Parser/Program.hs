@@ -16,9 +16,10 @@ parseProgram :: Parser Program
 parseProgram = do 
   parseKeyword KwModule
   space1 
+  sc
   _ <- some alphaNumChar
-  space
-  decls <- manyTill (parseDecl <* space) eof
+  sc
+  decls <- manyTill (parseDecl <* sc) eof
   let (pgD,pgT) = foldr (\eit (dts,tms) -> case eit of Left d -> (d:dts,tms); Right t -> (dts,t:tms)) ([],[]) decls
   return $ MkProgram pgD pgT 
 
@@ -30,8 +31,9 @@ parseTermDecl :: Parser TermDecl
 parseTermDecl = do 
   parseKeyword KwVal
   space1 
+  sc
   nm <- some alphaNumChar
-  space
+  sc
   parseSymbol SymEq
   t <- parseTerm
   parseSymbol SymSemi
@@ -42,17 +44,17 @@ parseDataDecl = do
   parseKeyword KwData
   space1
   nm <- some alphaNumChar
-  space
+  sc
   args <- parseTyArgs
-  space
+  sc
   parseSymbol SymColon
-  space
+  sc
   pol <- parsePol
-  space
+  sc
   parseSymbol SymBrackO 
-  space 
-  xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> space)
-  space
+  sc 
+  xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> sc)
+  sc
   parseSymbol SymBrackC
   return MkDataDecl{declNm=nm, declArgs=args,declPol=pol, declSig=xtors}
 
@@ -65,7 +67,7 @@ parseXtorSig = do
 parseXtorArgs :: Parser [Ty]
 parseXtorArgs = (do 
   parseSymbol SymParensO
-  vars <- parseTy `sepBy` (parseSymbol SymComma >> space) 
+  vars <- parseTy `sepBy` (parseSymbol SymComma >> sc) 
   parseSymbol SymParensC
   return vars)
   <|>

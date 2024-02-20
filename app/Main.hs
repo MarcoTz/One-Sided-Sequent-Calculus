@@ -30,10 +30,10 @@ main = do
   exPaths <- listRecursive "Examples"
   cExPaths <- listRecursive "CounterExamples"
 --  let paths = filter (isInfixOf "Stream") paths
-  putStrLn ("Testing Examples " <> show exPaths)
+  putStrLn "================== Testing Examples =================="
   forM_ exPaths parseExample
   putStrLn "Finished Parsing Examples"
   putStrLn ""
-  putStrLn ("Testing CounterExamples " <> show cExPaths)
+  putStrLn "=============== Testing CounterExamples ===============" 
   forM_ cExPaths parseExample
   putStrLn "Finished Parsing Counterexamples"
