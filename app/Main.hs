@@ -7,23 +7,33 @@ import Utils
 import Control.Monad
 --import Data.List (isInfixOf)
 
-showParsed :: Show a => Either String (a,DriverState) -> IO ()
-showParsed p1 = case p1 of 
-  Left err -> putStrLn ("Error Parsing Example: \n" <> err)
-  Right (pr,_) -> print pr
+colorError :: String
+colorError = "\ESC[31m"
+colorDefault :: String
+colorDefault = "\ESC[0m"
+
+showParsed :: FilePath -> Either String a -> IO ()
+showParsed path p1 = case p1 of 
+  Left err -> putStrLn ( colorError <> "Error Parsing Example: \n\t" <> err <> colorDefault)
+  Right _ -> putStrLn ("Example " <> path <> " Parsed Successfully")
 
 parseExample :: FilePath -> IO()
 parseExample path = do
-  putStrLn (" Parsing Example " <> path)
+  putStrLn ("Parsing Example " <> path)
   res <- runDriverMDb [] (inferProgram path)
-  showParsed res
+  showParsed path res
   putStrLn ""
 
 
 main :: IO()
 main = do 
-  paths <- listRecursive "Examples"
+  exPaths <- listRecursive "Examples"
+  cExPaths <- listRecursive "CounterExamples"
 --  let paths = filter (isInfixOf "Stream") paths
-  print paths
-  forM_ paths parseExample
+  putStrLn ("Testing Examples " <> show exPaths)
+  forM_ exPaths parseExample
   putStrLn "Finished Parsing Examples"
+  putStrLn ""
+  putStrLn ("Testing CounterExamples " <> show cExPaths)
+  forM_ cExPaths parseExample
+  putStrLn "Finished Parsing Counterexamples"

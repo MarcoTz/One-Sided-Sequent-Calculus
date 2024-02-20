@@ -18,14 +18,26 @@ import Data.List (intercalate)
 import Data.Text.IO qualified as T
 
 
-inferProgram :: FilePath -> DriverM S.Program
+checkDecls :: [S.DataDecl] -> DriverM ()
+checkDecls decls = do 
+  let declNms = S.declNm <$> decls 
+  let declXtors = S.sigName <$> concatMap S.declSig decls
+  case (checkDups declNms, checkDups declXtors) of 
+    (Nothing,Nothing) -> return ()
+    (Just tn,_) -> throwError ("Type " <> tn <> " declared multiple times")
+    (_,Just xtn) -> throwError ("Xtor " <> xtn <> " declared multiple times")
+  where 
+    checkDups :: Eq a => [a] -> Maybe a 
+    checkDups [] = Nothing
+    checkDups (tn:tns) = if tn `elem` tns then Just tn else checkDups tns
+
+inferProgram :: FilePath -> DriverM () 
 inferProgram path = do 
   progCont <- liftIO $ T.readFile path
   debug ("Parsing file " <> path)
   let progParser = runFileParser "" parseProgram progCont
-  case progParser of 
-    Left err -> throwError (show err)
-    Right decls -> return decls
+  prog <- liftErr progParser
+  checkDecls (S.pgDat prog)
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 

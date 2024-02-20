@@ -17,6 +17,8 @@ runDriverM decls m = runExceptT $ runStateT (getDriverM m) (MkDriverState False 
 
 runDriverMDb :: [DataDecl] -> DriverM a -> IO (Either String (a,DriverState))
 runDriverMDb decls m = runExceptT $ runStateT (getDriverM m) (MkDriverState True decls)
+
+
 liftErr :: Either String a -> DriverM a
 liftErr (Left err) = do 
   debug err
