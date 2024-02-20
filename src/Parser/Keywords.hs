@@ -1,9 +1,11 @@
 module Parser.Keywords where 
 
 data Keyword = 
-  KwData
+  KwModule
+  | KwData
   | KwWhere 
 
 instance Show Keyword where 
+  show KwModule = "module"
   show KwData = "data" 
   show KwWhere = "where"

@@ -10,8 +10,14 @@ import Untyped.Program
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+
 parseProgram :: Parser [DataDecl]
-parseProgram = some parseDecl 
+parseProgram = do 
+  parseKeyword KwModule
+  space1 
+  _ <- some alphaNumChar
+  space
+  manyTill (parseDecl <* space) eof
 
 
 parseDecl :: Parser DataDecl 
