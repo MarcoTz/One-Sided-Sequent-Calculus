@@ -1,7 +1,7 @@
 module Pretty.Types where 
 
-import Untyped.Program qualified as S
-import Typed.Types qualified as T
+import Syntax.Untyped.Program qualified as S
+import Syntax.Typed.Types qualified as T
 import Pretty.Common ()
 
 import Data.List (intercalate)

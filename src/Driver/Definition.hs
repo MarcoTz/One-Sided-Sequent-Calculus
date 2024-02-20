@@ -1,8 +1,8 @@
 module Driver.Definition where 
 
-import Typed.Program
+import Syntax.Typed.Program
 import Errors
-import Pretty.Errors ()
+import Pretty.Errors  ()
 
 import Control.Monad.State 
 import Control.Monad.Except 

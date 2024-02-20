@@ -1,8 +1,8 @@
 module TypeInference.SolveConstraints where 
 
 import TypeInference.Definition qualified as Df
-import Typed.Types
-import Typed.Syntax
+import Syntax.Typed.Types
+import Syntax.Typed.Terms
 import Common 
 import Errors
 import Pretty.Common ()

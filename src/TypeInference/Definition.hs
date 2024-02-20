@@ -1,8 +1,8 @@
 module TypeInference.Definition where 
 
-import Typed.Types
-import Typed.Syntax
-import Typed.Program
+import Syntax.Typed.Types
+import Syntax.Typed.Terms
+import Syntax.Typed.Program
 import Common
 import Errors
 

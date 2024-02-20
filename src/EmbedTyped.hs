@@ -1,10 +1,10 @@
 module EmbedTyped where 
 
-import Typed.Syntax    qualified as T 
-import Typed.Program   qualified as T 
-import Typed.Types     qualified as T
-import Untyped.Syntax  qualified as S
-import Untyped.Program qualified as S
+import Syntax.Typed.Terms     qualified as T 
+import Syntax.Typed.Program   qualified as T 
+import Syntax.Typed.Types     qualified as T
+import Syntax.Untyped.Terms   qualified as S
+import Syntax.Untyped.Program qualified as S
 
 class Embed a b where 
   embed :: a -> b 

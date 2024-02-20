@@ -1,4 +1,4 @@
-module Untyped.Syntax where 
+module Syntax.Untyped.Terms where 
 
 import Common 
 

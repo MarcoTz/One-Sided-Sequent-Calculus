@@ -3,7 +3,7 @@ module Main where
 import Driver.Definition
 import Driver.Driver
 import Utils 
-import Typed.Program
+import Syntax.Typed.Program
 import Pretty.Errors ()
 
 import Control.Monad

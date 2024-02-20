@@ -1,7 +1,7 @@
-module Untyped.Program where 
+module Syntax.Untyped.Program where 
 
 import Common
-import Untyped.Syntax
+import Syntax.Untyped.Terms
 
 data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 

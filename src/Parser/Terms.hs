@@ -4,7 +4,7 @@ import Parser.Definition
 import Parser.Lexer
 import Parser.Symbols
 import Parser.Keywords
-import Untyped.Syntax
+import Syntax.Untyped.Terms
 import Common
 
 import Text.Megaparsec
@@ -12,6 +12,8 @@ import Text.Megaparsec.Char
 
 import Pretty.Terms ()
 
+
+-- Xtors with no arguments are parsed as variables
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> try parseVar
 
@@ -34,18 +36,12 @@ parseXtor :: Parser Term
 parseXtor = do
   nm <- some alphaNumChar
   sc
-  Xtor nm <$> parseXtorArgs
-
-parseXtorArgs :: Parser [Term]
-parseXtorArgs = (do
   parseSymbol SymParensO
   sc
   args <- parseTerm `sepBy` (parseSymbol SymComma >> sc)
   sc
-  parseSymbol SymParensC
-  return args)
-  <|>
-  return []
+  parseSymbol SymParensC 
+  return $ Xtor nm args
 
 parsePatternVars :: Parser [Variable]
 parsePatternVars = (do 

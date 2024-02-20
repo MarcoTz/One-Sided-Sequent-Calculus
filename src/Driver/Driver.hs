@@ -1,10 +1,10 @@
 module Driver.Driver where 
 
 import Driver.Definition
-import Untyped.Syntax qualified as S
-import Untyped.Program qualified as S
-import Typed.Syntax qualified as T
-import Typed.Program qualified as T
+import Syntax.Untyped.Terms qualified as S
+import Syntax.Untyped.Program qualified as S
+import Syntax.Typed.Terms qualified as T
+import Syntax.Typed.Program qualified as T
 import Parser.Definition
 import Parser.Program
 import TypeInference.DataDecl

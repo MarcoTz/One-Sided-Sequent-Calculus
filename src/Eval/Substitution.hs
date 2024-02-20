@@ -1,6 +1,6 @@
 module Eval.Substitution where 
 
-import Untyped.Syntax
+import Syntax.Untyped.Terms
 import Common 
 
 import Data.Set qualified as S
@@ -23,6 +23,7 @@ instance FreeVars Pattern where
 
 instance FreeVars Command where 
   freeVars (Cut t1 _ t2) = S.union (freeVars t1) (freeVars t2) 
+  freeVars Done = S.empty
 
 freshVar :: Int -> S.Set Variable -> Variable 
 freshVar n vars = let newV = "x"<> show n in if newV `elem` vars then freshVar (n+1) vars else newV
@@ -72,3 +73,4 @@ instance Subst Term where
 
 instance Subst Command where 
   substVar (Cut t1 pol t2) t3 v = Cut (substVar t1 t3 v) pol (substVar t2 t3 v)
+  substVar Done _ _ = Done

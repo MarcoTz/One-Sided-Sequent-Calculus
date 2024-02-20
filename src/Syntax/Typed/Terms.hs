@@ -1,6 +1,6 @@
-module Typed.Syntax where 
+module Syntax.Typed.Terms where 
 
-import Typed.Types 
+import Syntax.Typed.Types 
 import Common
 
 data Command = 

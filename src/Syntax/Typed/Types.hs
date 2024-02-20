@@ -1,4 +1,4 @@
-module Typed.Types where 
+module Syntax.Typed.Types where 
 
 import Common 
 

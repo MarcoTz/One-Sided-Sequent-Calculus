@@ -1,8 +1,8 @@
 module Errors where 
 
 import Common 
-import Typed.Types
-import Typed.Syntax
+import Syntax.Typed.Types
+import Syntax.Typed.Terms
 
 data Error = 
   ErrArity !XtorName

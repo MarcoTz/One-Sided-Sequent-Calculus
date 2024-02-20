@@ -1,6 +1,6 @@
 module Eval.Eval where 
 
-import Untyped.Syntax 
+import Syntax.Untyped.Terms
 import Eval.Substitution 
 import Common
 import Errors

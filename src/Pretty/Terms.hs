@@ -1,7 +1,7 @@
 module Pretty.Terms where 
 
-import Untyped.Syntax qualified as S 
-import Typed.Syntax qualified as T 
+import Syntax.Untyped.Terms qualified as S 
+import Syntax.Typed.Terms qualified as T 
 import EmbedTyped 
 import Pretty.Common ()
 

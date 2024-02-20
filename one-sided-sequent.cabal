@@ -23,23 +23,15 @@ common all
 
 library lang
   import:           all
-  exposed-modules:  Untyped.Syntax,
-                    Untyped.Program,
-
-                    Typed.Syntax, 
-                    Typed.Types,
-                    Typed.Program,
-
-                    TypeInference.Definition,
-                    TypeInference.GenerateConstraints,
-                    TypeInference.SolveConstraints,
-                    TypeInference.DataDecl,
-
-                    Driver.Driver,
+  exposed-modules:  Driver.Driver,
                     Driver.Definition,
 
-                    Eval.Eval,
-                    Eval.Substitution,
+                    Syntax.Untyped.Terms,
+                    Syntax.Untyped.Program,
+
+                    Syntax.Typed.Terms, 
+                    Syntax.Typed.Types,
+                    Syntax.Typed.Program,
 
                     Parser.Definition,
                     Parser.Keywords,
@@ -48,6 +40,14 @@ library lang
                     Parser.Program,
                     Parser.Types,
                     Parser.Terms,
+
+                    TypeInference.Definition,
+                    TypeInference.GenerateConstraints,
+                    TypeInference.SolveConstraints,
+                    TypeInference.DataDecl,
+
+                    Eval.Eval,
+                    Eval.Substitution,
 
                     EmbedTyped,
 

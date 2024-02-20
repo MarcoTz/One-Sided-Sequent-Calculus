@@ -1,9 +1,9 @@
 module TypeInference.GenerateConstraints where 
 
-import Typed.Types 
-import Typed.Program
-import Untyped.Syntax qualified as S
-import Typed.Syntax qualified as T
+import Syntax.Typed.Types 
+import Syntax.Typed.Program
+import Syntax.Untyped.Terms qualified as S
+import Syntax.Typed.Terms qualified as T
 import TypeInference.Definition
 import Common 
 import Errors

@@ -1,8 +1,8 @@
-module Typed.Program where 
+module Syntax.Typed.Program where 
 
 import Common 
-import Typed.Types
-import Typed.Syntax
+import Syntax.Typed.Types
+import Syntax.Typed.Terms
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 

@@ -3,7 +3,7 @@ module Parser.Types where
 import Parser.Definition
 import Parser.Symbols
 import Parser.Lexer
-import Untyped.Program
+import Syntax.Untyped.Program
 import Common
 
 import Text.Megaparsec
