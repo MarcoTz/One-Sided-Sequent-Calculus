@@ -1,10 +1,12 @@
 module Pretty where 
 
 import Untyped.Syntax qualified as S
+import Untyped.Program qualified as S
 import Typed.Syntax   qualified as T
 import Typed.Types    qualified as T
 import Typed.Program  qualified as T
 import EmbedTyped
+import Driver.Definition
 import Common
 import TypeInference.Definition
 
@@ -33,15 +35,23 @@ instance Show S.Term where
 instance Show T.Term where 
   show t = show $ (embed :: T.Term -> S.Term) t 
 
+
+instance Show S.Ty where 
+  show (S.TyVar v) = v 
+  show (S.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+
 instance Show T.Ty where 
   show (T.TyVar v _) = v 
   show (T.TyDecl nm args _) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (T.TyShift ty _) = "{" <> show ty <> "}"
   show (T.TyCo ty _) = "co " <> show ty
 
-instance Show T.DataDecl where 
-  show T.MkDataDecl{T.declNm=nm, T.declArgs=args, T.declPol=pl, T.declSig=sig} = 
+instance Show S.DataDecl where 
+  show S.MkDataDecl{S.declNm=nm, S.declArgs=args, S.declPol=pl, S.declSig=sig} = 
     "data " <> nm <> "(" <> intercalate ", " ((\(v,p) -> v <> ":" <> show p) <$> args) <> ") :" <> show pl <> " where { " <> show sig <> "}"
+instance Show T.DataDecl where 
+  show t = show $ (embed :: T.DataDecl -> S.DataDecl) t
+
 instance Show T.VarDecl where 
   show T.MkValDecl{T.valVar = v, T.valTy=ty, T.valBd=bd} = 
     "val " <> v <> ":" <> show ty <> " = " <> show bd
@@ -53,9 +63,10 @@ instance Show T.Codecl where
   show (T.MkCo d) = "co " <> show d
 
 
+instance Show S.XtorSig where 
+  show S.MkXtorSig{S.sigName = nm, S.sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
 instance Show T.XtorSig where 
-  show T.MkXtorSig{T.sigName = nm, T.sigArgs=args} = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
-
+  show t = show $ (embed::T.XtorSig -> S.XtorSig) t
 
 instance Show T.Kind where 
   show (T.MkKind p) = show p
@@ -66,3 +77,6 @@ instance Show Constraint where
   show (MkKindEq k1 k2) = show k1 <> " = " <> show k2 
   show (MkFlipEq k1 k2) = show k1 <> " != " <> show k2
   show (MkProdEq p k1 k2) = show p <> " * " <> show k1 <> " = " <> show k2
+
+instance Show DriverState where 
+  show (MkDriverState _ env) = show env

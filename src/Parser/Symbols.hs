@@ -15,7 +15,7 @@ instance Show Sym where
   show SymParensC = ")"
   show SymComma   = ","
   show SymPlus    = "+"
-  show SymMinus   = "="
+  show SymMinus   = "-"
   show SymColon   = ":"
   show SymBrackO  = "{"
   show SymBrackC  = "}"

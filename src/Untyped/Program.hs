@@ -2,7 +2,8 @@ module Untyped.Program where
 
 import Common 
 
-data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![TypeVar]} 
+data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
+data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
 data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
 --data VarDecl  = MkValDecl{valVar  :: !Variable, valTy :: !Ty, valBd :: !Term}

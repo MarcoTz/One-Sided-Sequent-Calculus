@@ -7,6 +7,7 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 import Data.Either (isRight,fromLeft)
+import Data.List (isInfixOf)
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -14,6 +15,8 @@ import Test.Tasty.HUnit
 exPath :: FilePath
 exPath = "Examples"
 
+exclude :: [String]
+exclude = [""]
 
 listRecursive :: FilePath -> IO [FilePath]
 listRecursive path = do 
@@ -30,13 +33,16 @@ listRecursive path = do
 listExamples :: IO [FilePath]
 listExamples = listRecursive exPath
 
+
 main :: IO()
 main = do
   exPaths <- listExamples
-  exParsed <- forM exPaths (\ex -> do
+  let exPaths' = filter (\x -> not (any (`isInfixOf` x) exclude) ) exPaths
+  exParsed <- forM exPaths' (\ex -> do
     res <- runDriverMDb [] (inferProgram ex)
     let testName = "Example " <> ex
     let cs = testCase testName $ assertBool (fromLeft "" res) (isRight res)
     return cs )
+  putStrLn ("Parsing examples " <> show exPaths)
   let tests = testGroup "Examples" exParsed
   defaultMain tests
