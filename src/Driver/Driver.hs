@@ -8,7 +8,9 @@ import Parser.Definition
 import Parser.Program
 import TypeInference.GenerateConstraints
 import TypeInference.SolveConstraints
-import Pretty () 
+import Pretty.Terms ()
+import Pretty.Program ()
+import Pretty.TypeInference ()
 
 import Control.Monad.State
 import Control.Monad.Except

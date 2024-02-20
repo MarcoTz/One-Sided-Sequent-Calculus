@@ -49,7 +49,14 @@ library lang
                     Parser.Terms,
 
                     EmbedTyped,
-                    Pretty,
+
+                    Pretty.Common,
+                    Pretty.Driver,
+                    Pretty.Program,
+                    Pretty.Terms,
+                    Pretty.TypeInference,
+                    Pretty.Types,
+
                     Common,
                     Utils
   hs-source-dirs:   src

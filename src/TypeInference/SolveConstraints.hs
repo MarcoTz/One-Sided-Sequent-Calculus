@@ -8,7 +8,8 @@ import Data.Map qualified as M
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad
-import Pretty () 
+import Pretty.Common ()
+import Pretty.Types ()
 
 --
 -- Solver Monad 
