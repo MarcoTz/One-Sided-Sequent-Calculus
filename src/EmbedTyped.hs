@@ -36,4 +36,8 @@ instance Embed T.Ty S.Ty where
   embed (T.TyShift ty _)  = embed ty 
   embed (T.TyCo ty _) = embed ty 
 
+instance Embed T.VarDecl S.VarDecl where 
+  embed (T.MkVarDecl var _ body) = S.MkVarDecl var (embed body)
 
+instance Embed T.Program S.Program where 
+  embed (T.MkProgram decls vars) = S.MkProgram (embed <$> decls) (embed <$> vars)

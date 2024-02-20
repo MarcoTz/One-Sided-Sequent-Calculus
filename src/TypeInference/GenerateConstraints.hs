@@ -19,10 +19,10 @@ checkPts (pt:pts) = do
     Nothing -> throwError ("Xtor " <> show (T.ptxt pt) <> " used but not defined") 
     Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
-runGenCmd :: [DataDecl] -> S.Command -> Either String (T.Command,[Constraint])
-runGenCmd decls cmd = runGenM decls (genConstraintsCmd cmd)
-runGenT :: [DataDecl] -> S.Term -> Either String (T.Term,[Constraint])
-runGenT decls t = runGenM decls (genConstraintsTerm t)
+runGenCmd :: Program -> S.Command -> Either String (T.Command,[Constraint])
+runGenCmd prog cmd = runGenM prog (genConstraintsCmd cmd)
+runGenT :: Program -> S.Term -> Either String (T.Term,[Constraint])
+runGenT prog t = runGenM prog (genConstraintsTerm t)
 
 genConstraintsCmd :: S.Command -> GenM T.Command 
 genConstraintsCmd (S.Cut t pol u) = do 

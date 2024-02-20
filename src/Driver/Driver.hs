@@ -38,16 +38,16 @@ inferProgram path = do
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
   debug ("Successfully parsed " <> path)
-  debug ("parsed declarations " <> show (S.progDat prog))
-  debug ("parsed terms " <> show (S.progVar prog))
+  debug ("parsed declarations " <> show (S.progDecls prog))
+  debug ("parsed terms " <> show (S.progVars prog))
   debug "Checking well-formed program"
-  checkDecls (S.progDat prog)
+  checkDecls (S.progDecls prog)
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 
-  decls <- gets drvEnv
-  debug (" Inferring " <> show c <> " with environment " <> show decls)
-  (c',ctrs) <- liftErr (runGenCmd decls c)
+  prog <- gets drvEnv
+  debug (" Inferring " <> show c <> " with environment " <> show prog)
+  (c',ctrs) <- liftErr (runGenCmd prog c)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
   (_,varmap,kndmap) <- liftErr (runSolve ctrs)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
@@ -55,9 +55,9 @@ inferCommand c = do
 
 inferTerm :: S.Term -> DriverM T.Term
 inferTerm t = do 
-  decls <- gets drvEnv 
-  debug (" Inferring " <> show t <> " with environment " <> show decls)
-  (t',ctrs) <- liftErr (runGenT decls t)
+  prog <- gets drvEnv 
+  debug (" Inferring " <> show t <> " with environment " <> show prog)
+  (t',ctrs) <- liftErr (runGenT prog t)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
   (_,varmap,kndmap) <- liftErr (runSolve ctrs)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)

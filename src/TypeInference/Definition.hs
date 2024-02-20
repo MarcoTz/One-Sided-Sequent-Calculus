@@ -24,19 +24,19 @@ data GenerateState = MkGenState{
   tyVarEnv :: !(M.Map TypeVar Kind),
   tyVarCnt :: !Int,
   kndVarCnt :: !Int,
-  declEnv :: ![DataDecl],
+  declEnv :: !Program,
   constrSet :: ![Constraint]
 }
 
-initialGenState :: [DataDecl] -> GenerateState 
-initialGenState decls = MkGenState M.empty M.empty 0 0 decls []
+initialGenState :: Program -> GenerateState 
+initialGenState prog = MkGenState M.empty M.empty 0 0 prog []
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except String) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError String)
 
-runGenM :: [DataDecl] -> GenM a -> Either String (a, [Constraint])
-runGenM decls m = case runExcept (runStateT (getGenM m) (initialGenState decls)) of
+runGenM :: Program -> GenM a -> Either String (a, [Constraint])
+runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
 
@@ -72,8 +72,8 @@ addTyVar tyv knd = do
 
 findDataDecl :: XtorName -> GenM (Maybe (DataDecl,XtorSig))
 findDataDecl nm = do
-  decls <- gets declEnv 
-  return $ checkDecl nm decls 
+  prog <- gets declEnv 
+  return $ checkDecl nm (progDecls prog)
   where
     checkDecl :: XtorName -> [DataDecl] -> Maybe (DataDecl,XtorSig)
     checkDecl _ [] = Nothing
