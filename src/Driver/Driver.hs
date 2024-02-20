@@ -14,12 +14,11 @@ import Control.Monad.Except
 import Data.List (intercalate)
 import Data.Text.IO qualified as T
 
-import Debug.Trace
 
 inferProgram :: FilePath -> DriverM [S.DataDecl]
-inferProgram path = do
-  trace (show path) $ return () 
+inferProgram path = do 
   progCont <- liftIO $ T.readFile path
+  debug ("Parsing file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   case progParser of 
     Left err -> throwError (show err)

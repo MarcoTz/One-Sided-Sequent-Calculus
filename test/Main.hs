@@ -34,7 +34,7 @@ main :: IO()
 main = do
   exPaths <- listExamples
   exParsed <- forM exPaths (\ex -> do
-    res <- runDriverM [] (inferProgram ex)
+    res <- runDriverMDb [] (inferProgram ex)
     let testName = "Example " <> ex
     let cs = testCase testName $ assertBool (fromLeft "" res) (isRight res)
     return cs )
