@@ -52,6 +52,12 @@ instance Show S.DataDecl where
 instance Show T.DataDecl where 
   show t = show $ (embed :: T.DataDecl -> S.DataDecl) t
 
+instance Show S.TermDecl where 
+  show (S.MkTermDecl n t) = "val " <> n <> " = " <> show t
+
+instance Show S.Program where 
+  show (S.MkProgram decls terms) = "Type Declarations " <> intercalate ", " (show <$> decls) <> "\n Term Declarations"  <> intercalate ", " (show <$> terms)
+
 instance Show T.VarDecl where 
   show T.MkValDecl{T.valVar = v, T.valTy=ty, T.valBd=bd} = 
     "val " <> v <> ":" <> show ty <> " = " <> show bd

@@ -20,6 +20,5 @@ parseSymbol sym = do
   _ <- string (T.pack (show sym))
   return ()
 
-
 parsePol :: Parser Pol 
 parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)

@@ -9,6 +9,12 @@ data Sym =
   | SymColon
   | SymBrackO
   | SymBrackC
+  | SymEq
+  | SymSemi 
+  | SymAngO
+  | SymAngC
+  | SymBar
+  | SymDot
 
 instance Show Sym where 
   show SymParensO = "("
@@ -19,3 +25,10 @@ instance Show Sym where
   show SymColon   = ":"
   show SymBrackO  = "{"
   show SymBrackC  = "}"
+  show SymEq      = "="
+  show SymSemi    = ";"
+  show SymAngO    = "<"
+  show SymAngC    = ">"
+  show SymBar     = "|"
+  show SymDot     = "."
+

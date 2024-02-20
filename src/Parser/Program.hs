@@ -2,6 +2,7 @@ module Parser.Program where
 
 import Parser.Definition
 import Parser.Types
+import Parser.Terms
 import Parser.Lexer
 import Parser.Keywords
 import Parser.Symbols
@@ -11,17 +12,33 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 
-parseProgram :: Parser [DataDecl]
+parseProgram :: Parser Program
 parseProgram = do 
   parseKeyword KwModule
   space1 
   _ <- some alphaNumChar
   space
-  manyTill (parseDecl <* space) eof
+  decls <- manyTill (parseDecl <* space) eof
+  let (pgD,pgT) = foldr (\eit (dts,tms) -> case eit of Left d -> (d:dts,tms); Right t -> (dts,t:tms)) ([],[]) decls
+  return $ MkProgram pgD pgT 
 
 
-parseDecl :: Parser DataDecl 
-parseDecl = do 
+parseDecl :: Parser (Either DataDecl TermDecl)
+parseDecl = (Left <$> parseDataDecl) <|> (Right <$> parseTermDecl)
+
+parseTermDecl :: Parser TermDecl
+parseTermDecl = do 
+  parseKeyword KwVal
+  space1 
+  nm <- some alphaNumChar
+  space
+  parseSymbol SymEq
+  t <- parseTerm
+  parseSymbol SymSemi
+  return (MkTermDecl nm t)
+
+parseDataDecl :: Parser DataDecl 
+parseDataDecl = do 
   parseKeyword KwData
   space1
   nm <- some alphaNumChar

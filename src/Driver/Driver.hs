@@ -16,7 +16,7 @@ import Data.List (intercalate)
 import Data.Text.IO qualified as T
 
 
-inferProgram :: FilePath -> DriverM [S.DataDecl]
+inferProgram :: FilePath -> DriverM S.Program
 inferProgram path = do 
   progCont <- liftIO $ T.readFile path
   debug ("Parsing file " <> path)

@@ -46,6 +46,7 @@ library lang
                     Parser.Lexer,
                     Parser.Program,
                     Parser.Types,
+                    Parser.Terms,
 
                     EmbedTyped,
                     Pretty,
