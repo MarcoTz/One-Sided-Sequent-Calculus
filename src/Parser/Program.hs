@@ -24,11 +24,11 @@ parseProgram = do
   return $ MkProgram pgD pgT 
 
 
-parseDecl :: Parser (Either DataDecl TermDecl)
-parseDecl = (Left <$> parseDataDecl) <|> (Right <$> parseTermDecl)
+parseDecl :: Parser (Either DataDecl VarDecl)
+parseDecl = (Left <$> parseDataDecl) <|> (Right <$> parseVarDecl)
 
-parseTermDecl :: Parser TermDecl
-parseTermDecl = do 
+parseVarDecl :: Parser VarDecl
+parseVarDecl = do 
   parseKeyword KwVal
   space1 
   sc
@@ -38,7 +38,7 @@ parseTermDecl = do
   sc
   t <- parseTerm
   parseSymbol SymSemi
-  return (MkTermDecl nm t)
+  return (MkVarDecl nm t)
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 

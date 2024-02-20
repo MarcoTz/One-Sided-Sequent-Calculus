@@ -38,10 +38,10 @@ inferProgram path = do
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
   debug ("Successfully parsed " <> path)
-  debug ("parsed declarations " <> show (S.pgDat prog))
-  debug ("parsed terms " <> show (S.pgTm prog))
+  debug ("parsed declarations " <> show (S.progDat prog))
+  debug ("parsed terms " <> show (S.progVar prog))
   debug "Checking well-formed program"
-  checkDecls (S.pgDat prog)
+  checkDecls (S.progDat prog)
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 
