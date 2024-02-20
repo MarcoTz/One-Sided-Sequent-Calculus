@@ -4,7 +4,8 @@ import Driver.Definition
 import Untyped.Syntax qualified as S
 import Untyped.Program qualified as S
 import Typed.Syntax qualified as T
-import Parser.Parser
+import Parser.Definition
+import Parser.Program
 import TypeInference.GenerateConstraints
 import TypeInference.SolveConstraints
 import Pretty () 
