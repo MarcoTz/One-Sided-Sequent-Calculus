@@ -26,8 +26,8 @@ library lang
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
 
-                    Syntax.Untyped.Terms,
-                    Syntax.Untyped.Program,
+                    Syntax.Parsed.Terms,
+                    Syntax.Parsed.Program,
 
                     Syntax.Typed.Terms, 
                     Syntax.Typed.Types,

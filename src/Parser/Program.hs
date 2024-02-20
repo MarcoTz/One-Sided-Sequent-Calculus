@@ -6,7 +6,7 @@ import Parser.Terms
 import Parser.Lexer
 import Parser.Keywords
 import Parser.Symbols
-import Syntax.Untyped.Program
+import Syntax.Parsed.Program
 
 import Text.Megaparsec
 import Text.Megaparsec.Char

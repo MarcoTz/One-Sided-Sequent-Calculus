@@ -1,6 +1,6 @@
 module Pretty.Types where 
 
-import Syntax.Untyped.Program qualified as S
+import Syntax.Parsed.Program qualified as S
 import Syntax.Typed.Types qualified as T
 import Pretty.Common ()
 

@@ -1,6 +1,6 @@
 module Eval.Eval where 
 
-import Syntax.Untyped.Terms
+import Syntax.Typed.Terms
 import Eval.Substitution 
 import Common
 import Errors
@@ -13,10 +13,10 @@ newtype EvalM a = MkEvalM { getGenM :: Except Error a }
 
 
 isValue :: Pol -> Term -> Bool
-isValue Pos (Var _) = True 
-isValue Pos (Xtor _ args) = all (isValue Pos) args
-isValue Pos (XCase _) = True
-isValue Pos (Shift _) = True
+isValue Pos (Var _ _ ) = True 
+isValue Pos (Xtor _ args _) = all (isValue Pos) args
+isValue Pos (XCase _ _) = True
+isValue Pos (Shift  _ _) = True
 isValue Pos _ = False 
 isValue Neg _ = True
 
@@ -27,22 +27,22 @@ coTrans Done = Done
 
 evalOnce :: Command -> EvalM Command
 -- beta mu
-evalOnce s@(Cut t pol (Mu v c)) = if isValue pol t then return $ substVar c t v else return s
+evalOnce s@(Cut t pol (Mu v c _)) = if isValue pol t then return $ substVar c t v else return s
 -- beta shift 
-evalOnce (Cut (Shift t) Pos (Lam v c)) = return $ substVar c t v
+evalOnce (Cut (Shift t _) Pos (Lam v c _)) = return $ substVar c t v
 -- beta K
-evalOnce s@(Cut (Xtor nm args) _ (XCase pats)) = 
+evalOnce s@(Cut (Xtor nm args _) _ (XCase pats _)) = 
   if all (isValue Pos) args then do 
     pt <- findXtor nm pats
     substCase pt args 
   else return s
 -- eta K
-evalOnce s@(Cut t pol (Xtor nm args)) = 
+evalOnce s@(Cut t pol (Xtor nm args ty)) = 
   if isValue pol t 
   then do
     let frV = freshVar 0 (freeVars s)
     case splitArgs args pol of 
-      (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ))))
+      (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ) ty)) ty)
       (_, Nothing,_) -> return s
   else return s
   where

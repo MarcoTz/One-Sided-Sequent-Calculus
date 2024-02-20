@@ -1,6 +1,6 @@
 module TypeInference.DataDecl where 
 
-import Syntax.Untyped.Program qualified as S 
+import Syntax.Parsed.Program qualified as S 
 import Syntax.Typed.Program qualified as T 
 import Syntax.Typed.Types qualified as T
 import Common

@@ -3,8 +3,8 @@ module EmbedTyped where
 import Syntax.Typed.Terms     qualified as T 
 import Syntax.Typed.Program   qualified as T 
 import Syntax.Typed.Types     qualified as T
-import Syntax.Untyped.Terms   qualified as S
-import Syntax.Untyped.Program qualified as S
+import Syntax.Parsed.Terms    qualified as S
+import Syntax.Parsed.Program  qualified as S
 
 class Embed a b where 
   embed :: a -> b 

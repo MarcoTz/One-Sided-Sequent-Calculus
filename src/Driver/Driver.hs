@@ -1,8 +1,8 @@
 module Driver.Driver where 
 
 import Driver.Definition
-import Syntax.Untyped.Terms qualified as S
-import Syntax.Untyped.Program qualified as S
+import Syntax.Parsed.Terms qualified as S
+import Syntax.Parsed.Program qualified as S
 import Syntax.Typed.Terms qualified as T
 import Syntax.Typed.Program qualified as T
 import Parser.Definition

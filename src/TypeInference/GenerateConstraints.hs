@@ -2,7 +2,7 @@ module TypeInference.GenerateConstraints where
 
 import Syntax.Typed.Types 
 import Syntax.Typed.Program
-import Syntax.Untyped.Terms qualified as S
+import Syntax.Parsed.Terms qualified as S
 import Syntax.Typed.Terms qualified as T
 import TypeInference.Definition
 import Common 

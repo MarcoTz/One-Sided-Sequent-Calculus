@@ -4,7 +4,7 @@ import Parser.Definition
 import Parser.Lexer
 import Parser.Symbols
 import Parser.Keywords
-import Syntax.Untyped.Terms
+import Syntax.Parsed.Terms
 import Common
 
 import Text.Megaparsec
