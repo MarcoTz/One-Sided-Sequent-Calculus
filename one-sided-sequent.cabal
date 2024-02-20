@@ -50,6 +50,7 @@ library lang
                     EmbedTyped,
                     Pretty,
                     Common,
+                    Utils
   hs-source-dirs:   src
 
 
