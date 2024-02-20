@@ -29,7 +29,7 @@ parseExample db path = do
       putStrLn "\n=========================================================\n"
   else case res of 
     Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> path <> " failed Successfully" <> colorDefault)
-    Right _ -> putStrLn (colorError <> "Counterexample " <> path <> "did not fail" <> colorDefault)
+    Right _ -> putStrLn (colorError <> "Counterexample " <> path <> " did not fail" <> colorDefault)
 
 
 main :: IO()

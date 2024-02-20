@@ -17,6 +17,9 @@ initialDriverState = MkDriverState { drvDebug = False, drvEnv = emptyProg}
 runDriverM :: DriverState -> DriverM a -> IO(Either String (a,DriverState))
 runDriverM drvst m = runExceptT $ runStateT (getDriverM m) drvst 
 
+addDecl :: DataDecl -> DriverM ()
+addDecl decl = modify (\s -> MkDriverState (drvDebug s) (addDeclToProgram decl (drvEnv s)))
+
 liftErr :: Either String a -> DriverM a
 liftErr (Left err) = do 
   debug err

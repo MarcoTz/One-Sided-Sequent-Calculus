@@ -6,6 +6,7 @@ import Untyped.Program qualified as S
 import Typed.Syntax qualified as T
 import Parser.Definition
 import Parser.Program
+import TypeInference.DataDecl
 import TypeInference.GenerateConstraints
 import TypeInference.SolveConstraints
 import Pretty.Terms ()
@@ -13,23 +14,11 @@ import Pretty.Program ()
 import Pretty.TypeInference ()
 
 import Control.Monad.State
-import Control.Monad.Except
+import Control.Monad
 import Data.List (intercalate)
 import Data.Text.IO qualified as T
 
 
-checkDecls :: [S.DataDecl] -> DriverM ()
-checkDecls decls = do 
-  let declNms = S.declNm <$> decls 
-  let declXtors = S.sigName <$> concatMap S.declSig decls
-  case (checkDups declNms, checkDups declXtors) of 
-    (Nothing,Nothing) -> return ()
-    (Just tn,_) -> throwError ("Type " <> tn <> " declared multiple times")
-    (_,Just xtn) -> throwError ("Xtor " <> xtn <> " declared multiple times")
-  where 
-    checkDups :: Eq a => [a] -> Maybe a 
-    checkDups [] = Nothing
-    checkDups (tn:tns) = if tn `elem` tns then Just tn else checkDups tns
 
 inferProgram :: FilePath -> DriverM () 
 inferProgram path = do 
@@ -40,8 +29,10 @@ inferProgram path = do
   debug ("Successfully parsed " <> path)
   debug ("parsed declarations " <> show (S.progDecls prog))
   debug ("parsed terms " <> show (S.progVars prog))
-  debug "Checking well-formed program"
-  checkDecls (S.progDecls prog)
+  debug "Checking for well-formed program"
+  let checkedDecls = checkDecls (S.progDecls prog)
+  debug ("checked Declarations " <> show checkedDecls)
+  forM_ checkedDecls addDecl
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 

@@ -33,6 +33,7 @@ library lang
                     TypeInference.Definition,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
+                    TypeInference.DataDecl,
 
                     Driver.Driver,
                     Driver.Definition,

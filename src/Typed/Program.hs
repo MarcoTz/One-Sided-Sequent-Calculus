@@ -13,6 +13,13 @@ data Program = MkProgram { progDecls :: ![DataDecl], progVars :: ![VarDecl] }
 emptyProg :: Program
 emptyProg = MkProgram {progDecls = [], progVars = []}
 
+addDeclToProgram :: DataDecl -> Program -> Program
+addDeclToProgram decl (MkProgram decls vars) = MkProgram (decl:decls) vars
+
+addVarToProgram :: VarDecl -> Program -> Program
+addVarToProgram var (MkProgram decls vars) = MkProgram decls (var:vars)
+
+
 --not implemented
 --data RecDecl  = MkRecDecl{recVar :: !Variable, recTy :: !Ty, recBd :: !Term}
 --data Eps = MkEps 
