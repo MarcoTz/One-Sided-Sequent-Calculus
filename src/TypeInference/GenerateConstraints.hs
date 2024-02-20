@@ -33,6 +33,7 @@ genConstraintsCmd (S.Cut t pol u) = do
   addConstraint (MkFlipEq (T.getKind t') (T.getKind u'))
   addConstraint (MkProdEq pol' (T.getKind t') (MkKind pol))
   return (T.Cut t' pol u')
+genConstraintsCmd S.Done = return T.Done
   
 genConstraintsTerm :: S.Term -> GenM T.Term 
 genConstraintsTerm (S.Var v) = do 

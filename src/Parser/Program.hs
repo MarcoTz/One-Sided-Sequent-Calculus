@@ -19,7 +19,7 @@ parseProgram = do
   sc
   _ <- some alphaNumChar
   sc
-  decls <- manyTill (parseDecl <* sc) eof
+  decls <- manyTill (parseDecl <* sc) (sc >> eof)
   let (pgD,pgT) = foldr (\eit (dts,tms) -> case eit of Left d -> (d:dts,tms); Right t -> (dts,t:tms)) ([],[]) decls
   return $ MkProgram pgD pgT 
 
@@ -35,6 +35,7 @@ parseTermDecl = do
   nm <- some alphaNumChar
   sc
   parseSymbol SymEq
+  sc
   t <- parseTerm
   parseSymbol SymSemi
   return (MkTermDecl nm t)
@@ -62,10 +63,10 @@ parseDataDecl = do
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
  nm <- some alphaNumChar
- MkXtorSig nm <$> parseXtorArgs
+ MkXtorSig nm <$> parseXtorSigArgs
  
-parseXtorArgs :: Parser [Ty]
-parseXtorArgs = (do 
+parseXtorSigArgs :: Parser [Ty]
+parseXtorSigArgs = (do 
   parseSymbol SymParensO
   vars <- parseTy `sepBy` (parseSymbol SymComma >> sc) 
   parseSymbol SymParensC

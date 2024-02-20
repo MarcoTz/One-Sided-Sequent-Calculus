@@ -5,48 +5,67 @@ import Parser.Lexer
 import Parser.Symbols
 import Parser.Keywords
 import Untyped.Syntax
+import Common
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+import Pretty.Terms ()
+
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXtor <|> parseXCase <|> parseShift <|> parseLam <|> parseVar
+parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> try parseVar
 
 parseVar :: Parser Term 
-parseVar = Var <$> some alphaNumChar
+parseVar = do 
+  v <- some alphaNumChar
+  return $ Var v
 
 parseMu :: Parser Term
 parseMu = do
-  parseKeyword KwMu 
-  space
+  parseKeyword KwMu <|> parseKeyword Kwmu 
+  sc
   v <- some alphaNumChar
+  sc
   parseSymbol SymDot
-  space
+  sc
   Mu v <$> parseCommand
 
 parseXtor :: Parser Term
 parseXtor = do
   nm <- some alphaNumChar
   sc
-  parseSymbol SymBrackO
+  Xtor nm <$> parseXtorArgs
+
+parseXtorArgs :: Parser [Term]
+parseXtorArgs = (do
+  parseSymbol SymParensO
   sc
   args <- parseTerm `sepBy` (parseSymbol SymComma >> sc)
   sc
-  parseSymbol SymBrackC
-  return (Xtor nm args)
+  parseSymbol SymParensC
+  return args)
+  <|>
+  return []
+
+parsePatternVars :: Parser [Variable]
+parsePatternVars = (do 
+  parseSymbol SymParensO
+  args <- some alphaNumChar `sepBy` (parseSymbol SymComma >> sc)
+  parseSymbol SymParensC 
+  return args)
+  <|>
+  return []
 
 parsePattern :: Parser Pattern 
 parsePattern = do 
   nm <- some alphaNumChar
-  sc 
-  parseSymbol SymBrackO
-  args <- some alphaNumChar `sepBy` (parseSymbol SymComma >> sc)
-  sc 
+  sc
+  args <- parsePatternVars 
+  sc
   parseSymbol SymEq 
   parseSymbol SymAngC
-  c <- parseCommand
-  parseSymbol SymBrackC
-  return $ MkPattern nm args c
+  sc
+  MkPattern nm args <$> parseCommand
 
 parseXCase :: Parser Term
 parseXCase = do 
@@ -82,12 +101,22 @@ parseLam = do
   Lam v <$> parseCommand
 
 parseCommand :: Parser Command
-parseCommand = do 
+parseCommand = (do 
   parseSymbol SymAngO
+  sc
   t <- parseTerm
+  sc
   parseSymbol SymBar
+  sc
   pol <- parsePol
+  sc
   parseSymbol SymBar
+  sc
   u <- parseTerm
+  sc
   parseSymbol SymAngC
-  return (Cut t pol u)
+  return (Cut t pol u))
+  <|>
+  (do 
+    parseKeyword KwDone 
+    return Done)

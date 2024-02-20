@@ -9,20 +9,26 @@ import Control.Monad
 
 colorError :: String
 colorError = "\ESC[31m"
+colorSuccess :: String
+colorSuccess = "\ESC[32m"
 colorDefault :: String
 colorDefault = "\ESC[0m"
 
-showParsed :: FilePath -> Either String a -> IO ()
-showParsed path p1 = case p1 of 
-  Left err -> putStrLn ( colorError <> "Error Parsing Example: \n\t" <> err <> colorDefault)
-  Right _ -> putStrLn ("Example " <> path <> " Parsed Successfully")
 
-parseExample :: FilePath -> IO()
-parseExample path = do
-  putStrLn ("Parsing Example " <> path)
-  res <- runDriverMDb [] (inferProgram path)
-  showParsed path res
-  putStrLn ""
+parseExample :: Bool -> FilePath -> IO()
+parseExample db path = do
+  let driverfun = if db then runDriverMDb else runDriverM
+  res <- driverfun [] (inferProgram path)
+  if db then case res of 
+    Left err -> do 
+      putStrLn ( colorError <> "Error Parsing Example: \n\t" <> err <> colorDefault)
+      putStrLn "\n=========================================================\n"
+    Right _ -> do
+      putStrLn (colorSuccess <> "Example " <> path <> " Parsed Successfully" <> colorDefault)
+      putStrLn "\n=========================================================\n"
+  else case res of 
+    Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> path <> " failed Successfully" <> colorDefault)
+    Right _ -> putStrLn (colorError <> "Counterexample " <> path <> "did not fail" <> colorDefault)
 
 
 main :: IO()
@@ -30,10 +36,17 @@ main = do
   exPaths <- listRecursive "Examples"
   cExPaths <- listRecursive "CounterExamples"
 --  let paths = filter (isInfixOf "Stream") paths
-  putStrLn "================== Testing Examples =================="
-  forM_ exPaths parseExample
-  putStrLn "Finished Parsing Examples"
+  putStrLn "========================================================="
+  putStrLn "================ Testing CounterExamples ================"
+  putStrLn "=========================================================" 
+  forM_ cExPaths (parseExample False)
   putStrLn ""
-  putStrLn "=============== Testing CounterExamples ===============" 
-  forM_ cExPaths parseExample
   putStrLn "Finished Parsing Counterexamples"
+  putStrLn "" 
+  putStrLn "========================================================"
+  putStrLn "=================== Testing Examples ==================="
+  putStrLn "========================================================"
+  forM_ exPaths (parseExample True)
+  putStrLn ""
+  putStrLn "Finished Parsing Examples"
+

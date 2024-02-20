@@ -22,6 +22,7 @@ instance Embed T.Pattern S.Pattern where
 
 instance Embed T.Command S.Command where 
   embed (T.Cut t pol s) = S.Cut (embed t) pol (embed s)
+  embed T.Done = S.Done
 
 instance Embed T.DataDecl S.DataDecl where 
   embed (T.MkDataDecl nm vars pol sigs) = S.MkDataDecl nm vars pol (embed <$> sigs)

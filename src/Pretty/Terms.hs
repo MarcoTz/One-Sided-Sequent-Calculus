@@ -23,5 +23,7 @@ instance Show S.Pattern where
 
 instance Show S.Command where 
   show (S.Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"
+  show S.Done = "Done"
+
 instance Show T.Command where 
   show c = show $ (embed :: T.Command -> S.Command) c

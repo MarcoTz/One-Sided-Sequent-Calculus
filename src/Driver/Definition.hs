@@ -25,9 +25,7 @@ liftErr (Left err) = do
   throwError err
 liftErr (Right a) = return a 
 
-debugLn :: String
-debugLn = "==================================================="
 debug :: String -> DriverM () 
 debug st = do  
   db <- gets drvDebug
-  Control.Monad.when db $ liftIO (putStrLn st)
+  Control.Monad.when db $ liftIO (putStrLn ("\t" <> st))

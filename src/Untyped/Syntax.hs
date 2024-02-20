@@ -2,7 +2,9 @@ module Untyped.Syntax where
 
 import Common 
 
-data Command = Cut !Term !Pol !Term
+data Command = 
+  Cut !Term !Pol !Term
+  | Done
 
 data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
 

@@ -3,7 +3,9 @@ module Typed.Syntax where
 import Typed.Types 
 import Common
 
-data Command = Cut !Term !Pol !Term
+data Command = 
+  Cut !Term !Pol !Term
+  | Done
 
 data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
 

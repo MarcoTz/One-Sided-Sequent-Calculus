@@ -37,13 +37,16 @@ inferProgram path = do
   debug ("Parsing file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
+  debug ("Successfully parsed " <> path)
+  debug ("parsed declarations " <> show (S.pgDat prog))
+  debug ("parsed terms " <> show (S.pgTm prog))
+  debug "Checking well-formed program"
   checkDecls (S.pgDat prog)
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 
   decls <- gets drvEnv
   debug (" Inferring " <> show c <> " with environment " <> show decls)
-  debug debugLn 
   (c',ctrs) <- liftErr (runGenCmd decls c)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
   (_,varmap,kndmap) <- liftErr (runSolve ctrs)
