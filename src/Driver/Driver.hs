@@ -1,41 +1,29 @@
 module Driver.Driver where 
 
+import Driver.Definition
 import Untyped.Syntax qualified as S
+import Untyped.Program qualified as S
 import Typed.Syntax qualified as T
-import Typed.Program
+import Parser.Parser
 import TypeInference.GenerateConstraints
 import TypeInference.SolveConstraints
 import Pretty () 
 
 import Control.Monad.State
-import Control.Monad.Except 
-import Control.Monad
+import Control.Monad.Except
 import Data.List (intercalate)
+import Data.Text.IO qualified as T
 
-defaultDebug :: Bool
-defaultDebug = True
+import Debug.Trace
 
-data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: ![DataDecl] } 
-
-newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT String IO) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError String, MonadIO)
-
-
-runDriverM :: [DataDecl] -> DriverM a -> IO(Either String (a,DriverState))
-runDriverM decls m = runExceptT $ runStateT (getDriverM m) (MkDriverState defaultDebug decls)
-
-liftErr :: Either String a -> DriverM a
-liftErr (Left err) = do 
-  debug err
-  throwError err
-liftErr (Right a) = return a 
-
-debugLn :: String
-debugLn = "==================================================="
-debug :: String -> DriverM () 
-debug st = do  
-  db <- gets drvDebug
-  Control.Monad.when db $ liftIO (print st)
+inferProgram :: FilePath -> DriverM [S.DataDecl]
+inferProgram path = do
+  trace (show path) $ return () 
+  progCont <- liftIO $ T.readFile path
+  let progParser = runFileParser "" parseProgram progCont
+  case progParser of 
+    Left err -> throwError (show err)
+    Right decls -> return decls
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 
