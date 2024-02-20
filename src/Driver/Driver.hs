@@ -4,6 +4,7 @@ import Driver.Definition
 import Untyped.Syntax qualified as S
 import Untyped.Program qualified as S
 import Typed.Syntax qualified as T
+import Typed.Program qualified as T
 import Parser.Definition
 import Parser.Program
 import TypeInference.DataDecl
@@ -29,11 +30,27 @@ inferProgram path = do
   debug ("Successfully parsed " <> path)
   debug ("parsed declarations " <> show (S.progDecls prog))
   debug ("parsed terms " <> show (S.progVars prog))
-  debug "Checking for well-formed program"
-  let checked = runDeclM (checkDecls (S.progDecls prog))
-  checkedDecls <- liftErr checked
-  debug ("checked Declarations " <> show checkedDecls)
-  forM_ checkedDecls addDecl
+  decls <- inferDecls (S.progDecls prog)
+  forM_ decls addDecl
+  debug "inferring terms"
+  forM_ (S.progVars prog) inferVarDecl
+
+
+inferDecls :: [S.DataDecl] -> DriverM [T.DataDecl]
+inferDecls decls = do
+  debug ("checking declarations " <> show decls)
+  let checked = runDeclM (checkDecls decls)
+  decls' <- liftErr checked
+  debug ("checked declarations " <> show decls')
+  return decls'
+
+inferVarDecl :: S.VarDecl -> DriverM T.VarDecl
+inferVarDecl (S.MkVarDecl n t) = do 
+  t' <- inferTerm t
+  let newDecl = T.MkVarDecl n (T.getType t') t'
+  addVar newDecl
+  return $ T.MkVarDecl n (T.getType t') t' 
+
 
 inferCommand :: S.Command -> DriverM T.Command
 inferCommand c = do 
