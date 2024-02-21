@@ -3,11 +3,16 @@ module Desugar.Terms where
 import Desugar.Definition
 import Syntax.Parsed.Terms qualified as P
 import Syntax.Desugared.Terms qualified as D 
+import Syntax.Desugared.Program qualified as D
 
 import Control.Monad
+import Control.Monad.State
 
 desugarTerm :: P.Term -> DesugarM D.Term
-desugarTerm (P.Var v) = return $ D.Var v
+desugarTerm (P.Var v) = do
+  decls <- gets desDecls 
+  let declXts = D.sigName <$> concatMap D.declSig decls
+  if v `elem`declXts then return $ D.Xtor v [] else return $ D.Var v
 desugarTerm (P.Mu v c) = do 
   c' <- desugarCommand c
   return $ D.Mu v c'
