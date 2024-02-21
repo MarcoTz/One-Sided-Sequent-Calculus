@@ -2,7 +2,7 @@ module TypeInference.GenerateConstraints where
 
 import Syntax.Typed.Types 
 import Syntax.Typed.Program
-import Syntax.Parsed.Terms qualified as S
+import Syntax.Desugared.Terms qualified as D
 import Syntax.Typed.Terms qualified as T
 import TypeInference.Definition
 import Common 
@@ -20,13 +20,13 @@ checkPts (pt:pts) = do
     Nothing -> throwError (ErrXtorUndefined (T.ptxt pt))
     Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
-runGenCmd :: Program -> S.Command -> Either Error (T.Command,[Constraint])
+runGenCmd :: Program -> D.Command -> Either Error (T.Command,[Constraint])
 runGenCmd prog cmd = runGenM prog (genConstraintsCmd cmd)
-runGenT :: Program -> S.Term -> Either Error (T.Term,[Constraint])
+runGenT :: Program -> D.Term -> Either Error (T.Term,[Constraint])
 runGenT prog t = runGenM prog (genConstraintsTerm t)
 
-genConstraintsCmd :: S.Command -> GenM T.Command 
-genConstraintsCmd (S.Cut t pol u) = do 
+genConstraintsCmd :: D.Command -> GenM T.Command 
+genConstraintsCmd (D.Cut t pol u) = do 
   t' <- genConstraintsTerm t
   u' <- genConstraintsTerm u
   addConstraint (MkTyEq (T.getType t') (T.getType u'))
@@ -34,17 +34,17 @@ genConstraintsCmd (S.Cut t pol u) = do
   addConstraint (MkFlipEq (T.getKind t') (T.getKind u'))
   addConstraint (MkProdEq pol' (T.getKind t') (MkKind pol))
   return (T.Cut t' pol u')
-genConstraintsCmd S.Done = return T.Done
+genConstraintsCmd D.Done = return T.Done
   
-genConstraintsTerm :: S.Term -> GenM T.Term 
-genConstraintsTerm (S.Var v) = do 
+genConstraintsTerm :: D.Term -> GenM T.Term 
+genConstraintsTerm (D.Var v) = do 
    tyV <- freshTyVar 
    kndV <- freshKndVar
    let newT = TyVar tyV (MkKindVar kndV)
    addVar v newT 
    addTyVar tyV (MkKindVar kndV)
    return (T.Var v newT) 
-genConstraintsTerm (S.Mu v c) = do 
+genConstraintsTerm (D.Mu v c) = do 
   tyV <- freshTyVar
   kndV1 <- freshKndVar 
   kndV2 <- freshKndVar 
@@ -56,7 +56,7 @@ genConstraintsTerm (S.Mu v c) = do
 
 -- TODO generate new variables for the variables in the data declaration
 -- otherwise we can only have the same type arguments for each time a declaration is used
-genConstraintsTerm (S.Xtor nm args) = do 
+genConstraintsTerm (D.Xtor nm args) = do 
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError (ErrXtorUndefined nm) 
@@ -66,30 +66,30 @@ genConstraintsTerm (S.Xtor nm args) = do
       addConstraintsXtor nm argTys (sigArgs xtSig)
       let newT = TyDecl tyn argTys (MkKind pl)
       return (T.Xtor nm args' newT)
-genConstraintsTerm (S.XCase pts)  = do 
+genConstraintsTerm (D.XCase pts)  = do 
   pts' <- mapM genConstraintsPt pts
   decl <- checkPts pts' 
   case decl of 
     Nothing -> throwError (ErrPatMalformed pts')
     Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl,declSig=_} -> do 
       forM_ pts (\pt -> do 
-        forM_ (zip (S.ptv pt) tyArgs) (\(x,(y,z)) -> addVar x (TyVar y (MkKind z)))
-        genConstraintsCmd (S.ptcmd pt))
+        forM_ (zip (D.ptv pt) tyArgs) (\(x,(y,z)) -> addVar x (TyVar y (MkKind z)))
+        genConstraintsCmd (D.ptcmd pt))
       let newT = TyDecl tyn ( (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs ) (MkKind pl)
       return (T.XCase pts' newT)
-genConstraintsTerm (S.Shift t) = do 
+genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
   addConstraint (MkKindEq (T.getKind t') (MkKind Pos))
   let newT = TyShift (T.getType t') (MkKind Pos)
   return (T.Shift t' newT)
-genConstraintsTerm (S.Lam v cmd) = do  
+genConstraintsTerm (D.Lam v cmd) = do  
   tyV <- freshTyVar 
   addVar v (TyVar tyV (MkKind Pos))
   cmd' <- genConstraintsCmd cmd
   let newT = TyShift (TyVar tyV (MkKind Pos)) (MkKind Neg)
   return (T.Lam v cmd' newT)
-genConstraintsPt :: S.Pattern -> GenM T.Pattern
-genConstraintsPt (S.MkPattern xt vs cmd) = do
+genConstraintsPt :: D.Pattern -> GenM T.Pattern
+genConstraintsPt (D.MkPattern xt vs cmd) = do
   cmd' <- genConstraintsCmd cmd
   return $ T.MkPattern xt vs cmd'
 

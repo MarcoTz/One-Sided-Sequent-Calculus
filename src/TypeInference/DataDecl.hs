@@ -1,6 +1,6 @@
 module TypeInference.DataDecl where 
 
-import Syntax.Parsed.Program qualified as S 
+import Syntax.Desugared.Program qualified as D
 import Syntax.Typed.Program qualified as T 
 import Syntax.Typed.Types qualified as T
 import Common
@@ -30,10 +30,10 @@ setSt vars pol = do
   let newVs = foldr (\(v,p) m -> M.insert v p m) M.empty vars
   modify (\_ -> MkDeclState newVs pol)
 
-checkDecls :: [S.DataDecl] -> DeclM [T.DataDecl]
+checkDecls :: [D.DataDecl] -> DeclM [T.DataDecl]
 checkDecls decls = do 
-  let declNms = S.declNm <$> decls 
-  let declXtors = S.sigName <$> concatMap S.declSig decls
+  let declNms = D.declNm <$> decls 
+  let declXtors = D.sigName <$> concatMap D.declSig decls
   case (checkDups declNms, checkDups declXtors) of 
     (Just tn,_) -> throwError (ErrDeclExists tn)
     (_,Just xtn) -> throwError (ErrXtorExists xtn) 
@@ -43,24 +43,24 @@ checkDecls decls = do
     checkDups [] = Nothing
     checkDups (tn:tns) = if tn `elem` tns then Just tn else checkDups tns
 
-inferDecl :: S.DataDecl -> DeclM T.DataDecl
-inferDecl (S.MkDataDecl nm tyargs pol xts) = do 
+inferDecl :: D.DataDecl -> DeclM T.DataDecl
+inferDecl (D.MkDataDecl nm tyargs pol xts) = do 
   setSt tyargs pol
   newXts <- forM xts inferSig 
   return $ T.MkDataDecl nm tyargs pol newXts
 
-inferSig :: S.XtorSig -> DeclM T.XtorSig 
-inferSig (S.MkXtorSig nm args) = do
+inferSig :: D.XtorSig -> DeclM T.XtorSig 
+inferSig (D.MkXtorSig nm args) = do
   newTys <- forM args inferTy
   return $  T.MkXtorSig nm newTys 
 
-inferTy :: S.Ty -> DeclM T.Ty
-inferTy (S.TyVar v) = do 
+inferTy :: D.Ty -> DeclM T.Ty
+inferTy (D.TyVar v) = do 
   vars <- gets declVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrVarUndefined v)
     Just pol -> return $ T.TyVar v (T.MkKind pol)
-inferTy (S.TyDecl nm args) = do 
+inferTy (D.TyDecl nm args) = do 
   newArgs <- forM args inferTy 
   pol <- gets declPol
   return $ T.TyDecl nm newArgs (T.MkKind pol)
