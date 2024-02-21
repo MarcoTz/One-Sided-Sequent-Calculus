@@ -6,4 +6,4 @@ data Bool : + {
   False
 }
 
-val ifthenelse =  Mu x. < x | + | case { True => Done, False => Done } >;
+var ifthenelse :=  Mu x. < x | + | case { True => Done, False => Done } >;

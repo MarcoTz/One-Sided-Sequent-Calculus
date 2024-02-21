@@ -29,11 +29,12 @@ parseDecl = (Left <$> parseDataDecl) <|> (Right <$> parseVarDecl)
 
 parseVarDecl :: Parser VarDecl
 parseVarDecl = do 
-  parseKeyword KwVal
+  parseKeyword KwVar
   space1 
   sc
   nm <- some alphaNumChar
   sc
+  parseSymbol SymColon
   parseSymbol SymEq
   sc
   t <- parseTerm
@@ -57,7 +58,7 @@ parseDataDecl = do
   xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymBrackC
-  return MkDataDecl{declNm=nm, declArgs=args,declPol=pol, declSig=xtors}
+  return $ MkDataDecl{declNm=nm, declArgs=args,declPol=pol, declSig=xtors}
 
 
 parseXtorSig :: Parser XtorSig

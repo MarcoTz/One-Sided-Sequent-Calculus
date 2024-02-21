@@ -3,7 +3,7 @@ module Parser.Keywords where
 data Keyword = 
   KwModule
   | KwData
-  | KwVal
+  | KwVar
   | Kwmu
   | KwMu
   | KwCase
@@ -13,7 +13,7 @@ data Keyword =
 instance Show Keyword where 
   show KwModule = "module"
   show KwData   = "data" 
-  show KwVal    = "val"
+  show KwVar    = "var"
   show KwMu     = "Mu"
   show Kwmu     = "mu"
   show KwCase   = "case"
