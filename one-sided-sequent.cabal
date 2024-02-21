@@ -29,6 +29,9 @@ library lang
                     Syntax.Parsed.Terms,
                     Syntax.Parsed.Program,
 
+                    Syntax.Desugared.Program,
+                    Syntax.Desugared.Terms,
+
                     Syntax.Typed.Terms, 
                     Syntax.Typed.Types,
                     Syntax.Typed.Program,
