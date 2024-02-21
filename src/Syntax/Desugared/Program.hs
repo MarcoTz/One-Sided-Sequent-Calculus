@@ -1,7 +1,7 @@
 module Syntax.Desugared.Program where 
 
 import Common
-import Syntax.Parsed.Terms
+import Syntax.Desugared.Terms
 
 data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 

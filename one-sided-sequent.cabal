@@ -28,7 +28,7 @@ library lang
 
                     Syntax.Parsed.Terms,
                     Syntax.Parsed.Program,
-
+                    
                     Syntax.Desugared.Program,
                     Syntax.Desugared.Terms,
 
@@ -44,6 +44,10 @@ library lang
                     Parser.Types,
                     Parser.Terms,
 
+                    Desugar.Definition,
+                    Desugar.Terms,
+                    Desugar.Program,
+
                     TypeInference.Definition,
                     TypeInference.GenerateConstraints,
                     TypeInference.SolveConstraints,
@@ -51,8 +55,10 @@ library lang
 
                     Eval.Eval,
                     Eval.Substitution,
-
-                    EmbedTyped,
+                    
+                    Embed.Definition,
+                    Embed.EmbedDesugared,
+                    Embed.EmbedTyped,
 
                     Pretty.Common,
                     Pretty.Driver,

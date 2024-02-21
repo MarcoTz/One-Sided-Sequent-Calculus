@@ -1,14 +1,19 @@
 module Pretty.Types where 
 
-import Syntax.Parsed.Program qualified as S
+import Syntax.Parsed.Program qualified as P
+import Syntax.Desugared.Program qualified as D
 import Syntax.Typed.Types qualified as T
+import Embed.Definition
+import Embed.EmbedDesugared ()
 import Pretty.Common ()
 
 import Data.List (intercalate)
 
-instance Show S.Ty where 
-  show (S.TyVar v) = v 
-  show (S.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+instance Show P.Ty where 
+  show (P.TyVar v) = v 
+  show (P.TyDecl nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+instance Show D.Ty where 
+  show = show . (embed :: D.Ty -> P.Ty)
 
 instance Show T.Ty where 
   show (T.TyVar v knd ) = v  <> " : " <> show knd
