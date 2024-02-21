@@ -1,7 +1,6 @@
 module Driver.Driver where 
 
 import Driver.Definition
-import Syntax.Parsed.Program  qualified as P
 import Syntax.Desugared.Terms qualified as D
 import Syntax.Desugared.Program qualified as D
 import Syntax.Typed.Terms     qualified as T
@@ -34,14 +33,10 @@ inferProgram path = do
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
   debug ("Successfully parsed " <> path)
-  debug ("parsed declarations " <> show (P.progDecls prog))
-  debug ("parsed terms " <> show (P.progVars prog))
   debug "desugaring Program"
   let desugar = runDesugarM (desugarProgram prog)
   prog' <- liftErr desugar
   debug "Desugared Program"
-  debug ("desugared declarations " <> show (D.progDecls prog'))
-  debug ("desugared terms " <> show (D.progVars prog'))
   decls <- inferDecls (D.progDecls prog')
   forM_ decls addDecl
   debug "inferring terms"
@@ -53,7 +48,7 @@ inferDecls decls = do
   debug ("checking declarations " <> show decls)
   let checked = runDeclM (checkDecls decls)
   decls' <- liftErr checked
-  debug ("checked declarations " <> show decls')
+  debug "checked declarations"
   return decls'
 
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
@@ -77,7 +72,7 @@ inferCommand c = do
 inferTerm :: D.Term -> DriverM T.Term
 inferTerm t = do 
   prog <- gets drvEnv 
-  debug (" Inferring " <> show t <> " with environment " <> show prog)
+  debug (" Inferring " <> show t)
   (t',ctrs) <- liftErr (runGenT prog t)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
   (_,varmap,kndmap) <- liftErr (runSolve ctrs)

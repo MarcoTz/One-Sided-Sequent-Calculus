@@ -34,4 +34,4 @@ liftErr (Right a) = return a
 debug :: String -> DriverM () 
 debug st = do  
   db <- gets drvDebug
-  Control.Monad.when db $ liftIO (putStrLn ("\t" <> st))
+  Control.Monad.when db $ liftIO (putStrLn st)
