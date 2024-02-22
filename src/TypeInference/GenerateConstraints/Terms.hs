@@ -13,13 +13,13 @@ import Errors
 import Control.Monad.Except
 import Control.Monad
 
-checkPts :: [T.Pattern] -> GenM (Maybe DataDecl)
+checkPts :: [D.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
-  decl <- findDataDecl (T.ptxt pt)
+  decl <- findDataDecl (D.ptxt pt)
   case decl of 
-    Nothing -> throwError (ErrXtorUndefined (T.ptxt pt))
-    Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
+    Nothing -> throwError (ErrXtorUndefined (D.ptxt pt))
+    Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut t pol u) = do 
@@ -66,16 +66,19 @@ genConstraintsTerm (D.Xtor nm args) = do
       let newT = TyDecl tyn newTyArgs (MkKind pl)
       return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
-  pts' <- mapM genConstraintsPt pts
-  decl <- checkPts pts' 
+  decl <- checkPts pts
   case decl of 
-    Nothing -> throwError (ErrPatMalformed pts')
+    Nothing -> throwError (ErrPatMalformed (D.ptxt <$> pts))
     Just MkDataDecl{declNm=tyn, declArgs=tyArgs, declPol=pl,declSig=_} -> do 
-      forM_ pts (\pt -> do 
-        forM_ (zip (D.ptv pt) tyArgs) (\(x,(y,z)) -> addVar x (TyVar y (MkKind z)))
-        genConstraintsCmd (D.ptcmd pt))
-      let newT = TyDecl tyn ( (\(v,p) -> TyVar v (MkKind p)) <$> tyArgs ) (MkKind pl)
-      return (T.XCase pts' newT)
+      (newVars, varmap) <- freshTyVarsDecl tyArgs
+      pts' <- forM pts (\pt -> do 
+        forM_ (zip (D.ptv pt) newVars) (\(x,(y,z)) -> addVar x (TyVar y (MkKind z)))
+        c' <- genConstraintsCmd (D.ptcmd pt)
+        return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
+      let pts'' = substVars varmap <$> pts'
+      let newTyArgs = (\(v,p) -> TyVar v (MkKind p)) <$> newVars
+      let newT = TyDecl tyn newTyArgs (MkKind pl)
+      return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
   insertConstraint (MkKindEq (T.getKind t') (MkKind Pos))
@@ -87,10 +90,6 @@ genConstraintsTerm (D.Lam v cmd) = do
   cmd' <- genConstraintsCmd cmd
   let newT = TyShift (TyVar tyV (MkKind Pos)) (MkKind Neg)
   return (T.Lam v cmd' newT)
-genConstraintsPt :: D.Pattern -> GenM T.Pattern
-genConstraintsPt (D.MkPattern xt vs cmd) = do
-  cmd' <- genConstraintsCmd cmd
-  return $ T.MkPattern xt vs cmd'
 
 genConstraintsType :: Ty -> GenM Pol 
 genConstraintsType _ = return Pos

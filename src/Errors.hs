@@ -2,7 +2,6 @@ module Errors where
 
 import Common 
 import Syntax.Typed.Types
-import Syntax.Typed.Terms
 
 data Error = 
   ErrArityXtor !XtorName
@@ -16,5 +15,5 @@ data Error =
   | ErrKindMisMatch !Pol !Pol
   | ErrTyNeq !Ty !Ty
   | ErrXtorUndefined !XtorName
-  | ErrPatMalformed ![Pattern]
+  | ErrPatMalformed ![XtorName]
   | ErrParser !String
