@@ -4,6 +4,8 @@ import Common
 import Syntax.Typed.Types
 import Syntax.Typed.Terms
 
+import Data.Map qualified as M
+
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
 data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
@@ -24,3 +26,15 @@ addVarToProgram var (MkProgram decls vars) = MkProgram decls (var:vars)
 --data RecDecl  = MkRecDecl{recVar :: !Variable, recTy :: !Ty, recBd :: !Term}
 --data Eps = MkEps 
 --newtype Codecl = MkCo DataDecl 
+--
+class SubstVars a where 
+  substVars :: a -> M.Map Variable Variable -> a 
+
+instance SubstVars XtorSig where 
+  substVars (MkXtorSig nm args) varmap = MkXtorSig nm ((`substVars` varmap) <$> args)
+
+instance SubstVars Ty where 
+ substVars ty@(TyVar v knd) varmap = case M.lookup v varmap of Nothing -> ty; Just v' -> TyVar v' knd
+ substVars (TyDecl tyn args knd) varmap = TyDecl tyn ((`substVars` varmap) <$> args) knd 
+ substVars (TyShift ty knd) varmap = TyShift (substVars ty varmap) knd
+ substVars (TyCo ty knd) varmap = TyCo (substVars ty varmap) knd

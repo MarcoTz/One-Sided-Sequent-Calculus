@@ -7,7 +7,6 @@ import Syntax.Typed.Terms
 import Common
 import Errors 
 
-import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
 import Data.Map qualified as M
@@ -97,11 +96,13 @@ unifyTypeConstraint (TyVar v knd) ty = do
   case M.lookup v vars of 
     Nothing -> addTyVar v ty 
     Just ty' -> addTyEq ty' ty
-unifyTypeConstraint ty1@(TyDecl n1 args1 knd1) ty2@(TyDecl n2 args2 knd2) = 
-  if n1 == n2 && length args1 == length args2 then do 
-    forM_ (zip args1 args2) (uncurry addTyEq)
-    unifyKinds knd1 knd2
-  else throwError (ErrTyNeq ty1 ty2)
+unifyTypeConstraint ty1 ty2@TyVar{} = unifyTypeConstraint ty2 ty1
+unifyTypeConstraint ty1@(TyDecl n1 args1 knd1) ty2@(TyDecl n2 args2 knd2) 
+ | n1 /= n2 = throwError (ErrTyNeq ty1 ty2)
+ | otherwise = do 
+     addConstraintsArgs n1 args1 args2
+     unifyKinds knd1 knd2
+
 unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do 
   unifyKinds knd1 knd2 
   unifyTypeConstraint ty1 ty2

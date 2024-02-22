@@ -7,6 +7,7 @@ import Syntax.Typed.Terms
 import Common
 import Errors
 
+import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
 import Data.Map qualified as M
@@ -52,6 +53,14 @@ freshKndVar = do
   modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (cnt+1) (declEnv s) (constrSet s))
   return newVar
 
+freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([(Variable,Pol)],M.Map Variable Variable) 
+freshTyVarsDecl vars = do
+  varL <- forM vars (\(v,p) -> do
+    v' <- freshTyVar
+    return (v,v',p))
+  let newVars = (\(_,v',p) -> (v',p)) <$> varL
+  let newMap = M.fromList ((\(v,v',_) -> (v,v')) <$> varL )
+  return (newVars, newMap)
 
 -- modify environment
 insertConstraint :: Constraint -> GenM () 
@@ -85,9 +94,9 @@ findDataDecl nm = do
 
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
-addConstraintsXtor _ [] [] = return () 
-addConstraintsXtor xt _ [] = throwError (ErrArity xt)
-addConstraintsXtor xt [] _ = throwError (ErrArity xt)
+addConstraintsXtor _ [] [] = return ()
+addConstraintsXtor xt _ [] = throwError (ErrArityXtor xt)
+addConstraintsXtor xt [] _ = throwError (ErrArityXtor xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   insertConstraint (MkTyEq ty1 ty2)
   insertConstraint (MkKindEq (getKind ty1) (getKind ty2))

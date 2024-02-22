@@ -13,7 +13,6 @@ import Errors
 import Control.Monad.Except
 import Control.Monad
 
-
 checkPts :: [T.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
@@ -57,11 +56,14 @@ genConstraintsTerm (D.Xtor nm args) = do
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError (ErrXtorUndefined nm) 
-    Just (MkDataDecl{declNm=tyn, declArgs=_, declPol=pl, declSig=_},xtSig) -> do
+    Just (MkDataDecl{declNm=tyn, declArgs=tyargs, declPol=pl, declSig=_},xtSig) -> do
+      (newVars,varmap) <- freshTyVarsDecl tyargs
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
-      addConstraintsXtor nm argTys (sigArgs xtSig)
-      let newT = TyDecl tyn argTys (MkKind pl)
+      let varsSubst = (`substVars` varmap) <$>  sigArgs xtSig
+      let newTyArgs = (\(v,p) -> TyVar v (MkKind p)) <$> newVars
+      addConstraintsXtor nm argTys varsSubst
+      let newT = TyDecl tyn newTyArgs (MkKind pl)
       return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
   pts' <- mapM genConstraintsPt pts

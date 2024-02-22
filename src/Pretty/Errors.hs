@@ -5,7 +5,8 @@ import Pretty.Types ()
 import Pretty.Terms ()
 
 instance Show Error where 
-  show (ErrArity xt)            = "Wrong arity for xtor " <> xt
+  show (ErrArityXtor xt)        = "Wrong arity for xtor " <> xt
+  show (ErrArityTy tyn)         = "Wrong arity for type " <> tyn
   show (ErrNotMatched xt)       = "Xtor " <> xt <> " not matched in case"
   show (ErrDeclExists n)        = "Declaration " <> n <> " already exists"
   show (ErrXtorExists xt)       = "Xtor " <> xt <> " already exists"
@@ -17,4 +18,3 @@ instance Show Error where
   show (ErrParser s)            = "Parser Error: " <> s
   show (ErrNameExists nm)       = "Name " <> nm <> "already exists"
   show (ErrDeclUndefined tyn)   = "Type " <> tyn <> " was not defined"
-

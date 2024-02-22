@@ -30,27 +30,21 @@ import Data.Text.IO qualified as TIO
 inferProgram :: FilePath -> DriverM () 
 inferProgram path = do 
   progCont <- liftIO $ TIO.readFile path
-  debug ("Parsing file " <> path)
+  debug ("Inferring program in file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
-  debug ("Successfully parsed " <> path)
-  debug "desugaring Program"
   let desugar = runDesugarM (desugarProgram prog)
   prog' <- liftErr desugar
-  debug "Desugared Program"
   decls <- inferDecls (D.progDecls prog')
   forM_ decls addDecl
-  debug "inferring terms"
   forM_ (D.progVars prog') inferVarDecl
 
 
 inferDecls :: [D.DataDecl] -> DriverM [T.DataDecl]
 inferDecls decls = do
   prog <- gets drvEnv
-  debug ("checking declarations " <> show decls)
   let checked = runGenM prog. genConstraintsDecl <$> decls
   decls' <- forM checked liftErr 
-  debug "checked declarations"
   return (fst <$> decls')
 
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
@@ -64,11 +58,11 @@ inferVarDecl (D.MkVarDecl n t) = do
 inferCommand :: D.Command -> DriverM T.Command
 inferCommand c = do 
   prog <- gets drvEnv
-  debug (" Inferring " <> show c <> " with environment " <> show prog)
+  debug ("Inferring " <> show c)
   (c',ctrs) <- liftErr (runGenM prog (genConstraintsCmd c))
   debug (show ctrs)
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
+  debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
   return c'
 
 inferTerm :: D.Term -> DriverM T.Term

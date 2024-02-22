@@ -64,8 +64,8 @@ substCase MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
 substCase MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
   let newcmd = substVar cmd t v 
   in substCase MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
-substCase MkPattern{ptxt=xt, ptv=[],ptcmd=_} (_:_) = throwError (ErrArity xt) 
-substCase MkPattern{ptxt=xt, ptv=(_:_), ptcmd=_} [] = throwError (ErrArity xt) 
+substCase MkPattern{ptxt=xt, ptv=[],ptcmd=_} (_:_) = throwError (ErrArityXtor xt) 
+substCase MkPattern{ptxt=xt, ptv=(_:_), ptcmd=_} [] = throwError (ErrArityXtor xt) 
 
 findXtor :: XtorName -> [Pattern] -> EvalM Pattern
 findXtor xt [] = throwError (ErrNotMatched xt) 

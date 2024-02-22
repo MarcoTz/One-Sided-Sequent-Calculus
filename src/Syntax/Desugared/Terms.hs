@@ -16,4 +16,3 @@ data Term =
   | XCase ![Pattern]
   | Shift !Term
   | Lam !Variable !Command
-

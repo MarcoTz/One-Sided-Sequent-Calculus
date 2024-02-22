@@ -5,7 +5,8 @@ import Syntax.Typed.Types
 import Syntax.Typed.Terms
 
 data Error = 
-  ErrArity !XtorName
+  ErrArityXtor !XtorName
+  | ErrArityTy !TypeName
   | ErrNotMatched !XtorName
   | ErrNameExists !String
   | ErrDeclExists !TypeName

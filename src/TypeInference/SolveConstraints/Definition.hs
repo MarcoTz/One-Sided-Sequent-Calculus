@@ -31,3 +31,17 @@ runSolveM :: ConstraintSet -> SolverM a -> Either Error (a,M.Map TypeVar Ty, M.M
 runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st, slvKndVars st)
+
+insertConstraint :: Constraint -> SolverM ()
+insertConstraint constr = do
+  (MkConstraintSet constrs) <- gets remConstrs
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (constr:constrs)))
+
+addConstraintsArgs :: TypeName -> [Ty] -> [Ty] -> SolverM () 
+addConstraintsArgs _ [] [] = return () 
+addConstraintsArgs tyn [] _ = throwError (ErrArityTy tyn)
+addConstraintsArgs tyn _ [] = throwError (ErrArityTy tyn)
+addConstraintsArgs tyn (ty1:tys1) (ty2:tys2) = do
+  insertConstraint (MkTyEq ty1 ty2)
+  addConstraintsArgs tyn tys1 tys2
+
