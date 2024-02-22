@@ -72,7 +72,8 @@ inferTerm t = do
   (t',ctrs) <- liftErr (runGenM prog (genConstraintsTerm t))
   debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
-  debug (" Final Type : " <> show (T.getType t'))
+  debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
+  let t'' = T.substVars varmap t' 
+  debug ("Final Type : " <> show (T.getType t''))
   return t'
 

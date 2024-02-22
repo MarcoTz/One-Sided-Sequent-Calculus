@@ -60,7 +60,7 @@ genConstraintsTerm (D.Xtor nm args) = do
       (newVars,varmap) <- freshTyVarsDecl tyargs
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
-      let varsSubst = (`substVars` varmap) <$>  sigArgs xtSig
+      let varsSubst = substVars varmap <$>  sigArgs xtSig
       let newTyArgs = (\(v,p) -> TyVar v (MkKind p)) <$> newVars
       addConstraintsXtor nm argTys varsSubst
       let newT = TyDecl tyn newTyArgs (MkKind pl)

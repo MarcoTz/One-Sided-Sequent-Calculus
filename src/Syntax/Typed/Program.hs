@@ -5,6 +5,7 @@ import Syntax.Typed.Types
 import Syntax.Typed.Terms
 
 import Data.Map qualified as M
+import Data.Maybe (fromMaybe)
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
@@ -28,13 +29,29 @@ addVarToProgram var (MkProgram decls vars) = MkProgram decls (var:vars)
 --newtype Codecl = MkCo DataDecl 
 --
 class SubstVars a where 
-  substVars :: a -> M.Map Variable Variable -> a 
+  substVars :: M.Map Variable Ty -> a -> a 
 
 instance SubstVars XtorSig where 
-  substVars (MkXtorSig nm args) varmap = MkXtorSig nm ((`substVars` varmap) <$> args)
+  substVars varmap (MkXtorSig nm args) = MkXtorSig nm (substVars varmap <$> args)
 
 instance SubstVars Ty where 
- substVars ty@(TyVar v knd) varmap = case M.lookup v varmap of Nothing -> ty; Just v' -> TyVar v' knd
- substVars (TyDecl tyn args knd) varmap = TyDecl tyn ((`substVars` varmap) <$> args) knd 
- substVars (TyShift ty knd) varmap = TyShift (substVars ty varmap) knd
- substVars (TyCo ty knd) varmap = TyCo (substVars ty varmap) knd
+ substVars varmap ty@(TyVar v _) = fromMaybe ty (M.lookup v varmap) 
+ substVars varmap (TyDecl tyn args knd) = TyDecl tyn (substVars varmap <$> args) knd 
+ substVars varmap (TyShift ty knd) = TyShift (substVars varmap ty) knd
+ substVars varmap (TyCo ty knd) = TyCo (substVars varmap ty) knd
+
+instance SubstVars Term where 
+ substVars varmap (Var v ty) = Var v (substVars varmap ty)
+ substVars varmap (Mu v c ty) = Mu v (substVars varmap c) (substVars varmap ty)
+ substVars varmap (Xtor nm args ty) = Xtor nm (substVars varmap <$> args) (substVars varmap ty)
+ substVars varmap (XCase pts ty) = XCase (substVars varmap <$> pts) (substVars varmap ty)
+ substVars varmap (Shift t ty) = Shift (substVars varmap t) (substVars varmap ty)
+ substVars varmap (Lam v t ty) = Lam v (substVars varmap t) (substVars varmap ty)
+
+instance SubstVars Pattern where 
+  substVars varmap (MkPattern xt vars c) = MkPattern xt vars (substVars varmap c)
+
+instance SubstVars Command where 
+  substVars varmap (Cut t pol u) = Cut (substVars varmap t) pol (substVars varmap u) 
+  substVars _ Done = Done
+

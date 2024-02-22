@@ -53,13 +53,13 @@ freshKndVar = do
   modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (cnt+1) (declEnv s) (constrSet s))
   return newVar
 
-freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([(Variable,Pol)],M.Map Variable Variable) 
+freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([(Variable,Pol)],M.Map Variable Ty) 
 freshTyVarsDecl vars = do
   varL <- forM vars (\(v,p) -> do
     v' <- freshTyVar
     return (v,v',p))
   let newVars = (\(_,v',p) -> (v',p)) <$> varL
-  let newMap = M.fromList ((\(v,v',_) -> (v,v')) <$> varL )
+  let newMap = M.fromList ((\(v,v',p) -> (v,TyVar v' (MkKind p))) <$> varL )
   return (newVars, newMap)
 
 -- modify environment
