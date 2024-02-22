@@ -2,9 +2,6 @@ module Syntax.Typed.Types where
 
 import Common 
 
-type KindVar = String
-data Kind = MkKind !Pol | MkKindVar !KindVar 
-  deriving (Eq)
 
 data Ty = 
   TyVar !TypeVar !Kind

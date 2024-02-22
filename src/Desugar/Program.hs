@@ -1,24 +1,39 @@
 module Desugar.Program where 
 
-import Control.Monad 
-import Control.Monad.State
-
+import Errors
+import Common
 import Desugar.Definition
 import Desugar.Terms
 import Syntax.Parsed.Program qualified as P
 import Syntax.Desugared.Program qualified as D
+import Syntax.Desugared.Types qualified as D
+
+import Control.Monad.Except
+import Control.Monad.State
+import Control.Monad 
+import Data.Map qualified as M
+
+
+checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
+checkNames [] _ = return ()
+checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
 
 desugarProgram :: P.Program -> DesugarM D.Program
 desugarProgram (P.MkProgram decls vars) = do 
+  let declNms = P.declNm <$> decls
+  checkNames declNms ErrDeclExists
+  let xtNms = P.sigName <$> concatMap P.declSig decls
+  checkNames xtNms ErrXtorExists
   decls' <- forM decls (\d -> do
     d' <- desugarDecl d
-    addDataDecl d' 
+    addDataDecl d'
     return d')
   vars' <- forM vars desugarVar
   return $ D.MkProgram decls' vars'
 
 desugarDecl :: P.DataDecl -> DesugarM D.DataDecl
-desugarDecl (P.MkDataDecl tyn tyargs  pol sigs)= do 
+desugarDecl d@(P.MkDataDecl tyn tyargs  pol sigs)= do 
+  setCurrDecl d
   sigs' <- forM sigs desugarXtorSig
   return $ D.MkDataDecl tyn tyargs pol sigs'
 
@@ -33,11 +48,22 @@ desugarXtorSig (P.MkXtorSig xtn args) = do
   return (D.MkXtorSig xtn args')
 
 desugarTy :: P.Ty -> DesugarM D.Ty
+-- a type variable appearing in  a declaration is either 
+-- an actual variable that is the argument of the current declaration
+--   in this case it should be in the type args of descurrdecl
+-- a type name (that has to be in the environment) without type arugments
 desugarTy (P.TyVar v) = do 
-  decls <- gets desDecls
-  let declNms = D.declNm <$> decls
-  if v `elem` declNms then return $ D.TyDecl v [] else return $ D.TyVar v
+  decls <- gets desDecls 
+  case M.lookup v decls of 
+    Just decl -> return $ D.TyDecl v [] (MkKind $ D.declPol decl)
+    Nothing -> do
+      currDecl <- getCurrDecl (ErrVarUndefined v)
+      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
+        Nothing -> throwError (ErrVarUndefined v)
+        Just pol -> return $ D.TyVar v (MkKind pol)
+
+-- this always has to be the current type or one that has been declared before
 desugarTy (P.TyDecl tyn args) = do 
   args' <- forM args desugarTy 
-  return $ D.TyDecl tyn args'
-
+  pl <- getTynPol tyn 
+  return $ D.TyDecl tyn args' (MkKind pl)

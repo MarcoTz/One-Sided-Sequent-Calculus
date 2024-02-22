@@ -31,6 +31,7 @@ library lang
                     
                     Syntax.Desugared.Program,
                     Syntax.Desugared.Terms,
+                    Syntax.Desugared.Types,
 
                     Syntax.Typed.Terms, 
                     Syntax.Typed.Types,
@@ -53,7 +54,6 @@ library lang
                     TypeInference.GenerateConstraints.Program,
                     TypeInference.SolveConstraints.Definition,
                     TypeInference.SolveConstraints.Solver,
-                    TypeInference.DataDecl,
                     TypeInference.Constraints,
 
                     Eval.Eval,

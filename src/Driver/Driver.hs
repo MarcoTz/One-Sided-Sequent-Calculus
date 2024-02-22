@@ -12,8 +12,9 @@ import Parser.Program
 import Desugar.Definition
 import Desugar.Program
 
-import TypeInference.DataDecl
+import TypeInference.GenerateConstraints.Definition
 import TypeInference.GenerateConstraints.Terms
+import TypeInference.GenerateConstraints.Program
 import TypeInference.SolveConstraints.Definition
 import TypeInference.SolveConstraints.Solver
 
@@ -45,17 +46,18 @@ inferProgram path = do
 
 inferDecls :: [D.DataDecl] -> DriverM [T.DataDecl]
 inferDecls decls = do
+  prog <- gets drvEnv
   debug ("checking declarations " <> show decls)
-  let checked = runDeclM (checkDecls decls)
-  decls' <- liftErr checked
+  let checked = runGenM prog. genConstraintsDecl <$> decls
+  decls' <- forM checked liftErr 
   debug "checked declarations"
-  return decls'
+  return (fst <$> decls')
 
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
 inferVarDecl (D.MkVarDecl n t) = do 
   t' <- inferTerm t
   let newDecl = T.MkVarDecl n (T.getType t') t'
-  addVar newDecl
+  addVarDecl newDecl
   return $ T.MkVarDecl n (T.getType t') t' 
 
 
@@ -63,7 +65,7 @@ inferCommand :: D.Command -> DriverM T.Command
 inferCommand c = do 
   prog <- gets drvEnv
   debug (" Inferring " <> show c <> " with environment " <> show prog)
-  (c',ctrs) <- liftErr (runGenCmd prog c)
+  (c',ctrs) <- liftErr (runGenM prog (genConstraintsCmd c))
   debug (show ctrs)
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
@@ -73,7 +75,7 @@ inferTerm :: D.Term -> DriverM T.Term
 inferTerm t = do 
   prog <- gets drvEnv 
   debug (" Inferring " <> show t)
-  (t',ctrs) <- liftErr (runGenT prog t)
+  (t',ctrs) <- liftErr (runGenM prog (genConstraintsTerm t))
   debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)

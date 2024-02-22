@@ -20,3 +20,7 @@ multPol Neg Neg = Pos
 
 type Variable = String
 
+type KindVar = String
+data Kind = MkKind !Pol | MkKindVar !KindVar 
+  deriving (Eq)
+

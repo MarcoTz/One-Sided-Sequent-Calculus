@@ -15,4 +15,6 @@ instance Show Error where
   show (ErrXtorUndefined xt)    = "Xtor " <> show xt <> " was not defined" 
   show (ErrPatMalformed pts)    = "Patterns " <> show pts <> " not well-formed"
   show (ErrParser s)            = "Parser Error: " <> s
+  show (ErrNameExists nm)       = "Name " <> nm <> "already exists"
+  show (ErrDeclUndefined tyn)   = "Type " <> tyn <> " was not defined"
 

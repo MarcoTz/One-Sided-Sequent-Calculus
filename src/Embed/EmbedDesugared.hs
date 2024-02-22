@@ -3,8 +3,10 @@ module Embed.EmbedDesugared where
 import Embed.Definition
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
+import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P
 import Syntax.Parsed.Program     qualified as P 
+
 
 instance Embed D.Term P.Term where 
   embed (D.Var v) = P.Var v
@@ -28,8 +30,8 @@ instance Embed D.XtorSig P.XtorSig where
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
 
 instance Embed D.Ty P.Ty where 
-  embed (D.TyVar v) = P.TyVar v 
-  embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)
+  embed (D.TyVar v _) = P.TyVar v 
+  embed (D.TyDecl nm args _) = P.TyDecl nm (embed <$> args)
 
 
 instance Embed D.VarDecl P.VarDecl where 

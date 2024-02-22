@@ -22,8 +22,8 @@ runDriverM drvst m = runExceptT $ runStateT (getDriverM m) drvst
 addDecl :: DataDecl -> DriverM ()
 addDecl decl = modify (\s -> MkDriverState (drvDebug s) (addDeclToProgram decl (drvEnv s)))
 
-addVar :: VarDecl -> DriverM ()
-addVar var = modify (\s -> MkDriverState (drvDebug s) (addVarToProgram var (drvEnv s)))
+addVarDecl :: VarDecl -> DriverM ()
+addVarDecl var = modify (\s -> MkDriverState (drvDebug s) (addVarToProgram var (drvEnv s)))
 
 liftErr :: Either Error a -> DriverM a
 liftErr (Left err) = do 

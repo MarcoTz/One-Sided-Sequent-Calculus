@@ -1,4 +1,5 @@
 module Embed.EmbedTyped where 
+
 import Embed.Definition
 import Embed.EmbedDesugared () 
 import Syntax.Typed.Terms        qualified as T 
@@ -6,6 +7,7 @@ import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Types        qualified as T
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
+import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P 
 import Syntax.Parsed.Program     qualified as P
 
@@ -42,9 +44,9 @@ instance Embed T.XtorSig P.XtorSig where
   embed t = (embed :: D.XtorSig -> P.XtorSig) $ (embed :: T.XtorSig -> D.XtorSig) t
 
 instance Embed T.Ty D.Ty where 
-  embed (T.TyVar v _) = D.TyVar v 
-  embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
-  embed (T.TyShift ty _)  = embed ty 
+  embed (T.TyVar v knd) = D.TyVar v knd
+  embed (T.TyDecl nm args knd) = D.TyDecl nm (embed <$> args) knd
+  embed (T.TyShift ty _)  = embed ty
   embed (T.TyCo ty _) = embed ty 
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 

@@ -22,11 +22,6 @@ checkPts (pt:pts) = do
     Nothing -> throwError (ErrXtorUndefined (T.ptxt pt))
     Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
-runGenCmd :: Program -> D.Command -> Either Error (T.Command,ConstraintSet)
-runGenCmd prog cmd = runGenM prog (genConstraintsCmd cmd)
-runGenT :: Program -> D.Term -> Either Error (T.Term,ConstraintSet)
-runGenT prog t = runGenM prog (genConstraintsTerm t)
-
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut t pol u) = do 
   t' <- genConstraintsTerm t

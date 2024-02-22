@@ -1,7 +1,7 @@
 module Pretty.Types where 
 
 import Syntax.Parsed.Program qualified as P
-import Syntax.Desugared.Program qualified as D
+import Syntax.Desugared.Types qualified as D
 import Syntax.Typed.Types qualified as T
 import Embed.Definition
 import Embed.EmbedDesugared ()
@@ -22,7 +22,3 @@ instance Show T.Ty where
   show (T.TyDecl nm args knd) = nm <> "(" <> intercalate ", " (show <$> args) <> ") : " <> show knd 
   show (T.TyShift ty knd) = "{" <> show ty <> "} : " <>  show knd
   show (T.TyCo ty _) = "co " <> show ty
-
-instance Show T.Kind where 
-  show (T.MkKind p) = show p
-  show (T.MkKindVar kv) = kv
