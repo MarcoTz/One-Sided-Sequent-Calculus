@@ -5,4 +5,5 @@ data Fun(a:+,b:-):-
 }
 
 var nothing := mu x.<case { Ap(x,y) => Done } | + | x>;
-var id := Mu x. mu y.<case { Ap(a,b) => <a|+|b> } | + | Ap(x,y)>;
+var id := Mu x. <Mu a. < case { Ap(x,a) => <x|+|a> } | + | Ap(x,a)> | + | x> ;
+

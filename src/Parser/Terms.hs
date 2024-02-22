@@ -10,12 +10,10 @@ import Common
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
-import Pretty.Terms ()
-
 
 -- Xtors with no arguments are parsed as variables
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> try parseVar
+parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
 parseVar = do 

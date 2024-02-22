@@ -38,6 +38,7 @@ parseVarDecl = do
   parseSymbol SymEq
   sc
   t <- parseTerm
+  sc
   parseSymbol SymSemi
   return (MkVarDecl nm t)
 
