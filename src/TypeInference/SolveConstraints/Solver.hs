@@ -14,11 +14,11 @@ import Data.Map qualified as M
 
 solve :: SolverM () 
 solve = do
-  ctrs <- gets remConstrs
+  (MkConstraintSet ctrs) <- gets remConstrs
   case ctrs of 
     [] -> return ()
     (ctr1:ctrs') -> do 
-      modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) ctrs')
+      modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet ctrs'))
       case ctr1 of 
         MkTyEq ty1 ty2 -> do 
           unifyTypeConstraint ty1 ty2 
@@ -45,18 +45,18 @@ addKndVar v p = do
 
 addVarEq :: KindVar -> KindVar -> SolverM () 
 addVarEq v1 v2 = do 
-  eqs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkKindEq (MkKindVar v1) (MkKindVar v2) :eqs))
+  (MkConstraintSet eqs) <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (MkKindEq (MkKindVar v1) (MkKindVar v2) :eqs)))
 
 addVarNeq :: KindVar -> KindVar -> SolverM ()
 addVarNeq v1 v2 = do 
-  neqs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkFlipEq (MkKindVar v1) (MkKindVar v2) : neqs) )
+  (MkConstraintSet neqs) <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (MkFlipEq (MkKindVar v1) (MkKindVar v2) : neqs)))
 
 addTyEq :: Ty -> Ty -> SolverM () 
 addTyEq ty1 ty2 = do 
-  constrs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkTyEq ty1 ty2 : constrs))
+  (MkConstraintSet constrs) <- gets remConstrs 
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (MkTyEq ty1 ty2 : constrs)))
 
 unifyKinds :: Kind -> Kind -> SolverM () 
 unifyKinds (MkKind p1) (MkKind p2) = 

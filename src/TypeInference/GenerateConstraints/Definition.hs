@@ -22,17 +22,17 @@ data GenerateState = MkGenState{
   tyVarCnt :: !Int,
   kndVarCnt :: !Int,
   declEnv :: !Program,
-  constrSet :: ![Constraint]
+  constrSet :: !ConstraintSet 
 }
 
 initialGenState :: Program -> GenerateState 
-initialGenState prog = MkGenState M.empty M.empty 0 0 prog []
+initialGenState prog = MkGenState M.empty M.empty 0 0 prog (MkConstraintSet [])
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except Error) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError Error)
 
-runGenM :: Program -> GenM a -> Either Error (a, [Constraint])
+runGenM :: Program -> GenM a -> Either Error (a, ConstraintSet)
 runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
@@ -54,8 +54,8 @@ freshKndVar = do
 
 
 -- modify environment
-addConstraint :: Constraint -> GenM () 
-addConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (ctr:constrSet s))
+insertConstraint :: Constraint -> GenM () 
+insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
 
 addVar :: Variable -> Ty -> GenM ()
 addVar v ty = do 
@@ -89,6 +89,6 @@ addConstraintsXtor _ [] [] = return ()
 addConstraintsXtor xt _ [] = throwError (ErrArity xt)
 addConstraintsXtor xt [] _ = throwError (ErrArity xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
-  addConstraint (MkTyEq ty1 ty2)
-  addConstraint (MkKindEq (getKind ty1) (getKind ty2))
+  insertConstraint (MkTyEq ty1 ty2)
+  insertConstraint (MkKindEq (getKind ty1) (getKind ty2))
   addConstraintsXtor xt tys1 tys2

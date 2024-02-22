@@ -22,19 +22,19 @@ checkPts (pt:pts) = do
     Nothing -> throwError (ErrXtorUndefined (T.ptxt pt))
     Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . T.ptxt) pts then return (Just d) else return Nothing
 
-runGenCmd :: Program -> D.Command -> Either Error (T.Command,[Constraint])
+runGenCmd :: Program -> D.Command -> Either Error (T.Command,ConstraintSet)
 runGenCmd prog cmd = runGenM prog (genConstraintsCmd cmd)
-runGenT :: Program -> D.Term -> Either Error (T.Term,[Constraint])
+runGenT :: Program -> D.Term -> Either Error (T.Term,ConstraintSet)
 runGenT prog t = runGenM prog (genConstraintsTerm t)
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut t pol u) = do 
   t' <- genConstraintsTerm t
   u' <- genConstraintsTerm u
-  addConstraint (MkTyEq (T.getType t') (T.getType u'))
+  insertConstraint (MkTyEq (T.getType t') (T.getType u'))
   pol' <- genConstraintsType (T.getType t')
-  addConstraint (MkFlipEq (T.getKind t') (T.getKind u'))
-  addConstraint (MkProdEq pol' (T.getKind t') (MkKind pol))
+  insertConstraint (MkFlipEq (T.getKind t') (T.getKind u'))
+  insertConstraint (MkProdEq pol' (T.getKind t') (MkKind pol))
   return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
   
@@ -50,7 +50,7 @@ genConstraintsTerm (D.Mu v c) = do
   tyV <- freshTyVar
   kndV1 <- freshKndVar 
   kndV2 <- freshKndVar 
-  addConstraint (MkFlipEq (MkKindVar kndV1) (MkKindVar kndV2))
+  insertConstraint (MkFlipEq (MkKindVar kndV1) (MkKindVar kndV2))
   addVar v (TyVar tyV (MkKindVar kndV1))
   addTyVar tyV (MkKindVar kndV1)
   c' <- genConstraintsCmd c
@@ -81,7 +81,7 @@ genConstraintsTerm (D.XCase pts)  = do
       return (T.XCase pts' newT)
 genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
-  addConstraint (MkKindEq (T.getKind t') (MkKind Pos))
+  insertConstraint (MkKindEq (T.getKind t') (MkKind Pos))
   let newT = TyShift (T.getType t') (MkKind Pos)
   return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  

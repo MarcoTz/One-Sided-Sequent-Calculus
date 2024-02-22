@@ -8,3 +8,8 @@ data Constraint =
   | MkKindEq !Kind !Kind
   | MkFlipEq !Kind !Kind
   | MkProdEq !Pol !Kind !Kind
+
+newtype ConstraintSet = MkConstraintSet { ctrConstr :: [Constraint]}
+
+addConstraint :: Constraint -> ConstraintSet -> ConstraintSet
+addConstraint c (MkConstraintSet ctrs) = MkConstraintSet (c:ctrs)

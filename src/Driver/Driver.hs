@@ -23,7 +23,6 @@ import Pretty.TypeInference ()
 
 import Control.Monad.State
 import Control.Monad
-import Data.List (intercalate)
 import Data.Text.IO qualified as TIO
 
 
@@ -65,7 +64,7 @@ inferCommand c = do
   prog <- gets drvEnv
   debug (" Inferring " <> show c <> " with environment " <> show prog)
   (c',ctrs) <- liftErr (runGenCmd prog c)
-  debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
+  debug (show ctrs)
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
   return c'
@@ -75,7 +74,7 @@ inferTerm t = do
   prog <- gets drvEnv 
   debug (" Inferring " <> show t)
   (t',ctrs) <- liftErr (runGenT prog t)
-  debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
+  debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
   debug (" Final Type : " <> show (T.getType t'))
