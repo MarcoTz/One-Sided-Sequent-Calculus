@@ -63,7 +63,9 @@ inferCommand c = do
   debug (show ctrs)
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
-  return c'
+  let c'' = T.substVars varmap c'
+  let c''' = T.substKVars kndmap c''
+  return c'''
 
 inferTerm :: D.Term -> DriverM T.Term
 inferTerm t = do 
@@ -73,7 +75,8 @@ inferTerm t = do
   debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
-  let t'' = T.substVars varmap t' 
-  debug ("Final Type : " <> show (T.getType t''))
-  return t'
+  let t'' = T.substVars varmap t'
+  let t''' = T.substKVars kndmap t''
+  debug ("Final Type : " <> show (T.getType t'''))
+  return t'''
 
