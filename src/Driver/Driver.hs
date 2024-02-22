@@ -13,8 +13,9 @@ import Desugar.Definition
 import Desugar.Program
 
 import TypeInference.DataDecl
-import TypeInference.GenerateConstraints
-import TypeInference.SolveConstraints
+import TypeInference.GenerateConstraints.Terms
+import TypeInference.SolveConstraints.Definition
+import TypeInference.SolveConstraints.Solver
 
 import Pretty.Terms ()
 import Pretty.Program ()
@@ -65,7 +66,7 @@ inferCommand c = do
   debug (" Inferring " <> show c <> " with environment " <> show prog)
   (c',ctrs) <- liftErr (runGenCmd prog c)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
-  (_,varmap,kndmap) <- liftErr (runSolve ctrs)
+  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
   return c'
 
@@ -75,7 +76,7 @@ inferTerm t = do
   debug (" Inferring " <> show t)
   (t',ctrs) <- liftErr (runGenT prog t)
   debug (" Constraints " <> intercalate "\n" (show <$> ctrs))
-  (_,varmap,kndmap) <- liftErr (runSolve ctrs)
+  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug (" Substitutions " <> show varmap <> "\n" <> show kndmap)
   debug (" Final Type : " <> show (T.getType t'))
   return t'

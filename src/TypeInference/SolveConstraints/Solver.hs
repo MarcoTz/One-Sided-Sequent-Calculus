@@ -1,41 +1,16 @@
-module TypeInference.SolveConstraints where 
+module TypeInference.SolveConstraints.Solver where 
 
-import TypeInference.Definition qualified as Df
+import TypeInference.SolveConstraints.Definition
+import TypeInference.Constraints
 import Syntax.Typed.Types
 import Syntax.Typed.Terms
-import Common 
-import Errors
-import Pretty.Common ()
-import Pretty.Types ()
+import Common
+import Errors 
 
-import Data.Map qualified as M
-import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad
-
---
--- Solver Monad 
--- 
-data SolverState = MkSolverState 
-  { 
-  slvTyVars :: !(M.Map TypeVar Ty), 
-  slvKndVars :: !(M.Map KindVar Pol),
-  remConstrs :: ![Df.Constraint]
-}
-
-initialSolverState :: [Df.Constraint] -> SolverState
-initialSolverState = MkSolverState M.empty M.empty 
-
-newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except Error) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError Error)
-
-runSolveM :: [Df.Constraint] -> SolverM a -> Either Error (a,M.Map TypeVar Ty, M.Map KindVar Pol)
-runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
-  Left err -> Left err 
-  Right (x,st) -> Right (x,slvTyVars st, slvKndVars st)
-
-runSolve :: [Df.Constraint] -> Either Error ((),M.Map TypeVar Ty,M.Map KindVar Pol)
-runSolve ctrs = runSolveM ctrs solve
+import Control.Monad.State
+import Control.Monad.Except
+import Data.Map qualified as M
 
 solve :: SolverM () 
 solve = do
@@ -45,16 +20,16 @@ solve = do
     (ctr1:ctrs') -> do 
       modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) ctrs')
       case ctr1 of 
-        Df.MkTyEq ty1 ty2 -> do 
+        MkTyEq ty1 ty2 -> do 
           unifyTypeConstraint ty1 ty2 
           solve
-        Df.MkKindEq knd1 knd2 -> do 
+        MkKindEq knd1 knd2 -> do 
           unifyKinds knd1 knd2 
           solve
-        Df.MkFlipEq knd1 knd2 -> do
+        MkFlipEq knd1 knd2 -> do
           unifyFlipKinds knd1 knd2
           solve
-        Df.MkProdEq k1 k2 k3 -> do
+        MkProdEq k1 k2 k3 -> do
           unifyProdKinds k1 k2 k3
           solve 
 
@@ -71,17 +46,17 @@ addKndVar v p = do
 addVarEq :: KindVar -> KindVar -> SolverM () 
 addVarEq v1 v2 = do 
   eqs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkKindEq (MkKindVar v1) (MkKindVar v2) :eqs))
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkKindEq (MkKindVar v1) (MkKindVar v2) :eqs))
 
 addVarNeq :: KindVar -> KindVar -> SolverM ()
 addVarNeq v1 v2 = do 
   neqs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkFlipEq (MkKindVar v1) (MkKindVar v2) : neqs) )
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkFlipEq (MkKindVar v1) (MkKindVar v2) : neqs) )
 
 addTyEq :: Ty -> Ty -> SolverM () 
 addTyEq ty1 ty2 = do 
   constrs <- gets remConstrs 
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (Df.MkTyEq ty1 ty2 : constrs))
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkTyEq ty1 ty2 : constrs))
 
 unifyKinds :: Kind -> Kind -> SolverM () 
 unifyKinds (MkKind p1) (MkKind p2) = 

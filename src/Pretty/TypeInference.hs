@@ -1,6 +1,6 @@
 module Pretty.TypeInference where 
 
-import TypeInference.Definition
+import TypeInference.Constraints
 import Pretty.Types ()
 
 instance Show Constraint where 

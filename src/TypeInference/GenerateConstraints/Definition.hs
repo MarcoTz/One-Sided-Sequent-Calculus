@@ -1,23 +1,19 @@
-module TypeInference.Definition where 
+module TypeInference.GenerateConstraints.Definition where 
 
+import TypeInference.Constraints
 import Syntax.Typed.Types
-import Syntax.Typed.Terms
 import Syntax.Typed.Program
+import Syntax.Typed.Terms
 import Common
 import Errors
 
-import Data.Map qualified as M
-import Control.Monad.Except
 import Control.Monad.State
+import Control.Monad.Except
+import Data.Map qualified as M
 
 ---
 --- Constraint Monad
 --- 
-data Constraint = 
-  MkTyEq !Ty !Ty
-  | MkKindEq !Kind !Kind
-  | MkFlipEq !Kind !Kind
-  | MkProdEq !Pol !Kind !Kind
 
 
 data GenerateState = MkGenState{

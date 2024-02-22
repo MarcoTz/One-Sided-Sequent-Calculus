@@ -48,10 +48,13 @@ library lang
                     Desugar.Terms,
                     Desugar.Program,
 
-                    TypeInference.Definition,
-                    TypeInference.GenerateConstraints,
-                    TypeInference.SolveConstraints,
+                    TypeInference.GenerateConstraints.Definition,
+                    TypeInference.GenerateConstraints.Terms,
+                    TypeInference.GenerateConstraints.Program,
+                    TypeInference.SolveConstraints.Definition,
+                    TypeInference.SolveConstraints.Solver,
                     TypeInference.DataDecl,
+                    TypeInference.Constraints,
 
                     Eval.Eval,
                     Eval.Substitution,
