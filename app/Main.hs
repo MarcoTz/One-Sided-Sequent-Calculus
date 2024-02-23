@@ -23,10 +23,10 @@ parseExample db path = do
   res <- runDriverM drvSt (inferProgram path)
   if db then case res of 
     Left err -> do 
-      putStrLn ( colorError <> "Error Parsing Example: \n\t" <> show err <> colorDefault)
+      putStrLn ( colorError <> "Error Checking Example: \n\t" <> show err <> colorDefault)
       putStrLn "\n=========================================================\n"
     Right _ -> do
-      putStrLn (colorSuccess <> "Example " <> path <> " Parsed Successfully" <> colorDefault)
+      putStrLn (colorSuccess <> "Example " <> path <> " Checked Successfully" <> colorDefault)
       putStrLn "\n=========================================================\n"
   else case res of 
     Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> path <> " failed Successfully" <> colorDefault)
