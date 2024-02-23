@@ -35,10 +35,10 @@ instance SubstVars XtorSig where
   substVars varmap (MkXtorSig nm args) = MkXtorSig nm (substVars varmap <$> args)
 
 instance SubstVars Ty where 
-  substVars varmap ty@(TyVar v _) = fromMaybe ty (M.lookup v varmap) 
-  substVars varmap (TyDecl tyn args knd) = TyDecl tyn (substVars varmap <$> args) knd 
-  substVars varmap (TyShift ty knd) = TyShift (substVars varmap ty) knd
-  substVars varmap (TyCo ty knd) = TyCo (substVars varmap ty) knd
+  substVars varmap ty@(TyVar v) = fromMaybe ty (M.lookup v varmap) 
+  substVars varmap (TyDecl tyn args) = TyDecl tyn (substVars varmap <$> args)
+  substVars varmap (TyShift ty) = TyShift (substVars varmap ty)
+  substVars varmap (TyCo ty) = TyCo (substVars varmap ty)
 
 instance SubstVars Term where 
   substVars varmap (Var v ty) = Var v (substVars varmap ty)
@@ -54,30 +54,3 @@ instance SubstVars Pattern where
 instance SubstVars Command where 
   substVars varmap (Cut t pol u) = Cut (substVars varmap t) pol (substVars varmap u) 
   substVars _ Done = Done
-
-class SubstKVars a where 
-  substKVars :: M.Map KindVar Pol -> a -> a 
-
-instance SubstKVars Term where 
-  substKVars varmap (Var v ty) = Var v (substKVars varmap ty)
-  substKVars varmap (Mu v c ty) = Mu v (substKVars varmap c) (substKVars varmap ty)
-  substKVars varmap (Xtor nm args ty) = Xtor nm (substKVars varmap <$> args) (substKVars varmap ty)
-  substKVars varmap (XCase pts ty) = XCase (substKVars varmap <$> pts) (substKVars varmap ty)
-  substKVars varmap (Shift t ty) = Shift (substKVars varmap t) (substKVars varmap ty)
-  substKVars varmap (Lam v t ty) = Lam v (substKVars varmap t) (substKVars varmap ty)
-
-instance SubstKVars Pattern where 
-  substKVars varmap (MkPattern xt vars c) = MkPattern xt vars (substKVars varmap c)
-instance SubstKVars Command where 
-  substKVars varmap (Cut t pol u) = Cut (substKVars varmap t) pol (substKVars varmap u) 
-  substKVars _ Done = Done 
-
-instance SubstKVars Kind where 
-  substKVars _ (MkKind pol) = MkKind pol
-  substKVars varmap (MkKindVar kv) = maybe (MkKindVar kv) MkKind (M.lookup kv varmap)
-
-instance SubstKVars Ty where 
-  substKVars varmap (TyVar v knd) = TyVar v (substKVars varmap knd) 
-  substKVars varmap (TyDecl tyn args knd) = TyDecl tyn (substKVars varmap <$> args) (substKVars varmap knd)
-  substKVars varmap (TyShift ty knd) = TyShift (substKVars varmap ty) (substKVars varmap knd)
-  substKVars varmap (TyCo ty knd) = TyCo (substKVars varmap ty) (substKVars varmap knd)

@@ -27,10 +27,10 @@ genConstraintsXtorSig (D.MkXtorSig nm args) = do
   return $ T.MkXtorSig nm args'
 
 genConstraintsTy :: D.Ty -> GenM T.Ty
-genConstraintsTy (D.TyVar v knd) = return $ T.TyVar v knd
-genConstraintsTy (D.TyDecl tyn args knd) = do 
+genConstraintsTy (D.TyVar v) = return $ T.TyVar v
+genConstraintsTy (D.TyDecl tyn args) = do 
   args' <- forM args genConstraintsTy
-  return $ T.TyDecl tyn args' knd
+  return $ T.TyDecl tyn args' 
 
 genConstraintsVar :: D.VarDecl -> GenM T.VarDecl
 genConstraintsVar (D.MkVarDecl v t) = do

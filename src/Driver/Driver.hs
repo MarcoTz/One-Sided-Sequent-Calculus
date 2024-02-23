@@ -61,11 +61,10 @@ inferCommand c = do
   debug ("Inferring " <> show c)
   (c',ctrs) <- liftErr (runGenM prog (genConstraintsCmd c))
   debug (show ctrs)
-  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
+  (_,varmap) <- liftErr (runSolveM ctrs solve)
+  debug ("Substitutions " <> show varmap)
   let c'' = T.substVars varmap c'
-  let c''' = T.substKVars kndmap c''
-  return c'''
+  return c''
 
 inferTerm :: D.Term -> DriverM T.Term
 inferTerm t = do 
@@ -73,10 +72,9 @@ inferTerm t = do
   debug (" Inferring " <> show t)
   (t',ctrs) <- liftErr (runGenM prog (genConstraintsTerm t))
   debug (show ctrs) 
-  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug ("Substitutions " <> show varmap <> "\n" <> show kndmap)
+  (_,varmap) <- liftErr (runSolveM ctrs solve)
+  debug ("Substitutions " <> show varmap)
   let t'' = T.substVars varmap t'
-  let t''' = T.substKVars kndmap t''
-  debug ("Final Type : " <> show (T.getType t'''))
-  return t'''
+  debug ("Final Type : " <> show (T.getType t''))
+  return t''
 

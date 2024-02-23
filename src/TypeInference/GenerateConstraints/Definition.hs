@@ -3,7 +3,6 @@ module TypeInference.GenerateConstraints.Definition where
 import TypeInference.Constraints
 import Syntax.Typed.Types
 import Syntax.Typed.Program
-import Syntax.Typed.Terms
 import Common
 import Errors
 
@@ -11,6 +10,7 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
 import Data.Map qualified as M
+import Data.Bifunctor (second)
 
 ---
 --- Constraint Monad
@@ -19,15 +19,13 @@ import Data.Map qualified as M
 
 data GenerateState = MkGenState{
   varEnv :: !(M.Map Variable Ty),
-  tyVarEnv :: !(M.Map TypeVar Kind),
   tyVarCnt :: !Int,
-  kndVarCnt :: !Int,
   declEnv :: !Program,
   constrSet :: !ConstraintSet 
 }
 
 initialGenState :: Program -> GenerateState 
-initialGenState prog = MkGenState M.empty M.empty 0 0 prog (MkConstraintSet [])
+initialGenState prog = MkGenState M.empty 0 prog (MkConstraintSet [])
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except Error) a }
@@ -43,38 +41,27 @@ freshTyVar :: GenM TypeVar
 freshTyVar = do 
   cnt <- gets tyVarCnt
   let newVar = "X" <> show cnt
-  modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (cnt+1) (kndVarCnt s) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (varEnv s) (cnt+1) (declEnv s) (constrSet s))
   return newVar
 
-freshKndVar :: GenM KindVar
-freshKndVar = do 
-  cnt <- gets kndVarCnt 
-  let newVar = "K" <> show cnt
-  modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (cnt+1) (declEnv s) (constrSet s))
-  return newVar
 
-freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([(Variable,Pol)],M.Map Variable Ty) 
+freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([Variable],M.Map Variable Ty) 
 freshTyVarsDecl vars = do
-  varL <- forM vars (\(v,p) -> do
+  varL <- forM vars (\(v,_) -> do
     v' <- freshTyVar
-    return (v,v',p))
-  let newVars = (\(_,v',p) -> (v',p)) <$> varL
-  let newMap = M.fromList ((\(v,v',p) -> (v,TyVar v' (MkKind p))) <$> varL )
+    return (v,v'))
+  let newVars = snd <$> varL
+  let newMap = M.fromList (second TyVar <$> varL )
   return (newVars, newMap)
 
 -- modify environment
 insertConstraint :: Constraint -> GenM () 
-insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
+insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
 
 addVar :: Variable -> Ty -> GenM ()
 addVar v ty = do 
   vars <- gets varEnv
-  modify (\s -> MkGenState (M.insert v ty vars) (tyVarEnv s) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
-
-addTyVar :: TypeVar -> Kind -> GenM ()
-addTyVar tyv knd = do
-  tyVars <- gets tyVarEnv 
-  modify (\s -> MkGenState (varEnv s) (M.insert tyv knd tyVars) (tyVarCnt s) (kndVarCnt s) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (M.insert v ty vars) (tyVarCnt s) (declEnv s) (constrSet s))
 
 findDataDecl :: XtorName -> GenM (Maybe (DataDecl,XtorSig))
 findDataDecl nm = do
@@ -99,5 +86,4 @@ addConstraintsXtor xt _ [] = throwError (ErrArityXtor xt)
 addConstraintsXtor xt [] _ = throwError (ErrArityXtor xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   insertConstraint (MkTyEq ty1 ty2)
-  insertConstraint (MkKindEq (getKind ty1) (getKind ty2))
   addConstraintsXtor xt tys1 tys2

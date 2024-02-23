@@ -1,7 +1,6 @@
 module Desugar.Program where 
 
 import Errors
-import Common
 import Desugar.Definition
 import Desugar.Terms
 import Syntax.Parsed.Program qualified as P
@@ -55,15 +54,15 @@ desugarTy :: P.Ty -> DesugarM D.Ty
 desugarTy (P.TyVar v) = do 
   decls <- gets desDecls 
   case M.lookup v decls of 
-    Just decl -> return $ D.TyDecl v [] (MkKind $ D.declPol decl)
+    Just _ -> return $ D.TyDecl v [] 
     Nothing -> do
       currDecl <- getCurrDecl (ErrVarUndefined v)
       case M.lookup v (M.fromList $ P.declArgs currDecl) of 
         Nothing -> throwError (ErrVarUndefined v)
-        Just pol -> return $ D.TyVar v (MkKind pol)
+        Just _ -> return $ D.TyVar v 
 
 -- this always has to be the current type or one that has been declared before
 desugarTy (P.TyDecl tyn args) = do 
   args' <- forM args desugarTy 
-  pl <- getTynPol tyn 
-  return $ D.TyDecl tyn args' (MkKind pl)
+  _ <- getTynPol tyn 
+  return $ D.TyDecl tyn args' 
