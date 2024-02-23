@@ -1,10 +1,11 @@
 module Driver.Driver where 
 
 import Driver.Definition
-import Syntax.Desugared.Terms qualified as D
+import Syntax.Desugared.Terms   qualified as D
 import Syntax.Desugared.Program qualified as D
-import Syntax.Typed.Terms     qualified as T
-import Syntax.Typed.Program   qualified as T
+import Syntax.Typed.Terms       qualified as T
+import Syntax.Typed.Program     qualified as T
+import Syntax.Typed.Types       qualified as T
 
 import Parser.Definition
 import Parser.Program
@@ -75,6 +76,6 @@ inferTerm t = do
   (_,varmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)
   let t'' = T.substVars varmap t'
-  debug ("Final Type : " <> show (T.getType t''))
+  debug ("Final Type : " <> show (T.generalize $ T.getType t''))
   return t''
 
