@@ -7,7 +7,6 @@ data Constraint =
   MkTyEq !Ty !Ty
   | MkKindEq !Kind !Kind
   | MkFlipEq !Kind !Kind
-  | MkProdEq !Pol !Kind !Kind
 
 newtype ConstraintSet = MkConstraintSet { ctrConstr :: [Constraint]}
 

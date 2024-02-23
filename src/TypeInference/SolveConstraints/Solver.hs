@@ -28,9 +28,6 @@ solve = do
         MkFlipEq knd1 knd2 -> do
           unifyFlipKinds knd1 knd2
           solve
-        MkProdEq k1 k2 k3 -> do
-          unifyProdKinds k1 k2 k3
-          solve 
 
 addTyVar :: Variable -> Ty -> SolverM ()
 addTyVar v ty = do 

@@ -28,7 +28,8 @@ genConstraintsCmd (D.Cut t pol u) = do
   insertConstraint (MkTyEq (T.getType t') (T.getType u'))
   pol' <- genConstraintsType (T.getType t')
   insertConstraint (MkFlipEq (T.getKind t') (T.getKind u'))
-  insertConstraint (MkProdEq pol' (T.getKind t') (MkKind pol))
+  let newConstr = case pol' of Pos -> MkKindEq; Neg -> MkFlipEq 
+  insertConstraint (newConstr (T.getKind t') (MkKind pol))
   return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
   
