@@ -34,6 +34,13 @@ addTyEq ty1 ty2 = do
 
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
+unifyTypeConstraint (TyVar v1) (TyVar v2) = do 
+  vars <- gets slvTyVars 
+  case (M.lookup v1 vars, M.lookup v2 vars) of 
+    (Just ty1, Just ty2) -> addTyEq ty1 ty2
+    (Nothing, Just ty) -> addTyVar v1 ty
+    (Just ty, Nothing) -> addTyVar v2 ty
+    (Nothing,Nothing) -> return ()
 unifyTypeConstraint (TyVar v) ty = do
   vars <- gets slvTyVars
   case M.lookup v vars of 

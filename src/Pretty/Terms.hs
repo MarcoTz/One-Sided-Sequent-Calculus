@@ -25,7 +25,7 @@ instance Show T.Term where
 
 instance Show P.Pattern where 
   show (P.MkPattern xt [] cmd) = xt <> " => " <> show cmd
-  show (P.MkPattern xt vars cmd) = xt <> "(" <> intercalate ", " (show <$> vars) <> ") => " <> show cmd
+  show (P.MkPattern xt vars cmd) = xt <> "(" <> intercalate ", " vars <> ") => " <> show cmd
 instance Show D.Pattern where
   show = show . (embed :: D.Pattern -> P.Pattern)
 instance Show T.Pattern where 

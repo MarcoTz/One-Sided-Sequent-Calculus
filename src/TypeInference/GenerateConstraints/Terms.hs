@@ -15,6 +15,7 @@ import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
 
+
 checkPts :: [D.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
@@ -41,6 +42,7 @@ genConstraintsTerm (D.Var v) = do
        addVar v newT 
        return (T.Var v newT) 
      Just ty -> return (T.Var v ty)
+
 genConstraintsTerm (D.Mu v c) = do 
   tyV <- freshTyVar
   addVar v (TyVar tyV)
