@@ -1,35 +1,49 @@
-module Eval.Substitution where 
+module Syntax.Typed.Substitution where 
 
+import Syntax.Typed.Types 
+import Syntax.Typed.Program
 import Syntax.Typed.Terms
-import Common 
+import Syntax.Typed.FreeVars
+import Common
 
+import Data.Map qualified as M
 import Data.Set qualified as S
+import Data.Maybe (fromMaybe)
 
 
--- Free Variables 
-class FreeVars a where 
-  freeVars :: a -> S.Set Variable
+--------------------------------
+-- Type Variable Substitution --
+--------------------------------
+class SubstTyVars a where 
+  substVars :: M.Map Variable Ty -> a -> a 
 
-instance FreeVars Term where 
-  freeVars (Var v _)       = S.singleton v
-  freeVars (Mu v c _)      = S.delete v (freeVars c)
-  freeVars (Xtor _ args _) = S.unions (freeVars <$> args)
-  freeVars (XCase pts _)   = S.unions (freeVars <$> pts)
-  freeVars (Shift t _)     = freeVars t 
-  freeVars (Lam v cmd _)   = S.delete v (freeVars cmd)
+instance SubstTyVars XtorSig where 
+  substVars varmap (MkXtorSig nm args) = MkXtorSig nm (substVars varmap <$> args)
 
-instance FreeVars Pattern where 
-  freeVars MkPattern{ptxt=_, ptv=vars, ptcmd=st} = foldr S.delete (freeVars st) vars
+instance SubstTyVars Ty where 
+  substVars varmap ty@(TyVar v _) = fromMaybe ty (M.lookup v varmap) 
+  substVars varmap (TyDecl tyn args knd) = TyDecl tyn (substVars varmap <$> args) knd
+  substVars varmap (TyShift ty knd) = TyShift (substVars varmap ty) knd
+  substVars varmap (TyCo ty knd) = TyCo (substVars varmap ty) knd
 
-instance FreeVars Command where 
-  freeVars (Cut t1 _ t2) = S.union (freeVars t1) (freeVars t2) 
-  freeVars Done = S.empty
+instance SubstTyVars Term where 
+  substVars varmap (Var v ty) = Var v (substVars varmap ty)
+  substVars varmap (Mu v c ty) = Mu v (substVars varmap c) (substVars varmap ty)
+  substVars varmap (Xtor nm args ty) = Xtor nm (substVars varmap <$> args) (substVars varmap ty)
+  substVars varmap (XCase pts ty) = XCase (substVars varmap <$> pts) (substVars varmap ty)
+  substVars varmap (Shift t ty) = Shift (substVars varmap t) (substVars varmap ty)
+  substVars varmap (Lam v t ty) = Lam v (substVars varmap t) (substVars varmap ty)
 
-freshVar :: Int -> S.Set Variable -> Variable 
-freshVar n vars = let newV = "x"<> show n in if newV `elem` vars then freshVar (n+1) vars else newV
+instance SubstTyVars Pattern where 
+  substVars varmap (MkPattern xt vars c) = MkPattern xt vars (substVars varmap c)
 
+instance SubstTyVars Command where 
+  substVars varmap (Cut t pol u) = Cut (substVars varmap t) pol (substVars varmap u) 
+  substVars _ Done = Done
 
--- Substitution
+--------------------------------
+-- Term Variable Substitution --
+--------------------------------
 class Subst a where 
   substVar :: a -> Term -> Variable -> a 
 

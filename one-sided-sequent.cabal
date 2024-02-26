@@ -36,6 +36,8 @@ library lang
                     Syntax.Typed.Terms, 
                     Syntax.Typed.Types,
                     Syntax.Typed.Program,
+                    Syntax.Typed.Substitution,
+                    Syntax.Typed.FreeVars,
 
                     Parser.Definition,
                     Parser.Keywords,
@@ -51,13 +53,13 @@ library lang
 
                     TypeInference.GenerateConstraints.Definition,
                     TypeInference.GenerateConstraints.Terms,
-                    TypeInference.GenerateConstraints.Program,
+                    TypeInference.GenerateConstraints.Types,
                     TypeInference.SolveConstraints.Definition,
                     TypeInference.SolveConstraints.Solver,
                     TypeInference.Constraints,
+                    TypeInference.InferDecl,
 
                     Eval.Eval,
-                    Eval.Substitution,
                     
                     Embed.Definition,
                     Embed.EmbedDesugared,

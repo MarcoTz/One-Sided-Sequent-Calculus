@@ -44,10 +44,10 @@ instance Embed T.XtorSig P.XtorSig where
   embed t = (embed :: D.XtorSig -> P.XtorSig) $ (embed :: T.XtorSig -> D.XtorSig) t
 
 instance Embed T.Ty D.Ty where 
-  embed (T.TyVar v) = D.TyVar v
-  embed (T.TyDecl nm args) = D.TyDecl nm (embed <$> args)
-  embed (T.TyShift ty)  = embed ty
-  embed (T.TyCo ty) = embed ty 
+  embed (T.TyVar v _) = D.TyVar v
+  embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
+  embed (T.TyShift ty _)  = embed ty
+  embed (T.TyCo ty _) = embed ty 
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 

@@ -1,23 +1,24 @@
 module Driver.Driver where 
 
 import Driver.Definition
-import Syntax.Desugared.Terms   qualified as D
-import Syntax.Desugared.Program qualified as D
-import Syntax.Typed.Terms       qualified as T
-import Syntax.Typed.Program     qualified as T
-import Syntax.Typed.Types       qualified as T
+import Syntax.Desugared.Terms    qualified as D
+import Syntax.Desugared.Program  qualified as D
+import Syntax.Typed.Terms        qualified as T
+import Syntax.Typed.Program      qualified as T
+import Syntax.Typed.Types        qualified as T
+import Syntax.Typed.Substitution qualified as T
 
-import Parser.Definition
-import Parser.Program
+import Parser.Definition (runFileParser)
+import Parser.Program (parseProgram)
 
-import Desugar.Definition
-import Desugar.Program
+import Desugar.Definition (runDesugarM)
+import Desugar.Program (desugarProgram)
 
-import TypeInference.GenerateConstraints.Definition
-import TypeInference.GenerateConstraints.Terms
-import TypeInference.GenerateConstraints.Program
-import TypeInference.SolveConstraints.Definition
-import TypeInference.SolveConstraints.Solver
+import TypeInference.GenerateConstraints.Definition (runGenM)
+import TypeInference.GenerateConstraints.Terms (genConstraintsCmd, genConstraintsTerm)
+import TypeInference.SolveConstraints.Definition (runSolveM)
+import TypeInference.SolveConstraints.Solver (solve)
+import TypeInference.InferDecl (runDeclM, inferDecls)
 
 import Pretty.Terms ()
 import Pretty.Program ()
@@ -36,17 +37,11 @@ inferProgram path = do
   prog <- liftErr progParser
   let desugar = runDesugarM (desugarProgram prog)
   prog' <- liftErr desugar
-  decls <- inferDecls (D.progDecls prog')
-  forM_ decls addDecl
+  let decls = runDeclM (inferDecls (D.progDecls prog'))
+  decls' <- liftErr decls
+  forM_ decls' addDecl
   forM_ (D.progVars prog') inferVarDecl
 
-
-inferDecls :: [D.DataDecl] -> DriverM [T.DataDecl]
-inferDecls decls = do
-  prog <- gets drvEnv
-  let checked = runGenM prog. genConstraintsDecl <$> decls
-  decls' <- forM checked liftErr 
-  return (fst <$> decls')
 
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
 inferVarDecl (D.MkVarDecl n t) = do 

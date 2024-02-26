@@ -6,18 +6,18 @@ import Data.Set qualified as S
 
 data TypeScheme = MkTypeScheme ![TypeVar] !Ty
 data Ty = 
-  TyVar !TypeVar 
-  | TyDecl !TypeName ![Ty]
-  | TyShift !Ty
-  | TyCo !Ty 
+  TyVar !TypeVar !Kind
+  | TyDecl !TypeName ![Ty] !Kind
+  | TyShift !Ty !Kind
+  | TyCo !Ty !Kind
   deriving (Eq)
 
 
 getTyVars :: Ty -> S.Set TypeVar
-getTyVars (TyVar v) = S.singleton v
-getTyVars (TyDecl _ args) = S.unions (getTyVars <$> args)
-getTyVars (TyShift ty) = getTyVars ty
-getTyVars (TyCo ty) = getTyVars ty
+getTyVars (TyVar v _) = S.singleton v
+getTyVars (TyDecl _ args _) = S.unions (getTyVars <$> args)
+getTyVars (TyShift ty _) = getTyVars ty
+getTyVars (TyCo ty _) = getTyVars ty
 
 generalize :: Ty -> TypeScheme
 generalize ty = let vars = getTyVars ty in MkTypeScheme (S.toList vars) ty 

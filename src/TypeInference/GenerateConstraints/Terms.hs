@@ -5,10 +5,11 @@ import Syntax.Typed.Types
 import Syntax.Typed.Program
 import Syntax.Desugared.Terms qualified as D
 import Syntax.Typed.Terms qualified as T
+import Syntax.Typed.Substitution qualified as T
 import TypeInference.GenerateConstraints.Definition
 import TypeInference.Constraints
-import Common 
 import Errors
+import Common
 
 import Control.Monad.Except
 import Control.Monad.State
@@ -37,17 +38,16 @@ genConstraintsTerm (D.Var v) = do
    vars <- gets varEnv
    case M.lookup v vars of 
      Nothing -> do 
-       tyV <- freshTyVar 
-       let newT = TyVar tyV 
-       addVar v newT 
-       return (T.Var v newT) 
+       tyV <- freshTyVar Nothing
+       addVar v tyV
+       return (T.Var v tyV) 
      Just ty -> return (T.Var v ty)
 
 genConstraintsTerm (D.Mu v c) = do 
-  tyV <- freshTyVar
-  addVar v (TyVar tyV)
+  tyV <- freshTyVar Nothing
+  addVar v tyV 
   c' <- genConstraintsCmd c
-  return $ T.Mu v c' (TyVar tyV)
+  return $ T.Mu v c' tyV
 
 -- TODO generate new variables for the variables in the data declaration
 -- otherwise we can only have the same type arguments for each time a declaration is used
@@ -55,39 +55,34 @@ genConstraintsTerm (D.Xtor nm args) = do
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError (ErrXtorUndefined nm) 
-    Just (MkDataDecl tyn tyargs _ _,xtSig) -> do
+    Just (MkDataDecl tyn tyargs pol _ ,xtSig) -> do
       (newVars,varmap) <- freshTyVarsDecl tyargs
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
-      let varsSubst = substVars varmap <$>  sigArgs xtSig
-      let newTyArgs = TyVar <$> newVars
+      let varsSubst = T.substVars varmap <$>  sigArgs xtSig
       addConstraintsXtor nm argTys varsSubst
-      let newT = TyDecl tyn newTyArgs 
+      let newT = TyDecl tyn newVars (MkKind pol) 
       return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
   case decl of 
     Nothing -> throwError (ErrPatMalformed (D.ptxt <$> pts))
-    Just (MkDataDecl tyn tyArgs _ _) -> do
+    Just (MkDataDecl tyn tyArgs pol _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
-        forM_ (zip (D.ptv pt) newVars) (\(x,y) -> addVar x (TyVar y))
+        forM_ (zip (D.ptv pt) newVars) (uncurry addVar) 
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
-      let pts'' = substVars varmap <$> pts'
-      let newTyArgs = TyVar <$> newVars
-      let newT = TyDecl tyn newTyArgs 
+      let pts'' = T.substVars varmap <$> pts'
+      let newT = TyDecl tyn newVars (MkKind pol) 
       return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
-  let newT = TyShift (T.getType t') 
+  let newT = TyShift (T.getType t') (MkKind Neg)
   return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  
-  tyV <- freshTyVar 
-  addVar v (TyVar tyV)
+  tyV <- freshTyVar (Just $ MkKind Pos)
+  addVar v tyV
   cmd' <- genConstraintsCmd cmd
-  let newT = TyShift (TyVar tyV) 
+  let newT = TyShift tyV (MkKind Neg)
   return (T.Lam v cmd' newT)
-
-genConstraintsType :: Ty -> GenM Pol 
-genConstraintsType _ = return Pos

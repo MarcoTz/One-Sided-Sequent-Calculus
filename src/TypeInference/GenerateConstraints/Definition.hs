@@ -10,22 +10,26 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
 import Data.Map qualified as M
-import Data.Bifunctor (second)
+import Data.List (find)
 
----
---- Constraint Monad
---- 
+import Debug.Trace
+import Pretty.Program ()
+
+----------------------
+-- Constraint Monad --
+---------------------
 
 
 data GenerateState = MkGenState{
   varEnv :: !(M.Map Variable Ty),
   tyVarCnt :: !Int,
+  kVarCnt :: !Int,
   declEnv :: !Program,
   constrSet :: !ConstraintSet 
 }
 
 initialGenState :: Program -> GenerateState 
-initialGenState prog = MkGenState M.empty 0 prog (MkConstraintSet [])
+initialGenState prog = MkGenState M.empty 0 0 prog (MkConstraintSet [])
 
 
 newtype GenM a = GenM { getGenM :: StateT GenerateState (Except Error) a }
@@ -37,31 +41,45 @@ runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) o
   Right (x, st) ->  Right (x,constrSet st)
 
 -- Fresh Variables 
-freshTyVar :: GenM TypeVar
-freshTyVar = do 
+freshTyVar :: Maybe Kind -> GenM Ty
+freshTyVar Nothing = do 
   cnt <- gets tyVarCnt
   let newVar = "X" <> show cnt
-  modify (\s -> MkGenState (varEnv s) (cnt+1) (declEnv s) (constrSet s))
-  return newVar
+  newKVar <- freshKVar
+  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (declEnv s) (constrSet s))
+  return (TyVar newVar newKVar)
+freshTyVar (Just knd) = do 
+  cnt <- gets tyVarCnt 
+  let newVar = "x"<>show cnt
+  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (declEnv s) (constrSet s))
+  return (TyVar newVar knd)
+
+freshKVar :: GenM Kind
+freshKVar = do 
+  cnt <- gets kVarCnt
+  let newVar = "k" <> show cnt
+  modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (cnt+1) (declEnv s) (constrSet s))
+  return (MkKindVar newVar)
 
 
-freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([Variable],M.Map Variable Ty) 
+freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([Ty],M.Map Variable Ty) 
 freshTyVarsDecl vars = do
-  varL <- forM vars (\(v,_) -> do
-    v' <- freshTyVar
-    return (v,v'))
-  let newVars = snd <$> varL
-  let newMap = M.fromList (second TyVar <$> varL )
+  varL <- forM vars (\(v,p) -> do
+    v' <- freshTyVar (Just $ MkKind p)
+    let varpair = (v,v')
+    return (v',varpair))
+  let newVars = fst <$> varL
+  let newMap = M.fromList (snd <$> varL)
   return (newVars, newMap)
 
 -- modify environment
 insertConstraint :: Constraint -> GenM () 
-insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
+insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
 
 addVar :: Variable -> Ty -> GenM ()
 addVar v ty = do 
   vars <- gets varEnv
-  modify (\s -> MkGenState (M.insert v ty vars) (tyVarCnt s) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (declEnv s) (constrSet s))
 
 findDataDecl :: XtorName -> GenM (Maybe (DataDecl,XtorSig))
 findDataDecl nm = do
@@ -78,6 +96,12 @@ findDataDecl nm = do
     checkXtor :: XtorName -> [XtorSig] -> Maybe XtorSig
     checkXtor _ [] = Nothing
     checkXtor xtn (xt:xts) = if sigName xt == xtn then Just xt else checkXtor nm xts
+
+findDeclName :: TypeName -> GenM (Maybe DataDecl) 
+findDeclName nm = do
+  prog <- gets declEnv 
+  trace (show prog) $ return ()
+  return $ find (\x -> declNm x==nm) (progDecls prog)
 
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 

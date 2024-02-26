@@ -1,7 +1,8 @@
 module Eval.Eval where 
 
 import Syntax.Typed.Terms
-import Eval.Substitution 
+import Syntax.Typed.Substitution 
+import Syntax.Typed.FreeVars
 import Common
 import Errors
 
