@@ -21,3 +21,9 @@ getTyVars (TyCo ty _) = getTyVars ty
 
 generalize :: Ty -> TypeScheme
 generalize ty = let vars = getTyVars ty in MkTypeScheme (S.toList vars) ty 
+
+instance GetKind Ty where 
+  getKind (TyVar _ knd) = knd
+  getKind (TyDecl _ _ knd) = knd
+  getKind (TyShift _ knd) = knd
+  getKind (TyCo _ knd) = knd

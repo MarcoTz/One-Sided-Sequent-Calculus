@@ -24,3 +24,5 @@ type KindVar = String
 data Kind = MkKind !Pol | MkKindVar !KindVar 
   deriving (Eq)
 
+class GetKind a where 
+  getKind :: a -> Kind

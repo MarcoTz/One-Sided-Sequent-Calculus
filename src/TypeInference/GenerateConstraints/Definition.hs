@@ -73,8 +73,8 @@ freshTyVarsDecl vars = do
   return (newVars, newMap)
 
 -- modify environment
-insertConstraint :: Constraint -> GenM () 
-insertConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (declEnv s) (addConstraint ctr (constrSet s)))
+addConstraint :: Constraint -> GenM () 
+addConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (declEnv s) (insertConstraint ctr (constrSet s)))
 
 addVar :: Variable -> Ty -> GenM ()
 addVar v ty = do 
@@ -109,5 +109,5 @@ addConstraintsXtor _ [] [] = return ()
 addConstraintsXtor xt _ [] = throwError (ErrArityXtor xt)
 addConstraintsXtor xt [] _ = throwError (ErrArityXtor xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
-  insertConstraint (MkTyEq ty1 ty2)
+  addConstraint (MkTyEq ty1 ty2)
   addConstraintsXtor xt tys1 tys2

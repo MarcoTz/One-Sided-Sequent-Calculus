@@ -29,7 +29,8 @@ genConstraintsCmd :: D.Command -> GenM T.Command
 genConstraintsCmd (D.Cut t pol u) = do 
   t' <- genConstraintsTerm t
   u' <- genConstraintsTerm u
-  insertConstraint (MkTyEq (T.getType t') (T.getType u'))
+  addConstraint (MkKindEq (getKind t') (getKind u'))
+  addConstraint (MkTyEq (T.getType t') (T.getType u'))
   return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
   
@@ -45,12 +46,13 @@ genConstraintsTerm (D.Var v) = do
 
 genConstraintsTerm (D.Mu v c) = do 
   tyV <- freshTyVar Nothing
-  addVar v tyV 
+  addVar v tyV
+  knd <- freshKVar
+  let muTy = TyVar v knd
+  addConstraint (MkKindNeq (getKind tyV) knd)
   c' <- genConstraintsCmd c
-  return $ T.Mu v c' tyV
+  return $ T.Mu v c' muTy
 
--- TODO generate new variables for the variables in the data declaration
--- otherwise we can only have the same type arguments for each time a declaration is used
 genConstraintsTerm (D.Xtor nm args) = do 
   decl <- findDataDecl nm
   case decl of
@@ -77,8 +79,10 @@ genConstraintsTerm (D.XCase pts)  = do
       let newT = TyDecl tyn newVars (MkKind pol) 
       return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 
+  let posKnd = MkKind Pos
   t' <- genConstraintsTerm t 
-  let newT = TyShift (T.getType t') (MkKind Neg)
+  addConstraint (MkKindEq posKnd (getKind t'))
+  let newT = TyShift (T.getType t') posKnd 
   return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  
   tyV <- freshTyVar (Just $ MkKind Pos)

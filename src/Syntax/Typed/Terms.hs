@@ -24,3 +24,6 @@ getType (Xtor _ _ ty) = ty
 getType (XCase _ ty)  = ty 
 getType (Shift _ ty)  = ty 
 getType (Lam _ _ ty)  = ty 
+
+instance GetKind Term where 
+  getKind t = getKind (getType t)

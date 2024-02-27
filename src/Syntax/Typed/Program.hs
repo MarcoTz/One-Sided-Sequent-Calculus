@@ -4,9 +4,6 @@ import Common
 import Syntax.Typed.Types
 import Syntax.Typed.Terms
 
-import Data.Map qualified as M
-import Data.Maybe (fromMaybe)
-
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
 data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 

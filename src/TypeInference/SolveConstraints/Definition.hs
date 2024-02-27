@@ -17,11 +17,14 @@ import Control.Monad.State
 data SolverState = MkSolverState 
   { 
   slvTyVars :: !(M.Map TypeVar Ty), 
+  slvKndVars :: !(M.Map KindVar Pol),
   remConstrs :: !ConstraintSet 
 }
 
+data ConstrTy = Eq | Neq
+
 initialSolverState :: ConstraintSet -> SolverState
-initialSolverState = MkSolverState M.empty
+initialSolverState = MkSolverState M.empty M.empty
 
 newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except Error) a }
   deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError Error)
@@ -31,16 +34,26 @@ runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverStat
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st)
 
-insertConstraint :: Constraint -> SolverM ()
-insertConstraint constr = do
+addTyVar :: Variable -> Ty -> SolverM ()
+addTyVar v ty = do 
+  vars <- gets slvTyVars
+  modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))
+
+addKndVar :: KindVar -> Pol -> SolverM () 
+addKndVar kv pol = do
+  kndVars <- gets slvKndVars 
+  modify (\s -> MkSolverState (slvTyVars s) (M.insert kv pol kndVars) (remConstrs s))
+
+addConstraint :: Constraint -> SolverM ()
+addConstraint constr = do
   (MkConstraintSet constrs) <- gets remConstrs
-  modify (\s -> MkSolverState (slvTyVars s) (MkConstraintSet (constr:constrs)))
+  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (constr:constrs)))
 
 addConstraintsArgs :: TypeName -> [Ty] -> [Ty] -> SolverM () 
 addConstraintsArgs _ [] [] = return () 
 addConstraintsArgs tyn [] _ = throwError (ErrArityTy tyn)
 addConstraintsArgs tyn _ [] = throwError (ErrArityTy tyn)
 addConstraintsArgs tyn (ty1:tys1) (ty2:tys2) = do
-  insertConstraint (MkTyEq ty1 ty2)
+  addConstraint (MkTyEq ty1 ty2)
   addConstraintsArgs tyn tys1 tys2
 
