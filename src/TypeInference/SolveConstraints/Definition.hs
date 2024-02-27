@@ -29,10 +29,10 @@ initialSolverState = MkSolverState M.empty M.empty
 newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except Error) a }
   deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError Error)
 
-runSolveM :: ConstraintSet -> SolverM a -> Either Error (a,M.Map TypeVar Ty)
+runSolveM :: ConstraintSet -> SolverM a -> Either Error (a,M.Map TypeVar Ty,M.Map KindVar Pol)
 runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
   Left err -> Left err 
-  Right (x,st) -> Right (x,slvTyVars st)
+  Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
 
 addTyVar :: Variable -> Ty -> SolverM ()
 addTyVar v ty = do 
