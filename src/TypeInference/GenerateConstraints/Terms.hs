@@ -57,26 +57,28 @@ genConstraintsTerm (D.Xtor nm args) = do
   decl <- findDataDecl nm
   case decl of
     Nothing -> throwError (ErrXtorUndefined nm) 
-    Just (MkDataDecl tyn tyargs pol _ ,xtSig) -> do
+    Just (MkDataDecl tyn tyargs _ _ ,xtSig) -> do
       (newVars,varmap) <- freshTyVarsDecl tyargs
       args' <- forM args genConstraintsTerm
       let argTys = T.getType <$> args'
       let varsSubst = T.substVars varmap <$>  sigArgs xtSig
       addConstraintsXtor nm argTys varsSubst
-      let newT = TyDecl tyn newVars (MkKind pol) 
+      knd <- freshKVar
+      let newT = TyDecl tyn newVars knd 
       return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
   case decl of 
     Nothing -> throwError (ErrPatMalformed (D.ptxt <$> pts))
-    Just (MkDataDecl tyn tyArgs pol _) -> do
+    Just (MkDataDecl tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
         forM_ (zip (D.ptv pt) newVars) (uncurry addVar) 
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
       let pts'' = T.substVars varmap <$> pts'
-      let newT = TyDecl tyn newVars (MkKind pol) 
+      knd <- freshKVar
+      let newT = TyDecl tyn newVars knd 
       return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 
   let posKnd = MkKind Pos

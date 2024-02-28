@@ -28,32 +28,25 @@ solve = do
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
 unifyTypeConstraint (TyVar v1 knd1) (TyVar v2 knd2) = do 
   vars <- gets slvTyVars 
-  addConstraint (MkKindEq knd1 knd2)
   case (M.lookup v1 vars, M.lookup v2 vars) of 
-    (Just ty1, Just ty2) -> addConstraint (MkTyEq ty1 ty2)
+    (Just ty1, Just ty2) -> do
+      addConstraint (MkTyEq ty1 ty2) 
     (Nothing, Just ty) -> addTyVar v1 ty
     (Just ty, Nothing) -> addTyVar v2 ty
     (Nothing,Nothing) -> return ()
-unifyTypeConstraint (TyVar v knd) ty = do
+unifyTypeConstraint (TyVar v _) ty = do
   vars <- gets slvTyVars
-  addConstraint (MkKindEq knd (getKind ty))
   case M.lookup v vars of 
     Nothing -> addTyVar v ty 
-    Just ty' -> addConstraint (MkTyEq ty' ty)
+    Just ty' -> addConstraint (MkTyEq ty' ty) 
 unifyTypeConstraint ty1 ty2@TyVar{} = unifyTypeConstraint ty2 ty1
-unifyTypeConstraint ty1@(TyDecl n1 args1 knd1) ty2@(TyDecl n2 args2 knd2) 
+unifyTypeConstraint ty1@(TyDecl n1 args1 _) ty2@(TyDecl n2 args2 _) 
  | n1 /= n2 = throwError (ErrTyNeq ty1 ty2)
  | otherwise = do 
-     addConstraint (MkKindEq knd1 knd2)
      addConstraintsArgs n1 args1 args2
-unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do 
-  addConstraint (MkKindEq knd1 (MkKind Pos))
-  addConstraint (MkKindEq knd2 (MkKind Pos))
+unifyTypeConstraint (TyShift ty1 _) (TyShift ty2 _) = do 
   unifyTypeConstraint ty1 ty2
-unifyTypeConstraint (TyCo ty1 knd1) (TyCo ty2 knd2) = do 
-  addConstraint (MkKindNeq knd1 (getKind ty1)) 
-  addConstraint (MkKindNeq knd2 (getKind ty2))
-  addConstraint (MkKindEq knd1 knd2)
+unifyTypeConstraint (TyCo ty1 _) (TyCo ty2 _) = do 
   unifyTypeConstraint ty1 ty2 
 unifyTypeConstraint ty1 ty2 = throwError (ErrTyNeq ty1 ty2)
 
