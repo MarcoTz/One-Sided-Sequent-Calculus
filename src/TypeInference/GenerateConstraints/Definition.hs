@@ -41,18 +41,12 @@ runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) o
   Right (x, st) ->  Right (x,constrSet st)
 
 -- Fresh Variables 
-freshTyVar :: Maybe Kind -> GenM Ty
-freshTyVar Nothing = do 
+freshTyVar :: Pol-> GenM Ty
+freshTyVar pol = do 
   cnt <- gets tyVarCnt
   let newVar = "X" <> show cnt
-  newKVar <- freshKVar
   modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (declEnv s) (constrSet s))
-  return (TyVar newVar newKVar)
-freshTyVar (Just knd) = do 
-  cnt <- gets tyVarCnt 
-  let newVar = "x"<>show cnt
-  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (declEnv s) (constrSet s))
-  return (TyVar newVar knd)
+  return (TyVar newVar pol)
 
 freshKVar :: GenM Kind
 freshKVar = do 
@@ -65,7 +59,7 @@ freshKVar = do
 freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([Ty],M.Map Variable Ty) 
 freshTyVarsDecl vars = do
   varL <- forM vars (\(v,p) -> do
-    v' <- freshTyVar (Just $ MkKind p)
+    v' <- freshTyVar p
     let varpair = (v,v')
     return (v',varpair))
   let newVars = fst <$> varL

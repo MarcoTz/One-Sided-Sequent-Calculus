@@ -68,7 +68,7 @@ inferType (D.TyVar v) = do
   vars <- gets currVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrVarUndefined v)
-    Just pol -> return $ T.TyVar v (MkKind pol)
+    Just pol -> return $ T.TyVar v pol
 inferType (D.TyDecl tyn args) = do
   args' <- forM args inferType
   decls <- gets declsDone 
@@ -77,5 +77,5 @@ inferType (D.TyDecl tyn args) = do
       pol <- gets currPol 
       case pol of 
         Nothing -> throwError (ErrDeclUndefined tyn)
-        Just pol' -> return $ T.TyDecl tyn args' (MkKind pol')
-    Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' (MkKind pol)
+        Just pol' -> return $ T.TyDecl tyn args' pol'
+    Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' pol

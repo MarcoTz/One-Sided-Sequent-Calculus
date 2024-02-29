@@ -17,3 +17,4 @@ data Error =
   | ErrXtorUndefined !XtorName
   | ErrPatMalformed ![XtorName]
   | ErrParser !String
+  | ErrUnexpectedKind !Kind

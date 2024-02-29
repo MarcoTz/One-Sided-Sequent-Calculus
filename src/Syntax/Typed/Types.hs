@@ -6,10 +6,10 @@ import Data.Set qualified as S
 
 data TypeScheme = MkTypeScheme ![TypeVar] !Ty
 data Ty = 
-  TyVar !TypeVar !Kind
-  | TyDecl !TypeName ![Ty] !Kind
-  | TyShift !Ty !Kind
-  | TyCo !Ty !Kind
+  TyVar !TypeVar !Pol
+  | TyDecl !TypeName ![Ty] !Pol
+  | TyShift !Ty !Pol
+  | TyCo !Ty !Pol
   deriving (Eq)
 
 
@@ -27,3 +27,9 @@ instance GetKind Ty where
   getKind (TyDecl _ _ knd) = knd
   getKind (TyShift _ knd) = knd
   getKind (TyCo _ knd) = knd
+
+flipPolTy :: Ty -> Ty 
+flipPolTy (TyVar v pol) = TyVar v (flipPol pol)
+flipPolTy (TyDecl tyn args pol) = TyDecl tyn (flipPolTy <$> args) (flipPol pol)
+flipPolTy (TyShift ty pol) = TyShift (flipPolTy ty) (flipPol pol)
+flipPolTy (TyCo ty pol) = TyCo (flipPolTy ty) (flipPol pol)

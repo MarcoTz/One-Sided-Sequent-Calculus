@@ -51,6 +51,10 @@ library lang
                     Desugar.Terms,
                     Desugar.Program,
 
+                    TypeCheck.Definition,
+                    TypeCheck.Terms,
+                    TypeCheck.Program,
+
                     TypeInference.GenerateConstraints.Definition,
                     TypeInference.GenerateConstraints.Terms,
                     TypeInference.SolveConstraints.Definition,

@@ -26,7 +26,7 @@ solve = do
 
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
-unifyTypeConstraint (TyVar v1 knd1) (TyVar v2 knd2) = do 
+unifyTypeConstraint (TyVar v1 _knd1) (TyVar v2 _knd2) = do 
   vars <- gets slvTyVars 
   case (M.lookup v1 vars, M.lookup v2 vars) of 
     (Just ty1, Just ty2) -> do

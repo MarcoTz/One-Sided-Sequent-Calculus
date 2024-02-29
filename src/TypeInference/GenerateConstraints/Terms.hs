@@ -29,9 +29,11 @@ genConstraintsCmd :: D.Command -> GenM T.Command
 genConstraintsCmd (D.Cut t pol u) = do 
   t' <- genConstraintsTerm t
   u' <- genConstraintsTerm u
-  addConstraint (MkKindEq (getKind t') (getKind u'))
-  addConstraint (MkTyEq (T.getType t') (T.getType u'))
-  return (T.Cut t' pol u')
+  let pol1 = getKind t' 
+  let pol2 = getKind u'
+  if pol1 == pol2 then throwError (ErrKindMisMatch pol1 pol2) else do 
+    addConstraint (MkTyEq (T.getType t') (T.getType u'))
+    return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
   
 genConstraintsTerm :: D.Term -> GenM T.Term 
@@ -39,17 +41,15 @@ genConstraintsTerm (D.Var v) = do
    vars <- gets varEnv
    case M.lookup v vars of 
      Nothing -> do 
-       tyV <- freshTyVar Nothing
+       tyV <- freshTyVar Pos 
        addVar v tyV
        return (T.Var v tyV) 
      Just ty -> return (T.Var v ty)
 
 genConstraintsTerm (D.Mu v c) = do 
-  tyV <- freshTyVar Nothing
+  tyV <- freshTyVar Pos 
   addVar v tyV
-  knd <- freshKVar
-  let muTy = TyVar v knd
-  addConstraint (MkKindNeq (getKind tyV) knd)
+  let muTy = TyVar v Pos
   c' <- genConstraintsCmd c
   return $ T.Mu v c' muTy
 
@@ -63,8 +63,7 @@ genConstraintsTerm (D.Xtor nm args) = do
       let argTys = T.getType <$> args'
       let varsSubst = T.substVars varmap <$>  sigArgs xtSig
       addConstraintsXtor nm argTys varsSubst
-      knd <- freshKVar
-      let newT = TyDecl tyn newVars knd 
+      let newT = TyDecl tyn newVars Pos
       return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
@@ -77,18 +76,17 @@ genConstraintsTerm (D.XCase pts)  = do
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
       let pts'' = T.substVars varmap <$> pts'
-      knd <- freshKVar
-      let newT = TyDecl tyn newVars knd 
+      let newT = TyDecl tyn newVars Pos
       return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 
-  let posKnd = MkKind Pos
   t' <- genConstraintsTerm t 
-  addConstraint (MkKindEq posKnd (getKind t'))
-  let newT = TyShift (T.getType t') posKnd 
-  return (T.Shift t' newT)
+  let pol = getKind t' 
+  if pol /= Pos then throwError (ErrKindMisMatch pol Pos) else do 
+    let newT = TyShift (T.getType t') Pos
+    return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  
-  tyV <- freshTyVar (Just $ MkKind Pos)
+  tyV <- freshTyVar Pos 
   addVar v tyV
   cmd' <- genConstraintsCmd cmd
-  let newT = TyShift tyV (MkKind Neg)
+  let newT = TyShift tyV Neg
   return (T.Lam v cmd' newT)
