@@ -76,6 +76,7 @@ library lang
                     Pretty.Types,
                     Pretty.Errors,
 
+                    Environment,
                     Common,
                     Utils,
                     Errors

@@ -1,6 +1,7 @@
 module Desugar.Program where 
 
 import Errors
+import Environment
 import Desugar.Definition
 import Desugar.Terms
 import Syntax.Parsed.Program qualified as P
@@ -8,7 +9,6 @@ import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types qualified as D
 
 import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad 
 import Data.Map qualified as M
 
@@ -16,19 +16,6 @@ import Data.Map qualified as M
 checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
 checkNames [] _ = return ()
 checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
-
-desugarProgram :: P.Program -> DesugarM D.Program
-desugarProgram (P.MkProgram decls vars) = do 
-  let declNms = P.declNm <$> decls
-  checkNames declNms ErrDeclExists
-  let xtNms = P.sigName <$> concatMap P.declSig decls
-  checkNames xtNms ErrXtorExists
-  decls' <- forM decls (\d -> do
-    d' <- desugarDecl d
-    addDataDecl d'
-    return d')
-  vars' <- forM vars desugarVar
-  return $ D.MkProgram decls' vars'
 
 desugarDecl :: P.DataDecl -> DesugarM D.DataDecl
 desugarDecl d@(P.MkDataDecl tyn tyargs  pol sigs)= do 
@@ -52,14 +39,13 @@ desugarTy :: P.Ty -> DesugarM D.Ty
 --   in this case it should be in the type args of descurrdecl
 -- a type name (that has to be in the environment) without type arugments
 desugarTy (P.TyVar v) = do 
-  decls <- gets desDecls 
-  case M.lookup v decls of 
-    Just _ -> return $ D.TyDecl v [] 
-    Nothing -> do
-      currDecl <- getCurrDecl (ErrVarUndefined v)
-      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
-        Nothing -> throwError (ErrVarUndefined v)
-        Just _ -> return $ D.TyVar v 
+  ex <- tyExists v 
+  if not ex then do  
+    currDecl <- getCurrDecl (ErrVarUndefined v)
+    case M.lookup v (M.fromList $ P.declArgs currDecl) of 
+      Nothing -> throwError (ErrVarUndefined v)
+      Just _ -> return $ D.TyVar v 
+  else return $ D.TyDecl v [] 
 
 -- this always has to be the current type or one that has been declared before
 desugarTy (P.TyDecl tyn args) = do 

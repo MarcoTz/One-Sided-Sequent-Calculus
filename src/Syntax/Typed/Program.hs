@@ -7,7 +7,7 @@ import Syntax.Typed.Terms
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
 data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
-data VarDecl  = MkVarDecl{valVar :: !Variable, valTy :: !Ty, valBd :: !Term}
+data VarDecl  = MkVarDecl{varNm :: !Variable, varTy :: !Ty, varBd :: !Term}
 
 data Program = MkProgram { progDecls :: ![DataDecl], progVars :: ![VarDecl] }
 emptyProg :: Program

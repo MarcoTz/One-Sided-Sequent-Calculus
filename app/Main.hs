@@ -3,7 +3,7 @@ module Main where
 import Driver.Definition
 import Driver.Driver
 import Utils 
-import Syntax.Typed.Program
+import Environment
 import Pretty.Errors ()
 
 import Control.Monad
@@ -19,7 +19,7 @@ colorDefault = "\ESC[0m"
 
 parseExample :: Bool -> FilePath -> IO()
 parseExample db path = do
-  let drvSt = MkDriverState db emptyProg
+  let drvSt = MkDriverState db emptyEnv 
   res <- runDriverM drvSt (inferProgram path)
   if db then case res of 
     Left err -> do 
