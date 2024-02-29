@@ -39,13 +39,14 @@ desugarTy :: P.Ty -> DesugarM D.Ty
 --   in this case it should be in the type args of descurrdecl
 -- a type name (that has to be in the environment) without type arugments
 desugarTy (P.TyVar v) = do 
-  ex <- tyExists v 
-  if not ex then do  
-    currDecl <- getCurrDecl (ErrVarUndefined v)
-    case M.lookup v (M.fromList $ P.declArgs currDecl) of 
-      Nothing -> throwError (ErrVarUndefined v)
-      Just _ -> return $ D.TyVar v 
-  else return $ D.TyDecl v [] 
+  mdecl <- lookupMDecl v 
+  case mdecl of 
+    Nothing -> do 
+      currDecl <- getCurrDecl (ErrVarUndefined v)
+      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
+        Nothing -> throwError (ErrVarUndefined v)
+        Just _ -> return $ D.TyVar v 
+    Just _ -> return $ D.TyDecl v [] 
 
 -- this always has to be the current type or one that has been declared before
 desugarTy (P.TyDecl tyn args) = do 

@@ -7,6 +7,7 @@ import Common
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Map qualified as M
+import Data.List (find)
 
 data Environment = MkEnv { envDecls :: !(M.Map TypeName DataDecl), envVars :: !(M.Map Variable VarDecl) }
 
@@ -21,29 +22,40 @@ insertVar (MkEnv decls vars) var = MkEnv decls (M.insert (varNm var) var vars)
 
 type EnvReader a m = (MonadError Error m, MonadReader Environment m)
 
-lookupDecl :: EnvReader a m => TypeName -> m DataDecl
-lookupDecl tyn = do 
+lookupMDecl :: EnvReader a m => TypeName -> m (Maybe DataDecl)
+lookupMDecl tyn = do 
   decls <- asks envDecls 
-  case M.lookup tyn decls of 
+  return $ M.lookup tyn decls
+
+lookupDecl :: EnvReader a m => TypeName -> m DataDecl 
+lookupDecl tyn = do   
+  mdecl <- lookupMDecl tyn
+  case mdecl of 
     Nothing -> throwError (ErrDeclUndefined tyn)
     Just decl -> return decl
 
+lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
+lookupMVar v = do 
+  vars <- asks envVars 
+  return $ M.lookup v vars 
+
 lookupVar :: EnvReader a m => Variable -> m VarDecl
 lookupVar v = do 
-  vars <- asks envVars 
-  case M.lookup v vars of 
+  mvar <- lookupMVar v 
+  case mvar of 
     Nothing -> throwError (ErrVarUndefined v)
     Just decl -> return decl
 
-tyExists :: EnvReader a m => TypeName -> m Bool 
-tyExists tyn = do 
-  decls <- asks envDecls
-  case M.lookup tyn decls of 
-    Nothing -> return False 
-    Just _ -> return True
-
-xtorExists :: EnvReader a m => XtorName -> m Bool
-xtorExists xtn = do 
+lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
+lookupMXtor xtn = do
   decls <- asks envDecls 
-  let sigs = sigName <$> concatMap declSig decls
-  return $ xtn `elem` sigs
+  let sigs = concatMap (declSig . snd) (M.toList decls)
+  return $ find (\x -> sigName x == xtn) sigs 
+
+lookupXtor :: EnvReader a m => XtorName -> m XtorSig
+lookupXtor xtn = do
+  mxt <- lookupMXtor xtn
+  case mxt of 
+    Nothing -> throwError (ErrXtorUndefined xtn) 
+    Just xt -> return xt
+

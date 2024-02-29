@@ -75,6 +75,7 @@ library lang
                     Pretty.TypeInference,
                     Pretty.Types,
                     Pretty.Errors,
+                    Pretty.Environment,
 
                     Environment,
                     Common,

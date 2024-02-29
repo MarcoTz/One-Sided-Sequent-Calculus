@@ -3,9 +3,9 @@ module TypeCheck.Terms where
 import TypeCheck.Definition
 import Syntax.Typed.Terms
 import Syntax.Typed.Types
-import Syntax.Typed.Program
 import Errors
 import Common
+import Environment
 
 import Control.Monad.Except
 import Control.Monad.State
@@ -13,7 +13,7 @@ import Data.Map qualified as M
 
 checkTerm :: Term -> CheckM () 
 checkTerm (Var v ty) = do
-  vars <- gets varEnv 
+  vars <- gets checkVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrVarUndefined v)
     Just ty' -> if ty == ty' then return () else throwError (ErrTyNeq ty ty')
@@ -21,9 +21,7 @@ checkTerm (Mu v c ty) = addVar v ty >> checkCommand c
 
 checkTerm (Xtor nm args ty) = do 
   decl <- lookupXtor nm
-  case decl of 
-    Nothing -> throwError (ErrXtorUndefined nm)
-    Just (MkDataDecl tyn tyargs pol xtors,MkXtorSig _ xtargs) -> return () 
+  return () 
 checkTerm (XCase pts ty) = return ()
 
 checkTerm (Shift t ty) = do
