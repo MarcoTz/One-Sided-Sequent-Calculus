@@ -10,6 +10,7 @@ import TypeInference.GenerateConstraints.Definition
 import TypeInference.Constraints
 import Errors
 import Common
+import Environment
 
 import Control.Monad.Except
 import Control.Monad.State
@@ -20,10 +21,8 @@ import Data.Map qualified as M
 checkPts :: [D.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
-  decl <- findDataDecl (D.ptxt pt)
-  case decl of 
-    Nothing -> throwError (ErrXtorUndefined (D.ptxt pt))
-    Just (d@(MkDataDecl _ _ _ xtors),_) -> if all ((`elem` (sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
+  d@(MkDataDecl _ _ _ xtors) <- lookupXtorDecl (D.ptxt pt)
+  if all ((`elem` (sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut t pol u) = do 
@@ -54,17 +53,15 @@ genConstraintsTerm (D.Mu v c) = do
   return $ T.Mu v c' muTy
 
 genConstraintsTerm (D.Xtor nm args) = do 
-  decl <- findDataDecl nm
-  case decl of
-    Nothing -> throwError (ErrXtorUndefined nm) 
-    Just (MkDataDecl tyn tyargs _ _ ,xtSig) -> do
-      (newVars,varmap) <- freshTyVarsDecl tyargs
-      args' <- forM args genConstraintsTerm
-      let argTys = T.getType <$> args'
-      let varsSubst = T.substVars varmap <$>  sigArgs xtSig
-      addConstraintsXtor nm argTys varsSubst
-      let newT = TyDecl tyn newVars Pos
-      return (T.Xtor nm args' newT)
+  (MkDataDecl tyn tyargs _ _) <- lookupXtorDecl nm
+  xtSig <- lookupXtor nm
+  (newVars,varmap) <- freshTyVarsDecl tyargs
+  args' <- forM args genConstraintsTerm
+  let argTys = T.getType <$> args'
+  let varsSubst = T.substVars varmap <$>  sigArgs xtSig
+  addConstraintsXtor nm argTys varsSubst
+  let newT = TyDecl tyn newVars Pos
+  return (T.Xtor nm args' newT)
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
   case decl of 

@@ -22,7 +22,6 @@ import TypeInference.SolveConstraints.Definition (runSolveM)
 import TypeInference.SolveConstraints.Solver (solve)
 import TypeInference.InferDecl (runDeclM, inferDecl)
 
-import Environment 
 
 import Pretty.Terms ()
 import Pretty.Program ()
@@ -31,7 +30,6 @@ import Pretty.TypeInference ()
 import Control.Monad.State
 import Control.Monad
 import Data.Text.IO qualified as TIO
-import Data.Map qualified as M
 
 
 inferProgram :: FilePath -> DriverM () 
@@ -61,8 +59,7 @@ inferCommand :: D.Command -> DriverM T.Command
 inferCommand c = do 
   env <- gets drvEnv
   debug ("Inferring " <> show c)
-  let prog = T.MkProgram (snd <$> (M.toList . envDecls) env) (snd <$> (M.toList . envVars) env)
-  (c',ctrs) <- liftErr (runGenM prog (genConstraintsCmd c))
+  (c',ctrs) <- liftErr (runGenM env (genConstraintsCmd c))
   debug (show ctrs)
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)
@@ -76,8 +73,7 @@ inferTerm t = do
   let t' = runDesugarM env (desugarTerm t)
   t'' <- liftErr t'
   debug (" Inferring " <> show t)
-  let prog = T.MkProgram (snd <$> (M.toList . envDecls) env) (snd <$> (M.toList . envVars) env)
-  (t''',ctrs) <- liftErr (runGenM prog (genConstraintsTerm t''))
+  (t''',ctrs) <- liftErr (runGenM env (genConstraintsTerm t''))
   debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)

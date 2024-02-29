@@ -59,3 +59,14 @@ lookupXtor xtn = do
     Nothing -> throwError (ErrXtorUndefined xtn) 
     Just xt -> return xt
 
+lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
+lookupXtorMDecl xtn = do 
+  decls <- asks envDecls 
+  return $ find (\x -> xtn `elem` (sigName <$> declSig x)) decls
+
+lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl 
+lookupXtorDecl xtn = do
+  decl <- lookupXtorMDecl xtn
+  case decl of 
+    Nothing -> throwError (ErrXtorUndefined xtn) 
+    Just decl' -> return decl'

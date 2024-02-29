@@ -2,18 +2,15 @@ module TypeInference.GenerateConstraints.Definition where
 
 import TypeInference.Constraints
 import Syntax.Typed.Types
-import Syntax.Typed.Program
 import Common
 import Errors
+import Environment
 
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
+import Control.Monad.Reader
 import Data.Map qualified as M
-import Data.List (find)
-
-import Debug.Trace
-import Pretty.Program ()
 
 ----------------------
 -- Constraint Monad --
@@ -24,19 +21,18 @@ data GenerateState = MkGenState{
   varEnv :: !(M.Map Variable Ty),
   tyVarCnt :: !Int,
   kVarCnt :: !Int,
-  declEnv :: !Program,
   constrSet :: !ConstraintSet 
 }
 
-initialGenState :: Program -> GenerateState 
-initialGenState prog = MkGenState M.empty 0 0 prog (MkConstraintSet [])
+initialGenState :: GenerateState 
+initialGenState = MkGenState M.empty 0 0 (MkConstraintSet [])
 
 
-newtype GenM a = GenM { getGenM :: StateT GenerateState (Except Error) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError Error)
+newtype GenM a = GenM { getGenM :: ReaderT Environment (StateT GenerateState (Except Error)) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError Error, MonadReader Environment)
 
-runGenM :: Program -> GenM a -> Either Error (a, ConstraintSet)
-runGenM prog m = case runExcept (runStateT (getGenM m) (initialGenState prog)) of
+runGenM :: Environment -> GenM a -> Either Error (a, ConstraintSet)
+runGenM env m = case runExcept (runStateT (runReaderT (getGenM m) env) initialGenState) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
 
@@ -45,14 +41,14 @@ freshTyVar :: Pol-> GenM Ty
 freshTyVar pol = do 
   cnt <- gets tyVarCnt
   let newVar = "X" <> show cnt
-  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (constrSet s))
   return (TyVar newVar pol)
 
 freshKVar :: GenM Kind
 freshKVar = do 
   cnt <- gets kVarCnt
   let newVar = "k" <> show cnt
-  modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (cnt+1) (declEnv s) (constrSet s))
+  modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (cnt+1) (constrSet s))
   return (MkKindVar newVar)
 
 
@@ -68,34 +64,12 @@ freshTyVarsDecl vars = do
 
 -- modify environment
 addConstraint :: Constraint -> GenM () 
-addConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (declEnv s) (insertConstraint ctr (constrSet s)))
+addConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (insertConstraint ctr (constrSet s)))
 
 addVar :: Variable -> Ty -> GenM ()
 addVar v ty = do 
   vars <- gets varEnv
-  modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (declEnv s) (constrSet s))
-
-findDataDecl :: XtorName -> GenM (Maybe (DataDecl,XtorSig))
-findDataDecl nm = do
-  prog <- gets declEnv 
-  return $ checkDecl nm (progDecls prog)
-  where
-    checkDecl :: XtorName -> [DataDecl] -> Maybe (DataDecl,XtorSig)
-    checkDecl _ [] = Nothing
-    checkDecl n (d@(MkDataDecl _ _ _ xtors):dcs) = 
-      case checkXtor n xtors of 
-        Nothing -> checkDecl n dcs
-        Just sig -> Just (d,sig)
-
-    checkXtor :: XtorName -> [XtorSig] -> Maybe XtorSig
-    checkXtor _ [] = Nothing
-    checkXtor xtn (xt:xts) = if sigName xt == xtn then Just xt else checkXtor nm xts
-
-findDeclName :: TypeName -> GenM (Maybe DataDecl) 
-findDeclName nm = do
-  prog <- gets declEnv 
-  trace (show prog) $ return ()
-  return $ find (\x -> declNm x==nm) (progDecls prog)
+  modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (constrSet s))
 
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
