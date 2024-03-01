@@ -5,9 +5,9 @@ import Common
 import Environment
 import Embed.Definition
 import Embed.EmbedTyped ()
-import Syntax.Typed.Program qualified as T
+import Syntax.Typed.Program     qualified as T
 import Syntax.Desugared.Program qualified as D
-import Syntax.Parsed.Program qualified as P
+import Syntax.Parsed.Program    qualified as P
 
 import Control.Monad.State
 import Control.Monad.Except
@@ -48,7 +48,7 @@ getDecl tyn = do
   mdecl <- lookupMDecl tyn
   doneDecls <- gets (D.progDecls . desDone)
   case (mdecl,M.lookup tyn doneDecls) of
-    (Nothing,Nothing) -> throwError (ErrDeclUndefined tyn)
+    (Nothing,Nothing) -> throwError (ErrMissingDecl tyn WhereDesugar)
     (_,Just decl) -> return decl
     (Just decl,_) -> return $ (embed :: T.DataDecl -> D.DataDecl) decl
 
@@ -56,7 +56,7 @@ getDoneVar :: Variable -> DesugarM D.VarDecl
 getDoneVar v = do 
   doneVars <- gets (D.progVars . desDone)
   case M.lookup v doneVars of 
-    Nothing -> throwError (ErrVarUndefined v)
+    Nothing -> throwError (ErrMissingVar v WhereDesugar)
     Just vdecl -> return vdecl
 
 addDecl :: D.DataDecl -> DesugarM () 

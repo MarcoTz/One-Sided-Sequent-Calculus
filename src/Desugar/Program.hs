@@ -48,7 +48,7 @@ desugarAnnot (P.MkAnnot v ty) = do
   ty' <- desugarTypeScheme ty
   case mty of 
     Nothing -> addVar (D.MkVar v (Just ty') t)
-    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTySchemeNeq ty'' ty')
+    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeSchemeNeq ty'' ty' WhereDesugar)
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
@@ -75,9 +75,9 @@ desugarTy (P.TyVar v) = do
   mdecl <- lookupMDecl v 
   case mdecl of 
     Nothing -> do 
-      currDecl <- getCurrDecl (ErrVarUndefined v)
+      currDecl <- getCurrDecl (ErrMissingVar v WhereDesugar)
       case M.lookup v (M.fromList $ P.dataArgs currDecl) of 
-        Nothing -> throwError (ErrVarUndefined v)
+        Nothing -> throwError (ErrMissingVar v WhereDesugar)
         Just _ -> return $ D.TyVar v 
     Just _ -> return $ D.TyDecl v [] 
 

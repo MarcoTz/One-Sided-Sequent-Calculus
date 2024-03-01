@@ -51,8 +51,8 @@ addConstraint constr = do
 
 addConstraintsArgs :: TypeName -> [Ty] -> [Ty] -> SolverM () 
 addConstraintsArgs _ [] [] = return () 
-addConstraintsArgs tyn [] _ = throwError (ErrArityTy tyn)
-addConstraintsArgs tyn _ [] = throwError (ErrArityTy tyn)
+addConstraintsArgs tyn [] _ = throwError (ErrTyArity tyn WhereSolve)
+addConstraintsArgs tyn _ [] = throwError (ErrTyArity tyn WhereSolve)
 addConstraintsArgs tyn (ty1:tys1) (ty2:tys2) = do
   addConstraint (MkTyEq ty1 ty2)
   addConstraintsArgs tyn tys1 tys2

@@ -31,7 +31,7 @@ lookupDecl :: EnvReader a m => TypeName -> m DataDecl
 lookupDecl tyn = do   
   mdecl <- lookupMDecl tyn
   case mdecl of 
-    Nothing -> throwError (ErrDeclUndefined tyn)
+    Nothing -> throwError (ErrMissingDecl tyn WhereEnv)
     Just decl -> return decl
 
 lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
@@ -43,7 +43,7 @@ lookupVar :: EnvReader a m => Variable -> m VarDecl
 lookupVar v = do 
   mvar <- lookupMVar v 
   case mvar of 
-    Nothing -> throwError (ErrVarUndefined v)
+    Nothing -> throwError (ErrMissingVar v WhereEnv)
     Just decl -> return decl
 
 lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
@@ -56,7 +56,7 @@ lookupXtor :: EnvReader a m => XtorName -> m XtorSig
 lookupXtor xtn = do
   mxt <- lookupMXtor xtn
   case mxt of 
-    Nothing -> throwError (ErrXtorUndefined xtn) 
+    Nothing -> throwError (ErrMissingXtor xtn WhereEnv) 
     Just xt -> return xt
 
 lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
@@ -68,5 +68,5 @@ lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl
 lookupXtorDecl xtn = do
   decl <- lookupXtorMDecl xtn
   case decl of 
-    Nothing -> throwError (ErrXtorUndefined xtn) 
+    Nothing -> throwError (ErrMissingXtor xtn WhereEnv) 
     Just decl' -> return decl'

@@ -20,8 +20,8 @@ checkTerm (D.Var v) (D.MkTypeScheme _tyvars ty) = do
   vars <- gets checkVars 
   ty' <- checkType ty Pos
   case M.lookup v vars of 
-    Nothing -> throwError (ErrVarUndefined v)
-    Just ty'' -> if ty'' == ty' then return (T.Var v ty'') else throwError (ErrTyNeq ty'' ty')
+    Nothing -> throwError (ErrMissingVar v WhereCheck)
+    Just ty'' -> if ty'' == ty' then return (T.Var v ty'') else throwError (ErrTypeNeq ty'' ty' WhereCheck)
 checkTerm (D.Mu v c) (D.MkTypeScheme _tyvars ty) = do
   ty' <- checkType ty Pos
   addVar v ty' 
@@ -50,7 +50,7 @@ checkTerm (D.Shift t) d@(D.MkTypeScheme _tyargs ty) = do
   t' <- checkTerm t d
   ty' <- checkType ty Pos
   let knd = getKind ty'
-  if knd /= Pos then throwError (ErrKindMisMatch Pos knd) else return (T.Shift t' ty')
+  if knd /= Pos then throwError (ErrKind (MkKind knd) (MkKind Pos) ShouldEq WhereCheck) else return (T.Shift t' ty')
 
 checkTerm (D.Lam v c) (D.MkTypeScheme _tyargs ty) = do
   c' <- checkCommand c 
