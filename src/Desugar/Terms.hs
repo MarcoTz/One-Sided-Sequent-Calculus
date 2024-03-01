@@ -1,6 +1,5 @@
 module Desugar.Terms where 
 
-import Environment
 import Desugar.Definition
 import Syntax.Parsed.Terms    qualified as P
 import Syntax.Desugared.Terms qualified as D 
@@ -10,7 +9,7 @@ import Control.Monad
 desugarTerm :: P.Term -> DesugarM D.Term
 desugarTerm (P.Var v) = do
   let vxt = varToXtor v
-  mxt <- lookupMXtor vxt
+  mxt <- getMXtor vxt
   case mxt of 
     Nothing -> return $ D.Var v
     Just _ -> return $ D.Xtor vxt [] 

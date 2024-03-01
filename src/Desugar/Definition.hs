@@ -13,9 +13,7 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Map qualified as M
-
-import Debug.Trace
-import Pretty.Program ()
+import Data.List (find)
 
 data DesugarState = MkDesugarState { desCurrDecl :: !(Maybe P.DataDecl), desDone :: !D.Program} 
 
@@ -42,24 +40,29 @@ setCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
 getCurrDecl :: Error -> DesugarM P.DataDecl
 getCurrDecl err = do 
   curr <- gets desCurrDecl 
-  trace ("current declaration " <> show curr)$ return ()
   case curr of 
     Nothing -> throwError err 
     Just decl -> return decl
 
-getTynPol :: TypeName -> DesugarM Pol 
-getTynPol tyn = do 
-  decl <- lookupDecl tyn 
-  return $ T.declPol decl
-
-getDecl :: TypeName -> DesugarM D.DataDecl
-getDecl tyn = do
+getMDecl :: TypeName -> DesugarM (Maybe D.DataDecl)
+getMDecl tyn = do
   mdecl <- lookupMDecl tyn
   doneDecls <- gets (D.progDecls . desDone)
   case (mdecl,M.lookup tyn doneDecls) of
-    (Nothing,Nothing) -> throwError (ErrMissingDecl tyn WhereDesugar)
-    (_,Just decl) -> return decl
-    (Just decl,_) -> return $ (embed :: T.DataDecl -> D.DataDecl) decl
+    (Nothing,Nothing) -> return Nothing 
+    (_,Just decl) -> return (Just decl)
+    (Just decl,_) -> return $ (Just . (embed :: T.DataDecl -> D.DataDecl)) decl
+
+getMXtor :: XtorName -> DesugarM (Maybe D.XtorSig)
+getMXtor xtn = do
+  msig <- lookupMXtor xtn
+  doneDecls <- gets (D.progDecls . desDone)
+  let xtors = concatMap D.declXtors doneDecls
+  let msig' = find (\x -> D.sigName x == xtn) xtors
+  case (msig,msig') of 
+    (Nothing,Nothing) -> return Nothing
+    (Just sig,_) -> return $ (Just . (embed :: T.XtorSig -> D.XtorSig)) sig
+    (_, Just sig) -> return (Just sig)
 
 getDoneVar :: Variable -> DesugarM D.VarDecl 
 getDoneVar v = do 
