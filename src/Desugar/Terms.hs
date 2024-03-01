@@ -2,7 +2,7 @@ module Desugar.Terms where
 
 import Environment
 import Desugar.Definition
-import Syntax.Parsed.Terms qualified as P
+import Syntax.Parsed.Terms    qualified as P
 import Syntax.Desugared.Terms qualified as D 
 
 import Control.Monad

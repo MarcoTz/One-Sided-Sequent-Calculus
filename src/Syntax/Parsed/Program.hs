@@ -2,12 +2,10 @@ module Syntax.Parsed.Program where
 
 import Common
 import Syntax.Parsed.Terms
+import Syntax.Parsed.Types
 
 import Data.Map qualified as M
 
-data TypeScheme = MkTypeScheme ![TypeVar] !Ty
-
-data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
 data DataDecl  = MkData  {declName  :: !TypeName, dataArgs  :: ![(Variable,Pol)], dataPol :: !Pol, dataSig :: ![XtorSig]} 

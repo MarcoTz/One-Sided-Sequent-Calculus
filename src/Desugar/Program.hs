@@ -5,9 +5,10 @@ import Errors
 import Environment
 import Desugar.Definition
 import Desugar.Terms
-import Syntax.Parsed.Program qualified as P
+import Syntax.Parsed.Program    qualified as P
+import Syntax.Parsed.Types      qualified as P
 import Syntax.Desugared.Program qualified as D
-import Syntax.Desugared.Types qualified as D
+import Syntax.Desugared.Types   qualified as D
 
 import Control.Monad.Except
 import Control.Monad.State

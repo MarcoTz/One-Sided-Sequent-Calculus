@@ -10,6 +10,7 @@ import Syntax.Desugared.Program  qualified as D
 import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P 
 import Syntax.Parsed.Program     qualified as P
+import Syntax.Parsed.Types       qualified as P
 
 import Data.Map qualified as M
 

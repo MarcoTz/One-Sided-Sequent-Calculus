@@ -28,6 +28,7 @@ library lang
 
                     Syntax.Parsed.Terms,
                     Syntax.Parsed.Program,
+                    Syntax.Parsed.Types,
                     
                     Syntax.Desugared.Program,
                     Syntax.Desugared.Terms,

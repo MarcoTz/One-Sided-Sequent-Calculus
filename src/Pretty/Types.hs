@@ -1,8 +1,8 @@
 module Pretty.Types where 
 
-import Syntax.Parsed.Program qualified as P
+import Syntax.Parsed.Types    qualified as P
 import Syntax.Desugared.Types qualified as D
-import Syntax.Typed.Types qualified as T
+import Syntax.Typed.Types     qualified as T
 import Embed.Definition
 import Embed.EmbedDesugared ()
 import Pretty.Common ()

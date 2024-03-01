@@ -10,4 +10,5 @@ data Bool : + {
   True, False
 }
 
+exList :: List(Bool)
 exList := Cons(True,Cons(False,Nil));
