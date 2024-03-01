@@ -13,6 +13,7 @@ data Error =
    | ErrTypeSchemeNeq !D.TypeScheme !D.TypeScheme !ErrWhere
    | ErrMissingDecl   !TypeName !ErrWhere
    | ErrMissingVar    !Variable !ErrWhere
+   | ErrMissingTyVar  !TypeVar  !ErrWhere
    | ErrMissingXtor   !XtorName !ErrWhere
    | ErrMissingXtorPt !XtorName !ErrWhere
    | ErrParser        !String

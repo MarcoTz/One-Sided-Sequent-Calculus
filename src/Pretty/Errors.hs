@@ -20,6 +20,7 @@ instance Show Error where
   show (ErrMissingXtor xtn wh)          = "Xtor " <> xtn <> " was not defined " <> show wh
   show (ErrParser err)                  = "Parser Error " <> err
   show (ErrMissingXtorPt xtn wh)        = "Xtor " <> xtn <> " not found in patterns" <> show wh 
+  show (ErrMissingTyVar tyv wh)         = "Type Variable " <> tyv <> " was should not appear free " <> show wh
 
 instance Show ErrWhere where 
   show WhereCheck     = " (during type checking)"

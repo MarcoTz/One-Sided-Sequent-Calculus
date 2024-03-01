@@ -38,13 +38,16 @@ inferProgram path = do
   debug ("Inferring program in file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
+  debug "parsed program successfully"
   env <- gets drvEnv
   let prog' = runDesugarM env (desugarProgram prog)
   prog'' <- liftErr prog'
+  debug "desugared Program successfully"  
   forM_ (D.progDecls prog'') (\d -> do 
     let inferred = runDeclM (inferDecl d)
     inferred' <- liftErr inferred
     addDecl inferred')
+  debug "inferred declarations sucessfully"
   forM_ (D.progVars prog'') inferVarDecl
 
 
