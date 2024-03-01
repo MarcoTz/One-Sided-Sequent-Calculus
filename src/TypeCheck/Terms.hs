@@ -1,48 +1,65 @@
 module TypeCheck.Terms where 
 
 import TypeCheck.Definition
-import Syntax.Typed.Terms
-import Syntax.Typed.Types
+import TypeCheck.Types
+import Syntax.Typed.Terms     qualified as T
+import Syntax.Desugared.Terms qualified as D
+import Syntax.Desugared.Types qualified as D
 import Errors
 import Common
-import Environment
 
+import Control.Monad
 import Control.Monad.Except
 import Control.Monad.State
 import Data.Map qualified as M
 
-checkTerm :: Term -> CheckM () 
-checkTerm (Var v ty) = do
+
+-- WIP, should not be working yet 
+checkTerm :: D.Term -> D.TypeScheme -> CheckM T.Term
+checkTerm (D.Var v) (D.MkTypeScheme _tyvars ty) = do
   vars <- gets checkVars 
+  ty' <- checkType ty Pos
   case M.lookup v vars of 
     Nothing -> throwError (ErrVarUndefined v)
-    Just ty' -> if ty == ty' then return () else throwError (ErrTyNeq ty ty')
-checkTerm (Mu v c ty) = addVar v ty >> checkCommand c
+    Just ty'' -> if ty'' == ty' then return (T.Var v ty'') else throwError (ErrTyNeq ty'' ty')
+checkTerm (D.Mu v c) (D.MkTypeScheme _tyvars ty) = do
+  ty' <- checkType ty Pos
+  addVar v ty' 
+  c' <- checkCommand c
+  return (T.Mu v c' ty')
 
-checkTerm (Xtor nm args ty) = do 
-  decl <- lookupXtor nm
-  return () 
-checkTerm (XCase pts ty) = return ()
+checkTerm (D.Xtor nm args) tys@(D.MkTypeScheme _tyargs ty) = do 
+  args' <- forM args (`checkTerm` tys)
+  ty' <- checkType ty Pos
+  return (T.Xtor nm args' ty')
 
-checkTerm (Shift t ty) = do
-  checkTerm t 
-  let ty' = getType t 
-  let knd = getKind ty 
-  if knd /= Pos then throwError (ErrKindMisMatch Pos knd) else 
-    if ty == ty' then return () else throwError (ErrTyNeq ty ty')
+checkTerm (D.XCase pts) (D.MkTypeScheme _tyargs ty) = do
+  ty' <- checkType ty Pos 
+  pts' <- checkPatterns pts 
+  return (T.XCase pts' ty')
+  where 
+    checkPatterns :: [D.Pattern] -> CheckM [T.Pattern]
+    checkPatterns [] = return []
+    checkPatterns (D.MkPattern xt vars c:pts') = do 
+      c' <- checkCommand c
+      let newPt = T.MkPattern xt vars c'
+      newPts <- checkPatterns pts'
+      return (newPt:newPts)
 
-checkTerm (Lam v c ty) = do
-  if getKind ty == Neg then do
-    let ty' = flipPolTy ty
-    addVar v ty'
-    checkCommand c
-  else throwError (ErrKindMisMatch Neg (getKind ty)) 
+checkTerm (D.Shift t) d@(D.MkTypeScheme _tyargs ty) = do
+  t' <- checkTerm t d
+  ty' <- checkType ty Pos
+  let knd = getKind ty'
+  if knd /= Pos then throwError (ErrKindMisMatch Pos knd) else return (T.Shift t' ty')
 
-checkCommand :: Command -> CheckM ()
-checkCommand (Cut t _ u) = 
-  let pol1 = getKind (getType t)
-      pol2 = getKind (getType u) in
-  if pol1 == pol2 then throwError (ErrKindMisMatch (flipPol pol1) pol2) else do 
-    checkTerm t 
-    checkTerm u 
-checkCommand Done = return ()
+checkTerm (D.Lam v c) (D.MkTypeScheme _tyargs ty) = do
+  c' <- checkCommand c 
+  ty' <- checkType ty Pos
+  return (T.Lam v c' ty') 
+
+checkCommand :: D.Command -> CheckM T.Command
+checkCommand (D.Cut t pol u)  = do
+  t' <- checkTerm t (D.MkTypeScheme [] (D.TyVar "nothing"))
+  u' <- checkTerm u (D.MkTypeScheme [] (D.TyVar "nothing"))
+  return $ T.Cut t' pol u'
+checkCommand D.Done = return T.Done 

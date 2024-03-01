@@ -1,5 +1,6 @@
 module Desugar.Program where 
 
+import Common
 import Errors
 import Environment
 import Desugar.Definition
@@ -9,7 +10,8 @@ import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types qualified as D
 
 import Control.Monad.Except
-import Control.Monad 
+import Control.Monad.State
+import Control.Monad
 import Data.Map qualified as M
 
 
@@ -17,19 +19,51 @@ checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM ()
 checkNames [] _ = return ()
 checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
 
-desugarDecl :: P.Decl -> DesugarM D.Decl
+
+desugarProgram :: P.Program -> DesugarM D.Program
+desugarProgram prog = do 
+  forM_ (P.progDecls prog) desugarDecl 
+  forM_ (P.progVars prog) desugarVar
+  forM_ (P.progAnnots prog) desugarAnnot
+  gets desDone
+    
+
+desugarDecl :: P.DataDecl -> DesugarM () 
 desugarDecl d@(P.MkData tyn tyargs  pol sigs)= do 
   setCurrDecl d
   sigs' <- forM sigs desugarXtorSig
-  return $ D.MkData tyn tyargs pol sigs'
-desugarDecl (P.MkVar v t) = do 
+  let newD = D.MkData tyn tyargs pol sigs'
+  addDecl newD
+
+desugarVar :: P.VarDecl -> DesugarM () 
+desugarVar (P.MkVar v t) = do 
   t' <- desugarTerm t
-  return $ D.MkVar v Nothing t'
-desugarDecl (P.MkAnnot _v _ty) =  error "Not implemented (desugarDecl)"
+  let newV = D.MkVar v Nothing t'
+  addVar newV
+
+desugarAnnot :: P.AnnotDecl -> DesugarM () 
+desugarAnnot (P.MkAnnot v ty) = do 
+  D.MkVar _ mty t <- getDoneVar v
+  ty' <- desugarTypeScheme ty
+  case mty of 
+    Nothing -> addVar (D.MkVar v (Just ty') t)
+    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTySchemeNeq ty'' ty')
+
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
   args' <- forM args desugarTy
   return (D.MkXtorSig xtn args')
+
+desugarTypeScheme :: P.TypeScheme -> DesugarM D.TypeScheme
+desugarTypeScheme (P.MkTypeScheme vars ty) = do 
+  ty' <- desugarTypeSchemeTy ty vars
+  return $ D.MkTypeScheme vars ty' 
+  where 
+    desugarTypeSchemeTy :: P.Ty -> [TypeVar] -> DesugarM D.Ty
+    desugarTypeSchemeTy (P.TyVar v) tyVars = if v `elem` tyVars then return (D.TyVar v) else desugarTy (P.TyVar v)
+    desugarTypeSchemeTy (P.TyDecl tyn args) tyVars = do 
+      args' <- forM args (`desugarTypeSchemeTy` tyVars) 
+      return $ D.TyDecl tyn args' 
 
 desugarTy :: P.Ty -> DesugarM D.Ty
 -- a type variable appearing in  a declaration is either 

@@ -1,6 +1,7 @@
 module Parser.Definition where 
 
 import Errors
+import Syntax.Parsed.Program
 
 import Text.Megaparsec
 import Control.Monad.Plus
@@ -15,3 +16,5 @@ runFileParser :: FilePath -> Parser b -> T.Text -> Either Error b
 runFileParser fp p input = case runParser (getParser p) fp input of 
   Left s -> Left (ErrParser $ show s)
   Right x -> pure x 
+
+data ParseDecl = MkD !DataDecl | MkV !VarDecl | MkA !AnnotDecl

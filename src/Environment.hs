@@ -9,22 +9,22 @@ import Control.Monad.Reader
 import Data.Map qualified as M
 import Data.List (find)
 
-data Environment = MkEnv { envDecls :: !(M.Map TypeName DataDecl), envVars :: !(M.Map Variable VarDecl) }
+newtype Environment = MkEnv { envDefs :: Program }
 
 emptyEnv :: Environment
-emptyEnv = MkEnv M.empty M.empty
+emptyEnv = MkEnv emptyProg 
 
-insertDecl :: Environment -> DataDecl -> Environment 
-insertDecl (MkEnv decls vars) decl = MkEnv (M.insert (declNm decl) decl decls) vars
+addDeclEnv :: DataDecl -> Environment -> Environment 
+addDeclEnv decl (MkEnv defs) = MkEnv (addDeclProgram decl defs)
 
-insertVar :: Environment -> VarDecl -> Environment
-insertVar (MkEnv decls vars) var = MkEnv decls (M.insert (varNm var) var vars)
+addVarEnv :: VarDecl -> Environment -> Environment 
+addVarEnv var (MkEnv defs) = MkEnv (addVarProgram var defs)
 
 type EnvReader a m = (MonadError Error m, MonadReader Environment m)
 
 lookupMDecl :: EnvReader a m => TypeName -> m (Maybe DataDecl)
 lookupMDecl tyn = do 
-  decls <- asks envDecls 
+  decls <- asks (progDecls . envDefs)
   return $ M.lookup tyn decls
 
 lookupDecl :: EnvReader a m => TypeName -> m DataDecl 
@@ -36,7 +36,7 @@ lookupDecl tyn = do
 
 lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
 lookupMVar v = do 
-  vars <- asks envVars 
+  vars <- asks (progVars . envDefs) 
   return $ M.lookup v vars 
 
 lookupVar :: EnvReader a m => Variable -> m VarDecl
@@ -48,7 +48,7 @@ lookupVar v = do
 
 lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
 lookupMXtor xtn = do
-  decls <- asks envDecls 
+  decls <- asks (progDecls . envDefs) 
   let sigs = concatMap (declSig . snd) (M.toList decls)
   return $ find (\x -> sigName x == xtn) sigs 
 
@@ -61,7 +61,7 @@ lookupXtor xtn = do
 
 lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
 lookupXtorMDecl xtn = do 
-  decls <- asks envDecls 
+  decls <- asks (progDecls . envDefs)
   return $ find (\x -> xtn `elem` (sigName <$> declSig x)) decls
 
 lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl 

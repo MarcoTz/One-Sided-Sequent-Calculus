@@ -1,11 +1,14 @@
 module Embed.EmbedDesugared where 
 
 import Embed.Definition
+import Common
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P
-import Syntax.Parsed.Program     qualified as P 
+import Syntax.Parsed.Program     qualified as P
+
+import Data.Map qualified as M
 
 
 instance Embed D.Term P.Term where 
@@ -23,9 +26,19 @@ instance Embed D.Command P.Command where
   embed (D.Cut t pol s) = P.Cut (embed t) pol (embed s)
   embed D.Done = P.Done
 
-instance Embed D.Decl P.Decl where 
+instance Embed D.DataDecl P.DataDecl where 
   embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
+
+instance Embed D.VarDecl P.VarDecl where 
   embed (D.MkVar var _ body) = P.MkVar var (embed body)
+
+instance Embed D.Program P.Program where 
+  embed (D.MkProgram decls vars) = P.MkProgram (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars)
+    where 
+      embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
+      embedAnnots [] = [] 
+      embedAnnots ((_,D.MkVar _ Nothing _):ds) = embedAnnots ds
+      embedAnnots ((_,D.MkVar v (Just ty) _):ds) = (v,P.MkAnnot v (embed ty)):embedAnnots ds
 
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)

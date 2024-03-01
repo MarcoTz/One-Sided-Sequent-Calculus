@@ -19,3 +19,4 @@ instance Show Error where
   show (ErrNameExists nm)       = "Name " <> nm <> "already exists"
   show (ErrDeclUndefined tyn)   = "Type " <> tyn <> " was not defined"
   show (ErrUnexpectedKind knd)  = "Kind " <> show knd <> " not valid in this position"
+  show (ErrTySchemeNeq tys1 tys2) = "Typeschemes " <> show tys1 <> " and " <> show tys2 <> " are not equal" 

@@ -1,9 +1,7 @@
 module Driver.Driver where 
-
 import Driver.Definition
-import Syntax.Parsed.Program     qualified as P
-import Syntax.Parsed.Terms       qualified as P
 import Syntax.Desugared.Terms    qualified as D
+import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
 import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Types        qualified as T
@@ -13,8 +11,10 @@ import Parser.Definition (runFileParser)
 import Parser.Program (parseProgram)
 
 import Desugar.Definition (runDesugarM)
-import Desugar.Program (desugarDecl)
-import Desugar.Terms (desugarTerm)
+import Desugar.Program (desugarProgram)
+
+import TypeCheck.Definition
+import TypeCheck.Terms (checkTerm) 
 
 import TypeInference.GenerateConstraints.Definition (runGenM)
 import TypeInference.GenerateConstraints.Terms (genConstraintsCmd, genConstraintsTerm)
@@ -39,21 +39,27 @@ inferProgram path = do
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
   env <- gets drvEnv
-  forM_ prog (\d -> do 
-    let desugared = runDesugarM env (desugarDecl d)
-    desugared' <- liftErr desugared
-    let inferred = runDeclM (inferDecl desugared')
+  let prog' = runDesugarM env (desugarProgram prog)
+  prog'' <- liftErr prog'
+  forM_ (D.progDecls prog'') (\d -> do 
+    let inferred = runDeclM (inferDecl d)
     inferred' <- liftErr inferred
     addDecl inferred')
+  forM_ (D.progVars prog'') inferVarDecl
 
 
-inferVarDecl :: P.Decl -> DriverM T.VarDecl
-inferVarDecl (P.MkVar n t) = do 
+inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
+inferVarDecl (D.MkVar n Nothing t) = do 
   t' <- inferTerm t
   let newDecl = T.MkVarDecl n (T.generalize $ T.getType t') t'
   addVarDecl newDecl
   return newDecl 
-inferVarDecl _ = error "not implemented (inferVarDecl)"
+inferVarDecl (D.MkVar n (Just ty) t) = do 
+  env <- gets drvEnv
+  let t' =  runCheckM env (checkTerm t ty)
+  t'' <- liftErr t'
+  return (T.MkVarDecl n (T.generalize (T.getType t'')) t'')
+
 
 
 inferCommand :: D.Command -> DriverM T.Command
@@ -68,18 +74,16 @@ inferCommand c = do
   let c'' = T.substVars varmap c'
   return c''
 
-inferTerm :: P.Term -> DriverM T.Term
+inferTerm :: D.Term -> DriverM T.Term
 inferTerm t = do 
   env <- gets drvEnv 
-  let t' = runDesugarM env (desugarTerm t)
-  t'' <- liftErr t'
   debug (" Inferring " <> show t)
-  (t''',ctrs) <- liftErr (runGenM env (genConstraintsTerm t''))
+  (t',ctrs) <- liftErr (runGenM env (genConstraintsTerm t))
   debug (show ctrs) 
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)
   debug ("\t" <> show kndmap)
-  let t'''' = T.substVars varmap t'''
-  debug ("Final Type : " <> show (T.generalize $ T.getType t''''))
-  return t''''
+  let t'' = T.substVars varmap t'
+  debug ("Final Type : " <> show (T.generalize $ T.getType t''))
+  return t''
 

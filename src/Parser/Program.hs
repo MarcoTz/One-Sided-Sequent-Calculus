@@ -15,7 +15,7 @@ import Debug.Trace
 import Pretty.Types ()
 import Pretty.Terms ()
 
-parseProgram :: Parser [Decl] 
+parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule
   space1 
@@ -23,13 +23,21 @@ parseProgram = do
   mn <- some alphaNumChar
   trace ("parsed module name " <> mn) $ return ()
   sc
-  manyTill (parseDecl <* sc) (sc >> eof)
+  decls <- manyTill (parseDecl <* sc) (sc >> eof)
+  let prog = foldr foldFun emptyProg decls
+  return prog 
+  where 
+    foldFun :: ParseDecl -> Program -> Program 
+    foldFun (MkD decl) prog = addDeclProgram decl prog 
+    foldFun (MkV var) prog = addVarProgram var prog 
+    foldFun (MkA annot) prog = addAnnotProgram annot prog
 
 
-parseDecl :: Parser Decl 
-parseDecl = parseDataDecl <|>  try parseVarDecl <|> try parseTypeAnnot
+parseDecl :: Parser ParseDecl 
+parseDecl = do  
+  (MkD <$> parseDataDecl) <|>  (MkV<$> try parseVarDecl) <|> (MkA <$> try parseTypeAnnot)
 
-parseTypeAnnot :: Parser Decl 
+parseTypeAnnot :: Parser AnnotDecl 
 parseTypeAnnot = do
   nm <- some alphaNumChar
   trace ("parsed annotation name " <> nm) $ return ()
@@ -43,7 +51,7 @@ parseTypeAnnot = do
   trace ("parsed annotation " <> show nm <> ":" <> show ty) $ return ()
   return (MkAnnot nm ty)
 
-parseVarDecl :: Parser Decl 
+parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
   nm <- some alphaNumChar
   trace ("parsed variable name " <> nm ) $ return ()
@@ -58,7 +66,7 @@ parseVarDecl = do
   trace ("parsed variable declaration " <> show nm <> " = " <> show t)  $ return ()
   return (MkVar nm t)
 
-parseDataDecl :: Parser Decl 
+parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 
   parseKeyword KwData
   space1

@@ -11,6 +11,8 @@ import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P 
 import Syntax.Parsed.Program     qualified as P
 
+import Data.Map qualified as M
+
 instance Embed T.Term D.Term where 
   embed (T.Var v _) = D.Var v
   embed (T.Mu v c _) = D.Mu v (embed c)
@@ -32,11 +34,10 @@ instance Embed T.Command D.Command where
 instance Embed T.Command P.Command where 
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t
 
-instance Embed T.DataDecl D.Decl where 
+instance Embed T.DataDecl D.DataDecl where 
   embed (T.MkDataDecl nm vars pol sigs) = D.MkData nm vars pol (embed <$> sigs)
-instance Embed T.DataDecl P.Decl where 
-  embed t = (embed :: D.Decl -> P.Decl) $ (embed :: T.DataDecl -> D.Decl) t
-
+instance Embed T.DataDecl P.DataDecl where 
+  embed t = (embed :: D.DataDecl -> P.DataDecl) $ (embed :: T.DataDecl -> D.DataDecl) t
 
 instance Embed T.XtorSig D.XtorSig where 
   embed (T.MkXtorSig nm args) = D.MkXtorSig nm (embed <$> args)
@@ -53,12 +54,12 @@ instance Embed T.Ty D.Ty where
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
-instance Embed T.VarDecl D.Decl where 
+instance Embed T.VarDecl D.VarDecl where 
   embed (T.MkVarDecl var ty body) = D.MkVar var (Just $ embed ty) (embed body)
-instance Embed T.VarDecl P.Decl where 
-  embed t = (embed :: D.Decl -> P.Decl) $ (embed :: T.VarDecl -> D.Decl) t
+instance Embed T.VarDecl P.VarDecl where 
+  embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 
-instance Embed T.Program [D.Decl] where 
-  embed (T.MkProgram decls vars) = (embed <$> decls) ++ (embed <$> vars)
-instance Embed T.Program [P.Decl] where 
-  embed t = (embed :: D.Decl -> P.Decl) <$> (embed :: T.Program -> [D.Decl]) t 
+instance Embed T.Program D.Program where 
+  embed (T.MkProgram decls vars) = D.MkProgram (M.map embed decls) (M.map embed vars) 
+instance Embed T.Program P.Program where 
+  embed t = (embed :: D.Program -> P.Program) $ (embed :: T.Program -> D.Program) t 

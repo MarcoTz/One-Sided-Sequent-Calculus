@@ -33,7 +33,7 @@ runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
 addDecl :: T.DataDecl -> DeclM ()
 addDecl decl = do
   currDecls <- gets declsDone 
-  let newM = M.insert (T.declNm decl) decl currDecls
+  let newM = M.insert (T.declName decl) decl currDecls
   modify (\s -> MkDeclState newM (currVars s) (currPol s))
 
 setCurrVars :: [(Variable,Pol)] -> DeclM () 
@@ -44,20 +44,19 @@ setCurrVars vars = do
 setCurrPol :: Pol -> DeclM () 
 setCurrPol pol = modify (\s -> MkDeclState (declsDone s) (currVars s) (Just pol))
 
-inferDecls :: [D.Decl] -> DeclM [T.DataDecl] 
+inferDecls :: [D.DataDecl] -> DeclM [T.DataDecl] 
 inferDecls decls = 
   forM decls (\d -> do
     d' <- inferDecl d 
     addDecl d'
     return d')
 
-inferDecl :: D.Decl -> DeclM T.DataDecl
+inferDecl :: D.DataDecl -> DeclM T.DataDecl
 inferDecl (D.MkData tyn args pol xtors) = do 
   setCurrVars args
   setCurrPol pol
   xtors' <- forM xtors inferXtorSig 
   return $ T.MkDataDecl tyn args pol xtors'
-inferDecl _ = error "Not implemented (inferDecl)"
 
 inferXtorSig :: D.XtorSig -> DeclM T.XtorSig
 inferXtorSig (D.MkXtorSig nm args) = do 
