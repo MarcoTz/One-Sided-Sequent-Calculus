@@ -12,9 +12,12 @@ data Error =
    | ErrTypeNeq       !T.Ty !T.Ty !ErrWhere
    | ErrTypeSchemeNeq !D.TypeScheme !D.TypeScheme !ErrWhere
    | ErrMissingDecl   !TypeName !ErrWhere
+   | ErrDuplDecl      !TypeName !ErrWhere
    | ErrMissingVar    !Variable !ErrWhere
+   | ErrDuplVar       !Variable !ErrWhere
    | ErrMissingTyVar  !TypeVar  !ErrWhere
    | ErrMissingXtor   !XtorName !ErrWhere
+   | ErrDuplXtor      !XtorName !ErrWhere
    | ErrMissingXtorPt !XtorName !ErrWhere
    | ErrParser        !String
 

@@ -2,6 +2,7 @@ module Desugar.Program where
 
 import Common
 import Errors
+import Environment
 import Desugar.Definition
 import Desugar.Terms
 import Syntax.Parsed.Program    qualified as P
@@ -14,6 +15,9 @@ import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
 
+import Debug.Trace 
+import Pretty.Program ()
+
 checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
 checkNames [] _ = return ()
 checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
@@ -21,7 +25,16 @@ checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else chec
 
 desugarProgram :: P.Program -> DesugarM D.Program
 desugarProgram prog = do 
-  forM_ (P.progDecls prog) desugarDecl 
+  let decls = P.progDecls prog
+  trace ("declarations in program " <> show decls) $ return ()
+  envTyNames <- getTypeNames
+  let declNames = (fst <$> M.toList decls) ++ envTyNames 
+  trace ("checking names " <> show declNames) $ return ()
+  checkNames declNames (`ErrDuplDecl` WhereDesugar)
+  envXtns <- getXtorNames
+  let xtns = (P.sigName <$> concatMap P.declXtors decls) ++ envXtns
+  checkNames xtns (`ErrDuplXtor` WhereDesugar)
+  forM_ decls desugarDecl 
   forM_ (P.progVars prog) desugarVar
   forM_ (P.progAnnots prog) desugarAnnot
   gets desDone
@@ -80,7 +93,7 @@ desugarTy (P.TyVar v) = do
   case mdecl of 
     Nothing -> do 
       currDecl <- getCurrDecl (ErrMissingDecl vty WhereDesugar)
-      case M.lookup v (M.fromList $ P.dataArgs currDecl) of 
+      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
         Nothing -> throwError (ErrMissingDecl vty WhereDesugar)
         Just _ -> return $ D.TyVar v 
     Just _ -> return $ D.TyDecl vty [] 

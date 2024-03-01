@@ -38,7 +38,7 @@ inferProgram path = do
   debug ("Inferring program in file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
-  debug "parsed program successfully"
+  debug ("parsed program \n" <> show prog <> "\n") 
   env <- gets drvEnv
   let prog' = runDesugarM env (desugarProgram prog)
   prog'' <- liftErr prog'

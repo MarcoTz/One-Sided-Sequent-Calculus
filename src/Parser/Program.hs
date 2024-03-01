@@ -8,10 +8,20 @@ import Parser.Keywords
 import Parser.Symbols
 import Syntax.Parsed.Program
 import Syntax.Parsed.Types
+import Errors
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Control.Monad.Except 
+import Control.Monad
+import Data.Map qualified as M
 
+import Debug.Trace 
+import Pretty.Program ()
+instance Show ParseDecl where 
+  show (MkD d) = show d
+  show (MkA a) = show a 
+  show (MkV v) = show v 
 
 parseProgram :: Parser Program 
 parseProgram = do 
@@ -21,13 +31,15 @@ parseProgram = do
   _ <- some alphaNumChar
   sc
   decls <- manyTill (parseDecl <* sc) (sc >> eof)
-  let prog = foldr foldFun emptyProg decls
-  return prog 
+  trace ("parsed decls " <> show decls) $ return ()
+  foldM foldFun emptyProg decls
   where 
-    foldFun :: ParseDecl -> Program -> Program 
-    foldFun (MkD decl) prog = addDeclProgram decl prog 
-    foldFun (MkV var) prog = addVarProgram var prog 
-    foldFun (MkA annot) prog = addAnnotProgram annot prog
+    foldFun :: Program -> ParseDecl -> Parser Program 
+    foldFun prog (MkD decl) = let tyn = declName decl in 
+      if M.member tyn (progDecls prog) then throwError (ErrDuplDecl tyn WhereParser) else return $ addDeclProgram decl prog 
+    foldFun prog (MkV var)  = let v = varName var in 
+      if M.member v (progVars prog) then throwError (ErrDuplVar v WhereParser) else return $ addVarProgram var prog 
+    foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
 
 
 parseDecl :: Parser ParseDecl 

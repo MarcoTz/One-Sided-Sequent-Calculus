@@ -49,7 +49,7 @@ lookupVar v = do
 lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
 lookupMXtor xtn = do
   decls <- asks (progDecls . envDefs) 
-  let sigs = concatMap (declSig . snd) (M.toList decls)
+  let sigs = concatMap (declXtors . snd) (M.toList decls)
   return $ find (\x -> sigName x == xtn) sigs 
 
 lookupXtor :: EnvReader a m => XtorName -> m XtorSig
@@ -62,7 +62,7 @@ lookupXtor xtn = do
 lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
 lookupXtorMDecl xtn = do 
   decls <- asks (progDecls . envDefs)
-  return $ find (\x -> xtn `elem` (sigName <$> declSig x)) decls
+  return $ find (\x -> xtn `elem` (sigName <$> declXtors x)) decls
 
 lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl 
 lookupXtorDecl xtn = do
@@ -70,3 +70,13 @@ lookupXtorDecl xtn = do
   case decl of 
     Nothing -> throwError (ErrMissingXtor xtn WhereEnv) 
     Just decl' -> return decl'
+
+getTypeNames :: EnvReader a m => m [TypeName]
+getTypeNames = do 
+  decls <- asks (progDecls . envDefs)
+  return $ fst <$> M.toList decls
+
+getXtorNames :: EnvReader a m => m [XtorName]
+getXtorNames = do 
+  decls <- asks (progDecls . envDefs)
+  return (sigName <$> concatMap declXtors decls)

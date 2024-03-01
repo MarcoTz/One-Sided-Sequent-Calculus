@@ -16,8 +16,11 @@ instance Show Error where
   show (ErrTypeNeq ty1 ty2 wh)          = show ty1 <> " != " <> show ty2 <> show wh
   show (ErrTypeSchemeNeq tys1 tys2 wh)  = show tys1 <> " != " <> show tys2 <> show wh 
   show (ErrMissingDecl tyn wh)          = "Type " <> show tyn <> " was not defined " <> show wh
+  show (ErrDuplDecl tyn wh)             = "Type " <> show tyn <> " was defined multiple times" <> show wh
   show (ErrMissingVar v wh)             = "Variable " <> show v <> " was not defined" <> show wh
+  show (ErrDuplVar v wh)                = "Variable " <> show v <> " was defined multiple times " <> show wh
   show (ErrMissingXtor xtn wh)          = "Xtor " <> show xtn <> " was not defined " <> show wh
+  show (ErrDuplXtor xtn wh)             = "Xtor " <> show xtn <> " was defined multiple times" <> show wh
   show (ErrParser err)                  = "Parser Error " <> err
   show (ErrMissingXtorPt xtn wh)        = "Xtor " <> show xtn <> " not found in patterns" <> show wh 
   show (ErrMissingTyVar tyv wh)         = "Type Variable " <> show tyv <> " was should not appear free " <> show wh

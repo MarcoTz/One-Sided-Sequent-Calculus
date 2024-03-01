@@ -8,7 +8,7 @@ import Data.Map qualified as M
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl = MkDataDecl{declName :: !TypeName, declArgs :: ![(TypeVar,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
+data DataDecl = MkDataDecl{declName :: !TypeName, declArgs :: ![(TypeVar,Pol)], declPol :: !Pol, declXtors :: ![XtorSig]} 
 data VarDecl  = MkVarDecl {varName  :: !Variable, varTy    :: !TypeScheme,       varBd :: !Term}
 
 data Program = MkProgram { progDecls :: !(M.Map TypeName DataDecl), progVars :: !(M.Map Variable VarDecl) }

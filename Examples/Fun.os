@@ -4,6 +4,7 @@ data Fun(a:+,b:-):-
   Ap(a,b)
 }
 
+
 id :: forall X. Fun(X,X)
 id := case { Ap(x,a) => <x | + | a> };
 
