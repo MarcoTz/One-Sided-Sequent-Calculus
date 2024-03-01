@@ -34,7 +34,7 @@ runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverStat
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
 
-addTyVar :: Variable -> Ty -> SolverM ()
+addTyVar :: TypeVar -> Ty -> SolverM ()
 addTyVar v ty = do 
   vars <- gets slvTyVars
   modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))

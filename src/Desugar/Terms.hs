@@ -9,10 +9,11 @@ import Control.Monad
 
 desugarTerm :: P.Term -> DesugarM D.Term
 desugarTerm (P.Var v) = do
-  mxt <- lookupMXtor v 
+  let vxt = varToXtor v
+  mxt <- lookupMXtor vxt
   case mxt of 
     Nothing -> return $ D.Var v
-    Just _ -> return $ D.Xtor v [] 
+    Just _ -> return $ D.Xtor vxt [] 
 desugarTerm (P.Mu v c) = do 
   c' <- desugarCommand c
   return $ D.Mu v c'

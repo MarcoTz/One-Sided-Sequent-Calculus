@@ -1,8 +1,15 @@
 module Common where 
 
-type XtorName = String
-type TypeVar = String
-type TypeName = String 
+newtype XtorName = MkXtorName String
+  deriving (Eq)
+newtype TypeVar  = MkTypeVar String
+  deriving (Eq,Ord)
+newtype TypeName = MkTypeName String 
+  deriving (Eq,Ord)
+newtype Variable = MkVar String
+  deriving (Eq,Ord)
+newtype KindVar  = MkKVar String
+  deriving (Eq,Ord)
 
 
 data Pol = Pos | Neg 
@@ -18,9 +25,6 @@ multPol Neg Pos = Neg
 multPol Neg Neg = Pos
 
 
-type Variable = String
-
-type KindVar = String
 data Kind = MkKind !Pol | MkKindVar !KindVar 
   deriving (Eq)
 

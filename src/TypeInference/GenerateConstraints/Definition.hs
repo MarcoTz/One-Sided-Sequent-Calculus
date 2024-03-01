@@ -40,19 +40,19 @@ runGenM env m = case runExcept (runStateT (runReaderT (getGenM m) env) initialGe
 freshTyVar :: Pol-> GenM Ty
 freshTyVar pol = do 
   cnt <- gets tyVarCnt
-  let newVar = "X" <> show cnt
+  let newVar = MkTypeVar ("X" <> show cnt)
   modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (constrSet s))
   return (TyVar newVar pol)
 
 freshKVar :: GenM Kind
 freshKVar = do 
   cnt <- gets kVarCnt
-  let newVar = "k" <> show cnt
+  let newVar = MkKVar ("k" <> show cnt)
   modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (cnt+1) (constrSet s))
   return (MkKindVar newVar)
 
 
-freshTyVarsDecl :: [(Variable,Pol)] -> GenM ([Ty],M.Map Variable Ty) 
+freshTyVarsDecl :: [(TypeVar,Pol)] -> GenM ([Ty],M.Map TypeVar Ty) 
 freshTyVarsDecl vars = do
   varL <- forM vars (\(v,p) -> do
     v' <- freshTyVar p

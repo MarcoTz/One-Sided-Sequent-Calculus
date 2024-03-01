@@ -46,7 +46,7 @@ import Data.Maybe (fromMaybe)
 -- Type Variable Substitution --
 --------------------------------
 class SubstTyVars a where 
-  substVars :: M.Map Variable Ty -> a -> a 
+  substVars :: M.Map TypeVar Ty -> a -> a 
 
 instance SubstTyVars XtorSig where 
   substVars varmap (MkXtorSig nm args) = MkXtorSig nm (substVars varmap <$> args)

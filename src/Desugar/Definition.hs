@@ -14,6 +14,8 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Map qualified as M
 
+import Debug.Trace
+import Pretty.Program ()
 
 data DesugarState = MkDesugarState { desCurrDecl :: !(Maybe P.DataDecl), desDone :: !D.Program} 
 
@@ -28,12 +30,19 @@ runDesugarM env m = case runExcept (runStateT (runReaderT (getDesugarM m) env) i
   Left err -> Left err 
   Right (x,_) ->  Right x 
 
+varToXtor :: Variable -> XtorName
+varToXtor (MkVar v) = MkXtorName v
+
+tyvarToTyName :: TypeVar -> TypeName
+tyvarToTyName (MkTypeVar v) = MkTypeName v
+
 setCurrDecl :: P.DataDecl -> DesugarM () 
 setCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
 
 getCurrDecl :: Error -> DesugarM P.DataDecl
 getCurrDecl err = do 
   curr <- gets desCurrDecl 
+  trace ("current declaration " <> show curr)$ return ()
   case curr of 
     Nothing -> throwError err 
     Just decl -> return decl

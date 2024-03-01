@@ -48,9 +48,8 @@ genConstraintsTerm (D.Var v) = do
 genConstraintsTerm (D.Mu v c) = do 
   tyV <- freshTyVar Pos 
   addVar v tyV
-  let muTy = TyVar v Pos
   c' <- genConstraintsCmd c
-  return $ T.Mu v c' muTy
+  return $ T.Mu v c' tyV 
 
 genConstraintsTerm (D.Xtor nm args) = do 
   (MkDataDecl tyn tyargs _ _) <- lookupXtorDecl nm

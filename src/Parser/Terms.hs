@@ -8,7 +8,6 @@ import Syntax.Parsed.Terms
 import Common
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
 
 
 -- Xtors with no arguments are parsed as variables
@@ -16,15 +15,13 @@ parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
-parseVar = do 
-  v <- some alphaNumChar
-  return $ Var v
+parseVar = Var <$> parseVariable 
 
 parseMu :: Parser Term
 parseMu = do
   parseKeyword KwMu <|> parseKeyword Kwmu 
   sc
-  v <- some alphaNumChar
+  v <- parseVariable 
   sc
   parseSymbol SymDot
   sc
@@ -32,7 +29,7 @@ parseMu = do
 
 parseXtor :: Parser Term
 parseXtor = do
-  nm <- some alphaNumChar
+  nm <- parseXtorName 
   sc
   parseSymbol SymParensO
   sc
@@ -44,7 +41,7 @@ parseXtor = do
 parsePatternVars :: Parser [Variable]
 parsePatternVars = (do 
   parseSymbol SymParensO
-  args <- some alphaNumChar `sepBy` (parseSymbol SymComma >> sc)
+  args <- parseVariable `sepBy` (parseSymbol SymComma >> sc)
   parseSymbol SymParensC 
   return args)
   <|>
@@ -52,7 +49,7 @@ parsePatternVars = (do
 
 parsePattern :: Parser Pattern 
 parsePattern = do 
-  nm <- some alphaNumChar
+  nm <- parseXtorName 
   sc
   args <- parsePatternVars 
   sc
@@ -86,7 +83,7 @@ parseLam = do
   sc
   parseSymbol SymBrackO
   sc
-  v <- some alphaNumChar
+  v <- parseVariable 
   sc
   parseSymbol SymBrackC
   sc

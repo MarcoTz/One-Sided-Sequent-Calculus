@@ -32,3 +32,15 @@ sc = try parseComment <|> space
 
 parsePol :: Parser Pol 
 parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
+
+parseVariable :: Parser Variable
+parseVariable = MkVar <$> some alphaNumChar
+
+parseXtorName :: Parser XtorName 
+parseXtorName = MkXtorName <$> some alphaNumChar
+
+parseTypeName :: Parser TypeName
+parseTypeName = MkTypeName <$> some alphaNumChar
+
+parseTypeVar :: Parser TypeVar
+parseTypeVar = MkTypeVar <$> some alphaNumChar

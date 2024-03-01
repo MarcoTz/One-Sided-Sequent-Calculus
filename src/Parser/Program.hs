@@ -36,7 +36,7 @@ parseDecl = do
 
 parseTypeAnnot :: Parser AnnotDecl 
 parseTypeAnnot = do
-  nm <- some alphaNumChar
+  nm <- parseVariable 
   sc
   parseSymbol SymColon
   parseSymbol SymColon
@@ -47,7 +47,7 @@ parseTypeAnnot = do
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
-  nm <- some alphaNumChar
+  nm <- parseVariable 
   sc
   parseSymbol SymColon
   parseSymbol SymEq
@@ -61,7 +61,7 @@ parseDataDecl :: Parser DataDecl
 parseDataDecl = do 
   parseKeyword KwData
   space1
-  nm <- some alphaNumChar
+  nm <- parseTypeName 
   sc
   args <- parseTyArgs
   sc
@@ -79,7 +79,7 @@ parseDataDecl = do
 
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
- nm <- some alphaNumChar
+ nm <- parseXtorName 
  MkXtorSig nm <$> parseXtorSigArgs
  
 parseXtorSigArgs :: Parser [Ty]

@@ -7,7 +7,7 @@ data Command =
   Cut !Term !Pol !Term
   | Done
 
-data Pattern = MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}
+data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
 
 data Term = 
   Var !Variable !Ty

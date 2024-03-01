@@ -15,8 +15,8 @@ import Data.Map qualified as M
 
 
 instance Show P.XtorSig where 
-  show (P.MkXtorSig nm [])   = nm
-  show (P.MkXtorSig nm args) = nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (P.MkXtorSig nm [])   = show nm
+  show (P.MkXtorSig nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
 instance Show D.XtorSig where 
   show = show . (embed :: D.XtorSig -> P.XtorSig)
 instance Show T.XtorSig where
@@ -24,21 +24,21 @@ instance Show T.XtorSig where
 
 instance Show P.DataDecl where 
   show (P.MkData n args pol sigs) =  
-    "data " <> n <> "(" <> intercalate ", " ((\(v,p) -> v <> show p) <$> args) <> ") : " <> show pol <> " {" <> intercalate ",  " (show <$> sigs) <> "}"
+    "data " <> show n <> "(" <> intercalate ", " ((\(v,p) -> show v <> ":" <> show p) <$> args) <> ") : " <> show pol <> " {" <> intercalate ",  " (show <$> sigs) <> "}"
 instance Show D.DataDecl where 
   show = show . (embed :: D.DataDecl -> P.DataDecl)
 instance Show T.DataDecl where 
   show = show . (embed :: T.DataDecl -> P.DataDecl)
 
 instance Show P.VarDecl where
-  show (P.MkVar n t) = n <> " := " <> show t <> ";"
+  show (P.MkVar n t) = show n <> " := " <> show t <> ";"
 instance Show D.VarDecl where 
   show = show . (embed :: D.VarDecl -> P.VarDecl) 
 instance Show T.VarDecl where 
   show = show . (embed :: T.VarDecl -> P.VarDecl)
 
 instance Show P.AnnotDecl where 
-  show (P.MkAnnot n ty) = n <> " :: " <> show ty
+  show (P.MkAnnot n ty) = show n <> " :: " <> show ty
 
 instance Show P.Program where 
   show (P.MkProgram decls vars annots) = show (snd <$> M.toList decls) <> "\n" <> show (snd <$> M.toList annots) <> "\n" <> show (snd <$> M.toList vars)

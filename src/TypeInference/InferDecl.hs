@@ -14,7 +14,7 @@ import Data.Map qualified as M
 
 data DeclState = MkDeclState{
   declsDone :: !(M.Map TypeName T.DataDecl),
-  currVars :: !(M.Map Variable Pol),
+  currVars :: !(M.Map TypeVar Pol),
   currPol :: !(Maybe Pol)
 }
 
@@ -36,7 +36,7 @@ addDecl decl = do
   let newM = M.insert (T.declName decl) decl currDecls
   modify (\s -> MkDeclState newM (currVars s) (currPol s))
 
-setCurrVars :: [(Variable,Pol)] -> DeclM () 
+setCurrVars :: [(TypeVar,Pol)] -> DeclM () 
 setCurrVars vars = do
   let newM = M.fromList vars
   modify (\s -> MkDeclState (declsDone s) newM (currPol s))
@@ -67,7 +67,7 @@ inferType :: D.Ty -> DeclM T.Ty
 inferType (D.TyVar v) = do 
   vars <- gets currVars 
   case M.lookup v vars of 
-    Nothing -> throwError (ErrMissingVar v WhereDecl)
+    Nothing -> throwError (ErrMissingTyVar v WhereDecl)
     Just pol -> return $ T.TyVar v pol
 inferType (D.TyDecl tyn args) = do
   args' <- forM args inferType

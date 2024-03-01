@@ -59,7 +59,7 @@ checkTerm (D.Lam v c) (D.MkTypeScheme _tyargs ty) = do
 
 checkCommand :: D.Command -> CheckM T.Command
 checkCommand (D.Cut t pol u)  = do
-  t' <- checkTerm t (D.MkTypeScheme [] (D.TyVar "nothing"))
-  u' <- checkTerm u (D.MkTypeScheme [] (D.TyVar "nothing"))
+  t' <- checkTerm t (D.MkTypeScheme [] (D.TyVar $ MkTypeVar "nothing"))
+  u' <- checkTerm u (D.MkTypeScheme [] (D.TyVar $ MkTypeVar "nothing"))
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
