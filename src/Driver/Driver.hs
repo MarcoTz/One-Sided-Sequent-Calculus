@@ -39,20 +39,21 @@ inferProgram path = do
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
   env <- gets drvEnv
-  forM_ (P.progDecls prog) (\d -> do 
+  forM_ prog (\d -> do 
     let desugared = runDesugarM env (desugarDecl d)
     desugared' <- liftErr desugared
     let inferred = runDeclM (inferDecl desugared')
     inferred' <- liftErr inferred
     addDecl inferred')
-  forM_ (P.progVars prog) inferVarDecl
 
-inferVarDecl :: P.VarDecl -> DriverM T.VarDecl
-inferVarDecl (P.MkVarDecl n t) = do 
+
+inferVarDecl :: P.Decl -> DriverM T.VarDecl
+inferVarDecl (P.MkVar n t) = do 
   t' <- inferTerm t
-  let newDecl = T.MkVarDecl n (T.getType t') t'
+  let newDecl = T.MkVarDecl n (T.generalize $ T.getType t') t'
   addVarDecl newDecl
-  return $ T.MkVarDecl n (T.getType t') t' 
+  return newDecl 
+inferVarDecl _ = error "not implemented (inferVarDecl)"
 
 
 inferCommand :: D.Command -> DriverM T.Command

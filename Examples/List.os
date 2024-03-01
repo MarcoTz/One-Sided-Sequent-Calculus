@@ -10,4 +10,4 @@ data Bool : + {
   True, False
 }
 
-var exList := Cons(True,Cons(False,Nil));
+exList := Cons(True,Cons(False,Nil));

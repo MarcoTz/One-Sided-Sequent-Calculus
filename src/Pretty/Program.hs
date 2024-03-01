@@ -21,24 +21,20 @@ instance Show D.XtorSig where
 instance Show T.XtorSig where
   show = show . (embed :: T.XtorSig -> P.XtorSig)
 
-instance Show P.DataDecl where 
-  show (P.MkDataDecl n args pol sigs) =  
+instance Show P.Decl where 
+  show (P.MkData n args pol sigs) =  
     "data " <> n <> "(" <> intercalate ", " ((\(v,p) -> v <> show p) <$> args) <> ") : " <> show pol <> " {" <> intercalate ",  " (show <$> sigs) <> "}"
-instance Show D.DataDecl where 
-  show = show . (embed :: D.DataDecl -> P.DataDecl)
-instance Show T.DataDecl where 
-  show = show . (embed :: T.DataDecl -> P.DataDecl)
+  show (P.MkVar n t) = n <> " := " <> show t <> ";"
+  show (P.MkAnnot n ty) = n <> " :: " <> show ty
 
-instance Show P.VarDecl where 
-  show (P.MkVarDecl n t) = "val " <> n <> " = " <> show t
-instance Show D.VarDecl where 
-  show = show . (embed :: D.VarDecl -> P.VarDecl)  
+instance Show D.Decl where 
+  show = show . (embed :: D.Decl -> P.Decl)
+
+instance Show T.DataDecl where 
+  show = show . (embed :: T.DataDecl -> P.Decl)
+
 instance Show T.VarDecl where 
-  show = show . (embed :: T.VarDecl -> P.VarDecl)
+  show = show . (embed :: T.VarDecl -> P.Decl)
   
-instance Show P.Program where 
-  show (P.MkProgram decls terms) = "Type Declarations" <> intercalate ", " (show <$> decls) <> "\nTerm Declarations " <> intercalate ", " (show <$> terms)
-instance Show D.Program where 
-  show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 
-  show = show . (embed :: T.Program -> P.Program)
+  show = show . (embed :: T.Program -> [P.Decl])

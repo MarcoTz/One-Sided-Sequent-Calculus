@@ -9,6 +9,8 @@ data Keyword =
   | KwCase
   | KwLam
   | KwDone
+  | KwForall
+  | Kwforall 
 
 instance Show Keyword where 
   show KwModule = "module"
@@ -19,3 +21,5 @@ instance Show Keyword where
   show KwCase   = "case"
   show KwLam    = "lam"
   show KwDone   = "Done"
+  show KwForall = "Forall"
+  show Kwforall = "forall"

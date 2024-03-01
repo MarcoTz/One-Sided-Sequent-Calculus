@@ -23,19 +23,17 @@ instance Embed D.Command P.Command where
   embed (D.Cut t pol s) = P.Cut (embed t) pol (embed s)
   embed D.Done = P.Done
 
-instance Embed D.DataDecl P.DataDecl where 
-  embed (D.MkDataDecl nm vars pol sigs) = P.MkDataDecl nm vars pol (embed <$> sigs)
+instance Embed D.Decl P.Decl where 
+  embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
+  embed (D.MkVar var _ body) = P.MkVar var (embed body)
 
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
+
+instance Embed D.TypeScheme P.TypeScheme where 
+  embed (D.MkTypeScheme vars ty) = P.MkTypeScheme vars (embed ty)
 
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)
 
-
-instance Embed D.VarDecl P.VarDecl where 
-  embed (D.MkVarDecl var body) = P.MkVarDecl var (embed body)
-
-instance Embed D.Program P.Program where 
-  embed (D.MkProgram decls vars) = P.MkProgram (embed <$> decls) (embed <$> vars)

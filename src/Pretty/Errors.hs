@@ -18,3 +18,4 @@ instance Show Error where
   show (ErrParser s)            = "Parser Error: " <> s
   show (ErrNameExists nm)       = "Name " <> nm <> "already exists"
   show (ErrDeclUndefined tyn)   = "Type " <> tyn <> " was not defined"
+  show (ErrUnexpectedKind knd)  = "Kind " <> show knd <> " not valid in this position"

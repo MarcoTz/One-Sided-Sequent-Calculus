@@ -7,7 +7,6 @@ import Syntax.Desugared.Types
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
-data VarDecl = MkVarDecl {varNm :: !Variable, varBd :: !Term}
-
-data Program = MkProgram { progDecls :: ![DataDecl], progVars :: ![VarDecl]}
+data Decl = 
+  MkData  {dataName  :: !TypeName, declArgs :: ![(Variable,Pol)], dataPol :: !Pol, dataSig :: ![XtorSig]} 
+  | MkVar {varName   :: !Variable, varTy    :: !(Maybe TypeScheme),       varBody :: !Term}

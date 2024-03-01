@@ -3,13 +3,16 @@ module Syntax.Parsed.Program where
 import Common
 import Syntax.Parsed.Terms
 
+data TypeScheme = MkTypeScheme ![TypeVar] !Ty
+
 data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl = MkDataDecl{declNm :: !TypeName, declArgs :: ![(Variable,Pol)], declPol :: !Pol, declSig :: ![XtorSig]} 
-data VarDecl = MkVarDecl {varNm :: !Variable, varBd :: !Term}
+data Decl = 
+  MkData    {dataName  :: !TypeName, dataArgs  :: ![(Variable,Pol)], dataPol :: !Pol, dataSig :: ![XtorSig]} 
+  | MkVar   {varName   :: !Variable, varBody   :: !Term}
+  | MkAnnot {annotName :: !Variable, annotType :: !TypeScheme} 
 
-data Program = MkProgram { progDecls :: ![DataDecl], progVars :: ![VarDecl]}
 
 --data RecDecl  = MkRecDecl{recVar  :: !Variable, recTy :: !Ty, recBd :: !Term}
 --data Eps = MkEps 

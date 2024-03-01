@@ -11,7 +11,7 @@ import Control.Monad.Except
 import Control.Monad.Reader
 
 
-newtype DesugarState = MkDesugarState { desCurrDecl :: Maybe P.DataDecl} 
+newtype DesugarState = MkDesugarState { desCurrDecl :: Maybe P.Decl} 
 
 initialDesugarState :: DesugarState 
 initialDesugarState = MkDesugarState Nothing
@@ -24,10 +24,10 @@ runDesugarM env m = case runExcept (runStateT (runReaderT (getDesugarM m) env) i
   Left err -> Left err 
   Right (x,_) ->  Right x 
 
-setCurrDecl :: P.DataDecl -> DesugarM () 
+setCurrDecl :: P.Decl -> DesugarM () 
 setCurrDecl decl = modify (\_ -> MkDesugarState (Just decl))
 
-getCurrDecl :: Error -> DesugarM P.DataDecl
+getCurrDecl :: Error -> DesugarM P.Decl
 getCurrDecl err = do 
   curr <- gets desCurrDecl 
   case curr of 

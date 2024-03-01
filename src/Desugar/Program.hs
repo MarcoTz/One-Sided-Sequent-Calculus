@@ -17,17 +17,15 @@ checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM ()
 checkNames [] _ = return ()
 checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
 
-desugarDecl :: P.DataDecl -> DesugarM D.DataDecl
-desugarDecl d@(P.MkDataDecl tyn tyargs  pol sigs)= do 
+desugarDecl :: P.Decl -> DesugarM D.Decl
+desugarDecl d@(P.MkData tyn tyargs  pol sigs)= do 
   setCurrDecl d
   sigs' <- forM sigs desugarXtorSig
-  return $ D.MkDataDecl tyn tyargs pol sigs'
-
-desugarVar :: P.VarDecl -> DesugarM D.VarDecl
-desugarVar (P.MkVarDecl v t) = do 
+  return $ D.MkData tyn tyargs pol sigs'
+desugarDecl (P.MkVar v t) = do 
   t' <- desugarTerm t
-  return $ D.MkVarDecl v t'
-
+  return $ D.MkVar v Nothing t'
+desugarDecl (P.MkAnnot _v _ty) =  error "Not implemented (desugarDecl)"
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
   args' <- forM args desugarTy
@@ -43,7 +41,7 @@ desugarTy (P.TyVar v) = do
   case mdecl of 
     Nothing -> do 
       currDecl <- getCurrDecl (ErrVarUndefined v)
-      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
+      case M.lookup v (M.fromList $ P.dataArgs currDecl) of 
         Nothing -> throwError (ErrVarUndefined v)
         Just _ -> return $ D.TyVar v 
     Just _ -> return $ D.TyDecl v [] 

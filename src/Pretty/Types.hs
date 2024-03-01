@@ -23,6 +23,12 @@ instance Show T.Ty where
   show (T.TyShift ty knd) = "{" <> show ty <> "}: " <> show knd
   show (T.TyCo ty knd) = "co " <> show ty <> ":" <> show knd
 
+instance Show P.TypeScheme where 
+  show (P.MkTypeScheme [] ty) = show ty
+  show (P.MkTypeScheme vars ty) = "forall " <> intercalate "," vars <> ". " <> show ty
+
+instance Show D.TypeScheme where 
+  show t = show $ (embed :: D.TypeScheme -> P.TypeScheme) t
 instance Show T.TypeScheme where 
   show (T.MkTypeScheme [] ty) = show ty
   show (T.MkTypeScheme vars ty) = "forall " <> intercalate "," vars <> ". " <> show ty
