@@ -24,3 +24,7 @@ zipWithError [] [] _ = return []
 zipWithError [] (_:_) err = throwError err
 zipWithError (_:_) [] err = throwError err
 zipWithError (a1:as) (b1:bs) err = (\z -> (a1,b1) : z) <$> zipWithError as bs err
+
+fromMaybeWithError :: MonadError Error m => Maybe a -> Error -> m a 
+fromMaybeWithError Nothing err = throwError err
+fromMaybeWithError (Just a) _ = return a

@@ -52,11 +52,11 @@ freshKVar = do
   return (MkKindVar newVar)
 
 
-freshTyVarsDecl :: [PolVar] -> GenM ([Ty],M.Map TypeVar Ty) 
+freshTyVarsDecl :: [PolVar] -> GenM ([Ty],M.Map PolVar Ty) 
 freshTyVarsDecl vars = do
   varL <- forM vars (\(MkPolVar v p) -> do
     v' <- freshTyVar p
-    let varpair = (v,v')
+    let varpair = (MkPolVar v p,v')
     return (v',varpair))
   let newVars = fst <$> varL
   let newMap = M.fromList (snd <$> varL)
@@ -74,8 +74,8 @@ addVar v ty = do
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
 addConstraintsXtor _ [] [] = return ()
-addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt TooFew WhereInfer)
-addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt TooMany WhereInfer)
+addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt WhereInfer)
+addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt WhereInfer)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
   addConstraintsXtor xt tys1 tys2

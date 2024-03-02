@@ -5,11 +5,13 @@ import Syntax.Typed.Types     qualified as T
 import Syntax.Desugared.Types qualified as D
 
 data Error =
-   ErrXtorArity       !XtorName !ArityReason !ErrWhere
+   ErrXtorArity       !XtorName !ErrWhere
    | ErrBadPattern    ![XtorName] !ErrWhere
    | ErrTyArity       !TypeName !ErrWhere
    | ErrKind          !Kind !Kind !KindReason !ErrWhere
    | ErrTypeNeq       !T.Ty !T.Ty !ErrWhere
+   | ErrNotTyDecl     !TypeName !T.Ty !ErrWhere
+   | ErrNotTyShift    !T.Ty !ErrWhere
    | ErrTypeSchemeNeq !D.TypeScheme !D.TypeScheme !ErrWhere
    | ErrMissingDecl   !TypeName !ErrWhere
    | ErrDuplDecl      !TypeName !ErrWhere
@@ -22,6 +24,5 @@ data Error =
    | ErrParser        !String
 
 
-data ArityReason = TooMany | TooFew
 data KindReason = ShouldEq | ShouldNeq
 data ErrWhere = WhereEval | WhereInfer | WhereSolve | WhereEnv | WhereDecl | WhereCheck | WhereParser | WhereGenConstr | WhereDesugar

@@ -26,18 +26,21 @@ solve = do
 
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
-unifyTypeConstraint (TyVar v1 _knd1) (TyVar v2 _knd2) = do 
+unifyTypeConstraint (TyVar v1 knd1) (TyVar v2 knd2) = do 
   vars <- gets slvTyVars 
-  case (M.lookup v1 vars, M.lookup v2 vars) of 
+  let pv1 = MkPolVar v1 knd1
+  let pv2 = MkPolVar v2 knd2
+  case (M.lookup pv1 vars, M.lookup pv2 vars) of 
     (Just ty1, Just ty2) -> do
       addConstraint (MkTyEq ty1 ty2) 
-    (Nothing, Just ty) -> addTyVar v1 ty
-    (Just ty, Nothing) -> addTyVar v2 ty
+    (Nothing, Just ty) -> addTyVar pv1 ty
+    (Just ty, Nothing) -> addTyVar pv2 ty
     (Nothing,Nothing) -> return ()
-unifyTypeConstraint (TyVar v _) ty = do
+unifyTypeConstraint (TyVar v knd) ty = do
   vars <- gets slvTyVars
-  case M.lookup v vars of 
-    Nothing -> addTyVar v ty 
+  let pv = MkPolVar v knd
+  case M.lookup pv vars of 
+    Nothing -> addTyVar pv ty 
     Just ty' -> addConstraint (MkTyEq ty' ty) 
 unifyTypeConstraint ty1 ty2@TyVar{} = unifyTypeConstraint ty2 ty1
 unifyTypeConstraint ty1@(TyDecl n1 args1 _) ty2@(TyDecl n2 args2 _) 

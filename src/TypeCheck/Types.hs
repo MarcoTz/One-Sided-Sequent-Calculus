@@ -16,7 +16,11 @@ import Data.Map qualified as M
 
 
 checkTypeScheme :: D.TypeScheme -> CheckM T.TypeScheme
-checkTypeScheme (D.MkTypeScheme tyvars ty) = T.MkTypeScheme tyvars <$> checkType ty
+checkTypeScheme (D.MkTypeScheme tyvars ty) = do
+  forM_ tyvars addTyVar
+  ty' <- checkType ty 
+  forM_ tyvars remTyVar
+  return $ T.MkTypeScheme tyvars  ty'
 
 checkType :: D.Ty -> CheckM T.Ty
 checkType (D.TyVar v) = do

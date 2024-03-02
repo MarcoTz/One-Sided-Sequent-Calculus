@@ -57,7 +57,7 @@ genConstraintsTerm (D.Xtor nm args) = do
   (newVars,varmap) <- freshTyVarsDecl tyargs
   args' <- forM args genConstraintsTerm
   let argTys = T.getType <$> args'
-  let varsSubst = T.substVars varmap <$>  sigArgs xtSig
+  let varsSubst = T.substTyVars varmap <$>  sigArgs xtSig
   addConstraintsXtor nm argTys varsSubst
   let newT = TyDecl tyn newVars Pos
   return (T.Xtor nm args' newT)
@@ -71,7 +71,7 @@ genConstraintsTerm (D.XCase pts)  = do
         forM_ (zip (D.ptv pt) newVars) (uncurry addVar) 
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
-      let pts'' = T.substVars varmap <$> pts'
+      let pts'' = T.substTyVars varmap <$> pts'
       let newT = TyDecl tyn newVars Pos
       return (T.XCase pts'' newT)
 genConstraintsTerm (D.Shift t) = do 

@@ -46,31 +46,31 @@ import Data.Maybe (fromMaybe)
 -- Type Variable Substitution --
 --------------------------------
 class SubstTyVars a where 
-  substVars :: M.Map TypeVar Ty -> a -> a 
+  substTyVars :: M.Map PolVar Ty -> a -> a 
 
 instance SubstTyVars XtorSig where 
-  substVars varmap (MkXtorSig nm args) = MkXtorSig nm (substVars varmap <$> args)
+  substTyVars varmap (MkXtorSig nm args) = MkXtorSig nm (substTyVars varmap <$> args)
 
 instance SubstTyVars Ty where 
-  substVars varmap ty@(TyVar v _) = fromMaybe ty (M.lookup v varmap) 
-  substVars varmap (TyDecl tyn args knd) = TyDecl tyn (substVars varmap <$> args) knd
-  substVars varmap (TyShift ty knd) = TyShift (substVars varmap ty) knd
-  substVars varmap (TyCo ty knd) = TyCo (substVars varmap ty) knd
+  substTyVars varmap ty@(TyVar v pol) = fromMaybe ty (M.lookup (MkPolVar v pol) varmap) 
+  substTyVars varmap (TyDecl tyn args knd) = TyDecl tyn (substTyVars varmap <$> args) knd
+  substTyVars varmap (TyShift ty knd) = TyShift (substTyVars varmap ty) knd
+  substTyVars varmap (TyCo ty knd) = TyCo (substTyVars varmap ty) knd
 
 instance SubstTyVars Term where 
-  substVars varmap (Var v ty) = Var v (substVars varmap ty)
-  substVars varmap (Mu v c ty) = Mu v (substVars varmap c) (substVars varmap ty)
-  substVars varmap (Xtor nm args ty) = Xtor nm (substVars varmap <$> args) (substVars varmap ty)
-  substVars varmap (XCase pts ty) = XCase (substVars varmap <$> pts) (substVars varmap ty)
-  substVars varmap (Shift t ty) = Shift (substVars varmap t) (substVars varmap ty)
-  substVars varmap (Lam v t ty) = Lam v (substVars varmap t) (substVars varmap ty)
+  substTyVars varmap (Var v ty) = Var v (substTyVars varmap ty)
+  substTyVars varmap (Mu v c ty) = Mu v (substTyVars varmap c) (substTyVars varmap ty)
+  substTyVars varmap (Xtor nm args ty) = Xtor nm (substTyVars varmap <$> args) (substTyVars varmap ty)
+  substTyVars varmap (XCase pts ty) = XCase (substTyVars varmap <$> pts) (substTyVars varmap ty)
+  substTyVars varmap (Shift t ty) = Shift (substTyVars varmap t) (substTyVars varmap ty)
+  substTyVars varmap (Lam v t ty) = Lam v (substTyVars varmap t) (substTyVars varmap ty)
 
 instance SubstTyVars Pattern where 
-  substVars varmap (MkPattern xt vars c) = MkPattern xt vars (substVars varmap c)
+  substTyVars varmap (MkPattern xt vars c) = MkPattern xt vars (substTyVars varmap c)
 
 instance SubstTyVars Command where 
-  substVars varmap (Cut t pol u) = Cut (substVars varmap t) pol (substVars varmap u) 
-  substVars _ Done = Done
+  substTyVars varmap (Cut t pol u) = Cut (substTyVars varmap t) pol (substTyVars varmap u) 
+  substTyVars _ Done = Done
 
 --------------------------------
 -- Term Variable Substitution --

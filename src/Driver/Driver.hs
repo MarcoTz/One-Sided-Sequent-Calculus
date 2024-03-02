@@ -15,6 +15,7 @@ import Desugar.Program (desugarProgram)
 
 import TypeCheck.Definition
 import TypeCheck.Terms (checkTerm) 
+import TypeCheck.Types (checkTypeScheme)
 
 import TypeInference.GenerateConstraints.Definition (runGenM)
 import TypeInference.GenerateConstraints.Terms (genConstraintsCmd, genConstraintsTerm)
@@ -59,7 +60,9 @@ inferVarDecl (D.MkVar n Nothing t) = do
   return newDecl 
 inferVarDecl (D.MkVar n (Just ty) t) = do 
   env <- gets drvEnv
-  let t' =  runCheckM env (checkTerm t ty)
+  let ty' = runCheckM env (checkTypeScheme ty)
+  ty'' <- liftErr ty'
+  let t' =  runCheckM env (checkTerm t ty'')
   t'' <- liftErr t'
   return (T.MkVarDecl n (T.generalize (T.getType t'')) t'')
 
@@ -74,7 +77,7 @@ inferCommand c = do
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)
   debug ("\t" <> show kndmap)
-  let c'' = T.substVars varmap c'
+  let c'' = T.substTyVars varmap c'
   return c''
 
 inferTerm :: D.Term -> DriverM T.Term
@@ -86,7 +89,7 @@ inferTerm t = do
   (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
   debug ("Substitutions " <> show varmap)
   debug ("\t" <> show kndmap)
-  let t'' = T.substVars varmap t'
+  let t'' = T.substTyVars varmap t'
   debug ("Final Type : " <> show (T.generalize $ T.getType t''))
   return t''
 
