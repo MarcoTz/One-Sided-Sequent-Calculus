@@ -14,9 +14,8 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
+import Data.List (find)
 
-import Debug.Trace 
-import Pretty.Program ()
 
 checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
 checkNames [] _ = return ()
@@ -26,10 +25,8 @@ checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else chec
 desugarProgram :: P.Program -> DesugarM D.Program
 desugarProgram prog = do 
   let decls = P.progDecls prog
-  trace ("declarations in program " <> show decls) $ return ()
   envTyNames <- getTypeNames
   let declNames = (fst <$> M.toList decls) ++ envTyNames 
-  trace ("checking names " <> show declNames) $ return ()
   checkNames declNames (`ErrDuplDecl` WhereDesugar)
   envXtns <- getXtorNames
   let xtns = (P.sigName <$> concatMap P.declXtors decls) ++ envXtns
@@ -71,13 +68,14 @@ desugarTypeScheme (P.MkTypeScheme vars ty) = do
   ty' <- desugarTypeSchemeTy ty vars
   return $ D.MkTypeScheme vars ty' 
   where 
-    desugarTypeSchemeTy :: P.Ty -> [TypeVar] -> DesugarM D.Ty
+    desugarTypeSchemeTy :: P.Ty -> [PolVar] -> DesugarM D.Ty
     desugarTypeSchemeTy (P.TyVar v) tyVars = do
       let vty = tyvarToTyName v
+      let vars' = (\(MkPolVar tyv _) -> tyv) <$> tyVars
       mdecl <- getMDecl vty
       case mdecl of 
         Just _ -> return $ D.TyDecl vty [] 
-        Nothing -> if v `elem` tyVars then return $ D.TyVar v else throwError (ErrMissingTyVar v WhereDesugar)
+        Nothing -> if v `elem` vars' then return $ D.TyVar v else throwError (ErrMissingTyVar v WhereDesugar)
     desugarTypeSchemeTy (P.TyDecl tyn args) tyVars = do 
       args' <- forM args (`desugarTypeSchemeTy` tyVars) 
       return $ D.TyDecl tyn args' 
@@ -93,7 +91,7 @@ desugarTy (P.TyVar v) = do
   case mdecl of 
     Nothing -> do 
       currDecl <- getCurrDecl (ErrMissingDecl vty WhereDesugar)
-      case M.lookup v (M.fromList $ P.declArgs currDecl) of 
+      case find (\(MkPolVar v' _) -> v'==v) (P.declArgs currDecl) of 
         Nothing -> throwError (ErrMissingDecl vty WhereDesugar)
         Just _ -> return $ D.TyVar v 
     Just _ -> return $ D.TyDecl vty [] 

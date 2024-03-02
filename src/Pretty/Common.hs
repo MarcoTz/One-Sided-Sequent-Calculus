@@ -21,6 +21,9 @@ instance Show TypeVar where
 instance Show TypeName where 
   show (MkTypeName tyn) = tyn
 
+instance Show PolVar where 
+  show (MkPolVar tyv pol) = show tyv <> ":" <> show pol
+
 instance Show Kind where 
   show (MkKind p) = show p
   show (MkKindVar kv) = show kv

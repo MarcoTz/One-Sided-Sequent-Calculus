@@ -10,10 +10,12 @@ newtype Variable = MkVar String
   deriving (Eq,Ord)
 newtype KindVar  = MkKVar String
   deriving (Eq,Ord)
+data PolVar = MkPolVar !TypeVar !Pol
+  deriving (Eq,Ord)
 
 
 data Pol = Pos | Neg 
-  deriving (Eq)
+  deriving (Eq,Ord)
 flipPol :: Pol -> Pol 
 flipPol Pos = Neg 
 flipPol Neg = Pos 

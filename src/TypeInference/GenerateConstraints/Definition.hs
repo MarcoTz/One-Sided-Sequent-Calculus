@@ -52,9 +52,9 @@ freshKVar = do
   return (MkKindVar newVar)
 
 
-freshTyVarsDecl :: [(TypeVar,Pol)] -> GenM ([Ty],M.Map TypeVar Ty) 
+freshTyVarsDecl :: [PolVar] -> GenM ([Ty],M.Map TypeVar Ty) 
 freshTyVarsDecl vars = do
-  varL <- forM vars (\(v,p) -> do
+  varL <- forM vars (\(MkPolVar v p) -> do
     v' <- freshTyVar p
     let varpair = (v,v')
     return (v',varpair))

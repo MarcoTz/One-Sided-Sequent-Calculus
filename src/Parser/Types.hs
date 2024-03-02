@@ -18,7 +18,7 @@ parseTypeScheme :: Parser TypeScheme
 parseTypeScheme = do 
   parseKeyword KwForall <|> parseKeyword Kwforall
   sc
-  vars <- parseTypeVar `sepBy` (parseSymbol SymComma >> sc)
+  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymDot
   sc 
@@ -35,7 +35,7 @@ parseTyDecl = do
 parseTyVar :: Parser Ty
 parseTyVar = TyVar <$> parseTypeVar
 
-parseTyArgs :: Parser [(TypeVar, Pol)]
+parseTyArgs :: Parser [PolVar]
 parseTyArgs = (do 
   parseSymbol SymParensO
   vars <- parsePolVar `sepBy` (parseSymbol SymComma >> space)
@@ -43,10 +43,3 @@ parseTyArgs = (do
   return vars)
   <|>
   return []
-
-parsePolVar :: Parser (TypeVar,Pol)
-parsePolVar = do 
-  nm <- parseTypeVar 
-  parseSymbol SymColon
-  pol <- parsePol
-  return (nm,pol)

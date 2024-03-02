@@ -3,8 +3,8 @@ import Driver.Definition
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
-import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Types        qualified as T
+import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Substitution qualified as T
 
 import Parser.Definition (runFileParser)

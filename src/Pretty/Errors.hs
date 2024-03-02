@@ -23,7 +23,7 @@ instance Show Error where
   show (ErrDuplXtor xtn wh)             = "Xtor " <> show xtn <> " was defined multiple times" <> show wh
   show (ErrParser err)                  = "Parser Error " <> err
   show (ErrMissingXtorPt xtn wh)        = "Xtor " <> show xtn <> " not found in patterns" <> show wh 
-  show (ErrMissingTyVar tyv wh)         = "Type Variable " <> show tyv <> " was should not appear free " <> show wh
+  show (ErrMissingTyVar tyv wh)         = "Type Variable " <> show tyv <> " should not appear free " <> show wh
 
 instance Show ErrWhere where 
   show WhereCheck     = " (during type checking)"

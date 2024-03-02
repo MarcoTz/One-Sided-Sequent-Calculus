@@ -36,9 +36,9 @@ addDecl decl = do
   let newM = M.insert (T.declName decl) decl currDecls
   modify (\s -> MkDeclState newM (currVars s) (currPol s))
 
-setCurrVars :: [(TypeVar,Pol)] -> DeclM () 
+setCurrVars :: [PolVar] -> DeclM () 
 setCurrVars vars = do
-  let newM = M.fromList vars
+  let newM = M.fromList ((\(MkPolVar tyv pol) -> (tyv,pol)) <$> vars)
   modify (\s -> MkDeclState (declsDone s) newM (currPol s))
 
 setCurrPol :: Pol -> DeclM () 

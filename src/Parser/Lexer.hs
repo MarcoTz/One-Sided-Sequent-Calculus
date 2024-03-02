@@ -44,3 +44,11 @@ parseTypeName = MkTypeName <$> some alphaNumChar
 
 parseTypeVar :: Parser TypeVar
 parseTypeVar = MkTypeVar <$> some alphaNumChar
+
+parsePolVar :: Parser PolVar 
+parsePolVar = do
+  tyv <- parseTypeVar 
+  sc 
+  parseSymbol SymColon
+  sc 
+  MkPolVar tyv <$> parsePol

@@ -27,6 +27,6 @@ checkType (D.TyVar v) = do
 checkType (D.TyDecl tyn args) = do 
    T.MkDataDecl _ args' pol _ <- lookupDecl tyn
    args'' <- forM args checkType
-   zipped <- zipWithError (snd <$> args') (getKind <$> args'') (ErrTyArity tyn WhereCheck)
+   zipped <- zipWithError ((\(MkPolVar _ pol') -> pol') <$> args') (getKind <$> args'') (ErrTyArity tyn WhereCheck)
    forM_ zipped (\(pol1,pol2) -> if pol1 == pol2 then return () else throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereCheck)) 
    return $ T.TyDecl tyn args'' pol
