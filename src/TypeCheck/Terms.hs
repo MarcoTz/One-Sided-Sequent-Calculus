@@ -18,23 +18,23 @@ import Data.Map qualified as M
 checkTerm :: D.Term -> D.TypeScheme -> CheckM T.Term
 checkTerm (D.Var v) (D.MkTypeScheme _tyvars ty) = do
   vars <- gets checkVars 
-  ty' <- checkType ty Pos
+  ty' <- checkType ty
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v WhereCheck)
     Just ty'' -> if ty'' == ty' then return (T.Var v ty'') else throwError (ErrTypeNeq ty'' ty' WhereCheck)
 checkTerm (D.Mu v c) (D.MkTypeScheme _tyvars ty) = do
-  ty' <- checkType ty Pos
+  ty' <- checkType ty
   addVar v ty' 
   c' <- checkCommand c
   return (T.Mu v c' ty')
 
 checkTerm (D.Xtor nm args) tys@(D.MkTypeScheme _tyargs ty) = do 
   args' <- forM args (`checkTerm` tys)
-  ty' <- checkType ty Pos
+  ty' <- checkType ty
   return (T.Xtor nm args' ty')
 
 checkTerm (D.XCase pts) (D.MkTypeScheme _tyargs ty) = do
-  ty' <- checkType ty Pos 
+  ty' <- checkType ty
   pts' <- checkPatterns pts 
   return (T.XCase pts' ty')
   where 
@@ -48,13 +48,13 @@ checkTerm (D.XCase pts) (D.MkTypeScheme _tyargs ty) = do
 
 checkTerm (D.Shift t) d@(D.MkTypeScheme _tyargs ty) = do
   t' <- checkTerm t d
-  ty' <- checkType ty Pos
+  ty' <- checkType ty
   let knd = getKind ty'
   if knd /= Pos then throwError (ErrKind (MkKind knd) (MkKind Pos) ShouldEq WhereCheck) else return (T.Shift t' ty')
 
 checkTerm (D.Lam v c) (D.MkTypeScheme _tyargs ty) = do
   c' <- checkCommand c 
-  ty' <- checkType ty Pos
+  ty' <- checkType ty
   return (T.Lam v c' ty') 
 
 checkCommand :: D.Command -> CheckM T.Command

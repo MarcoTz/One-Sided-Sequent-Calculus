@@ -14,19 +14,19 @@ import Control.Monad.State
 import Control.Monad.Except
 import Data.Map qualified as M
 
-checkType :: D.Ty -> Pol -> CheckM T.Ty
-checkType (D.TyVar v) pol = do
+
+checkTypeScheme :: D.TypeScheme -> CheckM T.TypeScheme
+checkTypeScheme (D.MkTypeScheme tyvars ty) = T.MkTypeScheme tyvars <$> checkType ty
+
+checkType :: D.Ty -> CheckM T.Ty
+checkType (D.TyVar v) = do
   tyVars <- gets checkTyVars
   case M.lookup v tyVars of 
     Nothing -> throwError (ErrMissingTyVar v WhereCheck)
-    Just pol' -> 
-      if pol == pol' then 
-        return (T.TyVar v pol) 
-      else throwError (ErrKind (MkKind pol) (MkKind pol') ShouldEq WhereCheck)
-checkType (D.TyDecl tyn args) pol = do 
-   T.MkDataDecl _ args' pol' _ <- lookupDecl tyn
-   if pol /= pol' then throwError (ErrKind (MkKind pol) (MkKind pol') ShouldEq WhereCheck) else do
-     zipped <- zipWithError args (snd <$> args') (ErrTyArity tyn WhereCheck)
-     args'' <- forM zipped (uncurry checkType)
-     return (T.TyDecl tyn args'' pol)
-
+    Just pol -> return (T.TyVar v pol)  
+checkType (D.TyDecl tyn args) = do 
+   T.MkDataDecl _ args' pol _ <- lookupDecl tyn
+   args'' <- forM args checkType
+   zipped <- zipWithError (snd <$> args') (getKind <$> args'') (ErrTyArity tyn WhereCheck)
+   forM_ zipped (\(pol1,pol2) -> if pol1 == pol2 then return () else throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereCheck)) 
+   return $ T.TyDecl tyn args'' pol
