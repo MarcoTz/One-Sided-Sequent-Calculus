@@ -8,27 +8,26 @@ import Syntax.Desugared.Terms qualified as D
 import Control.Monad.Except
 
 data Error =
-   ErrXtorArity       !XtorName !ErrWhere
-   | ErrBadPattern    ![XtorName] !ErrWhere
-   | ErrTyArity       !TypeName !ErrWhere
-   | ErrKind          !KindReason !ErrWhere
-   | ErrTypeNeq       !P.Ty !P.Ty !ErrWhere
-   | ErrNotTyDecl     !TypeName !T.Ty !ErrWhere
-   | ErrNotTyShift    !T.Ty !ErrWhere
-   | ErrMissingDecl   !TypeName !ErrWhere
-   | ErrDuplDecl      !TypeName !ErrWhere
-   | ErrMissingVar    !Variable !ErrWhere
-   | ErrDuplVar       !Variable !ErrWhere
-   | ErrMissingTyVar  !TypeVar  !ErrWhere
-   | ErrMissingXtor   !XtorName !ErrWhere
-   | ErrDuplXtor      !XtorName !ErrWhere
-   | ErrMissingXtorPt !XtorName !ErrWhere
-   | ErrTypeAmbig     !D.Term !ErrWhere
+   ErrXtorArity       !XtorName !String
+   | ErrBadPattern    ![XtorName] !String
+   | ErrTyArity       !TypeName !String
+   | ErrKind          !KindReason !String
+   | ErrTypeNeq       !P.Ty !P.Ty !String
+   | ErrNotTyDecl     !TypeName !T.Ty !String
+   | ErrNotTyShift    !T.Ty !String
+   | ErrMissingDecl   !TypeName !String
+   | ErrDuplDecl      !TypeName !String
+   | ErrMissingVar    !Variable !String
+   | ErrDuplVar       !Variable !String
+   | ErrMissingTyVar  !TypeVar  !String
+   | ErrMissingXtor   !XtorName !String
+   | ErrDuplXtor      !XtorName !String
+   | ErrMissingXtorPt !XtorName !String
+   | ErrTypeAmbig     !D.Term !String
    | ErrParser        !String
 
 
 data KindReason = ShouldEq | ShouldNeq
-data ErrWhere = WhereEval | WhereInfer | WhereSolve | WhereEnv | WhereDecl | WhereCheck | WhereParser | WhereGenConstr | WhereDesugar
 
 zipWithError :: MonadError Error m => [a] -> [b] -> Error -> m [(a,b)]
 zipWithError [] [] _ = return []

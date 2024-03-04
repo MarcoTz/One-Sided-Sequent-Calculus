@@ -67,7 +67,7 @@ inferType :: D.Ty -> DeclM T.Ty
 inferType (D.TyVar v) = do 
   vars <- gets currVars 
   case M.lookup v vars of 
-    Nothing -> throwError (ErrMissingTyVar v WhereDecl)
+    Nothing -> throwError (ErrMissingTyVar v "inferType (inferdecl)")
     Just pol -> return $ T.TyVar v pol
 inferType (D.TyDecl tyn args) = do
   args' <- forM args inferType
@@ -76,6 +76,6 @@ inferType (D.TyDecl tyn args) = do
     Nothing -> do 
       pol <- gets currPol 
       case pol of 
-        Nothing -> throwError (ErrMissingDecl tyn WhereDecl)
+        Nothing -> throwError (ErrMissingDecl tyn "inferType (inferdecl)")
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' pol

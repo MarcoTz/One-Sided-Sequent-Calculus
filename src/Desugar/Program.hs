@@ -29,10 +29,10 @@ desugarProgram prog = do
   let decls = P.progDecls prog
   envTyNames <- getTypeNames
   let declNames = (fst <$> M.toList decls) ++ envTyNames 
-  checkNames declNames (`ErrDuplDecl` WhereDesugar)
+  checkNames declNames (`ErrDuplDecl` "desugarProgram")
   envXtns <- getXtorNames
   let xtns = (P.sigName <$> concatMap P.declXtors decls) ++ envXtns
-  checkNames xtns (`ErrDuplXtor` WhereDesugar)
+  checkNames xtns (`ErrDuplXtor` "desugarProgram")
   forM_ decls desugarDecl 
   forM_ (P.progVars prog) desugarVar
   forM_ (P.progAnnots prog) desugarAnnot
@@ -58,7 +58,7 @@ desugarAnnot (P.MkAnnot v ty) = do
   ty' <- desugarTy ty
   case mty of 
     Nothing -> addVar (D.MkVar v (Just ty') t)
-    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') WhereDesugar)
+    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
@@ -75,9 +75,9 @@ desugarTy (P.TyVar v) = do
   mdecl <- getMDecl vty
   case mdecl of 
     Nothing -> do 
-      currDecl <- getCurrDecl (ErrMissingDecl vty WhereDesugar)
+      currDecl <- getCurrDecl (ErrMissingDecl vty "desugarTy")
       case find (\(MkPolVar v' _) -> v'==v) (P.declArgs currDecl) of 
-        Nothing -> throwError (ErrMissingDecl vty WhereDesugar)
+        Nothing -> throwError (ErrMissingDecl vty "desugarTy")
         Just _ -> return $ D.TyVar v 
     Just _ -> return $ D.TyDecl vty [] 
 

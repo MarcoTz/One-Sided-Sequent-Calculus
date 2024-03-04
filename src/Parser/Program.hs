@@ -31,9 +31,9 @@ parseProgram = do
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 
     foldFun prog (MkD decl) = let tyn = declName decl in 
-      if M.member tyn (progDecls prog) then throwError (ErrDuplDecl tyn WhereParser) else return $ addDeclProgram decl prog 
+      if M.member tyn (progDecls prog) then throwError (ErrDuplDecl tyn "parseProgram") else return $ addDeclProgram decl prog 
     foldFun prog (MkV var)  = let v = varName var in 
-      if M.member v (progVars prog) then throwError (ErrDuplVar v WhereParser) else return $ addVarProgram var prog 
+      if M.member v (progVars prog) then throwError (ErrDuplVar v "parseProgram") else return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
 
 

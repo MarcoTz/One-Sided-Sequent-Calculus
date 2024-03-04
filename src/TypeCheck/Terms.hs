@@ -37,14 +37,14 @@ checkTerm t (T.TyCo ty) = do
     T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyCo ty')
     T.Mu v c ty' -> return $ T.Mu v c (T.TyCo ty')
     T.XCase pts ty' -> return $ T.XCase pts (T.TyCo ty')
-    T.Shift{} -> throwError (ErrKind ShouldEq WhereCheck)
-    T.Lam{} -> throwError (ErrKind ShouldEq WhereCheck)
+    T.Shift{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
+    T.Lam{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
 
 checkTerm (D.Var v) ty = do
   vars <- gets checkVars 
   case M.lookup v vars of 
-    Nothing -> throwError (ErrMissingVar v WhereCheck)
-    Just ty' -> if ty' == ty then return (T.Var v ty) else throwError (ErrTypeNeq (embed ty') (embed ty) WhereCheck)
+    Nothing -> throwError (ErrMissingVar v "checkTerm Var")
+    Just ty' -> if ty' == ty then return (T.Var v ty) else throwError (ErrTypeNeq (embed ty') (embed ty) "checkTerm Var")
 
 checkTerm (D.Mu v c) ty = do
   addVar v ty
@@ -54,11 +54,11 @@ checkTerm (D.Mu v c) ty = do
 checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkDataDecl tyn' tyargs' pol' _ <- lookupXtorDecl xtn 
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn ty WhereCheck)
-  unless (pol == pol') $ throwError (ErrKind ShouldEq WhereCheck)
-  tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> tyargs') (ErrTyArity tyn WhereCheck)
-  unless (all (uncurry (==)) tyargsZipped) $ throwError (ErrKind ShouldEq WhereCheck)
-  xtArgsZipped <- zipWithError xtargs xtargs' (ErrXtorArity xtn WhereCheck)
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn ty "checkTerm Xtor")
+  unless (pol == pol') $ throwError (ErrKind ShouldEq "checkTerm Xtor")
+  tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> tyargs') (ErrTyArity tyn "checkTerm Xtor")
+  unless (all (uncurry (==)) tyargsZipped) $ throwError (ErrKind ShouldEq "checkTerm Xtor")
+  xtArgsZipped <- zipWithError xtargs xtargs' (ErrXtorArity xtn "checkTerm Xtor")
   xtargs'' <- forM xtArgsZipped (uncurry checkTerm)
   return (T.Xtor xtn xtargs'' ty)
 
@@ -66,13 +66,13 @@ checkTerm (D.XCase pts) (T.TyDecl tyn tyargs pol) = do
   pts' <- forM pts checkPattern
   let xtns = T.ptxt <$> pts' 
   tyNames <- forM xtns (fmap T.declName . lookupXtorDecl)
-  allEqWithError tyNames (ErrBadPattern xtns WhereCheck) 
+  allEqWithError tyNames (ErrBadPattern xtns "checkTerm XCase") 
   return $ T.XCase pts' (T.TyDecl tyn tyargs pol)
   where 
     checkPattern :: D.Pattern -> CheckM T.Pattern 
     checkPattern (D.MkPattern xtn vars c) = do
       T.MkXtorSig _ xtargs' <- lookupXtor xtn
-      argsZipped <- zipWithError vars xtargs' (ErrXtorArity xtn WhereCheck)
+      argsZipped <- zipWithError vars xtargs' (ErrXtorArity xtn "checkTerm XCase" )
       forM_ argsZipped (uncurry addVar)
       c' <- checkCommand c
       forM_ vars remVar
@@ -80,18 +80,18 @@ checkTerm (D.XCase pts) (T.TyDecl tyn tyargs pol) = do
 
 checkTerm (D.Shift t) (T.TyShift ty) = do 
   t' <- checkTerm t ty 
-  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq WhereCheck)
+  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
   case t' of 
     T.Shift t'' ty' -> return $ T.Shift t'' (T.TyShift ty') 
-    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) WhereCheck)
+    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) "checkTerm Shift")
 
 checkTerm (D.Lam v c) (T.TyShift ty) = do 
-  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq WhereCheck)
+  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
   addVar v ty
   c' <- checkCommand c
   return $ T.Lam v c' ty
   
-checkTerm t _ = throwError (ErrTypeAmbig t WhereCheck)
+checkTerm t _ = throwError (ErrTypeAmbig t "checkterm other")
 
 
 checkCommand :: D.Command -> CheckM T.Command
@@ -101,7 +101,7 @@ checkCommand (D.Cut t pol u) = do
   u' <- checkTerm u ty
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrKind ShouldEq WhereCheck)
+  when (pol1 == pol2) $ throwError (ErrKind ShouldEq "checkCommand")
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 
@@ -109,7 +109,7 @@ getTyCommand :: D.Term -> D.Term -> CheckM T.Ty
 getTyCommand (D.Var v) _ = do 
   vars <- gets checkVars
   case M.lookup v vars of 
-    Nothing -> throwError (ErrMissingVar v WhereCheck)
+    Nothing -> throwError (ErrMissingVar v "checkCommand")
     Just ty -> return ty
 getTyCommand t1 t2@D.Var{} = getTyCommand t2 t1
-getTyCommand t _ = throwError (ErrTypeAmbig t WhereCheck)
+getTyCommand t _ = throwError (ErrTypeAmbig t "checkCommand")

@@ -30,7 +30,7 @@ genConstraintsCmd (D.Cut t pol u) = do
   u' <- genConstraintsTerm u
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  if pol1 == pol2 then throwError (ErrKind ShouldEq WhereInfer) else do 
+  if pol1 == pol2 then throwError (ErrKind ShouldEq "genConstraintsCmd") else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
@@ -64,7 +64,7 @@ genConstraintsTerm (D.Xtor nm args) = do
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
   case decl of 
-    Nothing -> throwError (ErrBadPattern (D.ptxt <$> pts) WhereInfer)
+    Nothing -> throwError (ErrBadPattern (D.ptxt <$> pts) "genConstraintsTerm (XCase)")
     Just (MkDataDecl tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
@@ -77,7 +77,7 @@ genConstraintsTerm (D.XCase pts)  = do
 genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
-  if pol /= Pos then throwError (ErrKind  ShouldEq WhereInfer ) else do 
+  if pol /= Pos then throwError (ErrKind  ShouldEq "genConstraintsTerm (Shift)") else do 
     let newT = TyShift (T.getType t')
     return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  

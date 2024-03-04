@@ -68,7 +68,7 @@ getDoneVar :: Variable -> DesugarM D.VarDecl
 getDoneVar v = do 
   doneVars <- gets (D.progVars . desDone)
   case M.lookup v doneVars of 
-    Nothing -> throwError (ErrMissingVar v WhereDesugar)
+    Nothing -> throwError (ErrMissingVar v "getDoneVar (desugar)")
     Just vdecl -> return vdecl
 
 addDecl :: D.DataDecl -> DesugarM () 

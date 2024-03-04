@@ -65,9 +65,9 @@ substCase MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
 substCase MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
   let newcmd = substVar cmd t v 
   in substCase MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
-substCase (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity xt WhereEval) 
-substCase (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity xt WhereEval) 
+substCase (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity xt "substCase (Eval)") 
+substCase (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity xt "substCase (Eval)") 
 
 findXtor :: XtorName -> [Pattern] -> EvalM Pattern
-findXtor xt [] = throwError (ErrMissingXtorPt xt WhereEval) 
+findXtor xt [] = throwError (ErrMissingXtorPt xt "findXtor (Eval)") 
 findXtor xt (pt:pts) = if ptxt pt == xt then return pt else findXtor xt pts

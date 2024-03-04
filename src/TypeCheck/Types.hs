@@ -19,12 +19,12 @@ checkType :: D.Ty -> CheckM T.Ty
 checkType (D.TyVar v) = do
   tyVars <- gets checkTyVars
   case M.lookup v tyVars of 
-    Nothing -> throwError (ErrMissingTyVar v WhereCheck)
+    Nothing -> throwError (ErrMissingTyVar v "checkType TyVar")
     Just pol -> return (T.TyVar v pol)
 
 checkType (D.TyDecl tyn args) = do 
    T.MkDataDecl _ args' pol _ <- lookupDecl tyn
    args'' <- forM args checkType 
-   argsZipped <- zipWithError (getKind <$> args') (getKind <$> args'') (ErrTyArity tyn WhereCheck)
-   unless (all (uncurry (==)) argsZipped) $ throwError (ErrKind ShouldEq WhereCheck)
+   argsZipped <- zipWithError (getKind <$> args') (getKind <$> args'') (ErrTyArity tyn "checkType TyDecl")
+   unless (all (uncurry (==)) argsZipped) $ throwError (ErrKind ShouldEq "checkType TyDecl")
    return $ T.TyDecl tyn args'' pol

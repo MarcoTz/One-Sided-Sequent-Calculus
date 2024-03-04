@@ -74,8 +74,8 @@ addVar v ty = do
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
 addConstraintsXtor _ [] [] = return ()
-addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt WhereInfer)
-addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt WhereInfer)
+addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt "addConstraintsXtor (generate constraints)")
+addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt "addConstraintsXtor (generate constraints)")
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
   addConstraintsXtor xt tys1 tys2
