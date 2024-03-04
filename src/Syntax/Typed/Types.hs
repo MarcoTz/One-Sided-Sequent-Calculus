@@ -34,4 +34,14 @@ flipPolTy :: Ty -> Ty
 flipPolTy _ = error "not implemented (flipPolTy)"
 
 isSubsumed :: Ty -> Ty -> Bool
-isSubsumed _ _ = error "not implemented (isSubsumed)"
+isSubsumed _ (TyForall vars (TyVar v _)) = v `elem` vars
+isSubsumed (TyVar _ pol1) (TyVar _ pol2) = pol1 == pol2
+isSubsumed (TyVar v pol1) (TyForall vars ty) = pol1 == getKind ty && v `elem` vars
+isSubsumed (TyDecl tyn1 args1 pol1) (TyDecl tyn2 args2 pol2) = tyn1 == tyn2 && pol1 == pol2 && all (uncurry isSubsumed) (zip args1 args2) 
+isSubsumed (TyDecl tyn1 args1 pol1) (TyForall vars (TyDecl tyn2 args2 pol2)) = let genTys = TyForall vars <$> args2 in pol1 == pol2 && tyn1 == tyn2 && all (uncurry isSubsumed) (zip args1 genTys)
+isSubsumed (TyShift ty1) (TyShift ty2) = isSubsumed ty1 ty2
+isSubsumed (TyShift ty1) (TyForall vars (TyShift ty2)) = isSubsumed ty1 (TyForall vars ty2)
+isSubsumed (TyCo ty1) (TyCo ty2) = isSubsumed ty1 ty2
+isSubsumed (TyCo ty1) (TyForall vars (TyCo ty2)) = isSubsumed ty1 (TyForall vars ty2)
+isSubsumed (TyForall _ ty1) (TyForall _ ty2) = isSubsumed ty1 ty2
+isSubsumed _ _ = False 
