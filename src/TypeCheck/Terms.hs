@@ -20,16 +20,16 @@ import Data.Map qualified as M
 
 -- WIP, should not be working yet 
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
-checkTerm t (T.TyForall tyvars ty) = do 
-  setForall tyvars 
-  t' <- checkTerm t ty
-  case t' of 
-    T.Var v ty' -> return $ T.Var v (T.TyForall tyvars ty')
-    T.Mu v c ty' -> return $ T.Mu v c (T.TyForall tyvars ty')
-    T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyForall tyvars ty') 
-    T.XCase pts ty' -> return $ T.XCase pts (T.TyForall tyvars ty')
-    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyForall tyvars ty')
-    T.Lam v c ty' -> return $ T.Lam v c (T.TyForall tyvars ty') 
+--checkTerm t (T.TyForall tyvars ty) = do 
+--  setForall tyvars 
+--  t' <- checkTerm t ty
+--  case t' of 
+--    T.Var v ty' -> return $ T.Var v (T.TyForall tyvars ty')
+--    T.Mu v c ty' -> return $ T.Mu v c (T.TyForall tyvars ty')
+--    T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyForall tyvars ty') 
+--    T.XCase pts ty' -> return $ T.XCase pts (T.TyForall tyvars ty')
+--    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyForall tyvars ty')
+--    T.Lam v c ty' -> return $ T.Lam v c (T.TyForall tyvars ty') 
 checkTerm t (T.TyCo ty) = do 
   t' <- checkTerm t ty
   case t' of 
@@ -44,7 +44,7 @@ checkTerm (D.Var v) ty = do
   vars <- gets checkVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v WhereCheck)
-    Just ty' -> if T.isSubsumed ty' ty then return (T.Var v ty) else throwError (ErrTypeNeq (embed ty') (embed ty) WhereCheck)
+    Just ty' -> if ty' == ty then return (T.Var v ty) else throwError (ErrTypeNeq (embed ty') (embed ty) WhereCheck)
 
 checkTerm (D.Mu v c) ty = do
   addVar v ty
@@ -117,6 +117,6 @@ getTyCommand (D.Var v) _ = do
   vars <- gets checkVars
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v WhereCheck)
-    Just ty -> return (T.generalize ty)
+    Just ty -> return ty
 getTyCommand t1 t2@D.Var{} = getTyCommand t2 t1
 getTyCommand t _ = throwError (ErrTypeAmbig t WhereCheck)

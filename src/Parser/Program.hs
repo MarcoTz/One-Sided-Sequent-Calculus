@@ -16,13 +16,6 @@ import Control.Monad.Except
 import Control.Monad
 import Data.Map qualified as M
 
-import Debug.Trace 
-import Pretty.Program ()
-instance Show ParseDecl where 
-  show (MkD d) = show d
-  show (MkA a) = show a 
-  show (MkV v) = show v 
-
 parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule
@@ -31,7 +24,6 @@ parseProgram = do
   _ <- some alphaNumChar
   sc
   decls <- manyTill (parseDecl <* sc) (sc >> eof)
-  trace ("parsed decls " <> show decls) $ return ()
   foldM foldFun emptyProg decls
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 
@@ -53,10 +45,7 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  ty <- parseTy
-  sc
-  parseSymbol SymColon
-  MkAnnot nm ty <$> parsePol
+  MkAnnot nm <$> parseTy
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 

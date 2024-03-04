@@ -11,7 +11,6 @@ import Syntax.Desugared.Types    qualified as D
 import Syntax.Parsed.Terms       qualified as P 
 import Syntax.Parsed.Program     qualified as P
 import Syntax.Parsed.Types       qualified as P
-import Common
 
 import Data.Map qualified as M
 
@@ -51,12 +50,12 @@ instance Embed T.Ty D.Ty where
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
   embed (T.TyShift ty)  = embed ty
   embed (T.TyCo ty) = embed ty 
-  embed (T.TyForall vars ty) = D.TyForall vars (embed ty)
+--  embed (T.TyForall vars ty) = D.TyForall vars (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
 instance Embed T.VarDecl D.VarDecl where 
-  embed (T.MkVarDecl var ty body) = D.MkVar var (Just (embed ty, getKind ty)) (embed body)
+  embed (T.MkVarDecl var ty body) = D.MkVar var (Just (embed ty)) (embed body)
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 

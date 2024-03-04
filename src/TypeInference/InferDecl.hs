@@ -79,4 +79,3 @@ inferType (D.TyDecl tyn args) = do
         Nothing -> throwError (ErrMissingDecl tyn WhereDecl)
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' pol
-inferType (D.TyForall _ _) = error "not implemented (inferType)"

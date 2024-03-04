@@ -2,7 +2,6 @@ module Parser.Types where
 
 import Parser.Definition
 import Parser.Symbols
-import Parser.Keywords
 import Parser.Lexer
 import Syntax.Parsed.Types
 import Common
@@ -12,17 +11,17 @@ import Text.Megaparsec.Char
 
 
 parseTy :: Parser Ty 
-parseTy = try parseTyDecl <|> parseTyForall <|> parseTyVar 
+parseTy = try parseTyDecl <|> parseTyVar 
 
-parseTyForall :: Parser Ty
-parseTyForall = do 
-  parseKeyword KwForall <|> parseKeyword Kwforall
-  sc
-  vars <- parseTypeVar `sepBy` (parseSymbol SymComma >> sc)
-  sc
-  parseSymbol SymDot
-  sc 
-  TyForall vars <$> parseTy
+--parseTyForall :: Parser Ty
+--parseTyForall = do 
+--  parseKeyword KwForall <|> parseKeyword Kwforall
+--  sc
+--  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> sc)
+--  sc
+--  parseSymbol SymDot
+--  sc 
+--  TyForall vars <$> parseTy
 
 parseTyDecl :: Parser Ty
 parseTyDecl = do

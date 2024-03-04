@@ -3,7 +3,6 @@ import Driver.Definition
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
-import Syntax.Typed.Types        qualified as T
 import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Substitution qualified as T
 
@@ -55,16 +54,16 @@ inferProgram path = do
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
 inferVarDecl (D.MkVar n Nothing t) = do 
   t' <- inferTerm t
-  let newDecl = T.MkVarDecl n (T.generalize $ T.getType t') t'
+  let newDecl = T.MkVarDecl n (T.getType t') t'
   addVarDecl newDecl
   return newDecl 
-inferVarDecl (D.MkVar n (Just (ty,pol)) t) = do 
+inferVarDecl (D.MkVar n (Just ty) t) = do 
   env <- gets drvEnv
-  let ty' = runCheckM env (checkType ty pol)
+  let ty' = runCheckM env (checkType ty)
   ty'' <- liftErr ty'
   let t' =  runCheckM env (checkTerm t ty'')
   t'' <- liftErr t'
-  return (T.MkVarDecl n (T.generalize (T.getType t'')) t'')
+  return (T.MkVarDecl n (T.getType t'') t'')
 
 
 
@@ -90,6 +89,6 @@ inferTerm t = do
   debug ("Substitutions " <> show varmap)
   debug ("\t" <> show kndmap)
   let t'' = T.substTyVars varmap t'
-  debug ("Final Type : " <> show (T.generalize $ T.getType t''))
+  debug ("Final Type : " <> show (T.getType t''))
   return t''
 
