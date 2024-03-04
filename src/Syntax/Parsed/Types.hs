@@ -4,7 +4,7 @@ import Common
 
 import Data.Set qualified as S
 
-data TypeScheme = MkTypeScheme ![PolVar] !Ty
+data TypeScheme = MkTypeScheme ![TypeVar] !Ty
 
 data Ty = TyVar !TypeVar | TyDecl !TypeName ![Ty]
 

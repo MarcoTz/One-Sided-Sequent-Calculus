@@ -25,12 +25,12 @@ checkTerm (D.Var v) tys = do
   let ty = (\(T.MkTypeScheme _ t) -> t) tys
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v WhereCheck)
-    Just ty' -> if ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq ty' ty' WhereCheck)
+    Just ty' -> if T.isSubsumed ty' tys then return (T.Var v ty') else throwError (ErrTypeNeq ty' ty WhereCheck)
 
 checkTerm (D.Mu v c) tys = do
   let ty = (\(T.MkTypeScheme _ t) -> t) tys
   addVar v ty
-  c' <- checkCommand c tys
+  c' <- checkCommand c
   return (T.Mu v c' ty)
 
 checkTerm (D.Xtor xtn xtargs) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys pol)) = do 
@@ -38,12 +38,9 @@ checkTerm (D.Xtor xtn xtargs) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys pol
   -- make sure type name and polarity are correct
   unless (tyn' == tyn) $ throwError (ErrNotTyDecl tyn ty WhereCheck)
   unless (pol == pol') $ throwError (ErrKind (MkKind pol') (MkKind pol) ShouldEq WhereCheck)
-  forM_ tyvars addTyVar
   zipped <- zipWithError xtargs argTys (ErrXtorArity xtn WhereCheck)
-  xtargs' <- forM zipped (\(t,ty') -> checkTerm t (T.MkTypeScheme [] ty'))
-  let newTy = T.TyDecl tyn (T.getType <$> xtargs') pol
-  forM_ tyvars remTyVar
-  return (T.Xtor xtn xtargs' newTy)
+  xtargs' <- forM zipped (\(t,ty') -> checkTerm t (T.MkTypeScheme tyvars ty'))
+  return (T.Xtor xtn xtargs' ty)
 checkTerm (D.Xtor xtn _) (T.MkTypeScheme _ ty) = do 
   T.MkDataDecl tyn _ _ _<- lookupXtorDecl xtn
   throwError (ErrNotTyDecl tyn ty WhereCheck) 
@@ -64,49 +61,63 @@ checkTerm (D.XCase pts@(pt1:_)) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys p
   subst <- M.fromList <$> zipWithError tyArgs argTys (ErrTyArity tyn WhereCheck)
   let xtArgTys = (\(T.MkXtorSig _ args) -> T.substTyVars subst <$> args) <$> xtSigs'
   zipped <- zipWithError pts xtArgTys (ErrBadPattern (D.ptxt <$> pts) WhereCheck)
-  forM_ tyvars addTyVar
   pts' <- forM zipped (uncurry checkPattern)
-  let newTy = T.TyDecl tyn argTys pol
-  forM_ tyvars remTyVar
-  return $ T.XCase pts' newTy
+  return $ T.XCase pts' ty
 
 checkTerm (D.XCase (pt1:_)) (T.MkTypeScheme _ ty) = do
   T.MkDataDecl tyn _ _ _ <- lookupXtorDecl (D.ptxt pt1)
   throwError (ErrNotTyDecl tyn ty WhereCheck)
 
-checkTerm (D.Shift t) tys@(T.MkTypeScheme tyargs ty) = do 
-  forM_ tyargs addTyVar
+checkTerm (D.Shift t) tys@(T.MkTypeScheme _ ty) = do 
   t' <- checkTerm t tys
   let pol = getKind t'
-  forM_ tyargs remTyVar
   if pol /= Pos then throwError (ErrKind (MkKind pol) (MkKind Pos) ShouldEq WhereCheck) else return (T.Shift t' ty)
 
-checkTerm (D.Lam v c) tys@(T.MkTypeScheme tyargs (T.TyShift ty pol)) = do
+checkTerm (D.Lam v c) (T.MkTypeScheme tyargs (T.TyShift ty pol)) = do
   when (pol /= Neg) $ throwError (ErrKind (MkKind pol) (MkKind Neg) ShouldEq WhereCheck)
-  forM_ tyargs addTyVar 
   addVar v ty
-  c' <- checkCommand c tys
-  forM_ tyargs remTyVar
+  c' <- checkCommand c
   return $ T.Lam v c' (T.TyShift ty Neg)
 
 checkTerm (D.Lam _ _) (T.MkTypeScheme _ ty) = throwError (ErrNotTyShift ty WhereCheck)
-
-
-checkCommand :: D.Command -> T.TypeScheme -> CheckM T.Command
-checkCommand (D.Cut t pol u) tys = do 
-  t' <- checkTerm t tys 
-  u' <- checkTerm u tys
-  let pol1 = getKind t' 
-  let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereCheck)
-  return $ T.Cut t' pol u'
-checkCommand D.Done _ = return T.Done 
 
 checkPattern :: D.Pattern -> [T.Ty] -> CheckM T.Pattern 
 checkPattern (D.MkPattern xtn vars c) argTys = do 
   zipped <- zipWithError vars argTys (ErrXtorArity xtn WhereCheck)
   forM_ zipped (uncurry addVar)
   -- not sure what type we need there
-  c' <- checkCommand c (T.MkTypeScheme [] (T.TyVar (MkTypeVar "") Neg))
+  c' <- checkCommand c 
   forM_ vars remVar 
   return $ T.MkPattern xtn vars c'
+
+checkCommand :: D.Command -> CheckM T.Command
+checkCommand (D.Cut t pol u) = do 
+  tys <- getTyCommand t u 
+  t' <- checkTerm t tys
+  u' <- checkTerm u tys 
+  let pol1 = getKind t' 
+  let pol2 = getKind u'
+  when (pol1 == pol2) $ throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereCheck)
+  return $ T.Cut t' pol u'
+checkCommand D.Done = return T.Done 
+
+getTyCommand :: D.Term -> D.Term -> CheckM T.TypeScheme
+getTyCommand (D.Var v) _ = do 
+  vars <- gets checkVars
+  case M.lookup v vars of 
+    Nothing -> throwError (ErrMissingVar v WhereCheck)
+    Just ty -> return (T.generalize ty)
+getTyCommand t1 t2@D.Var{} = getTyCommand t2 t1
+getTyCommand t _ = throwError (ErrTypeAmbig t WhereCheck)
+
+-- mu a.<cons(1,nil) | + | case(cons(x,y) => <x|+|a>, nil => Done)> : Nat
+-- a : Nat to env
+-- check <cons(1,nil) | + | case(cons(x,y) => <x|+|a>, nil => Done)> checks
+-- we need cons(1,nil) :List(Nat) : List(Nat)
+-- then cons(1,nil) : List(Nat)
+-- case(...) : List(Nat) 
+-- -> command checks
+-- to check case has List(Nat) we also check <x|+|a>
+-- needs x:Nat, a:Nat
+-- x:Nat by Cons 
+-- a:Nat by env

@@ -18,12 +18,11 @@ parseTypeScheme :: Parser TypeScheme
 parseTypeScheme = do 
   parseKeyword KwForall <|> parseKeyword Kwforall
   sc
-  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> sc)
+  vars <- parseTypeVar `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymDot
   sc 
   MkTypeScheme vars <$> parseTy
-
 parseTyDecl :: Parser Ty
 parseTyDecl = do
   tyn <- parseTypeName 

@@ -13,7 +13,7 @@ import Data.Map qualified as M
 data CheckerState = MkCheckState { checkVars :: !(M.Map Variable Ty), checkTyVars :: !(M.Map TypeVar Pol)}
 
 initialCheckerState :: CheckerState 
-initialCheckerState = MkCheckState M.empty M.empty
+initialCheckerState = MkCheckState M.empty M.empty 
 
 newtype CheckM a = CheckM { getCheckM :: ReaderT Environment (StateT CheckerState (Except Error)) a }
   deriving newtype (Functor, Applicative, Monad, MonadReader Environment, MonadError Error, MonadState CheckerState)

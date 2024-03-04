@@ -24,6 +24,8 @@ instance Show Error where
   show (ErrMissingXtorPt xtn wh)        = "Xtor " <> show xtn <> " not found in patterns" <> show wh 
   show (ErrMissingTyVar tyv wh)         = "Type Variable " <> show tyv <> " should not appear free" <> show wh
   show (ErrNotTyDecl tyn ty wh)         = "Type needs to be " <> show tyn <> " but was " <>  show ty <> " instead" <> show wh
+  show (ErrNotTyShift ty wh)            = "Type " <> show ty <> " should be a Shift" <> show wh
+  show (ErrTypeAmbig t wh)              = "Type of term " <> show t <> " is unclear" <> show wh 
 
 instance Show ErrWhere where 
   show WhereCheck     = " (during type checking)"

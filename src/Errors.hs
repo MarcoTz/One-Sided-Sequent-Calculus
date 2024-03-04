@@ -2,6 +2,7 @@ module Errors where
 
 import Common 
 import Syntax.Typed.Types     qualified as T
+import Syntax.Desugared.Terms qualified as D
 import Syntax.Desugared.Types qualified as D
 
 data Error =
@@ -21,6 +22,7 @@ data Error =
    | ErrMissingXtor   !XtorName !ErrWhere
    | ErrDuplXtor      !XtorName !ErrWhere
    | ErrMissingXtorPt !XtorName !ErrWhere
+   | ErrTypeAmbig     !D.Term !ErrWhere
    | ErrParser        !String
 
 

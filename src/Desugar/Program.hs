@@ -68,14 +68,13 @@ desugarTypeScheme (P.MkTypeScheme vars ty) = do
   ty' <- desugarTypeSchemeTy ty vars
   return $ D.MkTypeScheme vars ty' 
   where 
-    desugarTypeSchemeTy :: P.Ty -> [PolVar] -> DesugarM D.Ty
+    desugarTypeSchemeTy :: P.Ty -> [TypeVar] -> DesugarM D.Ty
     desugarTypeSchemeTy (P.TyVar v) tyVars = do
       let vty = tyvarToTyName v
-      let vars' = (\(MkPolVar tyv _) -> tyv) <$> tyVars
       mdecl <- getMDecl vty
       case mdecl of 
         Just _ -> return $ D.TyDecl vty [] 
-        Nothing -> if v `elem` vars' then return $ D.TyVar v else throwError (ErrMissingTyVar v WhereDesugar)
+        Nothing -> if v `elem` tyVars then return $ D.TyVar v else throwError (ErrMissingTyVar v WhereDesugar)
     desugarTypeSchemeTy (P.TyDecl tyn args) tyVars = do 
       args' <- forM args (`desugarTypeSchemeTy` tyVars) 
       return $ D.TyDecl tyn args' 
