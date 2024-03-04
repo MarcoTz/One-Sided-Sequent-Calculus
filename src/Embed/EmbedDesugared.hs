@@ -44,10 +44,8 @@ instance Embed D.Program P.Program where
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
 
-instance Embed D.TypeScheme P.TypeScheme where 
-  embed (D.MkTypeScheme vars ty) = P.MkTypeScheme vars (embed ty)
-
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)
+  embed (D.TyForall vars ty) = P.TyForall vars (embed ty)
 

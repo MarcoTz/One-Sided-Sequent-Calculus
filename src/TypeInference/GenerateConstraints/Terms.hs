@@ -78,11 +78,11 @@ genConstraintsTerm (D.Shift t) = do
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
   if pol /= Pos then throwError (ErrKind (MkKind pol) (MkKind Pos) ShouldEq WhereInfer ) else do 
-    let newT = TyShift (T.getType t') Pos
+    let newT = TyShift (T.getType t')
     return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  
   tyV <- freshTyVar Pos 
   addVar v tyV
   cmd' <- genConstraintsCmd cmd
-  let newT = TyShift tyV Neg
+  let newT = TyShift tyV 
   return (T.Lam v cmd' newT)

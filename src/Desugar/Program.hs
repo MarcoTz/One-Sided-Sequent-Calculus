@@ -5,6 +5,8 @@ import Errors
 import Environment
 import Desugar.Definition
 import Desugar.Terms
+import Embed.Definition
+import Embed.EmbedDesugared ()
 import Syntax.Parsed.Program    qualified as P
 import Syntax.Parsed.Types      qualified as P
 import Syntax.Desugared.Program qualified as D
@@ -53,31 +55,15 @@ desugarVar (P.MkVar v t) = do
 desugarAnnot :: P.AnnotDecl -> DesugarM () 
 desugarAnnot (P.MkAnnot v ty) = do 
   D.MkVar _ mty t <- getDoneVar v
-  ty' <- desugarTypeScheme ty
+  ty' <- desugarTy ty
   case mty of 
     Nothing -> addVar (D.MkVar v (Just ty') t)
-    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeSchemeNeq ty'' ty' WhereDesugar)
+    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') WhereDesugar)
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
   args' <- forM args desugarTy
   return (D.MkXtorSig xtn args')
-
-desugarTypeScheme :: P.TypeScheme -> DesugarM D.TypeScheme
-desugarTypeScheme (P.MkTypeScheme vars ty) = do 
-  ty' <- desugarTypeSchemeTy ty vars
-  return $ D.MkTypeScheme vars ty' 
-  where 
-    desugarTypeSchemeTy :: P.Ty -> [TypeVar] -> DesugarM D.Ty
-    desugarTypeSchemeTy (P.TyVar v) tyVars = do
-      let vty = tyvarToTyName v
-      mdecl <- getMDecl vty
-      case mdecl of 
-        Just _ -> return $ D.TyDecl vty [] 
-        Nothing -> if v `elem` tyVars then return $ D.TyVar v else throwError (ErrMissingTyVar v WhereDesugar)
-    desugarTypeSchemeTy (P.TyDecl tyn args) tyVars = do 
-      args' <- forM args (`desugarTypeSchemeTy` tyVars) 
-      return $ D.TyDecl tyn args' 
 
 desugarTy :: P.Ty -> DesugarM D.Ty
 -- a type variable appearing in  a declaration is either 
@@ -99,3 +85,6 @@ desugarTy (P.TyVar v) = do
 desugarTy (P.TyDecl tyn args) = do 
   args' <- forM args desugarTy 
   return $ D.TyDecl tyn args' 
+desugarTy (P.TyForall vars ty) = do 
+  ty' <- desugarTy ty
+  return $ D.TyForall vars ty' 

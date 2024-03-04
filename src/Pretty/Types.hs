@@ -13,6 +13,7 @@ instance Show P.Ty where
   show (P.TyVar v) = show v 
   show (P.TyDecl nm []) = show nm
   show (P.TyDecl nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (P.TyForall vars ty) = "forall " <> intercalate ", " (show <$> vars) <> ". " <> show ty 
 instance Show D.Ty where 
   show = show . (embed :: D.Ty -> P.Ty)
 
@@ -20,15 +21,6 @@ instance Show T.Ty where
   show (T.TyVar v knd) = show v <> ":" <> show knd
   show (T.TyDecl nm [] knd) = show nm <> ":" <> show knd
   show (T.TyDecl nm args knd) = show nm <> "(" <> intercalate ", " (show <$> args) <> ") :" <> show knd
-  show (T.TyShift ty knd) = "{" <> show ty <> "}: " <> show knd
-  show (T.TyCo ty knd) = "co " <> show ty <> ":" <> show knd
-
-instance Show P.TypeScheme where 
-  show (P.MkTypeScheme [] ty) = show ty
-  show (P.MkTypeScheme vars ty) = "forall " <> intercalate "," (show <$> vars) <> ". " <> show ty
-
-instance Show D.TypeScheme where 
-  show t = show $ (embed :: D.TypeScheme -> P.TypeScheme) t
-instance Show T.TypeScheme where 
-  show (T.MkTypeScheme [] ty) = show ty
-  show (T.MkTypeScheme vars ty) = "forall " <> intercalate "," (show <$> vars) <> ". " <> show ty
+  show (T.TyShift ty) = "{" <> show ty <> "}" 
+  show (T.TyCo ty) = "co " <> show ty
+  show (T.TyForall vars ty)  = "forall " <> intercalate ", " (show <$> vars) <> ". " <> show ty

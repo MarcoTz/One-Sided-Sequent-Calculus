@@ -13,7 +13,6 @@ instance Show Error where
   show (ErrKind knd1 knd2 ShouldEq wh)  = show knd1 <> " != " <> show knd2 <> ", should be equal" <> show wh
   show (ErrKind knd1 knd2 ShouldNeq wh) = show knd1 <> " = " <> show knd2 <> ", should be different " <> show wh
   show (ErrTypeNeq ty1 ty2 wh)          = show ty1 <> " != " <> show ty2 <> show wh
-  show (ErrTypeSchemeNeq tys1 tys2 wh)  = show tys1 <> " != " <> show tys2 <> show wh 
   show (ErrMissingDecl tyn wh)          = "Type " <> show tyn <> " was not defined " <> show wh
   show (ErrDuplDecl tyn wh)             = "Type " <> show tyn <> " was defined multiple times" <> show wh
   show (ErrMissingVar v wh)             = "Variable " <> show v <> " was not defined" <> show wh

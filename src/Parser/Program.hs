@@ -53,7 +53,7 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  ty <- parseTypeScheme <|> (MkTypeScheme [] <$> parseTy)
+  ty <- parseTy
   sc
   return (MkAnnot nm ty)
 

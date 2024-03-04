@@ -10,7 +10,7 @@ data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]}
 
 data DataDecl  = MkData  {declName  :: !TypeName, declArgs  :: ![PolVar], dataPol :: !Pol, declXtors :: ![XtorSig]} 
 data VarDecl   = MkVar   {varName   :: !Variable, varBody   :: !Term}
-data AnnotDecl = MkAnnot {annotName :: !Variable, annotType :: !TypeScheme} 
+data AnnotDecl = MkAnnot {annotName :: !Variable, annotType :: !Ty} 
 
 data Program = MkProgram { progDecls :: !(M.Map TypeName DataDecl), progVars :: !(M.Map Variable VarDecl), progAnnots :: !(M.Map Variable AnnotDecl)} 
 

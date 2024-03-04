@@ -45,13 +45,12 @@ instance Embed T.XtorSig D.XtorSig where
 instance Embed T.XtorSig P.XtorSig where 
   embed t = (embed :: D.XtorSig -> P.XtorSig) $ (embed :: T.XtorSig -> D.XtorSig) t
 
-instance Embed T.TypeScheme D.TypeScheme where 
-  embed (T.MkTypeScheme vars ty) = D.MkTypeScheme vars (embed ty)
 instance Embed T.Ty D.Ty where 
   embed (T.TyVar v _) = D.TyVar v
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
-  embed (T.TyShift ty _)  = embed ty
-  embed (T.TyCo ty _) = embed ty 
+  embed (T.TyShift ty)  = embed ty
+  embed (T.TyCo ty) = embed ty 
+  embed (T.TyForall vars ty) = D.TyForall vars (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 

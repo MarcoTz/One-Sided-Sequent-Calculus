@@ -12,17 +12,18 @@ import Text.Megaparsec.Char
 
 
 parseTy :: Parser Ty 
-parseTy = try parseTyDecl <|> parseTyVar
+parseTy = try parseTyDecl <|> parseTyForall <|> parseTyVar 
 
-parseTypeScheme :: Parser TypeScheme 
-parseTypeScheme = do 
+parseTyForall :: Parser Ty
+parseTyForall = do 
   parseKeyword KwForall <|> parseKeyword Kwforall
   sc
   vars <- parseTypeVar `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymDot
   sc 
-  MkTypeScheme vars <$> parseTy
+  TyForall vars <$> parseTy
+
 parseTyDecl :: Parser Ty
 parseTyDecl = do
   tyn <- parseTypeName 

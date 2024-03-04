@@ -15,10 +15,6 @@ import Control.Monad.Except
 import Data.Map qualified as M
 
 
-checkTypeScheme :: D.TypeScheme -> CheckM T.TypeScheme
-checkTypeScheme (D.MkTypeScheme tyvars ty) = do
-  ty' <- checkType ty 
-  return $ T.MkTypeScheme tyvars  ty'
 
 checkType :: D.Ty -> CheckM T.Ty
 checkType (D.TyVar v) = do
@@ -32,3 +28,7 @@ checkType (D.TyDecl tyn args) = do
    zipped <- zipWithError ((\(MkPolVar _ pol') -> pol') <$> args') (getKind <$> args'') (ErrTyArity tyn WhereCheck)
    forM_ zipped (\(pol1,pol2) -> if pol1 == pol2 then return () else throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereCheck)) 
    return $ T.TyDecl tyn args'' pol
+checkType (D.TyForall tyvars ty) = do
+  ty' <- checkType ty 
+  return $ T.TyForall tyvars  ty'
+

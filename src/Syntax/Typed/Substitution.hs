@@ -54,8 +54,9 @@ instance SubstTyVars XtorSig where
 instance SubstTyVars Ty where 
   substTyVars varmap ty@(TyVar v pol) = fromMaybe ty (M.lookup (MkPolVar v pol) varmap) 
   substTyVars varmap (TyDecl tyn args knd) = TyDecl tyn (substTyVars varmap <$> args) knd
-  substTyVars varmap (TyShift ty knd) = TyShift (substTyVars varmap ty) knd
-  substTyVars varmap (TyCo ty knd) = TyCo (substTyVars varmap ty) knd
+  substTyVars varmap (TyShift ty) = TyShift (substTyVars varmap ty)
+  substTyVars varmap (TyCo ty) = TyCo (substTyVars varmap ty) 
+  substTyVars varmap (TyForall vars ty) = let newmap = foldr (\v m -> M.delete (MkPolVar v Neg) (M.delete (MkPolVar v Pos) m)) varmap vars in TyForall vars (substTyVars newmap ty)
 
 instance SubstTyVars Term where 
   substTyVars varmap (Var v ty) = Var v (substTyVars varmap ty)

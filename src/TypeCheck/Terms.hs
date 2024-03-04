@@ -10,6 +10,8 @@ import Environment
 import Errors
 import Utils
 import Common
+import Embed.EmbedTyped () 
+import Embed.Definition
 
 import Control.Monad
 import Control.Monad.Except
@@ -19,34 +21,32 @@ import Data.List (find)
 
 
 -- WIP, should not be working yet 
-checkTerm :: D.Term -> T.TypeScheme -> CheckM T.Term
-checkTerm (D.Var v) tys = do
+checkTerm :: D.Term -> T.Ty -> CheckM T.Term
+checkTerm (D.Var v) ty = do
   vars <- gets checkVars 
-  let ty = (\(T.MkTypeScheme _ t) -> t) tys
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v WhereCheck)
-    Just ty' -> if T.isSubsumed ty' tys then return (T.Var v ty') else throwError (ErrTypeNeq ty' ty WhereCheck)
+    Just ty' -> if T.isSubsumed ty' ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) WhereCheck)
 
-checkTerm (D.Mu v c) tys = do
-  let ty = (\(T.MkTypeScheme _ t) -> t) tys
+checkTerm (D.Mu v c) ty = do
   addVar v ty
   c' <- checkCommand c
   return (T.Mu v c' ty)
 
-checkTerm (D.Xtor xtn xtargs) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys pol)) = do 
+checkTerm (D.Xtor xtn xtargs) (T.TyForall tyvars ty@(T.TyDecl tyn argTys pol)) = do 
   T.MkDataDecl tyn' _ pol' _ <- lookupXtorDecl xtn
   -- make sure type name and polarity are correct
   unless (tyn' == tyn) $ throwError (ErrNotTyDecl tyn ty WhereCheck)
   unless (pol == pol') $ throwError (ErrKind (MkKind pol') (MkKind pol) ShouldEq WhereCheck)
   zipped <- zipWithError xtargs argTys (ErrXtorArity xtn WhereCheck)
-  xtargs' <- forM zipped (\(t,ty') -> checkTerm t (T.MkTypeScheme tyvars ty'))
+  xtargs' <- forM zipped (\(t,ty') -> checkTerm t (T.TyForall tyvars ty'))
   return (T.Xtor xtn xtargs' ty)
-checkTerm (D.Xtor xtn _) (T.MkTypeScheme _ ty) = do 
+checkTerm (D.Xtor xtn _) (T.TyForall _ ty) = do 
   T.MkDataDecl tyn _ _ _<- lookupXtorDecl xtn
   throwError (ErrNotTyDecl tyn ty WhereCheck) 
 
 checkTerm (D.XCase []) _ = throwError (ErrBadPattern [] WhereCheck)
-checkTerm (D.XCase pts@(pt1:_)) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys pol)) = do
+checkTerm (D.XCase pts@(pt1:_)) (T.TyForall _tyvars ty@(T.TyDecl tyn argTys pol)) = do
   T.MkDataDecl tyn' tyArgs pol' xtors <- lookupXtorDecl (D.ptxt pt1)
   -- check type name and polarity are correct
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn ty WhereCheck)
@@ -64,22 +64,22 @@ checkTerm (D.XCase pts@(pt1:_)) (T.MkTypeScheme tyvars ty@(T.TyDecl tyn argTys p
   pts' <- forM zipped (uncurry checkPattern)
   return $ T.XCase pts' ty
 
-checkTerm (D.XCase (pt1:_)) (T.MkTypeScheme _ ty) = do
+checkTerm (D.XCase (pt1:_)) (T.TyForall _ ty) = do
   T.MkDataDecl tyn _ _ _ <- lookupXtorDecl (D.ptxt pt1)
   throwError (ErrNotTyDecl tyn ty WhereCheck)
 
-checkTerm (D.Shift t) tys@(T.MkTypeScheme _ ty) = do 
+checkTerm (D.Shift t) tys@(T.TyForall _ ty) = do 
   t' <- checkTerm t tys
   let pol = getKind t'
   if pol /= Pos then throwError (ErrKind (MkKind pol) (MkKind Pos) ShouldEq WhereCheck) else return (T.Shift t' ty)
 
-checkTerm (D.Lam v c) (T.MkTypeScheme tyargs (T.TyShift ty pol)) = do
-  when (pol /= Neg) $ throwError (ErrKind (MkKind pol) (MkKind Neg) ShouldEq WhereCheck)
+checkTerm (D.Lam v c) (T.TyForall _tyargs (T.TyShift ty)) = do
   addVar v ty
   c' <- checkCommand c
-  return $ T.Lam v c' (T.TyShift ty Neg)
+  return $ T.Lam v c' (T.TyShift ty)
 
-checkTerm (D.Lam _ _) (T.MkTypeScheme _ ty) = throwError (ErrNotTyShift ty WhereCheck)
+checkTerm (D.Lam _ _) (T.TyForall _ ty) = throwError (ErrNotTyShift ty WhereCheck)
+checkTerm _ _ = error "not implemented (checkTerm)"
 
 checkPattern :: D.Pattern -> [T.Ty] -> CheckM T.Pattern 
 checkPattern (D.MkPattern xtn vars c) argTys = do 
@@ -101,7 +101,7 @@ checkCommand (D.Cut t pol u) = do
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 
-getTyCommand :: D.Term -> D.Term -> CheckM T.TypeScheme
+getTyCommand :: D.Term -> D.Term -> CheckM T.Ty
 getTyCommand (D.Var v) _ = do 
   vars <- gets checkVars
   case M.lookup v vars of 
