@@ -55,7 +55,8 @@ parseTypeAnnot = do
   sc
   ty <- parseTy
   sc
-  return (MkAnnot nm ty)
+  parseSymbol SymColon
+  MkAnnot nm ty <$> parsePol
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 

@@ -58,9 +58,9 @@ inferVarDecl (D.MkVar n Nothing t) = do
   let newDecl = T.MkVarDecl n (T.generalize $ T.getType t') t'
   addVarDecl newDecl
   return newDecl 
-inferVarDecl (D.MkVar n (Just ty) t) = do 
+inferVarDecl (D.MkVar n (Just (ty,pol)) t) = do 
   env <- gets drvEnv
-  let ty' = runCheckM env (checkType ty)
+  let ty' = runCheckM env (checkType ty pol)
   ty'' <- liftErr ty'
   let t' =  runCheckM env (checkTerm t ty'')
   t'' <- liftErr t'

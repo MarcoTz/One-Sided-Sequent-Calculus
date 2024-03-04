@@ -39,7 +39,7 @@ instance Embed D.Program P.Program where
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 
       embedAnnots ((_,D.MkVar _ Nothing _):ds) = embedAnnots ds
-      embedAnnots ((_,D.MkVar v (Just ty) _):ds) = (v,P.MkAnnot v (embed ty)):embedAnnots ds
+      embedAnnots ((_,D.MkVar v (Just (ty,pol)) _):ds) = (v,P.MkAnnot v (embed ty) pol):embedAnnots ds
 
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)

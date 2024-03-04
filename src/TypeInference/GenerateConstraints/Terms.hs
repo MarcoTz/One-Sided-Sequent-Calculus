@@ -30,7 +30,7 @@ genConstraintsCmd (D.Cut t pol u) = do
   u' <- genConstraintsTerm u
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  if pol1 == pol2 then throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereInfer) else do 
+  if pol1 == pol2 then throwError (ErrKind ShouldEq WhereInfer) else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut t' pol u')
 genConstraintsCmd D.Done = return T.Done
@@ -77,7 +77,7 @@ genConstraintsTerm (D.XCase pts)  = do
 genConstraintsTerm (D.Shift t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
-  if pol /= Pos then throwError (ErrKind (MkKind pol) (MkKind Pos) ShouldEq WhereInfer ) else do 
+  if pol /= Pos then throwError (ErrKind  ShouldEq WhereInfer ) else do 
     let newT = TyShift (T.getType t')
     return (T.Shift t' newT)
 genConstraintsTerm (D.Lam v cmd) = do  

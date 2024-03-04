@@ -56,14 +56,14 @@ unifyTypeConstraint (TyCo ty1) (TyCo ty2) = do
 unifyTypeConstraint ty1 ty2 = throwError (ErrTypeNeq (embed ty1) (embed ty2) WhereSolve)
 
 unifyKindConstraint :: ConstrTy -> Kind -> Kind -> SolverM ()
-unifyKindConstraint Eq (MkKind p1) (MkKind p2)  = when (p1 /= p2) $ throwError (ErrKind (MkKind p1) (MkKind p2) ShouldEq WhereSolve)
-unifyKindConstraint Neq (MkKind p1) (MkKind p2) = when (p1==p2)   $ throwError (ErrKind (MkKind p1) (MkKind p2) ShouldNeq WhereSolve)
+unifyKindConstraint Eq (MkKind p1) (MkKind p2)  = when (p1 /= p2) $ throwError (ErrKind ShouldEq WhereSolve)
+unifyKindConstraint Neq (MkKind p1) (MkKind p2) = when (p1==p2)   $ throwError (ErrKind ShouldNeq WhereSolve)
 
 unifyKindConstraint Eq (MkKindVar v1) (MkKind pol) = do
   kndEnv <- gets slvKndVars
   case M.lookup v1 kndEnv of 
     Nothing -> addKndVar v1 pol
-    Just pol' -> if pol == pol' then return () else throwError (ErrKind (MkKind pol) (MkKind pol') ShouldEq WhereSolve)
+    Just pol' -> if pol == pol' then return () else throwError (ErrKind ShouldEq WhereSolve)
 unifyKindConstraint Eq p@MkKind{} v@MkKindVar{} = unifyKindConstraint Eq v p
 unifyKindConstraint Eq (MkKindVar v1) (MkKindVar v2) = do
   kndEnv <- gets slvKndVars 
@@ -71,7 +71,7 @@ unifyKindConstraint Eq (MkKindVar v1) (MkKindVar v2) = do
     (Nothing, Nothing) -> return ()
     (Just pol,Nothing) -> addKndVar v2 pol
     (Nothing, Just pol) -> addKndVar v1 pol
-    (Just pol1, Just pol2) -> when (pol1 /= pol2) $ throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldEq WhereSolve)
+    (Just pol1, Just pol2) -> when (pol1 /= pol2) $ throwError (ErrKind ShouldEq WhereSolve)
 
 
 unifyKindConstraint Neq v@MkKindVar{} (MkKind p) = unifyKindConstraint Eq v (MkKind $ flipPol p)
@@ -82,4 +82,4 @@ unifyKindConstraint Neq (MkKindVar v1) (MkKindVar v2) = do
     (Nothing, Nothing) -> return ()
     (Just pol,Nothing) -> addKndVar v2 (flipPol pol)
     (Nothing, Just pol) -> addKndVar v1 (flipPol pol)
-    (Just pol1, Just pol2) -> when (pol1 == pol2) $ throwError (ErrKind (MkKind pol1) (MkKind pol2) ShouldNeq WhereSolve)
+    (Just pol1, Just pol2) -> when (pol1 == pol2) $ throwError (ErrKind ShouldNeq WhereSolve)

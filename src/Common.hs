@@ -32,3 +32,6 @@ data Kind = MkKind !Pol | MkKindVar !KindVar
 
 class GetKind a where 
   getKind :: a -> Pol
+
+instance GetKind PolVar where 
+  getKind (MkPolVar _ pol) = pol
