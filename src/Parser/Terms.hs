@@ -9,7 +9,6 @@ import Common
 
 import Text.Megaparsec
 
-
 -- Xtors with no arguments are parsed as variables
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
@@ -91,8 +90,12 @@ parseLam = do
   sc
   Lam v <$> parseCommand
 
-parseCommand :: Parser Command
-parseCommand = (do 
+
+parseCommand :: Parser Command 
+parseCommand = parseCut <|> parseDone
+
+parseCut :: Parser Command
+parseCut = do 
   parseSymbol SymAngO
   sc
   t <- parseTerm
@@ -106,8 +109,8 @@ parseCommand = (do
   u <- parseTerm
   sc
   parseSymbol SymAngC
-  return (Cut t pol u))
-  <|>
-  (do 
-    parseKeyword KwDone 
-    return Done)
+  return (Cut t pol u)
+
+parseDone :: Parser Command
+parseDone = parseKeyword KwDone  >> return Done
+

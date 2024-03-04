@@ -16,6 +16,9 @@ import Control.Monad.Except
 import Control.Monad
 import Data.Map qualified as M
 
+import Pretty.Types ()
+import Pretty.Terms ()
+
 parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule

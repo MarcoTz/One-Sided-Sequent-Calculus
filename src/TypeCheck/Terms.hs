@@ -90,15 +90,8 @@ checkTerm (D.Lam v c) (T.TyShift ty) = do
   addVar v ty
   c' <- checkCommand c
   return $ T.Lam v c' ty
-
---  TyVar !TypeVar !Pol
---  | TyDecl !TypeName ![Ty] !Pol
---  | TyShift !Ty 
---  | TyCo !Ty
---  | TyForall ![TypeVar] !Ty
---
   
-checkTerm _ _ = error "not implemented (checkTerm)"
+checkTerm t _ = throwError (ErrTypeAmbig t WhereCheck)
 
 
 checkCommand :: D.Command -> CheckM T.Command
