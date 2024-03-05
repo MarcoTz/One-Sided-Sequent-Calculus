@@ -6,9 +6,12 @@ data Fun(a:+,b:-):-
 
 data Bool:+ { True, False }
 
-id :: Fun(co Bool,Bool)
+id :: Fun(Bool,Bool)
 id := case { Ap(x,a) => <x | + | a> };
 
-nothing :: Fun(co Bool,Bool)
+coId :: co (Fun(co Bool,co Bool))
+coId := id;
+
+nothing :: Fun(Bool,Bool)
 nothing := mu x.<case { Ap(y,z) => Done } | + | x>;
 

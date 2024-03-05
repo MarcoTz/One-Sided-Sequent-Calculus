@@ -47,23 +47,22 @@ checkTerm t (D.TyCo ty) = do
 
 checkTerm (D.Var v) ty = do
   vars <- gets checkVars
+  trace ("variable " <> show v)$ return ()
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v "checkTerm Var")
     Just ty' -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) "checkTerm Var")
 
 checkTerm (D.Mu v c) ty = do
-  ty' <- checkType ty
+  ty' <- checkType ty Nothing
   addVar v ty'
   c' <- checkCommand c
   return (T.Mu v c' ty')
 
 checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do 
-  T.MkDataDecl tyn' declTyargs pol' _ <- lookupXtorDecl xtn 
+  T.MkDataDecl tyn' declTyArgs pol' _ <- lookupXtorDecl xtn 
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm Xtor")
-  tyargs' <- forM tyargs checkType
-  argPols <- zipWithError (getKind <$> tyargs') (getKind <$> declTyargs) (ErrTyArity tyn "checkTerm xtor")
-  trace ("checking xtor " <> show xtn <> " with polarities " <> show argPols) $ return() 
-  unless (all (uncurry (==)) argPols) $ throwError (ErrKind ShouldEq "checkTerm xtor")
+  tyargsZipped <- zipWithError tyargs (Just . getKind <$> declTyArgs) (ErrTyArity tyn "checkTerm xtor")
+  tyargs' <- forM tyargsZipped (uncurry checkType)
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
   xtArgsZipped <- zipWithError xtargs (embed <$> xtargs') (ErrXtorArity xtn "checkTerm Xtor")
   xtargs'' <- forM xtArgsZipped (uncurry checkTerm)
@@ -73,10 +72,8 @@ checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do
 checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do 
   T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
-  tyargs' <- forM tyargs checkType
-  argPols <- zipWithError (getKind <$> tyargs') (flipPol . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
-  trace (show argPols) $ return ()
-  unless (all (uncurry (==)) argPols) $ throwError (ErrKind ShouldEq "checkTerm xcase")
+  tyArgsZipped <- zipWithError tyargs (Just . flipPol . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
+  tyargs' <- forM tyArgsZipped (uncurry checkType)
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
