@@ -62,12 +62,17 @@ checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do
   xtargs'' <- forM xtArgsZipped (uncurry checkTerm)
   return (T.Xtor xtn xtargs'' ty)
 
-checkTerm (D.XCase pts) (T.TyDecl tyn tyargs pol) = do 
+checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
+  T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' ty "checkTerm XCase")
+  unless (flipPol pol == pol') $ throwError (ErrKind ShouldEq "checkTerm XCase")
+  let ptxtns = D.ptxt <$> pts
+  let declxtns = T.sigName <$> xtors
+  unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
+  tyArgsZip <- zipWithError (getKind <$> argVars) (getKind<$> tyargs) (ErrTyArity tyn "checkTerm XCase")
+  allEqWithError tyArgsZip (ErrKind ShouldEq "checkTerm XCase")
   pts' <- forM pts checkPattern
-  let xtns = T.ptxt <$> pts' 
-  tyNames <- forM xtns (fmap T.declName . lookupXtorDecl)
-  allEqWithError tyNames (ErrBadPattern xtns "checkTerm XCase") 
-  return $ T.XCase pts' (T.TyDecl tyn tyargs pol)
+  return $ T.XCase pts' ty 
   where 
     checkPattern :: D.Pattern -> CheckM T.Pattern 
     checkPattern (D.MkPattern xtn vars c) = do

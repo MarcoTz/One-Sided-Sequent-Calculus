@@ -14,6 +14,8 @@ import Control.Monad.Except
 import Data.Map qualified as M
 
 
+import Debug.Trace
+import Pretty.Common ()
 
 checkType :: D.Ty -> CheckM T.Ty
 checkType (D.TyVar v) = do
@@ -26,5 +28,6 @@ checkType (D.TyDecl tyn args) = do
    T.MkDataDecl _ args' pol _ <- lookupDecl tyn
    args'' <- forM args checkType 
    argsZipped <- zipWithError (getKind <$> args') (getKind <$> args'') (ErrTyArity tyn "checkType TyDecl")
+   trace (show argsZipped) $ return ()
    unless (all (uncurry (==)) argsZipped) $ throwError (ErrKind ShouldEq "checkType TyDecl")
    return $ T.TyDecl tyn args'' pol
