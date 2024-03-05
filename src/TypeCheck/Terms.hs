@@ -5,6 +5,7 @@ import TypeCheck.Types
 import Syntax.Typed.Terms         qualified as T
 import Syntax.Typed.Types         qualified as T
 import Syntax.Typed.Program       qualified as T
+import Syntax.Typed.Substitution  qualified as T
 import Syntax.Desugared.Terms     qualified as D
 import Syntax.Desugared.Types     qualified as D
 import Environment
@@ -79,13 +80,15 @@ checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
-  pts' <- forM pts checkPattern
+  varmap <- M.fromList <$> zipWithError argVars tyargs' (ErrTyArity tyn "checkTerm XCase")
+  pts' <- forM pts (`checkPattern` varmap)
   let newTy = T.TyDecl tyn tyargs' (flipPol pol')
   return $ T.XCase pts' newTy 
   where 
-    checkPattern :: D.Pattern -> CheckM T.Pattern 
-    checkPattern (D.MkPattern xtn vars c) = do
-      T.MkXtorSig _ xtargs' <- lookupXtor xtn
+    checkPattern :: D.Pattern -> M.Map PolVar T.Ty -> CheckM T.Pattern 
+    checkPattern (D.MkPattern xtn vars c) varmap = do
+      T.MkXtorSig _ xtargs <- lookupXtor xtn
+      let xtargs' = T.substTyVars varmap <$> xtargs
       argsZipped <- zipWithError vars xtargs' (ErrXtorArity xtn "checkTerm XCase" )
       forM_ argsZipped (uncurry addVar)
       c' <- checkCommand c
