@@ -22,6 +22,7 @@ data Error =
    | ErrMissingTyVar  !TypeVar  !String
    | ErrMissingXtor   !XtorName !String
    | ErrDuplXtor      !XtorName !String
+   | ErrMissingType   !String
    | ErrMissingXtorPt !XtorName !String
    | ErrTypeAmbig     !D.Term !String
    | ErrParser        !String

@@ -1,10 +1,12 @@
 module TypeCheck.Terms where 
 
 import TypeCheck.Definition
+import TypeCheck.Types
 import Syntax.Typed.Terms         qualified as T
 import Syntax.Typed.Types         qualified as T
 import Syntax.Typed.Program       qualified as T
 import Syntax.Desugared.Terms     qualified as D
+import Syntax.Desugared.Types     qualified as D
 import Environment
 import Errors
 import Common
@@ -17,9 +19,10 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Map qualified as M
 
+import Debug.Trace
 
--- WIP, should not be working yet 
-checkTerm :: D.Term -> T.Ty -> CheckM T.Term
+checkTerm :: D.Term -> D.Ty -> CheckM T.Term
+
 --checkTerm t (T.TyForall tyvars ty) = do 
 --  setForall tyvars 
 --  t' <- checkTerm t ty
@@ -30,7 +33,8 @@ checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 --    T.XCase pts ty' -> return $ T.XCase pts (T.TyForall tyvars ty')
 --    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyForall tyvars ty')
 --    T.Lam v c ty' -> return $ T.Lam v c (T.TyForall tyvars ty') 
-checkTerm t (T.TyCo ty) = do 
+--
+checkTerm t (D.TyCo ty) = do 
   t' <- checkTerm t ty
   case t' of 
     T.Var v ty' -> return $ T.Var v (T.TyCo ty')
@@ -41,38 +45,43 @@ checkTerm t (T.TyCo ty) = do
     T.Lam{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
 
 checkTerm (D.Var v) ty = do
-  vars <- gets checkVars 
+  vars <- gets checkVars
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v "checkTerm Var")
-    Just ty' -> if ty' == ty then return (T.Var v ty) else throwError (ErrTypeNeq (embed ty') (embed ty) "checkTerm Var")
+    Just ty' -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) "checkTerm Var")
 
 checkTerm (D.Mu v c) ty = do
-  addVar v ty
+  ty' <- checkType ty
+  addVar v ty'
   c' <- checkCommand c
-  return (T.Mu v c' ty)
+  return (T.Mu v c' ty')
 
-checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
-  T.MkDataDecl tyn' tyargs' pol' _ <- lookupXtorDecl xtn 
+checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do 
+  T.MkDataDecl tyn' declTyargs pol' _ <- lookupXtorDecl xtn 
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm Xtor")
+  tyargs' <- forM tyargs checkType
+  argPols <- zipWithError (getKind <$> tyargs') (getKind <$> declTyargs) (ErrTyArity tyn "checkTerm xtor")
+  trace ("checking xtor " <> show xtn <> " with polarities " <> show argPols) $ return() 
+  unless (all (uncurry (==)) argPols) $ throwError (ErrKind ShouldEq "checkTerm xtor")
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn ty "checkTerm Xtor")
-  unless (pol == pol') $ throwError (ErrKind ShouldEq "checkTerm Xtor")
-  tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> tyargs') (ErrTyArity tyn "checkTerm Xtor")
-  unless (all (uncurry (==)) tyargsZipped) $ throwError (ErrKind ShouldEq "checkTerm Xtor")
-  xtArgsZipped <- zipWithError xtargs xtargs' (ErrXtorArity xtn "checkTerm Xtor")
+  xtArgsZipped <- zipWithError xtargs (embed <$> xtargs') (ErrXtorArity xtn "checkTerm Xtor")
   xtargs'' <- forM xtArgsZipped (uncurry checkTerm)
-  return (T.Xtor xtn xtargs'' ty)
+  let newTy = T.TyDecl tyn tyargs' pol'
+  return (T.Xtor xtn xtargs'' newTy)
 
-checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
+checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do 
   T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' ty "checkTerm XCase")
-  unless (flipPol pol == pol') $ throwError (ErrKind ShouldEq (", " <> show ty <> " should have kind " <> show (flipPol pol) <> " checkTerm XCase"))
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
+  tyargs' <- forM tyargs checkType
+  argPols <- zipWithError (getKind <$> tyargs') (flipPol . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
+  trace (show argPols) $ return ()
+  unless (all (uncurry (==)) argPols) $ throwError (ErrKind ShouldEq "checkTerm xcase")
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
-  tyArgsZip <- zipWithError (getKind <$> argVars) (getKind<$> tyargs) (ErrTyArity tyn "checkTerm XCase")
-  allEqWithError tyArgsZip (ErrKind ShouldEq "checkTerm XCase")
   pts' <- forM pts checkPattern
-  return $ T.XCase pts' ty 
+  let newTy = T.TyDecl tyn tyargs' (flipPol pol')
+  return $ T.XCase pts' newTy 
   where 
     checkPattern :: D.Pattern -> CheckM T.Pattern 
     checkPattern (D.MkPattern xtn vars c) = do
@@ -83,18 +92,20 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
       forM_ vars remVar
       return $ T.MkPattern xtn vars c'
 
-checkTerm (D.Shift t) (T.TyShift ty) = do 
-  t' <- checkTerm t ty 
-  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
-  case t' of 
-    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyShift ty') 
-    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) "checkTerm Shift")
+-- tyshift is not in desugared yet
+--checkTerm (D.Shift t) (D.TyShift ty) = do 
+--  t' <- checkTerm t ty 
+--  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
+--  case t' of 
+--    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyShift ty') 
+--    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) "checkTerm Shift")
 
-checkTerm (D.Lam v c) (T.TyShift ty) = do 
-  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
-  addVar v ty
-  c' <- checkCommand c
-  return $ T.Lam v c' ty
+-- tyshift is not in desugared yet
+--checkTerm (D.Lam v c) (T.TyShift ty) = do 
+--  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
+--  addVar v ty
+--  c' <- checkCommand c
+--  return $ T.Lam v c' ty
   
 checkTerm t _ = throwError (ErrTypeAmbig t "checkterm other")
 
@@ -110,11 +121,11 @@ checkCommand (D.Cut t pol u) = do
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 
-getTyCommand :: D.Term -> D.Term -> CheckM T.Ty
+getTyCommand :: D.Term -> D.Term -> CheckM D.Ty
 getTyCommand (D.Var v) _ = do 
   vars <- gets checkVars
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v "checkCommand")
-    Just ty -> return ty
+    Just ty -> return (embed ty)
 getTyCommand t1 t2@D.Var{} = getTyCommand t2 t1
 getTyCommand t _ = throwError (ErrTypeAmbig t "checkCommand")

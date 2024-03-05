@@ -25,4 +25,4 @@ instance Show Error where
   show (ErrNotTyDecl tyn ty wh)         = "Type needs to be " <> show tyn <> " but was " <>  show ty <> " instead " <> wh
   show (ErrNotTyShift ty wh)            = "Type " <> show ty <> " should be a Shift " <> wh
   show (ErrTypeAmbig t wh)              = "Type of term " <> show t <> " is unclear "  <> wh
-
+  show (ErrMissingType str)             = "Missing type: " <> str

@@ -79,3 +79,4 @@ inferType (D.TyDecl tyn args) = do
         Nothing -> throwError (ErrMissingDecl tyn "inferType (inferdecl)")
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' pol
+inferType (D.TyCo ty) = T.TyCo <$> inferType ty

@@ -13,8 +13,7 @@ import Desugar.Definition (runDesugarM)
 import Desugar.Program (desugarProgram)
 
 import TypeCheck.Definition
-import TypeCheck.Terms (checkTerm) 
-import TypeCheck.Types (checkType)
+import TypeCheck.Program (checkVarDecl) 
 
 import TypeInference.GenerateConstraints.Definition (runGenM)
 import TypeInference.GenerateConstraints.Terms (genConstraintsCmd, genConstraintsTerm)
@@ -57,13 +56,10 @@ inferVarDecl (D.MkVar n Nothing t) = do
   let newDecl = T.MkVarDecl n (T.getType t') t'
   addVarDecl newDecl
   return newDecl 
-inferVarDecl (D.MkVar n (Just ty) t) = do 
+inferVarDecl v@(D.MkVar _ (Just _) _) = do 
   env <- gets drvEnv
-  let ty' = runCheckM env (checkType ty)
-  ty'' <- liftErr ty'
-  let t' =  runCheckM env (checkTerm t ty'')
-  t'' <- liftErr t'
-  return (T.MkVarDecl n (T.getType t'') t'')
+  let v' = runCheckM env (checkVarDecl v)
+  liftErr v'
 
 
 
