@@ -10,7 +10,7 @@ import Errors
 import Common
 import Embed.EmbedTyped () 
 import Embed.Definition
-import Pretty.Terms ()
+import Pretty.Types ()
 
 import Control.Monad
 import Control.Monad.Except
@@ -65,7 +65,7 @@ checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do
 checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' ty "checkTerm XCase")
-  unless (flipPol pol == pol') $ throwError (ErrKind ShouldEq "checkTerm XCase")
+  unless (flipPol pol == pol') $ throwError (ErrKind ShouldEq (", " <> show ty <> " should have kind " <> show (flipPol pol) <> " checkTerm XCase"))
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")

@@ -49,7 +49,7 @@ instance Embed T.Ty D.Ty where
   embed (T.TyVar v _) = D.TyVar v
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
   embed (T.TyShift ty)  = embed ty
-  embed (T.TyCo ty) = embed ty 
+  embed (T.TyCo ty) = D.TyCo (embed ty)
 --  embed (T.TyForall vars ty) = D.TyForall vars (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 

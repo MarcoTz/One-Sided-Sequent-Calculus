@@ -47,5 +47,6 @@ instance Embed D.XtorSig P.XtorSig where
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)
+  embed (D.TyCo ty) = P.TyCo (embed ty)
 --  embed (D.TyForall vars ty) = P.TyForall vars (embed ty)
 

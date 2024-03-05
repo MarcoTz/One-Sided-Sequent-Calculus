@@ -31,3 +31,6 @@ checkType (D.TyDecl tyn args) = do
    trace (show argsZipped) $ return ()
    unless (all (uncurry (==)) argsZipped) $ throwError (ErrKind ShouldEq "checkType TyDecl")
    return $ T.TyDecl tyn args'' pol
+
+checkType (D.TyCo ty) = T.TyCo <$> checkType ty
+

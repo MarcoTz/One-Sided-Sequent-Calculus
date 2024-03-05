@@ -6,6 +6,7 @@ import Common
 data Ty = 
   TyVar !TypeVar 
   | TyDecl !TypeName ![Ty]
+  | TyCo !Ty
 --  | TyForall ![PolVar] !Ty
 
 --freeTyVars :: Ty -> S.Set TypeVar 

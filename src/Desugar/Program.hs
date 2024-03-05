@@ -1,22 +1,19 @@
 module Desugar.Program where 
 
-import Common
 import Errors
 import Environment
 import Desugar.Definition
 import Desugar.Terms
+import Desugar.Types
 import Embed.Definition
 import Embed.EmbedDesugared ()
 import Syntax.Parsed.Program    qualified as P
-import Syntax.Parsed.Types      qualified as P
 import Syntax.Desugared.Program qualified as D
-import Syntax.Desugared.Types   qualified as D
 
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
-import Data.List (find)
 
 
 checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
@@ -64,27 +61,3 @@ desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
   args' <- forM args desugarTy
   return (D.MkXtorSig xtn args')
-
-desugarTy :: P.Ty -> DesugarM D.Ty
--- a type variable appearing in  a declaration is either 
--- an actual variable that is the argument of the current declaration
---   in this case it should be in the type args of descurrdecl
--- a type name (that has to be in the environment) without type arugments
-desugarTy (P.TyVar v) = do 
-  let vty = tyvarToTyName v
-  mdecl <- getMDecl vty
-  case mdecl of 
-    Nothing -> do 
-      currDecl <- getCurrDecl (ErrMissingDecl vty "desugarTy")
-      case find (\(MkPolVar v' _) -> v'==v) (P.declArgs currDecl) of 
-        Nothing -> throwError (ErrMissingDecl vty "desugarTy")
-        Just _ -> return $ D.TyVar v 
-    Just _ -> return $ D.TyDecl vty [] 
-
--- this always has to be the current type or one that has been declared before
-desugarTy (P.TyDecl tyn args) = do 
-  args' <- forM args desugarTy 
-  return $ D.TyDecl tyn args' 
---desugarTy (P.TyForall vars ty) = do 
---  ty' <- desugarTy ty
---  return $ D.TyForall vars ty' 

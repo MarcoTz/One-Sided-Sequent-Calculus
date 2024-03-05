@@ -13,6 +13,8 @@ instance Show P.Ty where
   show (P.TyVar v) = show v 
   show (P.TyDecl nm []) = show nm
   show (P.TyDecl nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (P.TyCo ty) = "co " <> show ty
+
 --  show (P.TyForall vars ty) = "forall " <> intercalate ", " (show <$> vars) <> ". " <> show ty 
 instance Show D.Ty where 
   show = show . (embed :: D.Ty -> P.Ty)

@@ -2,6 +2,7 @@ module Parser.Types where
 
 import Parser.Definition
 import Parser.Symbols
+import Parser.Keywords
 import Parser.Lexer
 import Syntax.Parsed.Types
 import Common
@@ -11,7 +12,16 @@ import Text.Megaparsec.Char
 
 
 parseTy :: Parser Ty 
-parseTy = try parseTyDecl <|> parseTyVar 
+parseTy = parseTyParens <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
+
+parseTyParens :: Parser Ty
+parseTyParens = do 
+  parseSymbol SymParensO
+  sc
+  ty <- parseTy
+  sc
+  parseSymbol SymParensC
+  return ty
 
 --parseTyForall :: Parser Ty
 --parseTyForall = do 
@@ -31,9 +41,6 @@ parseTyDecl = do
   parseSymbol SymParensC
   return (TyDecl tyn args)
 
-parseTyVar :: Parser Ty
-parseTyVar = TyVar <$> parseTypeVar
-
 parseTyArgs :: Parser [PolVar]
 parseTyArgs = (do 
   parseSymbol SymParensO
@@ -42,3 +49,12 @@ parseTyArgs = (do
   return vars)
   <|>
   return []
+
+parseTyVar :: Parser Ty
+parseTyVar = TyVar <$> parseTypeVar
+
+parseTyCo :: Parser Ty 
+parseTyCo = do 
+  parseKeyword KwCo <|> parseKeyword Kwco
+  sc
+  TyCo <$> parseTy

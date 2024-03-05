@@ -4,9 +4,11 @@ import Parser.Keywords
 import Parser.Symbols
 import Parser.Definition
 import Common
-
+import Errors
+ 
 import Text.Megaparsec 
 import Text.Megaparsec.Char
+import Control.Monad.Except
 import Data.Text qualified as T
 
 parseKeyword :: Keyword -> Parser () 
@@ -33,17 +35,24 @@ sc = try parseComment <|> space
 parsePol :: Parser Pol 
 parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
 
+parseIdentifier :: Parser String
+parseIdentifier = do
+  ident <- some alphaNumChar
+  if ident `elem` (show <$> allKws)
+  then throwError $ ErrParser ("Identifier " <> ident <> " is reserved") 
+  else return ident
+
 parseVariable :: Parser Variable
-parseVariable = MkVar <$> some alphaNumChar
+parseVariable = MkVar <$>  parseIdentifier
 
 parseXtorName :: Parser XtorName 
-parseXtorName = MkXtorName <$> some alphaNumChar
+parseXtorName = MkXtorName <$> parseIdentifier 
 
 parseTypeName :: Parser TypeName
-parseTypeName = MkTypeName <$> some alphaNumChar
+parseTypeName = MkTypeName <$> parseIdentifier 
 
 parseTypeVar :: Parser TypeVar
-parseTypeVar = MkTypeVar <$> some alphaNumChar
+parseTypeVar = MkTypeVar <$> parseIdentifier 
 
 parsePolVar :: Parser PolVar 
 parsePolVar = do

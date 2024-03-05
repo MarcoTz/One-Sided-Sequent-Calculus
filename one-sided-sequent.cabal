@@ -51,6 +51,7 @@ library lang
                     Desugar.Definition,
                     Desugar.Terms,
                     Desugar.Program,
+                    Desugar.Types,
 
                     TypeCheck.Definition,
                     TypeCheck.Terms,
