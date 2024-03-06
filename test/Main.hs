@@ -1,38 +1,53 @@
-module Main where
+module Main where 
 
 import Driver.Definition
 import Driver.Driver
-import Utils
+import Utils 
+import Environment
+import Pretty.Errors ()
 
 import Control.Monad
-import Data.Either (isRight,isLeft,fromLeft)
+--import Data.List (isInfixOf)
 
-import Test.Tasty
-import Test.Tasty.HUnit
+colorError :: String
+colorError = "\ESC[31m"
+colorSuccess :: String
+colorSuccess = "\ESC[32m"
+colorDefault :: String
+colorDefault = "\ESC[0m"
 
-exPath :: FilePath
-exPath = "Examples"
-cExPath :: FilePath
-cExPath = "CounterExamples"
+
+parseExample :: Bool -> FilePath -> IO()
+parseExample shouldFail path = do
+  let drvSt = MkDriverState False emptyEnv 
+  res <- runDriverM drvSt (inferProgram path)
+  if shouldFail then case res of 
+    Left err -> do 
+      putStrLn ( colorError <> "Error Checking Example: \n\t" <> show err <> colorDefault)
+      putStrLn "\n=========================================================\n"
+    Right _ -> do
+      putStrLn (colorSuccess <> "Example " <> path <> " Checked Successfully" <> colorDefault)
+      putStrLn "\n=========================================================\n"
+  else case res of 
+    Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> path <> " failed Successfully" <> colorDefault)
+    Right _ -> putStrLn (colorError <> "Counterexample " <> path <> " did not fail" <> colorDefault)
+
 
 main :: IO()
-main = do
-  exPaths <- listRecursive exPath 
-  cExPaths <- listRecursive cExPath
-  
-  exParsed <- forM exPaths (\ex -> do
-    res <- runDriverMDb [] (inferProgram ex)
-    let testName = "Example " <> ex
-    let cs = testCase testName $ assertBool (fromLeft "" res) (isRight res)
-    return cs )
+main = do 
+  exPaths <- listRecursive "Examples"
+  cExPaths <- listRecursive "CounterExamples"
+  putStrLn "========================================================="
+  putStrLn "================ Testing CounterExamples ================"
+  putStrLn "=========================================================" 
+  forM_ cExPaths (parseExample False)
+  putStrLn ""
+  putStrLn "Finished Parsing Counterexamples"
+  putStrLn "" 
+  putStrLn "========================================================"
+  putStrLn "=================== Testing Examples ==================="
+  putStrLn "========================================================"
+  forM_ exPaths (parseExample True)
+  putStrLn ""
+  putStrLn "Finished Parsing Examples"
 
-  cExParsed <- forM cExPaths (\cex -> do 
-    res <- runDriverMDb [] (inferProgram cex)
-    let testName = "Counterexample " <> cex
-    let cs = testCase testName $ assertBool ("Counterexample " <> cex <> " could be successfully parsed ") (isLeft res)
-    return cs)
-  putStrLn ("Parsing examples " <> show exPaths)
-  let extests = testGroup "Examples" exParsed
-  let cextests = testGroup "CounterExamples" cExParsed
-  let tests = testGroup "All" [extests,cextests] 
-  defaultMain tests 

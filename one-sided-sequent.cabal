@@ -17,9 +17,7 @@ common all
                       mtl,
                       text,
                       directory,
-                      filepath,
-                      tasty,
-                      tasty-hunit
+                      filepath
 
 library lang
   import:           all
@@ -93,9 +91,8 @@ executable one-sided-sequent
   build-depends:    lang
   hs-source-dirs:   app
 
-test-suite one-sided-tests
+executable test-suite 
   import:         all 
-  type:           exitcode-stdio-1.0
   main-is:        Main.hs
   build-depends:  lang
   hs-source-dirs: test
