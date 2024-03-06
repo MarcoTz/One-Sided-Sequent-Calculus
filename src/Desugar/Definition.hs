@@ -17,14 +17,14 @@ import Data.List (find)
 
 data DesugarState = MkDesugarState { desCurrDecl :: !(Maybe P.DataDecl), desDone :: !D.Program} 
 
-initialDesugarState :: DesugarState 
-initialDesugarState = MkDesugarState Nothing D.emptyProg
+initialDesugarState :: Modulename -> DesugarState 
+initialDesugarState nm = MkDesugarState Nothing (D.emptyProg nm)
 
 newtype DesugarM a = DesugarM { getDesugarM :: ReaderT Environment (StateT DesugarState (Except Error)) a }
   deriving newtype (Functor, Applicative, Monad, MonadState DesugarState, MonadError Error, MonadReader Environment)
 
-runDesugarM :: Environment -> DesugarM a -> Either Error a
-runDesugarM env m = case runExcept (runStateT (runReaderT (getDesugarM m) env) initialDesugarState) of
+runDesugarM :: Environment -> Modulename -> DesugarM a -> Either Error a
+runDesugarM env nm m = case runExcept (runStateT (runReaderT (getDesugarM m) env) (initialDesugarState nm)) of
   Left err -> Left err 
   Right (x,_) ->  Right x 
 

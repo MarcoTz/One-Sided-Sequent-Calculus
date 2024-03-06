@@ -60,6 +60,6 @@ instance Embed T.VarDecl P.VarDecl where
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 
 instance Embed T.Program D.Program where 
-  embed (T.MkProgram decls vars) = D.MkProgram (M.map embed decls) (M.map embed vars) 
+  embed (T.MkProgram nm decls vars) = D.MkProgram nm (M.map embed decls) (M.map embed vars) 
 instance Embed T.Program P.Program where 
   embed t = (embed :: D.Program -> P.Program) $ (embed :: T.Program -> D.Program) t 

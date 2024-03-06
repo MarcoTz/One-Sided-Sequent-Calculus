@@ -1,5 +1,8 @@
 module Driver.Driver where 
+
+import Common
 import Driver.Definition
+import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
@@ -39,29 +42,30 @@ inferProgram path = do
   debug ("Inferring program in file " <> path)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
+  let mn = P.progName prog
   debug ("parsed program \n" <> show prog <> "\n") 
   env <- gets drvEnv
-  let prog' = runDesugarM env (desugarProgram prog)
+  let prog' = runDesugarM env mn (desugarProgram prog)
   prog'' <- liftErr prog'
   debug "desugared Program successfully"  
   forM_ (D.progDecls prog'') (\d -> do 
     let inferred = runDeclM (inferDecl d)
     inferred' <- liftErr inferred
-    addDecl inferred')
+    addDecl mn inferred')
   debug "inferred declarations sucessfully"
-  forM_ (D.progVars prog'') inferVarDecl 
+  forM_ (D.progVars prog'') (inferVarDecl mn)
 
-inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
-inferVarDecl (D.MkVar n Nothing t) = do 
+inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
+inferVarDecl mn (D.MkVar n Nothing t) = do 
   t' <- inferTerm t
   let newDecl = T.MkVarDecl n (T.getType t') t'
-  addVarDecl newDecl
+  addVarDecl mn newDecl
   return newDecl 
-inferVarDecl v@(D.MkVar _ (Just _) _) = do 
+inferVarDecl mn v@(D.MkVar _ (Just _) _) = do 
   env <- gets drvEnv
   let v' = runCheckM env (checkVarDecl v)
   v'' <- liftErr v' 
-  addVarDecl v''
+  addVarDecl mn v''
   return v''
 
 inferCommand :: D.Command -> DriverM T.Command

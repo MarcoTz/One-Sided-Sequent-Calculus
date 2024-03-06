@@ -85,7 +85,7 @@ library lang
   hs-source-dirs:   src
 
 
-executable one-sided-sequent
+executable main 
   import:           all
   main-is:          Main.hs
   build-depends:    lang

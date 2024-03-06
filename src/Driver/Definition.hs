@@ -2,6 +2,7 @@ module Driver.Definition where
 
 import Syntax.Typed.Program
 import Errors
+import Common
 import Pretty.Errors  ()
 import Environment
 
@@ -20,11 +21,11 @@ initialDriverState = MkDriverState { drvDebug = False, drvEnv = emptyEnv}
 runDriverM :: DriverState -> DriverM a -> IO(Either Error (a,DriverState))
 runDriverM drvst m = runExceptT $ runStateT (getDriverM m) drvst 
 
-addDecl :: DataDecl -> DriverM ()
-addDecl decl = modify (\s -> MkDriverState (drvDebug s) (addDeclEnv decl (drvEnv s)))
+addDecl :: Modulename -> DataDecl -> DriverM ()
+addDecl nm decl = modify (\s -> MkDriverState (drvDebug s) (addDeclEnv nm decl (drvEnv s)))
 
-addVarDecl :: VarDecl -> DriverM ()
-addVarDecl var = modify (\s -> MkDriverState (drvDebug s) (addVarEnv var (drvEnv s)))
+addVarDecl :: Modulename -> VarDecl -> DriverM ()
+addVarDecl nm var = modify (\s -> MkDriverState (drvDebug s) (addVarEnv nm var (drvEnv s)))
 
 liftErr :: Either Error a -> DriverM a
 liftErr (Left err) = do 

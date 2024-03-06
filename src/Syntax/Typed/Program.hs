@@ -11,16 +11,16 @@ data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]}
 data DataDecl = MkDataDecl{declName :: !TypeName, declArgs :: ![PolVar], declPol :: !Pol, declXtors :: ![XtorSig]} 
 data VarDecl  = MkVarDecl {varName  :: !Variable, varTy    :: !Ty,       varBd :: !Term}
 
-data Program = MkProgram { progDecls :: !(M.Map TypeName DataDecl), progVars :: !(M.Map Variable VarDecl) }
+data Program = MkProgram {progName :: !Modulename, progDecls :: !(M.Map TypeName DataDecl), progVars :: !(M.Map Variable VarDecl) }
 
-emptyProg :: Program
-emptyProg = MkProgram M.empty M.empty  
+emptyProg :: Modulename -> Program
+emptyProg nm = MkProgram nm M.empty M.empty  
 
 addDeclProgram :: DataDecl -> Program -> Program
-addDeclProgram decl (MkProgram decls vars) = MkProgram (M.insert (declName decl) decl decls) vars
+addDeclProgram decl (MkProgram nm decls vars) = MkProgram nm (M.insert (declName decl) decl decls) vars
 
 addVarProgram :: VarDecl -> Program -> Program
-addVarProgram var (MkProgram decls vars) = MkProgram decls (M.insert (varName var) var vars)
+addVarProgram var (MkProgram nm decls vars) = MkProgram nm decls (M.insert (varName var) var vars)
 
 
 --not implemented

@@ -1,4 +1,9 @@
 module Main where 
 
+import System.Environment 
+
 main :: IO()
-main = return ()
+main = do 
+  args <- getArgs
+  print args
+  return ()

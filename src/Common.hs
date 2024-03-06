@@ -1,5 +1,7 @@
 module Common where 
 
+newtype Modulename = MkModule String
+  deriving (Eq,Ord)
 newtype XtorName = MkXtorName String
   deriving (Eq)
 newtype TypeVar  = MkTypeVar String

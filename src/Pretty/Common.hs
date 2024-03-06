@@ -6,6 +6,9 @@ instance Show Pol where
   show Pos = "+"
   show Neg = "-"
 
+instance Show Modulename where 
+  show (MkModule nm) = nm 
+
 instance Show KindVar where 
   show (MkKVar kv) = kv
 

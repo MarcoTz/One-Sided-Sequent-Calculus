@@ -41,7 +41,7 @@ instance Show P.AnnotDecl where
   show (P.MkAnnot n ty) = show n <> " :: " <> show ty
 
 instance Show P.Program where 
-  show (P.MkProgram decls vars annots) = show (snd <$> M.toList decls) <> "\n" <> show (snd <$> M.toList annots) <> "\n" <> show (snd <$> M.toList vars)
+  show (P.MkProgram nm decls vars annots) = "module " <> show nm <> show (snd <$> M.toList decls) <> "\n" <> show (snd <$> M.toList annots) <> "\n" <> show (snd <$> M.toList vars)
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 

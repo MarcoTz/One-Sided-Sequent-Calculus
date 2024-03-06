@@ -24,10 +24,10 @@ parseProgram = do
   parseKeyword KwModule
   space1 
   sc
-  _ <- some alphaNumChar
+  nm <- parseModulename
   sc
   decls <- manyTill (parseDecl <* sc) (sc >> eof)
-  foldM foldFun emptyProg decls
+  foldM foldFun (emptyProg nm) decls
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 
     foldFun prog (MkD decl) = let tyn = declName decl in 

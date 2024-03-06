@@ -42,6 +42,9 @@ parseIdentifier = do
   then throwError $ ErrParser ("Identifier " <> ident <> " is reserved") 
   else return ident
 
+parseModulename :: Parser Modulename
+parseModulename = MkModule <$> parseIdentifier
+
 parseVariable :: Parser Variable
 parseVariable = MkVar <$>  parseIdentifier
 

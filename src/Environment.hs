@@ -9,23 +9,41 @@ import Control.Monad.Reader
 import Data.Map qualified as M
 import Data.List (find)
 
-newtype Environment = MkEnv { envDefs :: Program }
+newtype Environment = MkEnv { envDefs :: M.Map Modulename Program }
 
 emptyEnv :: Environment
-emptyEnv = MkEnv emptyProg 
+emptyEnv = MkEnv M.empty 
 
-addDeclEnv :: DataDecl -> Environment -> Environment 
-addDeclEnv decl (MkEnv defs) = MkEnv (addDeclProgram decl defs)
+addDeclEnv :: Modulename -> DataDecl -> Environment -> Environment 
+addDeclEnv nm decl (MkEnv defs) = 
+  case M.lookup nm defs of 
+    Nothing -> let newProg = addDeclProgram decl (emptyProg nm) in MkEnv (M.insert nm newProg defs) 
+    Just prog -> MkEnv (M.insert nm (addDeclProgram decl prog) defs)
 
-addVarEnv :: VarDecl -> Environment -> Environment 
-addVarEnv var (MkEnv defs) = MkEnv (addVarProgram var defs)
+addVarEnv :: Modulename -> VarDecl -> Environment -> Environment 
+addVarEnv nm var (MkEnv defs) = 
+  case M.lookup nm defs of 
+    Nothing -> let newProg = addVarProgram var (emptyProg nm) in MkEnv (M.insert nm newProg defs) 
+    Just prog -> MkEnv (M.insert nm (addVarProgram var prog) defs) 
 
 type EnvReader a m = (MonadError Error m, MonadReader Environment m)
 
+getDecls :: EnvReader a m => m (M.Map TypeName DataDecl)
+getDecls = do
+  defs <- asks envDefs
+  let progs = snd <$> M.toList defs
+  let decls = M.unions (progDecls <$> progs)
+  return decls
+
+getVars :: EnvReader a m => m (M.Map Variable VarDecl)
+getVars = do 
+  defs <- asks envDefs 
+  let progs = snd <$> M.toList defs
+  let vars = M.unions (progVars <$> progs) 
+  return vars
+
 lookupMDecl :: EnvReader a m => TypeName -> m (Maybe DataDecl)
-lookupMDecl tyn = do 
-  decls <- asks (progDecls . envDefs)
-  return $ M.lookup tyn decls
+lookupMDecl tyn = M.lookup tyn <$> getDecls
 
 lookupDecl :: EnvReader a m => TypeName -> m DataDecl 
 lookupDecl tyn = do   
@@ -35,9 +53,7 @@ lookupDecl tyn = do
     Just decl -> return decl
 
 lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
-lookupMVar v = do 
-  vars <- asks (progVars . envDefs) 
-  return $ M.lookup v vars 
+lookupMVar v = M.lookup v <$> getVars
 
 lookupVar :: EnvReader a m => Variable -> m VarDecl
 lookupVar v = do 
@@ -48,7 +64,7 @@ lookupVar v = do
 
 lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
 lookupMXtor xtn = do
-  decls <- asks (progDecls . envDefs) 
+  decls <- getDecls 
   let sigs = concatMap (declXtors . snd) (M.toList decls)
   return $ find (\x -> sigName x == xtn) sigs 
 
@@ -60,9 +76,7 @@ lookupXtor xtn = do
     Just xt -> return xt
 
 lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
-lookupXtorMDecl xtn = do 
-  decls <- asks (progDecls . envDefs)
-  return $ find (\x -> xtn `elem` (sigName <$> declXtors x)) decls
+lookupXtorMDecl xtn = find (\x -> xtn `elem` (sigName <$> declXtors x)) <$> getDecls
 
 lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl 
 lookupXtorDecl xtn = do
@@ -73,10 +87,10 @@ lookupXtorDecl xtn = do
 
 getTypeNames :: EnvReader a m => m [TypeName]
 getTypeNames = do 
-  decls <- asks (progDecls . envDefs)
+  decls <- getDecls 
   return $ fst <$> M.toList decls
 
 getXtorNames :: EnvReader a m => m [XtorName]
 getXtorNames = do 
-  decls <- asks (progDecls . envDefs)
+  decls <- getDecls 
   return (sigName <$> concatMap declXtors decls)

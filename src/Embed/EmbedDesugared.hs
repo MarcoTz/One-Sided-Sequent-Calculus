@@ -34,7 +34,7 @@ instance Embed D.VarDecl P.VarDecl where
   embed (D.MkVar var _ body) = P.MkVar var (embed body)
 
 instance Embed D.Program P.Program where 
-  embed (D.MkProgram decls vars) = P.MkProgram (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars)
+  embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars)
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 
