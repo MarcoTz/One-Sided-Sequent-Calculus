@@ -1,8 +1,8 @@
 module Driver.Driver where 
 
 import Common
+import Files
 import Driver.Definition
-import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
@@ -32,17 +32,14 @@ import Pretty.Environment ()
 
 import Control.Monad.State
 import Control.Monad
-import Data.Text.IO qualified as TIO
 
 
-
-inferProgram :: FilePath -> DriverM () 
-inferProgram path = do 
-  progCont <- liftIO $ TIO.readFile path
-  debug ("Inferring program in file " <> path)
+inferProgram :: Modulename -> DriverM () 
+inferProgram mn = do 
+  progCont <- loadModule mn
+  debug ("Inferring module " <> show mn)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
-  let mn = P.progName prog
   debug ("parsed program \n" <> show prog <> "\n") 
   env <- gets drvEnv
   let prog' = runDesugarM env mn (desugarProgram prog)

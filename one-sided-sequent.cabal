@@ -80,7 +80,7 @@ library lang
 
                     Environment,
                     Common,
-                    Utils,
+                    Files,
                     Errors
   hs-source-dirs:   src
 

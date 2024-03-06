@@ -26,6 +26,7 @@ data Error =
    | ErrMissingXtorPt !XtorName !String
    | ErrTypeAmbig     !D.Term !String
    | ErrParser        !String
+   | ErrModuleNotFound !String
 
 
 data KindReason = ShouldEq | ShouldNeq

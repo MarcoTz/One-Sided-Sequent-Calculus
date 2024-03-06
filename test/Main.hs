@@ -2,8 +2,9 @@ module Main where
 
 import Driver.Definition
 import Driver.Driver
-import Utils 
+import Files 
 import Environment
+import Common
 import Pretty.Errors ()
 
 import Control.Monad
@@ -17,20 +18,20 @@ colorDefault :: String
 colorDefault = "\ESC[0m"
 
 
-parseExample :: Bool -> FilePath -> IO()
-parseExample shouldFail path = do
+parseExample :: Bool -> Modulename -> IO()
+parseExample shouldFail mn = do
   let drvSt = MkDriverState False emptyEnv 
-  res <- runDriverM drvSt (inferProgram path)
+  res <- runDriverM drvSt (inferProgram mn)
   if shouldFail then case res of 
     Left err -> do 
       putStrLn ( colorError <> "Error Checking Example: \n\t" <> show err <> colorDefault)
       putStrLn "\n=========================================================\n"
     Right _ -> do
-      putStrLn (colorSuccess <> "Example " <> path <> " Checked Successfully" <> colorDefault)
+      putStrLn (colorSuccess <> "Example " <> show mn <> " Checked Successfully" <> colorDefault)
       putStrLn "\n=========================================================\n"
   else case res of 
-    Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> path <> " failed Successfully" <> colorDefault)
-    Right _ -> putStrLn (colorError <> "Counterexample " <> path <> " did not fail" <> colorDefault)
+    Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> show mn <> " failed Successfully" <> colorDefault)
+    Right _ -> putStrLn (colorError <> "Counterexample " <> show mn <> " did not fail" <> colorDefault)
 
 
 main :: IO()
@@ -50,4 +51,3 @@ main = do
   forM_ exPaths (parseExample True)
   putStrLn ""
   putStrLn "Finished Parsing Examples"
-
