@@ -50,4 +50,4 @@ main = do
   putStrLn "========================================================"
   forM_ exPaths (parseExample True)
   putStrLn ""
-  putStrLn "Finished Parsing Examples"
+  putStrLn "Finished Running Examples"

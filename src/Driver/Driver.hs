@@ -40,11 +40,11 @@ inferProgram mn = do
   debug ("Inferring module " <> show mn)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
-  debug ("parsed program \n" <> show prog <> "\n") 
+  debug ("successfully parsed program: \n" <> show prog <> "\n") 
   env <- gets drvEnv
   let prog' = runDesugarM env mn (desugarProgram prog)
   prog'' <- liftErr prog'
-  debug "desugared Program successfully"  
+  debug ("desugared Program successfully: \n" <> show prog'')
   forM_ (D.progDecls prog'') (\d -> do 
     let inferred = runDeclM (inferDecl d)
     inferred' <- liftErr inferred

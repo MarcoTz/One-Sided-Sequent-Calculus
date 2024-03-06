@@ -28,9 +28,7 @@ addVarDecl :: Modulename -> VarDecl -> DriverM ()
 addVarDecl nm var = modify (\s -> MkDriverState (drvDebug s) (addVarEnv nm var (drvEnv s)))
 
 liftErr :: Either Error a -> DriverM a
-liftErr (Left err) = do 
-  debug (show err)
-  throwError err
+liftErr (Left err) = throwError err
 liftErr (Right a) = return a 
 
 debug :: String -> DriverM () 
