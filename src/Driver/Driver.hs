@@ -25,10 +25,12 @@ import TypeInference.InferDecl (runDeclM, inferDecl)
 import Pretty.Terms ()
 import Pretty.Program ()
 import Pretty.TypeInference ()
+import Pretty.Environment ()
 
 import Control.Monad.State
 import Control.Monad
 import Data.Text.IO qualified as TIO
+
 
 
 inferProgram :: FilePath -> DriverM () 
@@ -47,8 +49,7 @@ inferProgram path = do
     inferred' <- liftErr inferred
     addDecl inferred')
   debug "inferred declarations sucessfully"
-  forM_ (D.progVars prog'') inferVarDecl
-
+  forM_ (D.progVars prog'') inferVarDecl 
 
 inferVarDecl :: D.VarDecl -> DriverM T.VarDecl
 inferVarDecl (D.MkVar n Nothing t) = do 
@@ -59,9 +60,9 @@ inferVarDecl (D.MkVar n Nothing t) = do
 inferVarDecl v@(D.MkVar _ (Just _) _) = do 
   env <- gets drvEnv
   let v' = runCheckM env (checkVarDecl v)
-  liftErr v'
-
-
+  v'' <- liftErr v' 
+  addVarDecl v''
+  return v''
 
 inferCommand :: D.Command -> DriverM T.Command
 inferCommand c = do 
