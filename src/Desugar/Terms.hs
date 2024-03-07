@@ -1,6 +1,7 @@
 module Desugar.Terms where 
 
 import Desugar.Definition
+import Desugar.Types
 import Syntax.Parsed.Terms    qualified as P
 import Syntax.Desugared.Terms qualified as D 
 
@@ -39,4 +40,9 @@ desugarCommand (P.Cut t pol u) = do
   t' <- desugarTerm t
   u' <- desugarTerm u 
   return $ D.Cut t' pol u'
+desugarCommand (P.CutAnnot t ty pol u) = do
+  t' <- desugarTerm t
+  u' <- desugarTerm u
+  ty' <- desugarTy ty 
+  return $ D.CutAnnot t' ty' pol u'
 desugarCommand P.Done = return D.Done

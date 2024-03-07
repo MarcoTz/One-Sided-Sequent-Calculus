@@ -24,7 +24,8 @@ instance Embed D.Pattern P.Pattern where
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)
 
 instance Embed D.Command P.Command where 
-  embed (D.Cut t pol s) = P.Cut (embed t) pol (embed s)
+  embed (D.Cut t pol u) = P.Cut (embed t) pol (embed u)
+  embed (D.CutAnnot t ty pol u) = P.CutAnnot (embed t) (embed ty) pol (embed u)
   embed D.Done = P.Done
 
 instance Embed D.DataDecl P.DataDecl where 

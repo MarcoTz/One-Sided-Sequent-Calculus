@@ -30,7 +30,7 @@ instance Embed T.Pattern P.Pattern where
   embed t = (embed :: D.Pattern -> P.Pattern) $ (embed :: T.Pattern -> D.Pattern) t
 
 instance Embed T.Command D.Command where 
-  embed (T.Cut t pol s) = D.Cut (embed t) pol (embed s)
+  embed (T.Cut t pol s) = D.CutAnnot (embed t) (embed $ T.getType t) pol (embed s)
   embed T.Done = D.Done
 instance Embed T.Command P.Command where 
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t

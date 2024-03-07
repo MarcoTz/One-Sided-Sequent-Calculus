@@ -4,12 +4,13 @@ import Parser.Definition
 import Parser.Lexer
 import Parser.Symbols
 import Parser.Keywords
+import Parser.Types
 import Syntax.Parsed.Terms
+import Syntax.Parsed.Types
 import Common
 
 import Text.Megaparsec
 
--- Xtors with no arguments are parsed as variables
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
 
@@ -102,14 +103,38 @@ parseCut = do
   sc
   parseSymbol SymBar
   sc
-  pol <- parsePol
+  (pol,mty) <- parseCutAnnot 
   sc
   parseSymbol SymBar
   sc
   u <- parseTerm
   sc
   parseSymbol SymAngC
-  return (Cut t pol u)
+  case mty of 
+    Nothing -> return (Cut t pol u)
+    Just ty -> return (CutAnnot t ty pol u)
+
+parseCutAnnot :: Parser (Pol,Maybe Ty)
+parseCutAnnot = try parsePolTy <|> parseTyPol <|> (,Nothing) <$> parsePol 
+
+parsePolTy :: Parser (Pol, Maybe Ty)
+parsePolTy = do
+  pol <- parsePol 
+  sc 
+  parseSymbol SymBar
+  sc 
+  ty <- parseTy 
+  notFollowedBy (sc >> parseSymbol SymAngC)
+  return (pol,Just ty)
+
+parseTyPol :: Parser (Pol,Maybe Ty)
+parseTyPol = do 
+  ty <- parseTy 
+  sc 
+  parseSymbol SymBar 
+  sc 
+  pol <- parsePol 
+  return (pol,Just ty)
 
 parseDone :: Parser Command
 parseDone = parseKeyword KwDone  >> return Done

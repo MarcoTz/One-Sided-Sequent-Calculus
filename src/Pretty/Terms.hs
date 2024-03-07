@@ -7,6 +7,7 @@ import Embed.Definition
 import Embed.EmbedDesugared () 
 import Embed.EmbedTyped () 
 import Pretty.Common ()
+import Pretty.Types ()
 
 import Data.List (intercalate)
 
@@ -32,7 +33,8 @@ instance Show T.Pattern where
   show = show . (embed :: T.Pattern -> P.Pattern)
   
 instance Show P.Command where 
-  show (P.Cut t1 pol t2) = "<" <> show t1 <> " | " <> show pol <> " | " <> show t2 <> ">"
+  show (P.Cut t pol u) = "<" <> show t <> " | " <> show pol <> " | " <> show u <> ">"
+  show (P.CutAnnot t ty pol u) = "<" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u <> ">"
   show P.Done = "Done"
 instance Show D.Command where 
   show = show . (embed :: D.Command -> P.Command)

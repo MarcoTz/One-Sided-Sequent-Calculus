@@ -118,7 +118,14 @@ checkCommand (D.Cut t pol u) = do
   u' <- checkTerm u ty
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrKind ShouldEq "checkCommand")
+  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq "checkCommand cut")
+  return $ T.Cut t' pol u'
+checkCommand (D.CutAnnot t ty pol u) = do
+  t' <- checkTerm t ty 
+  u' <- checkTerm u  ty 
+  let pol1 = getKind t' 
+  let pol2 = getKind u' 
+  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq "checkCommand annot")
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 
