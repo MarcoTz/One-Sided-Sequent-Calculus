@@ -33,11 +33,23 @@ parseProgram = do
       guard (not (M.member v (progVars prog)))
       return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
+    foldFun prog (MkI imp) = return $ addImportProgram imp prog
 
 
 parseDecl :: Parser ParseDecl 
-parseDecl = do  
-  (MkD <$> parseDataDecl) <|>  (MkV<$> try parseVarDecl) <|> (MkA <$> try parseTypeAnnot)
+parseDecl = 
+ (MkI <$> parseImport)       <|>
+ (MkD <$> parseDataDecl)     <|>  
+ (MkV <$> try parseVarDecl)  <|> 
+ (MkA <$> try parseTypeAnnot) 
+
+parseImport :: Parser Import
+parseImport = do
+  parseKeyword KwImport
+  space1
+  mn <- parseModulename
+  parseSymbol SymSemi
+  return (MkImport mn)
 
 parseTypeAnnot :: Parser AnnotDecl 
 parseTypeAnnot = do
@@ -46,7 +58,10 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  MkAnnot nm <$> parseTy
+  ty <- parseTy
+  sc
+  parseSymbol SymSemi
+  return $ MkAnnot nm ty 
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
