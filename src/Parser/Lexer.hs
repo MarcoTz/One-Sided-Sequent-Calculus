@@ -4,11 +4,10 @@ import Parser.Keywords
 import Parser.Symbols
 import Parser.Definition
 import Common
-import Errors
  
 import Text.Megaparsec 
 import Text.Megaparsec.Char
-import Control.Monad.Except
+import Control.Monad
 import Data.Text qualified as T
 
 parseKeyword :: Keyword -> Parser () 
@@ -38,9 +37,10 @@ parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> retu
 parseIdentifier :: Parser String
 parseIdentifier = do
   ident <- some alphaNumChar
-  if ident `elem` (show <$> allKws)
-  then throwError $ ErrParser ("Identifier " <> ident <> " is reserved") 
-  else return ident
+  guard (ident `notElem` (show <$> allKws))
+  return ident
+--  then throwError $ ErrParser ("Identifier " <> ident <> " is reserved") 
+--  else return ident
 
 parseModulename :: Parser Modulename
 parseModulename = MkModule <$> parseIdentifier

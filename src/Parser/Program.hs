@@ -8,16 +8,10 @@ import Parser.Keywords
 import Parser.Symbols
 import Syntax.Parsed.Program
 import Syntax.Parsed.Types
-import Errors
-
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Control.Monad.Except 
 import Control.Monad
 import Data.Map qualified as M
-
-import Pretty.Types ()
-import Pretty.Terms ()
 
 parseProgram :: Parser Program 
 parseProgram = do 
@@ -30,10 +24,14 @@ parseProgram = do
   foldM foldFun (emptyProg nm) decls
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 
-    foldFun prog (MkD decl) = let tyn = declName decl in 
-      if M.member tyn (progDecls prog) then throwError (ErrDuplDecl tyn "parseProgram") else return $ addDeclProgram decl prog 
-    foldFun prog (MkV var)  = let v = varName var in 
-      if M.member v (progVars prog) then throwError (ErrDuplVar v "parseProgram") else return $ addVarProgram var prog 
+    foldFun prog (MkD decl) = do 
+      let tyn = declName decl 
+      guard (not (M.member tyn (progDecls prog)))
+      return $ addDeclProgram decl prog 
+    foldFun prog (MkV var)  = do
+      let v = varName var 
+      guard (not (M.member v (progVars prog)))
+      return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
 
 

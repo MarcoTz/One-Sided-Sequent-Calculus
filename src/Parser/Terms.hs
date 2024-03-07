@@ -11,6 +11,8 @@ import Common
 
 import Text.Megaparsec
 
+import Pretty.Terms() 
+
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
 
