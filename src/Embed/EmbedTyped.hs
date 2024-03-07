@@ -1,6 +1,7 @@
 module Embed.EmbedTyped where 
 
 import Embed.Definition
+import Common
 import Embed.EmbedDesugared () 
 import Syntax.Typed.Terms        qualified as T 
 import Syntax.Typed.Program      qualified as T 
@@ -16,7 +17,7 @@ import Data.Map qualified as M
 
 instance Embed T.Term D.Term where 
   embed (T.Var v _) = D.Var v
-  embed (T.Mu v c _) = D.Mu v (embed c)
+  embed (T.Mu v c ty) = D.Mu v (Just $ getKind ty) (embed c)
   embed (T.Xtor nm args _) = D.Xtor nm (embed <$> args)
   embed (T.XCase pts _) = D.XCase (embed <$> pts)
   embed (T.Shift t _) = D.Shift (embed t)

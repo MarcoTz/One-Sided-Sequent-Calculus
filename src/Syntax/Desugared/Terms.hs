@@ -12,7 +12,7 @@ data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Comman
 
 data Term = 
   Var !Variable
-  | Mu !Variable !Command 
+  | Mu !Variable !(Maybe Pol) !Command 
   | Xtor !XtorName ![Term]
   | XCase ![Pattern]
   | Shift !Term

@@ -24,11 +24,9 @@ parseExample shouldFail mn = do
   res <- runDriverM drvSt (inferProgram mn)
   if shouldFail then case res of 
     Left err -> do 
-      putStrLn ( colorError <> "Error Checking Example: \n\t" <> show err <> colorDefault)
-      putStrLn "\n=========================================================\n"
+      putStrLn ( colorError <> "Error Checking Example " <> show mn <> ": \n\t" <> show err <> colorDefault)
     Right _ -> do
       putStrLn (colorSuccess <> "Example " <> show mn <> " Checked Successfully" <> colorDefault)
-      putStrLn "\n=========================================================\n"
   else case res of 
     Left _ -> putStrLn (colorSuccess <> "Counterxexample " <> show mn <> " failed Successfully" <> colorDefault)
     Right _ -> putStrLn (colorError <> "Counterexample " <> show mn <> " did not fail" <> colorDefault)

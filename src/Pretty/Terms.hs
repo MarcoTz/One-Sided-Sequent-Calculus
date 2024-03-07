@@ -13,7 +13,8 @@ import Data.List (intercalate)
 
 instance Show P.Term where 
   show (P.Var v) = show v
-  show (P.Mu v cmd) = "mu " <> show v <> ". " <> show cmd
+  show (P.Mu v Nothing cmd) = "mu " <> show v <> ". " <> show cmd
+  show (P.Mu v (Just pol) cmd) = "mu " <> show v <> " : " <> show pol <> ", " <> show cmd
   show (P.Xtor xt []) = show xt
   show (P.Xtor xt args) = show xt <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (P.XCase pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"

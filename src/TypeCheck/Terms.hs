@@ -20,6 +20,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Map qualified as M
 
+
 checkTerm :: D.Term -> D.Ty -> CheckM T.Term
 
 --checkTerm t (T.TyForall tyvars ty) = do 
@@ -51,8 +52,8 @@ checkTerm (D.Var v) ty = do
     (Just ty',_) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
     (_,Just (T.MkVarDecl _ ty' _)) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
 
-checkTerm (D.Mu v c) ty = do
-  ty' <- checkType ty Nothing
+checkTerm (D.Mu v mpol c) ty = do
+  ty' <- checkType ty mpol
   addVar v ty'
   c' <- checkCommand c
   return (T.Mu v c' ty')
@@ -73,7 +74,7 @@ checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do
 checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do 
   T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
-  tyArgsZipped <- zipWithError tyargs (Just . flipPol . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
+  tyArgsZipped <- zipWithError tyargs (Just . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
   tyargs' <- forM tyArgsZipped (uncurry checkType)
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors

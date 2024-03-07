@@ -14,7 +14,7 @@ import Data.Map qualified as M
 
 instance Embed D.Term P.Term where 
   embed (D.Var v) = P.Var v
-  embed (D.Mu v c) = P.Mu v (embed c)
+  embed (D.Mu v mpol c) = P.Mu v mpol (embed c)
   embed (D.Xtor nm args) = P.Xtor nm (embed <$> args)
   embed (D.XCase pts) = P.XCase (embed <$> pts)
   embed (D.Shift t) = P.Shift (embed t)

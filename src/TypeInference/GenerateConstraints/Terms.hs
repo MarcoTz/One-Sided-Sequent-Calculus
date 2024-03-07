@@ -33,6 +33,7 @@ genConstraintsCmd (D.Cut t pol u) = do
   if pol1 == pol2 then throwError (ErrKind ShouldEq "genConstraintsCmd") else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut t' pol u')
+genConstraintsCmd (D.CutAnnot t _ pol u) = genConstraintsCmd (D.Cut t pol u)
 genConstraintsCmd D.Done = return T.Done
   
 genConstraintsTerm :: D.Term -> GenM T.Term 
@@ -45,7 +46,7 @@ genConstraintsTerm (D.Var v) = do
        return (T.Var v tyV) 
      Just ty -> return (T.Var v ty)
 
-genConstraintsTerm (D.Mu v c) = do 
+genConstraintsTerm (D.Mu v _mpol c) = do 
   tyV <- freshTyVar Pos 
   addVar v tyV
   c' <- genConstraintsCmd c

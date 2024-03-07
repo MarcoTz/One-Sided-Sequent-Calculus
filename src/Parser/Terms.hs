@@ -23,9 +23,14 @@ parseMu = do
   sc
   v <- parseVariable 
   sc
+  mpol <- optional (do 
+    parseSymbol SymColon
+    pol <- parsePol 
+    sc
+    return pol)
   parseSymbol SymDot
   sc
-  Mu v <$> parseCommand
+  Mu v mpol <$> parseCommand
 
 parseXtor :: Parser Term
 parseXtor = do
