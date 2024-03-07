@@ -23,6 +23,7 @@ instance Show T.XtorSig where
   show = show . (embed :: T.XtorSig -> P.XtorSig)
 
 instance Show P.DataDecl where 
+  show (P.MkData n [] pol sigs) = "data " <> show n <> ": " <> show pol <> "{" <> intercalate ", " (show <$> sigs) <> "}"
   show (P.MkData n args pol sigs) =  
     "data " <> show n <> "(" <> intercalate ", " (show <$> args) <> ") : " <> show pol <> " {" <> intercalate ",  " (show <$> sigs) <> "}"
 instance Show D.DataDecl where 

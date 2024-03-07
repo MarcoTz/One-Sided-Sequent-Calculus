@@ -34,6 +34,14 @@ varToXtor (MkVar v) = MkXtorName v
 tyvarToTyName :: TypeVar -> TypeName
 tyvarToTyName (MkTypeVar v) = MkTypeName v
 
+getDefNames :: DesugarM [TypeName]
+getDefNames = do
+  doneNames <-  gets (map fst .  M.toList . D.progDecls . desDone)
+  curr <- gets desCurrDecl
+  case curr of 
+    Nothing -> return doneNames 
+    Just (P.MkData tyn _ _ _) -> return (tyn : doneNames)
+
 setCurrDecl :: P.DataDecl -> DesugarM () 
 setCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
 
@@ -43,15 +51,6 @@ getCurrDecl err = do
   case curr of 
     Nothing -> throwError err 
     Just decl -> return decl
-
-getMDecl :: TypeName -> DesugarM (Maybe D.DataDecl)
-getMDecl tyn = do
-  mdecl <- lookupMDecl tyn
-  doneDecls <- gets (D.progDecls . desDone)
-  case (mdecl,M.lookup tyn doneDecls) of
-    (Nothing,Nothing) -> return Nothing 
-    (_,Just decl) -> return (Just decl)
-    (Just decl,_) -> return $ (Just . (embed :: T.DataDecl -> D.DataDecl)) decl
 
 getMXtor :: XtorName -> DesugarM (Maybe D.XtorSig)
 getMXtor xtn = do
