@@ -50,7 +50,7 @@ instance Show P.SugarDecl where
 instance Show P.Program where 
   show (P.MkProgram nm decls vars annots imports sugar) = 
     "module " <> show nm  <>
-    "\n\t Imports: " <> intercalate "," (show <$> imports) <> 
+    "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList annots) <> 
     "\n\tAnnotations: " <> show (snd <$> M.toList vars) <> 

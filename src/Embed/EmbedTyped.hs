@@ -37,7 +37,7 @@ instance Embed T.Command P.Command where
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t
 
 instance Embed T.DataDecl D.DataDecl where 
-  embed (T.MkDataDecl nm vars pol sigs) = D.MkData nm vars pol (embed <$> sigs)
+  embed (T.MkData nm vars pol sigs) = D.MkData nm vars pol (embed <$> sigs)
 instance Embed T.DataDecl P.DataDecl where 
   embed t = (embed :: D.DataDecl -> P.DataDecl) $ (embed :: T.DataDecl -> D.DataDecl) t
 
@@ -56,7 +56,7 @@ instance Embed T.Ty P.Ty where
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
 instance Embed T.VarDecl D.VarDecl where 
-  embed (T.MkVarDecl var ty body) = D.MkVar var (Just (embed ty)) (embed body)
+  embed (T.MkVar var ty body) = D.MkVar var (Just (embed ty)) (embed body)
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 

@@ -21,7 +21,7 @@ import Data.Map qualified as M
 checkPts :: [D.Pattern] -> GenM (Maybe DataDecl)
 checkPts [] = return Nothing 
 checkPts (pt:pts) = do 
-  d@(MkDataDecl _ _ _ xtors) <- lookupXtorDecl (D.ptxt pt)
+  d@(MkData _ _ _ xtors) <- lookupXtorDecl (D.ptxt pt)
   if all ((`elem` (sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
@@ -53,7 +53,7 @@ genConstraintsTerm (D.Mu v _mpol c) = do
   return $ T.Mu v c' tyV 
 
 genConstraintsTerm (D.Xtor nm args) = do 
-  (MkDataDecl tyn tyargs _ _) <- lookupXtorDecl nm
+  (MkData tyn tyargs _ _) <- lookupXtorDecl nm
   xtSig <- lookupXtor nm
   (newVars,varmap) <- freshTyVarsDecl tyargs
   args' <- forM args genConstraintsTerm
@@ -66,7 +66,7 @@ genConstraintsTerm (D.XCase pts)  = do
   decl <- checkPts pts
   case decl of 
     Nothing -> throwError (ErrBadPattern (D.ptxt <$> pts) "genConstraintsTerm (XCase)")
-    Just (MkDataDecl tyn tyArgs _ _) -> do
+    Just (MkData tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
         forM_ (zip (D.ptv pt) newVars) (uncurry addVar) 

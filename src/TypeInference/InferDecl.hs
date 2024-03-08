@@ -56,7 +56,7 @@ inferDecl (D.MkData tyn args pol xtors) = do
   setCurrVars args
   setCurrPol pol
   xtors' <- forM xtors inferXtorSig 
-  return $ T.MkDataDecl tyn args pol xtors'
+  return $ T.MkData tyn args pol xtors'
 
 inferXtorSig :: D.XtorSig -> DeclM T.XtorSig
 inferXtorSig (D.MkXtorSig nm args) = do 
@@ -78,5 +78,5 @@ inferType (D.TyDecl tyn args) = do
       case pol of 
         Nothing -> throwError (ErrMissingDecl tyn "inferType (inferdecl)")
         Just pol' -> return $ T.TyDecl tyn args' pol'
-    Just (T.MkDataDecl _ _ pol _) -> return $ T.TyDecl tyn args' pol
+    Just (T.MkData _ _ pol _) -> return $ T.TyDecl tyn args' pol
 inferType (D.TyCo ty) = T.TyCo <$> inferType ty

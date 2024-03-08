@@ -8,11 +8,11 @@ import Data.Map qualified as M
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl  = MkData  {declName  :: !TypeName, declArgs  :: ![PolVar], dataPol :: !Pol, declXtors :: ![XtorSig]} 
-data VarDecl   = MkVar   {varName   :: !Variable, varBody   :: !Term}
-data AnnotDecl = MkAnnot {annotName :: !Variable, annotType :: !Ty} 
-newtype Import    = MkImport { importName :: Modulename }
-data SugarDecl = MkSugar {sugarName :: !Variable, sugarVars :: ![Variable], sugarTerm :: !Term}
+data DataDecl  = MkData   {declName   :: !TypeName, declArgs  :: ![PolVar], dataPol :: !Pol, declXtors :: ![XtorSig]} 
+data VarDecl   = MkVar    {varName    :: !Variable, varBody   :: !Term}
+data AnnotDecl = MkAnnot  {annotName  :: !Variable, annotType :: !Ty} 
+newtype Import = MkImport {importName :: Modulename }
+data SugarDecl = MkSugar  {sugarName  :: !Variable, sugarVars :: ![Variable], sugarTerm :: !Term}
 
 data Program = MkProgram { 
   progName    :: !Modulename, 

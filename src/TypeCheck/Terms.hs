@@ -50,7 +50,7 @@ checkTerm (D.Var v) ty = do
   case (M.lookup v vars,mdecl) of 
     (Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
     (Just ty',_) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
-    (_,Just (T.MkVarDecl _ ty' _)) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
+    (_,Just (T.MkVar _ ty' _)) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
 
 checkTerm (D.Mu v mpol c) ty = do
   ty' <- checkType ty mpol
@@ -59,7 +59,7 @@ checkTerm (D.Mu v mpol c) ty = do
   return (T.Mu v c' ty')
 
 checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do 
-  T.MkDataDecl tyn' argVars pol' _ <- lookupXtorDecl xtn 
+  T.MkData tyn' argVars pol' _ <- lookupXtorDecl xtn 
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm Xtor")
   tyargsZipped <- zipWithError tyargs (Just . getKind <$> argVars) (ErrTyArity tyn "checkTerm xtor")
   tyargs' <- forM tyargsZipped (uncurry checkType)
@@ -72,7 +72,7 @@ checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do
   return (T.Xtor xtn xtargs''' newTy)
 
 checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do 
-  T.MkDataDecl tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
+  T.MkData tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
   tyArgsZipped <- zipWithError tyargs (Just . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
   tyargs' <- forM tyArgsZipped (uncurry checkType)

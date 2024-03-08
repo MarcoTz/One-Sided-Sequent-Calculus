@@ -23,7 +23,7 @@ checkType (D.TyVar v) mpol = do
     Just pol -> if isNothing mpol || Just pol == mpol then return (T.TyVar v pol) else  throwError (ErrKind ShouldEq "checkType TyVar")
 
 checkType (D.TyDecl tyn args) mpol = do 
-   T.MkDataDecl _ argVars pol' _ <- lookupDecl tyn
+   T.MkData _ argVars pol' _ <- lookupDecl tyn
    polPairs <- zipWithError args (Just . getKind <$> argVars) (ErrTyArity tyn " checkType TyDecl")
    args' <- forM polPairs (uncurry checkType)
    let newPol = fromMaybe pol' mpol
