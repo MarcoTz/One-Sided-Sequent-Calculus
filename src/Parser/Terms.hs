@@ -82,12 +82,10 @@ parseShift = do
   parseSymbol SymBrackO
   t <- parseTerm
   parseSymbol SymBrackC
-  return (Shift t)
+  return (ShiftPos t)
 
 parseLam :: Parser Term
 parseLam = do 
-  parseKeyword KwLam
-  sc
   parseSymbol SymBrackO
   sc
   v <- parseVariable 
@@ -96,7 +94,7 @@ parseLam = do
   sc
   parseSymbol SymDot
   sc
-  Lam v <$> parseCommand
+  ShiftNeg v <$> parseCommand
 
 
 parseCommand :: Parser Command 

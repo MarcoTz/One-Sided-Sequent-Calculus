@@ -23,12 +23,12 @@ desugarTerm (P.Xtor xtn args) = do
 desugarTerm (P.XCase pts) = do
   pts' <- forM pts desugarPattern
   return $ D.XCase pts'
-desugarTerm (P.Shift t) = do
+desugarTerm (P.ShiftPos t) = do
   t' <- desugarTerm t
-  return $ D.Shift t'
-desugarTerm (P.Lam v c) = do 
+  return $ D.ShiftPos t'
+desugarTerm (P.ShiftNeg v c) = do 
   c' <- desugarCommand c
-  return $ D.Lam v c'
+  return $ D.ShiftNeg v c'
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.MkPattern xtn vars c) = do 

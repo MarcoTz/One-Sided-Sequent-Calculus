@@ -15,5 +15,5 @@ data Term =
   | Mu !Variable !(Maybe Pol) !Command 
   | Xtor !XtorName ![Term]
   | XCase ![Pattern]
-  | Shift !Term
-  | Lam !Variable !Command
+  | ShiftPos !Term
+  | ShiftNeg !Variable !Command

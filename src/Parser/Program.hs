@@ -34,14 +34,32 @@ parseProgram = do
       return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
     foldFun prog (MkI imp) = return $ addImportProgram imp prog
+    foldFun prog (MkS sugar) = return $ addSugarProgram sugar prog
 
 
 parseDecl :: Parser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
+ (MkS <$> parseSugar)        <|>
  (MkV <$> try parseVarDecl)  <|> 
  (MkA <$> try parseTypeAnnot) 
+
+parseSugar :: Parser SugarDecl 
+parseSugar = do 
+  parseKeyword KwDefine
+  sc 
+  nm <- parseVariable
+  sc
+  args <- parseParens (parseVariable `sepBy` (parseSymbol SymComma >> sc))
+  sc
+  parseSymbol SymColon
+  parseSymbol SymEq 
+  sc 
+  t <- parseTerm
+  parseSymbol SymSemi
+  return (MkSugar nm args t)
+
 
 parseImport :: Parser Import
 parseImport = do
@@ -101,10 +119,4 @@ parseXtorSig = do
  MkXtorSig nm <$> parseXtorSigArgs
  
 parseXtorSigArgs :: Parser [Ty]
-parseXtorSigArgs = (do 
-  parseSymbol SymParensO
-  vars <- parseTy `sepBy` (parseSymbol SymComma >> sc) 
-  parseSymbol SymParensC
-  return vars)
-  <|>
-  return []
+parseXtorSigArgs = parseParens (parseTy `sepBy` (parseSymbol SymComma >> sc)) <|>  return []

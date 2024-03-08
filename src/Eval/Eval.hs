@@ -17,7 +17,7 @@ isValue :: Pol -> Term -> Bool
 isValue Pos (Var _ _ ) = True 
 isValue Pos (Xtor _ args _) = all (isValue Pos) args
 isValue Pos (XCase _ _) = True
-isValue Pos (Shift  _ _) = True
+isValue Pos (ShiftPos _ _) = True
 isValue Pos _ = False 
 isValue Neg _ = True
 
@@ -30,7 +30,7 @@ evalOnce :: Command -> EvalM Command
 -- beta mu
 evalOnce s@(Cut t pol (Mu v c _)) = if isValue pol t then return $ substVar c t v else return s
 -- beta shift 
-evalOnce (Cut (Shift t _) Pos (Lam v c _)) = return $ substVar c t v
+evalOnce (Cut (ShiftPos t _) Pos (ShiftNeg v c _)) = return $ substVar c t v
 -- beta K
 evalOnce s@(Cut (Xtor nm args _) _ (XCase pats _)) = 
   if all (isValue Pos) args then do 

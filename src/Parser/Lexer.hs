@@ -11,6 +11,16 @@ import Text.Megaparsec.Char.Lexer qualified as L
 import Control.Monad
 import Data.Text qualified as T
 
+
+parseParens :: Parser a -> Parser a
+parseParens p = do 
+  parseSymbol SymParensO 
+  sc
+  a <- p
+  sc
+  parseSymbol SymParensC 
+  return a
+
 parseKeyword :: Keyword -> Parser () 
 parseKeyword kw = do
  _ <- string (T.pack (show kw))

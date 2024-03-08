@@ -75,15 +75,15 @@ genConstraintsTerm (D.XCase pts)  = do
       let pts'' = T.substTyVars varmap <$> pts'
       let newT = TyDecl tyn newVars Pos
       return (T.XCase pts'' newT)
-genConstraintsTerm (D.Shift t) = do 
+genConstraintsTerm (D.ShiftPos t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
   if pol /= Pos then throwError (ErrKind  ShouldEq "genConstraintsTerm (Shift)") else do 
     let newT = TyShift (T.getType t')
-    return (T.Shift t' newT)
-genConstraintsTerm (D.Lam v cmd) = do  
+    return (T.ShiftPos t' newT)
+genConstraintsTerm (D.ShiftNeg v cmd) = do  
   tyV <- freshTyVar Pos 
   addVar v tyV
   cmd' <- genConstraintsCmd cmd
   let newT = TyShift tyV 
-  return (T.Lam v cmd' newT)
+  return (T.ShiftNeg v cmd' newT)

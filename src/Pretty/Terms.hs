@@ -18,8 +18,8 @@ instance Show P.Term where
   show (P.Xtor xt []) = show xt
   show (P.Xtor xt args) = show xt <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (P.XCase pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
-  show (P.Shift t) = "{" <> show t <> "}"
-  show (P.Lam v cmd) = "Lambda {" <> show v <> "}." <> show cmd
+  show (P.ShiftPos t) = "{" <> show t <> "}"
+  show (P.ShiftNeg v cmd) = "{" <> show v <> "}." <> show cmd
 instance Show D.Term where 
   show = show . (embed :: D.Term -> P.Term)
 instance Show T.Term where 

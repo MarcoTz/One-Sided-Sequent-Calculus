@@ -41,8 +41,8 @@ checkTerm t (D.TyCo ty) = do
     T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyCo ty')
     T.Mu v c ty' -> return $ T.Mu v c (T.TyCo ty')
     T.XCase pts ty' -> return $ T.XCase pts (T.TyCo ty')
-    T.Shift{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
-    T.Lam{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
+    T.ShiftPos{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
+    T.ShiftNeg{} -> throwError (ErrKind ShouldEq "checkTerm TyCo")
 
 checkTerm (D.Var v) ty = do
   vars <- gets checkVars

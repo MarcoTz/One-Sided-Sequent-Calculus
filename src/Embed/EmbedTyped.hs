@@ -20,8 +20,8 @@ instance Embed T.Term D.Term where
   embed (T.Mu v c ty) = D.Mu v (Just $ getKind ty) (embed c)
   embed (T.Xtor nm args _) = D.Xtor nm (embed <$> args)
   embed (T.XCase pts _) = D.XCase (embed <$> pts)
-  embed (T.Shift t _) = D.Shift (embed t)
-  embed (T.Lam v c _) = D.Lam v (embed c)
+  embed (T.ShiftPos t _) = D.ShiftPos (embed t)
+  embed (T.ShiftNeg v c _) = D.ShiftNeg v (embed c)
 instance Embed T.Term P.Term where 
   embed t = (embed :: D.Term -> P.Term) $  (embed :: T.Term -> D.Term) t 
 

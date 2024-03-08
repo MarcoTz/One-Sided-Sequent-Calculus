@@ -14,16 +14,16 @@ data Term =
   | Mu !Variable !Command !Ty
   | Xtor !XtorName ![Term] !Ty
   | XCase ![Pattern] !Ty
-  | Shift !Term !Ty
-  | Lam !Variable !Command !Ty
+  | ShiftPos !Term !Ty
+  | ShiftNeg !Variable !Command !Ty
 
 getType :: Term -> Ty
 getType (Var _ ty)    = ty
 getType (Mu _ _ ty)   = ty 
 getType (Xtor _ _ ty) = ty 
 getType (XCase _ ty)  = ty 
-getType (Shift _ ty)  = ty 
-getType (Lam _ _ ty)  = ty 
+getType (ShiftPos _ ty)  = ty 
+getType (ShiftNeg _ _ ty)  = ty 
 
 instance GetKind Term where 
   getKind t = getKind (getType t)

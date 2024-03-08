@@ -13,12 +13,12 @@ class FreeVars a where
   freeVars :: a -> S.Set Variable
 
 instance FreeVars Term where 
-  freeVars (Var v _)       = S.singleton v
-  freeVars (Mu v c _)      = S.delete v (freeVars c)
-  freeVars (Xtor _ args _) = S.unions (freeVars <$> args)
-  freeVars (XCase pts _)   = S.unions (freeVars <$> pts)
-  freeVars (Shift t _)     = freeVars t 
-  freeVars (Lam v cmd _)   = S.delete v (freeVars cmd)
+  freeVars (Var v _)          = S.singleton v
+  freeVars (Mu v c _)         = S.delete v (freeVars c)
+  freeVars (Xtor _ args _)    = S.unions (freeVars <$> args)
+  freeVars (XCase pts _)      = S.unions (freeVars <$> pts)
+  freeVars (ShiftPos t _)     = freeVars t 
+  freeVars (ShiftNeg v cmd _) = S.delete v (freeVars cmd)
 
 instance FreeVars Pattern where 
   freeVars MkPattern{ptxt=_, ptv=vars, ptcmd=st} = foldr S.delete (freeVars st) vars

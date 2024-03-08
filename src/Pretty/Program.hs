@@ -44,13 +44,17 @@ instance Show P.AnnotDecl where
 instance Show P.Import where 
   show (P.MkImport mn) = "import " <> show mn
 
+instance Show P.SugarDecl where 
+  show (P.MkSugar nm vars t) = "define " <> show nm <> "(" <> intercalate ", " (show <$> vars) <> ") := " <> show t
+
 instance Show P.Program where 
-  show (P.MkProgram nm decls vars annots imports) = 
+  show (P.MkProgram nm decls vars annots imports sugar) = 
     "module " <> show nm  <>
     "\n\t Imports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList annots) <> 
-    "\n\tAnnotations: " <> show (snd <$> M.toList vars)
+    "\n\tAnnotations: " <> show (snd <$> M.toList vars) <> 
+    "\n\tSyntactic Sugar: " <> show (snd <$> M.toList sugar)
 
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)

@@ -17,8 +17,8 @@ instance Embed D.Term P.Term where
   embed (D.Mu v mpol c) = P.Mu v mpol (embed c)
   embed (D.Xtor nm args) = P.Xtor nm (embed <$> args)
   embed (D.XCase pts) = P.XCase (embed <$> pts)
-  embed (D.Shift t) = P.Shift (embed t)
-  embed (D.Lam v c) = P.Lam v (embed c)
+  embed (D.ShiftPos t) = P.ShiftPos (embed t)
+  embed (D.ShiftNeg v c) = P.ShiftNeg v (embed c)
 
 instance Embed D.Pattern P.Pattern where 
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)
@@ -35,7 +35,7 @@ instance Embed D.VarDecl P.VarDecl where
   embed (D.MkVar var _ body) = P.MkVar var (embed body)
 
 instance Embed D.Program P.Program where 
-  embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) []
+  embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) [] M.empty
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 

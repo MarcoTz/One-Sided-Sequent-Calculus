@@ -63,8 +63,8 @@ instance SubstTyVars Term where
   substTyVars varmap (Mu v c ty) = Mu v (substTyVars varmap c) (substTyVars varmap ty)
   substTyVars varmap (Xtor nm args ty) = Xtor nm (substTyVars varmap <$> args) (substTyVars varmap ty)
   substTyVars varmap (XCase pts ty) = XCase (substTyVars varmap <$> pts) (substTyVars varmap ty)
-  substTyVars varmap (Shift t ty) = Shift (substTyVars varmap t) (substTyVars varmap ty)
-  substTyVars varmap (Lam v t ty) = Lam v (substTyVars varmap t) (substTyVars varmap ty)
+  substTyVars varmap (ShiftPos t ty) = ShiftPos (substTyVars varmap t) (substTyVars varmap ty)
+  substTyVars varmap (ShiftNeg v t ty) = ShiftNeg v (substTyVars varmap t) (substTyVars varmap ty)
 
 instance SubstTyVars Pattern where 
   substTyVars varmap (MkPattern xt vars c) = MkPattern xt vars (substTyVars varmap c)
@@ -105,17 +105,17 @@ instance Subst Term where
       else Mu v1 (substVar cmd t2 v2) ty
   substVar (Xtor xt args ty) t v = Xtor xt ((\x -> substVar x t v) <$> args) ty
   substVar (XCase pts ty) t v = XCase ((\x -> substVar x t v) <$> pts) ty
-  substVar (Shift t1 ty) t2 v = Shift (substVar t1 t2 v) ty
-  substVar (Lam v1 cmd ty) t v2 = 
-    if v1 == v2 then Lam v1 cmd ty
+  substVar (ShiftPos t1 ty) t2 v = ShiftPos (substVar t1 t2 v) ty
+  substVar (ShiftNeg v1 cmd ty) t v2 = 
+    if v1 == v2 then ShiftNeg v1 cmd ty
     else 
       let fv = freeVars t 
       in if v1 `elem` fv 
       then do 
         let frV = freshVar 0 (S.union fv (freeVars cmd))
         let cmd' = substVar cmd (Var v1 ty) frV
-        Lam frV (substVar cmd' t v2) ty
-      else Lam v1 (substVar cmd t v2) ty
+        ShiftNeg frV (substVar cmd' t v2) ty
+      else ShiftNeg v1 (substVar cmd t v2) ty
 
 instance Subst Command where 
   substVar (Cut t1 pol t2) t3 v = Cut (substVar t1 t3 v) pol (substVar t2 t3 v)
