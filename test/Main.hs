@@ -20,7 +20,7 @@ colorDefault = "\ESC[0m"
 
 parseExample :: Bool -> Modulename -> IO()
 parseExample shouldFail mn = do
-  let drvSt = MkDriverState False emptyEnv 
+  let drvSt = MkDriverState False emptyEnv []
   res <- runDriverM drvSt (inferProgram mn)
   if shouldFail then case res of 
     Left err -> do 

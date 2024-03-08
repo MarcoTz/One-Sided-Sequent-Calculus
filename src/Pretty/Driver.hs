@@ -5,4 +5,4 @@ import Pretty.Program ()
 import Pretty.Environment()
 
 instance Show DriverState where 
-  show (MkDriverState _ env) = show env
+  show (MkDriverState _ env modules) = "Current environment: " <> show env  <> "\n" <> "current modules: " <> show modules 

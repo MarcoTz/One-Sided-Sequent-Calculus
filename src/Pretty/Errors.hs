@@ -26,4 +26,5 @@ instance Show Error where
   show (ErrNotTyShift ty wh)            = "Type " <> show ty <> " should be a Shift " <> wh
   show (ErrTypeAmbig t wh)              = "Type of term " <> show t <> " is unclear "  <> wh
   show (ErrMissingType str)             = "Missing type: " <> str
-  show (ErrModuleNotFound str)          = "Module not found " <> str
+  show (ErrModuleNotFound mn str)       = "Module " <> show mn <> " not found " <> str
+  show (ErrDuplModule mn str)           = "Circular imports for module " <> show mn <> str

@@ -7,6 +7,7 @@ import Common
  
 import Text.Megaparsec 
 import Text.Megaparsec.Char
+import Text.Megaparsec.Char.Lexer qualified as L
 import Control.Monad
 import Data.Text qualified as T
 
@@ -21,15 +22,14 @@ parseSymbol sym = do
   return ()
 
 parseComment :: Parser()
-parseComment = do
-  space
+parseComment = try $ do
   parseSymbol SymMinus
   parseSymbol SymMinus
-  _ <- manyTill anySingle eol
+  _ <- takeWhileP (Just "character") (/= '\n')
   return ()
 
 sc :: Parser () 
-sc = try parseComment <|> space
+sc = L.space space1 parseComment empty 
 
 parsePol :: Parser Pol 
 parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)

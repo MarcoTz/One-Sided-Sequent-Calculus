@@ -25,5 +25,5 @@ loadModule :: MonadIO m => MonadError Error m =>  Modulename -> m T.Text
 loadModule (MkModule nm) = do 
   let filePath =  joinPath ["Examples", nm <> ".os"]
   exists <- liftIO $ doesFileExist filePath
-  unless exists $ throwError (ErrModuleNotFound (show nm))
+  unless exists $ throwError (ErrModuleNotFound (MkModule nm) "loadModule")
   liftIO $ T.readFile filePath

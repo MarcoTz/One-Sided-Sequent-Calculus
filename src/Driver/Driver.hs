@@ -2,7 +2,9 @@ module Driver.Driver where
 
 import Common
 import Files
+import Errors
 import Driver.Definition
+import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Typed.Terms        qualified as T
@@ -24,23 +26,27 @@ import TypeInference.SolveConstraints.Definition (runSolveM)
 import TypeInference.SolveConstraints.Solver (solve)
 import TypeInference.InferDecl (runDeclM, inferDecl)
 
-
 import Pretty.Terms ()
 import Pretty.Program ()
 import Pretty.TypeInference ()
 import Pretty.Environment ()
 
 import Control.Monad.State
+import Control.Monad.Except
 import Control.Monad
 
 
 inferProgram :: Modulename -> DriverM () 
 inferProgram mn = do 
+  loaded <- gets drvLoaded
+  when (mn `elem` loaded) $ throwError (ErrDuplModule mn "Driver inferProgram")
   progCont <- loadModule mn
   debug ("Inferring module " <> show mn)
   let progParser = runFileParser "" parseProgram progCont
   prog <- liftErr progParser
+  addLoaded mn
   debug ("successfully parsed program: \n" <> show prog <> "\n") 
+  forM_ (P.importName <$> P.progImports prog) inferProgram
   env <- gets drvEnv
   let prog' = runDesugarM env mn (desugarProgram prog)
   prog'' <- liftErr prog'
