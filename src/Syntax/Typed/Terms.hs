@@ -3,6 +3,8 @@ module Syntax.Typed.Terms where
 import Syntax.Typed.Types 
 import Common
 
+type TypedVar = (Variable,Ty)
+
 data Command = 
   Cut !Term !Pol !Term
   | Done

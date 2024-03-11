@@ -11,9 +11,6 @@ import Common
 
 import Text.Megaparsec
 
-import Debug.Trace
-import Pretty.Terms() 
-
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
 
@@ -26,14 +23,9 @@ parseMu = do
   sc
   v <- parseVariable 
   sc
-  mpol <- optional (do 
-    parseSymbol SymColon
-    pol <- parsePol 
-    sc
-    return pol)
   parseSymbol SymDot
   sc
-  Mu v mpol <$> parseCommand
+  Mu v <$> parseCommand
 
 parseXtor :: Parser Term
 parseXtor = do
@@ -73,7 +65,6 @@ parseXCase = do
   parseSymbol SymBrackO
   sc
   pts <- parsePattern `sepBy` (parseSymbol SymComma >> sc)
-  trace ("parsed patterns " <> show pts) $ return ()
   sc
   parseSymbol SymBrackC
   sc
@@ -97,6 +88,17 @@ parseLam = do
   parseSymbol SymDot
   sc
   ShiftNeg v <$> parseCommand
+
+parseMTypedVar :: Parser MTypedVar 
+parseMTypedVar = try (do 
+  var <- parseVariable 
+  sc 
+  parseSymbol SymColon
+  sc 
+  pty <- parsePolTy
+  return (var, Just pty)) 
+  <|>
+  (,Nothing) <$> parseVariable
 
 
 parseCommand :: Parser Command 
@@ -122,10 +124,10 @@ parseCut = do
     Just ty -> return (CutAnnot t ty pol u)
 
 parseCutAnnot :: Parser (Pol,Maybe Ty)
-parseCutAnnot = try parsePolTy <|> parseTyPol <|> (,Nothing) <$> parsePol 
+parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
 
-parsePolTy :: Parser (Pol, Maybe Ty)
-parsePolTy = do
+parsePolBarTy :: Parser (Pol, Maybe Ty)
+parsePolBarTy = do
   pol <- parsePol 
   sc 
   parseSymbol SymBar
@@ -134,8 +136,8 @@ parsePolTy = do
   notFollowedBy (sc >> parseSymbol SymAngC)
   return (pol,Just ty)
 
-parseTyPol :: Parser (Pol,Maybe Ty)
-parseTyPol = do 
+parseTyBarPol :: Parser (Pol,Maybe Ty)
+parseTyBarPol = do 
   ty <- parseTy 
   sc 
   parseSymbol SymBar 
@@ -145,4 +147,3 @@ parseTyPol = do
 
 parseDone :: Parser Command
 parseDone = parseKeyword KwDone  >> return Done
-

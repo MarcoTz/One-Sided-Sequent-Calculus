@@ -11,22 +11,29 @@ import Environment
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
-import Data.Maybe (fromMaybe, isNothing)
 import Data.Map qualified as M
 
 
-checkType :: D.Ty -> Maybe Pol -> CheckM T.Ty
-checkType (D.TyVar v) mpol = do
+checkType :: D.Ty -> Pol -> CheckM T.Ty
+checkType (D.TyVar v) pol = do
   tyVars <- gets checkTyVars
   case M.lookup v tyVars of 
     Nothing -> throwError (ErrMissingTyVar v "checkType TyVar")
-    Just pol -> if isNothing mpol || Just pol == mpol then return (T.TyVar v pol) else  throwError (ErrKind ShouldEq "checkType TyVar")
+    Just pol' -> if pol' == pol then return (T.TyVar v pol) else  throwError (ErrKind ShouldEq "checkType TyVar")
 
-checkType (D.TyDecl tyn args) mpol = do 
-   T.MkData _ argVars pol' _ <- lookupDecl tyn
-   polPairs <- zipWithError args (Just . getKind <$> argVars) (ErrTyArity tyn " checkType TyDecl")
+checkType (D.TyDecl tyn args) pol = do 
+   T.MkData _ argVars _  _ <- lookupDecl tyn
+   polPairs <- zipWithError args (getKind <$> argVars) (ErrTyArity tyn " checkType TyDecl")
    args' <- forM polPairs (uncurry checkType)
-   let newPol = fromMaybe pol' mpol
-   return $ T.TyDecl tyn args' newPol
+   return $ T.TyDecl tyn args' pol 
 
-checkType (D.TyCo ty) mpol = T.TyCo <$> checkType ty (flipPol <$> mpol)
+checkType (D.TyCo ty) pol = T.TyCo <$> checkType ty (flipPol pol)
+
+checkPolTy :: D.PolTy -> CheckM T.Ty
+checkPolTy (D.TyVar v,pol) = return $ T.TyVar v pol
+checkPolTy (D.TyDecl tyn tyargs,pol) = do 
+  T.MkData _ tyargs'  _ _<- lookupDecl tyn
+  tyArgsZipped <- zipWithError tyargs (getKind <$> tyargs') (ErrTyArity tyn "checkPolTy")
+  args' <- forM tyArgsZipped (uncurry checkType)
+  return $ T.TyDecl tyn args' pol
+checkPolTy (D.TyCo ty, pol) = T.TyCo <$> checkPolTy (ty, flipPol pol)

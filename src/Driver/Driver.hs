@@ -50,7 +50,7 @@ inferProgram mn = do
   env <- gets drvEnv
   let prog' = runDesugarM env mn (desugarProgram prog)
   prog'' <- liftErr prog'
-  debug ("desugared Program successfully: \n" <> show prog'')
+  debug "sucessfully desugared program"
   forM_ (D.progDecls prog'') (\d -> do 
     let inferred = runDeclM (inferDecl d)
     inferred' <- liftErr inferred
@@ -67,6 +67,7 @@ inferVarDecl mn (D.MkVar n _ Nothing t) = do
   return newDecl 
 inferVarDecl mn v@(D.MkVar _ _ (Just _) _) = do 
   env <- gets drvEnv
+  debug ("checking variable declaration " <> show v) 
   let v' = runCheckM env (checkVarDecl v)
   v'' <- liftErr v' 
   addVarDecl mn v''

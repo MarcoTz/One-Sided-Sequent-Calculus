@@ -50,8 +50,8 @@ instance Show P.Program where
     "module " <> show nm  <>
     "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
-    "\n\tVariables: " <> show (snd <$> M.toList annots) <> 
-    "\n\tAnnotations: " <> show (snd <$> M.toList vars) 
+    "\n\tVariables: " <> show (snd <$> M.toList vars) <> 
+    "\n\tAnnotations: " <> show (snd <$> M.toList annots) 
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 

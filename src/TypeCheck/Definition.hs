@@ -3,14 +3,13 @@ module TypeCheck.Definition where
 import Errors 
 import Environment
 import Common
-import Syntax.Typed.Types
-
+import Syntax.Typed.Types qualified as T 
 import Control.Monad.Except 
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Map qualified as M
 
-data CheckerState = MkCheckState { checkVars :: !(M.Map Variable Ty), checkTyVars :: !(M.Map TypeVar Pol)}
+data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: !(M.Map TypeVar Pol)}
 
 initialCheckerState :: CheckerState 
 initialCheckerState = MkCheckState M.empty M.empty 
@@ -23,11 +22,8 @@ runCheckM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) initi
   Left err -> Left err
   Right (x,_) -> Right x
 
-addVar :: Variable -> Ty -> CheckM () 
-addVar v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
-
-remVar :: Variable -> CheckM () 
-remVar v = modify (\s -> MkCheckState (M.delete v (checkVars s)) (checkTyVars s))
+addVarPol :: Variable -> T.Ty -> CheckM () 
+addVarPol v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
 
 addTyVar :: PolVar -> CheckM () 
 addTyVar (MkPolVar tyv pol) = modify (\s -> MkCheckState (checkVars s) (M.insert tyv pol (checkTyVars s)))

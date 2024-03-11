@@ -7,13 +7,11 @@ import Parser.Lexer
 import Parser.Keywords
 import Parser.Symbols
 import Syntax.Parsed.Program
-import Syntax.Parsed.Types
+
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Monad
 import Data.Map qualified as M
-
-import Debug.Trace
 
 parseProgram :: Parser Program 
 parseProgram = do 
@@ -60,7 +58,7 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  ty <- parseTy
+  ty <- parsePolTy
   sc
   parseSymbol SymSemi
   return $ MkAnnot nm ty 
@@ -68,16 +66,13 @@ parseTypeAnnot = do
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
   nm <- parseVariable 
-  trace ("parsed variable " <> show nm) $ return ()
   sc
-  vars <- optional $ parseParens (parseVariableTy `sepBy` (parseSymbol SymComma >> sc))
-  trace ("parsed variables " <> show vars) $ return ()
+  vars <- optional $ parseParens (parseMTypedVar `sepBy` parseCommaSep)
   sc
   parseSymbol SymColon
   parseSymbol SymEq
   sc
   t <- parseTerm
-  trace ("parsed body " <> show t) $ return ()
   sc
   parseSymbol SymSemi
   case vars of 
@@ -98,7 +93,7 @@ parseDataDecl = do
   sc
   parseSymbol SymBrackO 
   sc 
-  xtors <- parseXtorSig `sepBy` (parseSymbol SymComma >> sc)
+  xtors <- parseXtorSig `sepBy` parseCommaSep
   sc
   parseSymbol SymBrackC
   return $ MkData nm args pol xtors
@@ -107,7 +102,5 @@ parseDataDecl = do
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
  nm <- parseXtorName 
- MkXtorSig nm <$> parseXtorSigArgs
- 
-parseXtorSigArgs :: Parser [Ty]
-parseXtorSigArgs = parseParens (parseTy `sepBy` (parseSymbol SymComma >> sc)) <|>  return []
+ args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
+ return $ MkXtorSig nm args 

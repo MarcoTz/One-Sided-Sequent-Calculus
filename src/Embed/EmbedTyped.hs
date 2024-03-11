@@ -17,7 +17,7 @@ import Data.Map qualified as M
 
 instance Embed T.Term D.Term where 
   embed (T.Var v _) = D.Var v
-  embed (T.Mu v c ty) = D.Mu v (Just $ getKind ty) (embed c)
+  embed (T.Mu v c _) = D.Mu v (embed c)
   embed (T.Xtor nm args _) = D.Xtor nm (embed <$> args)
   embed (T.XCase pts _) = D.XCase (embed <$> pts)
   embed (T.ShiftPos t _) = D.ShiftPos (embed t)
@@ -51,12 +51,22 @@ instance Embed T.Ty D.Ty where
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
   embed (T.TyShift ty)  = embed ty
   embed (T.TyCo ty) = D.TyCo (embed ty)
---  embed (T.TyForall vars ty) = D.TyForall vars (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
+instance Embed T.Ty D.PolTy where 
+  embed (T.TyVar v knd) = (D.TyVar v, knd)
+  embed (T.TyDecl nm args knd) = (D.TyDecl nm (embed <$> args), knd)
+  embed (T.TyShift ty) = embed ty
+  embed (T.TyCo ty) = (D.TyCo (embed ty), flipPol . getKind $ ty)
+
+instance Embed T.TypedVar D.TypedVar where
+  embed (v,ty) = (v,embed ty)
+instance Embed T.TypedVar D.MTypedVar where 
+  embed (v,ty) = (v,Just . embed $ ty)
+
 instance Embed T.VarDecl D.VarDecl where 
-  embed (T.MkVar var args ty body) = D.MkVar var ((\(v,ty') -> (v,Just (embed ty'))) <$> args) (Just (embed ty)) (embed body)
+  embed (T.MkVar var args ty body) = D.MkVar var (embed <$> args) (Just (embed ty)) (embed body)
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 

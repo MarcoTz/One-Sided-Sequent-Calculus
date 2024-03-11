@@ -18,9 +18,13 @@ data PolVar = MkPolVar !TypeVar !Pol
 
 data Pol = Pos | Neg 
   deriving (Eq,Ord)
-flipPol :: Pol -> Pol 
-flipPol Pos = Neg 
-flipPol Neg = Pos 
+
+class FlipPol a where 
+  flipPol :: a -> a 
+
+instance FlipPol Pol where
+  flipPol Pos = Neg 
+  flipPol Neg = Pos 
 
 multPol :: Pol -> Pol -> Pol 
 multPol Pos Pos = Pos 

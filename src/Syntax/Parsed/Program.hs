@@ -8,9 +8,9 @@ import Data.Map qualified as M
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl  = MkData   {declName   :: !TypeName, declArgs  :: ![PolVar],   dataPol   :: !Pol, declXtors :: ![XtorSig]} 
-data VarDecl   = MkVar    {varName    :: !Variable, varArgs   :: ![(Variable, Maybe Ty)], varBody   :: !Term}
-data AnnotDecl = MkAnnot  {annotName  :: !Variable, annotType :: !Ty} 
+data DataDecl  = MkData   {declName   :: !TypeName, declArgs  :: ![PolVar],    dataPol   :: !Pol, declXtors :: ![XtorSig]} 
+data VarDecl   = MkVar    {varName    :: !Variable, varArgs   :: ![MTypedVar], varBody   :: !Term}
+data AnnotDecl = MkAnnot  {annotName  :: !Variable, annotType :: !PolTy} 
 newtype Import = MkImport {importName :: Modulename }
 
 data Program = MkProgram { 

@@ -46,7 +46,7 @@ genConstraintsTerm (D.Var v) = do
        return (T.Var v tyV) 
      Just ty -> return (T.Var v ty)
 
-genConstraintsTerm (D.Mu v _mpol c) = do 
+genConstraintsTerm (D.Mu v  c) = do 
   tyV <- freshTyVar Pos 
   addVar v tyV
   c' <- genConstraintsCmd c

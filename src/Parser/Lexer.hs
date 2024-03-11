@@ -44,6 +44,9 @@ sc = L.space space1 parseComment empty
 parsePol :: Parser Pol 
 parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
 
+parseCommaSep :: Parser ()
+parseCommaSep = parseSymbol SymComma>>sc
+
 parseIdentifier :: Parser String
 parseIdentifier = do
   ident <- some alphaNumChar

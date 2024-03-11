@@ -53,10 +53,10 @@ desugarVar (P.MkVar v args t) = do
 desugarAnnot :: P.AnnotDecl -> DesugarM () 
 desugarAnnot (P.MkAnnot v ty) = do 
   D.MkVar _ args mty t <- getDoneVar v
-  ty' <- desugarTy ty
+  ty' <- desugarPolTy ty
   case mty of 
     Nothing -> addVar (D.MkVar v args (Just ty') t)
-    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
+    Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed . fst $ ty'') (embed . fst $ ty') "desugarAnnot")
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do

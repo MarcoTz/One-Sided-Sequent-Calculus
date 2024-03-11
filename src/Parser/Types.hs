@@ -23,16 +23,6 @@ parseTyParens = do
   parseSymbol SymParensC
   return ty
 
---parseTyForall :: Parser Ty
---parseTyForall = do 
---  parseKeyword KwForall <|> parseKeyword Kwforall
---  sc
---  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> sc)
---  sc
---  parseSymbol SymDot
---  sc 
---  TyForall vars <$> parseTy
-
 parseTyDecl :: Parser Ty
 parseTyDecl = do
   tyn <- parseTypeName 
@@ -59,13 +49,11 @@ parseTyCo = do
   sc
   TyCo <$> parseTy
 
-
-parseVariableTy :: Parser (Variable, Maybe Ty)
-parseVariableTy = try (do 
-  v <- parseVariable
+parsePolTy :: Parser PolTy
+parsePolTy = do 
+  ty <- parseTy
   sc 
   parseSymbol SymColon
   sc 
-  ty <- parseTy
-  return (v, Just ty)) 
-  <|> (,Nothing) <$> parseVariable
+  pol <- parsePol
+  return (ty, pol)

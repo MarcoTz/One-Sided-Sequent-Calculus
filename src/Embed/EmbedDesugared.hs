@@ -10,16 +10,21 @@ import Syntax.Parsed.Program     qualified as P
 import Syntax.Parsed.Types       qualified as P
 
 import Data.Map qualified as M
-import Data.Bifunctor (second)
 
 
 instance Embed D.Term P.Term where 
   embed (D.Var v) = P.Var v
-  embed (D.Mu v mpol c) = P.Mu v mpol (embed c)
+  embed (D.Mu v c) = P.Mu v (embed c)
   embed (D.Xtor nm args) = P.Xtor nm (embed <$> args)
   embed (D.XCase pts) = P.XCase (embed <$> pts)
   embed (D.ShiftPos t) = P.ShiftPos (embed t)
   embed (D.ShiftNeg v c) = P.ShiftNeg v (embed c)
+
+instance Embed D.TypedVar P.MTypedVar where 
+  embed (v,ty) = (v,Just . embed $ ty)
+instance Embed D.MTypedVar P.MTypedVar where 
+  embed (v,Just ty)= (v,Just . embed $ ty)
+  embed (v,Nothing) = (v,Nothing)
 
 instance Embed D.Pattern P.Pattern where 
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)
@@ -33,8 +38,7 @@ instance Embed D.DataDecl P.DataDecl where
   embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
 
 instance Embed D.VarDecl P.VarDecl where 
-  embed (D.MkVar var args _ body) = P.MkVar var (second (embed <$>) <$> args) (embed body)
-
+  embed (D.MkVar var args _ body) = P.MkVar var (embed <$> args) (embed body)
 
 instance Embed D.Program P.Program where 
   embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) []
@@ -47,6 +51,8 @@ instance Embed D.Program P.Program where
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
 
+instance Embed D.PolTy P.PolTy  where 
+  embed (ty,pol) = (embed ty,pol)
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)

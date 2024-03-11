@@ -20,22 +20,9 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Map qualified as M
 
-
-checkTerm :: D.Term -> D.Ty -> CheckM T.Term
-
---checkTerm t (T.TyForall tyvars ty) = do 
---  setForall tyvars 
---  t' <- checkTerm t ty
---  case t' of 
---    T.Var v ty' -> return $ T.Var v (T.TyForall tyvars ty')
---    T.Mu v c ty' -> return $ T.Mu v c (T.TyForall tyvars ty')
---    T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyForall tyvars ty') 
---    T.XCase pts ty' -> return $ T.XCase pts (T.TyForall tyvars ty')
---    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyForall tyvars ty')
---    T.Lam v c ty' -> return $ T.Lam v c (T.TyForall tyvars ty') 
---
-checkTerm t (D.TyCo ty) = do 
-  t' <- checkTerm t ty
+checkTerm :: D.Term -> T.Ty -> CheckM T.Term
+checkTerm t (T.TyCo ty) = do 
+  t' <- checkTerm t (flipPol ty)
   case t' of 
     T.Var v ty' -> return $ T.Var v (T.TyCo ty')
     T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyCo ty')
@@ -48,50 +35,53 @@ checkTerm (D.Var v) ty = do
   vars <- gets checkVars
   mdecl <- lookupMVar v
   case (M.lookup v vars,mdecl) of 
-    (Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
-    (Just ty',_) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
-    (_,Just (T.MkVar _ _ ty' _)) -> if embed ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
+    (Nothing,Nothing)   -> throwError (ErrMissingVar v "checkTerm Var")
+    (Just ty',_) -> 
+      if ty' == ty then return (T.Var v ty') 
+      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
+    (_,Just (T.MkVar _ _ ty' _)) -> if ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
 
-checkTerm (D.Mu v mpol c) ty = do
-  ty' <- checkType ty mpol
-  addVar v ty'
+checkTerm (D.Mu v c) ty = do
+  addVarPol v ty
   c' <- checkCommand c
-  return (T.Mu v c' ty')
+  return (T.Mu v c' ty)
 
-checkTerm (D.Xtor xtn xtargs) (D.TyDecl tyn tyargs) = do 
+checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' _ <- lookupXtorDecl xtn 
+  unless (pol' == pol) $ throwError (ErrKind ShouldEq "checkTerm Xtor")
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm Xtor")
-  tyargsZipped <- zipWithError tyargs (Just . getKind <$> argVars) (ErrTyArity tyn "checkTerm xtor")
-  tyargs' <- forM tyargsZipped (uncurry checkType)
+  tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTyArity tyn "checkTerm xtor")
+  unless (all (uncurry (==)) tyargsZipped) $ throwError (ErrKind ShouldEq "checkTerm Xtor")
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
-  varmap <- M.fromList <$> zipWithError argVars tyargs' (ErrTyArity tyn "checkTerm Xtor")
+  varmap <- M.fromList <$> zipWithError argVars tyargs (ErrTyArity tyn "checkTerm Xtor")
   let xtargs'' = T.substTyVars varmap <$> xtargs'
-  xtArgsZipped <- zipWithError xtargs (embed <$> xtargs'') (ErrXtorArity xtn "checkTerm Xtor")
+  xtArgsZipped <- zipWithError xtargs xtargs'' (ErrXtorArity xtn "checkTerm Xtor")
   xtargs''' <- forM xtArgsZipped (uncurry checkTerm)
-  let newTy = T.TyDecl tyn tyargs' pol'
-  return (T.Xtor xtn xtargs''' newTy)
+  return (T.Xtor xtn xtargs''' ty)
 
-checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do 
+checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
+  unless (pol' /= pol) $ throwError (ErrKind ShouldNeq "checkTerm XCase")
   unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
-  tyArgsZipped <- zipWithError tyargs (Just . getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
-  tyargs' <- forM tyArgsZipped (uncurry checkType)
+  tyArgsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
+  unless (all (uncurry (==)) tyArgsZipped) $ throwError (ErrKind ShouldEq "checkTerm XCase")
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
-  varmap <- M.fromList <$> zipWithError argVars tyargs' (ErrTyArity tyn "checkTerm XCase")
+  varmap <- M.fromList <$> zipWithError argVars tyargs (ErrTyArity tyn "checkTerm XCase")
   pts' <- forM pts (`checkPattern` varmap)
-  let newTy = T.TyDecl tyn tyargs' (flipPol pol')
-  return $ T.XCase pts' newTy 
+  return $ T.XCase pts' ty 
   where 
     checkPattern :: D.Pattern -> M.Map PolVar T.Ty -> CheckM T.Pattern 
     checkPattern (D.MkPattern xtn vars c) varmap = do
       T.MkXtorSig _ xtargs <- lookupXtor xtn
       let xtargs' = T.substTyVars varmap <$> xtargs
       argsZipped <- zipWithError vars xtargs' (ErrXtorArity xtn "checkTerm XCase" )
-      forM_ argsZipped (uncurry addVar)
+      currVars <- gets checkVars
+      let newVars = foldr (\(v,ty') m -> M.insert v ty' m)  currVars argsZipped 
+      modify (MkCheckState newVars . checkTyVars) 
       c' <- checkCommand c
-      forM_ vars remVar
+      modify (MkCheckState currVars . checkTyVars)
       return $ T.MkPattern xtn vars c'
 
 -- tyshift is not in desugared yet
@@ -102,7 +92,6 @@ checkTerm (D.XCase pts@(pt1:_)) (D.TyDecl tyn tyargs) = do
 --    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyShift ty') 
 --    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) "checkTerm Shift")
 
--- tyshift is not in desugared yet
 --checkTerm (D.Lam v c) (T.TyShift ty) = do 
 --  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
 --  addVar v ty
@@ -114,16 +103,20 @@ checkTerm t ty = throwError (ErrTypeAmbig t ("checkterm other, type to check "<>
 
 checkCommand :: D.Command -> CheckM T.Command
 checkCommand (D.Cut t pol u) = do 
-  ty <- getTyCommand t u 
-  t' <- checkTerm t ty
-  u' <- checkTerm u ty
+  ty <- getTyCommand t u
+  ty' <- checkType ty pol 
+  ty'' <- checkType ty (flipPol pol)
+  t' <- checkTerm t ty'
+  u' <- checkTerm u ty''
   let pol1 = getKind t' 
   let pol2 = getKind u'
   when (pol1 == pol2) $ throwError (ErrKind ShouldNeq "checkCommand cut")
   return $ T.Cut t' pol u'
 checkCommand (D.CutAnnot t ty pol u) = do
-  t' <- checkTerm t ty 
-  u' <- checkTerm u  ty 
+  ty' <- checkType ty pol
+  ty'' <- checkType ty (flipPol pol)
+  t' <- checkTerm t ty' 
+  u' <- checkTerm u  ty'' 
   let pol1 = getKind t' 
   let pol2 = getKind u' 
   when (pol1 == pol2) $ throwError (ErrKind ShouldNeq "checkCommand annot")

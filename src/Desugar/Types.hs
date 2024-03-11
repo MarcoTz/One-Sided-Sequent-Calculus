@@ -5,8 +5,10 @@ import Errors
 import Desugar.Definition
 import Environment qualified as Env
 import Syntax.Parsed.Types    qualified as P
+import Syntax.Parsed.Terms    qualified as P
 import Syntax.Parsed.Program  qualified as P
 import Syntax.Desugared.Types qualified as D
+import Syntax.Desugared.Terms qualified as D
 
 import Control.Monad
 import Control.Monad.Except
@@ -22,19 +24,16 @@ desugarTy (P.TyVar v) = do
     case find (\(MkPolVar v' _) -> v'==v) (P.declArgs currDecl) of 
       Nothing -> throwError (ErrMissingDecl vty "desugarTy")
       Just _ -> return $ D.TyVar v 
-
 desugarTy (P.TyDecl tyn args) = do 
   args' <- forM args desugarTy 
   return $ D.TyDecl tyn args' 
-
 desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
 
-desugarVarTy :: (Variable,Maybe P.Ty) -> DesugarM (Variable, Maybe D.Ty)
-desugarVarTy (v,Nothing) = return (v,Nothing)
-desugarVarTy (v, Just ty) = do 
-  ty' <- desugarTy ty 
-  return (v,Just ty')
+desugarPolTy :: P.PolTy -> DesugarM D.PolTy
+desugarPolTy (ty,pol) = (,pol) <$> desugarTy ty
 
---desugarTy (P.TyForall vars ty) = do 
---  ty' <- desugarTy ty
---  return $ D.TyForall vars ty' 
+desugarVarTy :: P.MTypedVar -> DesugarM D.MTypedVar 
+desugarVarTy (v,Nothing) = return (v,Nothing) 
+desugarVarTy (v, Just ty) = do 
+  ty' <- desugarPolTy ty 
+  return (v,Just ty')
