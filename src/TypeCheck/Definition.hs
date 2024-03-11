@@ -9,10 +9,10 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.Map qualified as M
 
-data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: !(M.Map TypeVar Pol)}
+data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: ![TypeVar]}
 
 initialCheckerState :: CheckerState 
-initialCheckerState = MkCheckState M.empty M.empty 
+initialCheckerState = MkCheckState M.empty []
 
 newtype CheckM a = CheckM { getCheckM :: ReaderT Environment (StateT CheckerState (Except Error)) a }
   deriving newtype (Functor, Applicative, Monad, MonadReader Environment, MonadError Error, MonadState CheckerState)
@@ -25,8 +25,5 @@ runCheckM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) initi
 addVarPol :: Variable -> T.Ty -> CheckM () 
 addVarPol v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
 
-addTyVar :: PolVar -> CheckM () 
-addTyVar (MkPolVar tyv pol) = modify (\s -> MkCheckState (checkVars s) (M.insert tyv pol (checkTyVars s)))
-
-remTyVar :: PolVar -> CheckM () 
-remTyVar (MkPolVar tyv _) = modify (\s -> MkCheckState (checkVars s) (M.delete tyv (checkTyVars s)))
+addTyVar :: TypeVar -> CheckM ()
+addTyVar tyv = modify (\s -> MkCheckState (checkVars s) (tyv:checkTyVars s))

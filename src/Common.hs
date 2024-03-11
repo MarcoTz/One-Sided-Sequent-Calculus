@@ -14,8 +14,6 @@ newtype KindVar  = MkKVar String
   deriving (Eq,Ord)
 data PolVar = MkPolVar !TypeVar !Pol
   deriving (Eq,Ord)
-
-
 data Pol = Pos | Neg 
   deriving (Eq,Ord)
 
@@ -25,13 +23,6 @@ class FlipPol a where
 instance FlipPol Pol where
   flipPol Pos = Neg 
   flipPol Neg = Pos 
-
-multPol :: Pol -> Pol -> Pol 
-multPol Pos Pos = Pos 
-multPol Pos Neg = Neg 
-multPol Neg Pos = Neg 
-multPol Neg Neg = Pos
-
 
 data Kind = MkKind !Pol | MkKindVar !KindVar 
   deriving (Eq)

@@ -11,15 +11,12 @@ import Environment
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
-import Data.Map qualified as M
 
 
 checkType :: D.Ty -> Pol -> CheckM T.Ty
 checkType (D.TyVar v) pol = do
   tyVars <- gets checkTyVars
-  case M.lookup v tyVars of 
-    Nothing -> throwError (ErrMissingTyVar v "checkType TyVar")
-    Just pol' -> if pol' == pol then return (T.TyVar v pol) else  throwError (ErrKind ShouldEq "checkType TyVar")
+  if v `elem` tyVars then return $ T.TyVar v pol else throwError (ErrMissingTyVar v "checkType TyVar")
 
 checkType (D.TyDecl tyn args) pol = do 
    T.MkData _ argVars _  _ <- lookupDecl tyn
@@ -28,6 +25,9 @@ checkType (D.TyDecl tyn args) pol = do
    return $ T.TyDecl tyn args' pol 
 
 checkType (D.TyCo ty) pol = T.TyCo <$> checkType ty (flipPol pol)
+checkType (D.TyForall args ty) pol = do
+  forM_ args addTyVar 
+  T.TyForall args <$> checkType ty pol
 
 checkPolTy :: D.PolTy -> CheckM T.Ty
 checkPolTy (D.TyVar v,pol) = return $ T.TyVar v pol
@@ -37,3 +37,6 @@ checkPolTy (D.TyDecl tyn tyargs,pol) = do
   args' <- forM tyArgsZipped (uncurry checkType)
   return $ T.TyDecl tyn args' pol
 checkPolTy (D.TyCo ty, pol) = T.TyCo <$> checkPolTy (ty, flipPol pol)
+checkPolTy (D.TyForall args ty, pol) = do
+  forM_ args addTyVar
+  T.TyForall args <$> checkPolTy (ty,pol)

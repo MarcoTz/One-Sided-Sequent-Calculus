@@ -10,9 +10,8 @@ import Common
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
-
 parseTy :: Parser Ty 
-parseTy = parseTyParens <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
+parseTy = parseTyParens <|> parseTyForall <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
 
 parseTyParens :: Parser Ty
 parseTyParens = do 
@@ -22,6 +21,16 @@ parseTyParens = do
   sc
   parseSymbol SymParensC
   return ty
+
+parseTyForall :: Parser Ty 
+parseTyForall = do
+  parseKeyword KwForall <|> parseKeyword Kwforall 
+  sc 
+  args <- parseTypeVar `sepBy` parseCommaSep
+  sc 
+  parseSymbol SymDot
+  sc 
+  TyForall args <$> parseTy 
 
 parseTyDecl :: Parser Ty
 parseTyDecl = do

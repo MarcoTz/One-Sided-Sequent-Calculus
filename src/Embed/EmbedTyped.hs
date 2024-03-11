@@ -51,15 +51,12 @@ instance Embed T.Ty D.Ty where
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
   embed (T.TyShift ty)  = embed ty
   embed (T.TyCo ty) = D.TyCo (embed ty)
+  embed (T.TyForall args ty) = D.TyForall args (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
 instance Embed T.Ty D.PolTy where 
-  embed (T.TyVar v knd) = (D.TyVar v, knd)
-  embed (T.TyDecl nm args knd) = (D.TyDecl nm (embed <$> args), knd)
-  embed (T.TyShift ty) = embed ty
-  embed (T.TyCo ty) = (D.TyCo (embed ty), flipPol . getKind $ ty)
-
+  embed ty = (embed ty, getKind ty)
 instance Embed T.TypedVar D.TypedVar where
   embed (v,ty) = (v,embed ty)
 instance Embed T.TypedVar D.MTypedVar where 

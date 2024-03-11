@@ -21,6 +21,17 @@ import Control.Monad.State
 import Data.Map qualified as M
 
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
+checkTerm t (T.TyForall args ty) = do 
+  forM_ args addTyVar 
+  t' <- checkTerm t ty
+  case t' of 
+    T.Var v ty' -> return $ T.Var v (T.TyForall args ty')
+    T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyForall args ty')
+    T.Mu v c ty' -> return $ T.Mu v c (T.TyForall args ty')
+    T.XCase pts ty' -> return $ T.XCase pts (T.TyForall args ty')
+    T.ShiftPos t'' ty' -> return $ T.ShiftPos t'' (T.TyForall args ty')
+    T.ShiftNeg v c ty' -> return $ T.ShiftNeg v c (T.TyForall args ty')
+
 checkTerm t (T.TyCo ty) = do 
   t' <- checkTerm t (flipPol ty)
   case t' of 
