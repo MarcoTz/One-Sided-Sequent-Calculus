@@ -2,14 +2,14 @@ module Bool
 
 import Fun;
 
---Booleans
 data Bool : + { 
   True,
   False
 }
 
-ifthenelse :: Bool:+;
-ifthenelse :=  Mu x. < x | + | case { True => Done, False => Done } >;
+
+ifthenelse :: Forall X. Fun(Bool,Fun(X,Fun(X,X))) : -;
+ifthenelse(b:Bool:+,t1:X:+,t2:X:+) := mu a. <case { True => <t1|+|a>, False =>  <t2|-|b>} | - | b >;
 
 bool1 :: Bool:+;
 bool1 := True;

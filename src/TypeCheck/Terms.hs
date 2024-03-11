@@ -47,10 +47,17 @@ checkTerm (D.Var v) ty = do
   mdecl <- lookupMVar v
   case (M.lookup v vars,mdecl) of 
     (Nothing,Nothing)   -> throwError (ErrMissingVar v "checkTerm Var")
+    (Just (T.TyVar tyv pol),_) -> do
+      unless (pol == getKind ty) $ throwError (ErrKind ShouldEq "checkTerm Var")
+      tyVars <- gets checkTyVars 
+      if tyv `elem` tyVars then return $ T.Var v ty
+      else throwError (ErrMissingTyVar tyv "checkTerm Var")
     (Just ty',_) -> 
       if ty' == ty then return (T.Var v ty') 
-      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
-    (_,Just (T.MkVar _ _ ty' _)) -> if ty' == ty then return (T.Var v ty') else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var, variable " <> show v))
+      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (checkVars), variable " <> show v))
+    (_,Just (T.MkVar _ _ ty' _)) -> 
+      if ty' == ty then return (T.Var v ty') 
+      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (declvars), variable " <> show v))
 
 checkTerm (D.Mu v c) ty = do
   addVarPol v ty
