@@ -32,15 +32,15 @@ instance Embed D.DataDecl P.DataDecl where
   embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
 
 instance Embed D.VarDecl P.VarDecl where 
-  embed (D.MkVar var _ body) = P.MkVar var (embed body)
+  embed (D.MkVar var args _ body) = P.MkVar var args (embed body)
 
 instance Embed D.Program P.Program where 
-  embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) [] M.empty
+  embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) []
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 
-      embedAnnots ((_,D.MkVar _ Nothing _):ds) = embedAnnots ds
-      embedAnnots ((_,D.MkVar v (Just ty) _):ds) = (v,P.MkAnnot v (embed ty)):embedAnnots ds
+      embedAnnots ((_,D.MkVar _ _ Nothing _):ds) = embedAnnots ds
+      embedAnnots ((_,D.MkVar v _ (Just ty) _):ds) = (v,P.MkAnnot v (embed ty)):embedAnnots ds
 
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)

@@ -11,7 +11,7 @@ import Control.Monad.Except
 import Pretty.Common ()
 
 checkVarDecl :: D.VarDecl -> CheckM T.VarDecl
-checkVarDecl (D.MkVar nm (Just ty) t) =  do
+checkVarDecl (D.MkVar nm vars (Just ty) t) =  do
   t' <- checkTerm t ty
-  return $ T.MkVar nm (T.getType t') t'
-checkVarDecl (D.MkVar nm Nothing _) = throwError (ErrMissingType (" Cannot typecheck variable " <> show nm <> " without a type annotation"))
+  return $ T.MkVar nm vars (T.getType t') t'
+checkVarDecl (D.MkVar nm vars Nothing _) = throwError (ErrMissingType (" Cannot typecheck variable " <> show nm <> " without a type annotation"))

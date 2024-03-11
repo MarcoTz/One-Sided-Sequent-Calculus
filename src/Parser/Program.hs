@@ -13,6 +13,8 @@ import Text.Megaparsec.Char
 import Control.Monad
 import Data.Map qualified as M
 
+import Debug.Trace
+
 parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule
@@ -34,32 +36,14 @@ parseProgram = do
       return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
     foldFun prog (MkI imp) = return $ addImportProgram imp prog
-    foldFun prog (MkS sugar) = return $ addSugarProgram sugar prog
 
 
 parseDecl :: Parser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
- (MkS <$> parseSugar)        <|>
  (MkV <$> try parseVarDecl)  <|> 
  (MkA <$> try parseTypeAnnot) 
-
-parseSugar :: Parser SugarDecl 
-parseSugar = do 
-  parseKeyword KwDefine
-  sc 
-  nm <- parseVariable
-  sc
-  args <- parseParens (parseVariable `sepBy` (parseSymbol SymComma >> sc))
-  sc
-  parseSymbol SymColon
-  parseSymbol SymEq 
-  sc 
-  t <- parseTerm
-  parseSymbol SymSemi
-  return (MkSugar nm args t)
-
 
 parseImport :: Parser Import
 parseImport = do
@@ -84,14 +68,21 @@ parseTypeAnnot = do
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
   nm <- parseVariable 
+  trace ("parsed variable " <> show nm) $ return ()
+  sc
+  vars <- optional $ parseParens (parseVariable `sepBy` (parseSymbol SymComma >> sc))
+  trace ("parsed variables " <> show vars) $ return ()
   sc
   parseSymbol SymColon
   parseSymbol SymEq
   sc
   t <- parseTerm
+  trace ("parsed body " <> show t) $ return ()
   sc
   parseSymbol SymSemi
-  return (MkVar nm t)
+  case vars of 
+    Nothing -> return (MkVar nm [] t)
+    Just vars' -> return (MkVar nm vars' t)
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 

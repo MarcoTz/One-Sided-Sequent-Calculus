@@ -5,5 +5,11 @@ data Fun(a:+,b:-):-
   Ap(a,b)
 }
 
-define Lam(x,y) := case { Ap(x,a) => <y | + | a> };
-define App(x,y) := Mu a. <x | + | Ap(y,a)>;
+data Unit : + { 
+  MkUnit
+}
+
+Lam :: Fun(Unit,Unit);
+Lam(x,y) := case { Ap(x,a) => <y | + | a> };
+App :: Unit;
+App(x,y) := Mu a. <x | + | Ap(y,a)>;

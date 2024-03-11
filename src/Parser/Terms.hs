@@ -11,6 +11,7 @@ import Common
 
 import Text.Megaparsec
 
+import Debug.Trace
 import Pretty.Terms() 
 
 parseTerm :: Parser Term
@@ -72,6 +73,7 @@ parseXCase = do
   parseSymbol SymBrackO
   sc
   pts <- parsePattern `sepBy` (parseSymbol SymComma >> sc)
+  trace ("parsed patterns " <> show pts) $ return ()
   sc
   parseSymbol SymBrackC
   sc

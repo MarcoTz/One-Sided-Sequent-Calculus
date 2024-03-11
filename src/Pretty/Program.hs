@@ -32,7 +32,8 @@ instance Show T.DataDecl where
   show = show . (embed :: T.DataDecl -> P.DataDecl)
 
 instance Show P.VarDecl where
-  show (P.MkVar n t) = show n <> " := " <> show t <> ";"
+  show (P.MkVar n [] t) = show n <> ":=" <> show t <> ";"
+  show (P.MkVar n args t) = show n <> "(" <> intercalate ", " (show <$> args) <> ")" <> " := " <> show t <> ";"
 instance Show D.VarDecl where 
   show = show . (embed :: D.VarDecl -> P.VarDecl) 
 instance Show T.VarDecl where 
@@ -44,18 +45,13 @@ instance Show P.AnnotDecl where
 instance Show P.Import where 
   show (P.MkImport mn) = "import " <> show mn
 
-instance Show P.SugarDecl where 
-  show (P.MkSugar nm vars t) = "define " <> show nm <> "(" <> intercalate ", " (show <$> vars) <> ") := " <> show t
-
 instance Show P.Program where 
-  show (P.MkProgram nm decls vars annots imports sugar) = 
+  show (P.MkProgram nm decls vars annots imports) = 
     "module " <> show nm  <>
     "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList annots) <> 
-    "\n\tAnnotations: " <> show (snd <$> M.toList vars) <> 
-    "\n\tSyntactic Sugar: " <> show (snd <$> M.toList sugar)
-
+    "\n\tAnnotations: " <> show (snd <$> M.toList vars) 
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 

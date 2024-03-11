@@ -44,17 +44,17 @@ desugarDecl d@(P.MkData tyn tyargs  pol sigs)= do
   addDecl newD
 
 desugarVar :: P.VarDecl -> DesugarM () 
-desugarVar (P.MkVar v t) = do 
+desugarVar (P.MkVar v args t) = do 
   t' <- desugarTerm t
-  let newV = D.MkVar v Nothing t'
+  let newV = D.MkVar v args Nothing t'
   addVar newV
 
 desugarAnnot :: P.AnnotDecl -> DesugarM () 
 desugarAnnot (P.MkAnnot v ty) = do 
-  D.MkVar _ mty t <- getDoneVar v
+  D.MkVar _ args mty t <- getDoneVar v
   ty' <- desugarTy ty
   case mty of 
-    Nothing -> addVar (D.MkVar v (Just ty') t)
+    Nothing -> addVar (D.MkVar v args (Just ty') t)
     Just ty'' -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig

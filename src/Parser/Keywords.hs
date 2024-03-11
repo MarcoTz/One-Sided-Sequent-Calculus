@@ -3,7 +3,6 @@ module Parser.Keywords where
 data Keyword = 
   KwModule
   | KwData
-  | KwVar
   | Kwmu
   | KwMu
   | KwCase
@@ -13,12 +12,10 @@ data Keyword =
   | KwCo
   | Kwco
   | KwImport
-  | KwDefine
 
 instance Show Keyword where 
   show KwModule = "module"
   show KwData   = "data" 
-  show KwVar    = "var"
   show KwMu     = "Mu"
   show Kwmu     = "mu"
   show KwCase   = "case"
@@ -28,7 +25,6 @@ instance Show Keyword where
   show KwCo     = "Co"
   show Kwco     = "co"
   show KwImport = "import"
-  show KwDefine = "define"
 
 allKws :: [Keyword]
-allKws = [KwModule,KwData,KwVar,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwDefine]
+allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport]

@@ -16,4 +16,4 @@ runFileParser fp p input = case runParser (getParser p) fp input of
   Left err -> Left (ErrParser (show err))
   Right x -> Right x 
 
-data ParseDecl = MkD !DataDecl | MkV !VarDecl | MkA !AnnotDecl | MkI !Import | MkS !SugarDecl
+data ParseDecl = MkD !DataDecl | MkV !VarDecl | MkA !AnnotDecl | MkI !Import 
