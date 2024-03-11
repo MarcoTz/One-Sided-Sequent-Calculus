@@ -70,7 +70,7 @@ parseVarDecl = do
   nm <- parseVariable 
   trace ("parsed variable " <> show nm) $ return ()
   sc
-  vars <- optional $ parseParens (parseVariable `sepBy` (parseSymbol SymComma >> sc))
+  vars <- optional $ parseParens (parseVariableTy `sepBy` (parseSymbol SymComma >> sc))
   trace ("parsed variables " <> show vars) $ return ()
   sc
   parseSymbol SymColon

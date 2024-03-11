@@ -29,6 +29,11 @@ desugarTy (P.TyDecl tyn args) = do
 
 desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
 
+desugarVarTy :: (Variable,Maybe P.Ty) -> DesugarM (Variable, Maybe D.Ty)
+desugarVarTy (v,Nothing) = return (v,Nothing)
+desugarVarTy (v, Just ty) = do 
+  ty' <- desugarTy ty 
+  return (v,Just ty')
 
 --desugarTy (P.TyForall vars ty) = do 
 --  ty' <- desugarTy ty

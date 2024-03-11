@@ -46,7 +46,8 @@ desugarDecl d@(P.MkData tyn tyargs  pol sigs)= do
 desugarVar :: P.VarDecl -> DesugarM () 
 desugarVar (P.MkVar v args t) = do 
   t' <- desugarTerm t
-  let newV = D.MkVar v args Nothing t'
+  args' <- forM args desugarVarTy
+  let newV = D.MkVar v args' Nothing t'
   addVar newV
 
 desugarAnnot :: P.AnnotDecl -> DesugarM () 

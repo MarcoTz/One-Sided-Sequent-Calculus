@@ -49,8 +49,6 @@ parseIdentifier = do
   ident <- some alphaNumChar
   guard (ident `notElem` (show <$> allKws))
   return ident
---  then throwError $ ErrParser ("Identifier " <> ident <> " is reserved") 
---  else return ident
 
 parseModulename :: Parser Modulename
 parseModulename = MkModule <$> parseIdentifier

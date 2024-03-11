@@ -59,9 +59,10 @@ inferProgram mn = do
   forM_ (D.progVars prog'') (inferVarDecl mn)
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
-inferVarDecl mn (D.MkVar n args Nothing t) = do 
+inferVarDecl mn (D.MkVar n _ Nothing t) = do 
   t' <- inferTerm t
-  let newDecl = T.MkVar n args (T.getType t') t'
+  -- this is not yet correct
+  let newDecl = T.MkVar n [] (T.getType t') t'
   addVarDecl mn newDecl
   return newDecl 
 inferVarDecl mn v@(D.MkVar _ _ (Just _) _) = do 

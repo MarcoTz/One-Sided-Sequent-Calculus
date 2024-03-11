@@ -58,3 +58,14 @@ parseTyCo = do
   parseKeyword KwCo <|> parseKeyword Kwco
   sc
   TyCo <$> parseTy
+
+
+parseVariableTy :: Parser (Variable, Maybe Ty)
+parseVariableTy = try (do 
+  v <- parseVariable
+  sc 
+  parseSymbol SymColon
+  sc 
+  ty <- parseTy
+  return (v, Just ty)) 
+  <|> (,Nothing) <$> parseVariable

@@ -10,6 +10,7 @@ import Syntax.Parsed.Program     qualified as P
 import Syntax.Parsed.Types       qualified as P
 
 import Data.Map qualified as M
+import Data.Bifunctor (second)
 
 
 instance Embed D.Term P.Term where 
@@ -32,7 +33,8 @@ instance Embed D.DataDecl P.DataDecl where
   embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
 
 instance Embed D.VarDecl P.VarDecl where 
-  embed (D.MkVar var args _ body) = P.MkVar var args (embed body)
+  embed (D.MkVar var args _ body) = P.MkVar var (second (embed <$>) <$> args) (embed body)
+
 
 instance Embed D.Program P.Program where 
   embed (D.MkProgram nm decls vars) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) []
