@@ -7,20 +7,30 @@ data Bool : + {
   False
 }
 
+not :: Fun(Bool,Bool) : + ;
+not := case { Ap(b,a) => 
+  <case {
+    True  => <False | + | a>,
+    False => <True  | + | a>
+  } | - | b>
+};
 
-ifthenelse :: Forall X Y. Fun(Bool,Fun(X,Y)): +;
-ifthenelse := 
-  case { Ap(b,a) => 
-    <case { 
-      True => 
-        < case { Ap(t1,c) => <t1| + | c> } | + | a >,
-      False => 
-        < case { Ap(t2,d) => <t2| + | d> } | + | a > 
-      }
-    | - | b >}; 
+and :: Fun(Bool,Fun(Bool,Bool)) : +;
+and := case { Ap(b1,a) =>
+  < case { Ap(b2,b) => 
+    < case {
+      True => <b2|+|b>,
+      False => <False|+|b>
+    } | - | b1 > 
+  } | + | a>
+};
 
-bool1 :: Bool:+;
-bool1 := True;
-
-bool2 :: Bool:+;
-bool2 := False;
+or :: Fun(Bool,Fun(Bool,Bool)) : +;
+or := case { Ap(b1,a) => 
+  < case { Ap(b2, b) => 
+    < case { 
+      True  => <True|+|b>,
+      False => <b2  |+|b> 
+    } | - | b1> 
+  } | + | a> 
+};

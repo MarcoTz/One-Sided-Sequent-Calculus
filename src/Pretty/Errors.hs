@@ -10,8 +10,8 @@ instance Show Error where
   show (ErrBadPattern xts wh)           = "Malformed pattern " <> intercalate ", " (show <$> xts) <> " " <> wh
   show (ErrXtorArity xtn wh)            = " Wrong number of arguments for xtor " <> show xtn  <> " " <> wh
   show (ErrTyArity ty wh)               = "Wrong number of arguments for " <> show ty <>  " " <> wh
-  show (ErrKind ShouldEq wh)            = "Kinds are not equal " <> wh
-  show (ErrKind ShouldNeq wh)           = "Kinds are not different " <> wh
+  show (ErrKind ShouldEq ty1 ty2 wh)    = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " should be equal, but are different " <> wh
+  show (ErrKind ShouldNeq ty1 ty2 wh)   = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " should be different, but are equal " <> wh
   show (ErrTypeNeq ty1 ty2 wh)          = show ty1 <> " != " <> show ty2 <> " " <> wh
   show (ErrMissingDecl tyn wh)          = "Type " <> show tyn <> " was not defined " <> wh
   show (ErrDuplDecl tyn wh)             = "Type " <> show tyn <> " was defined multiple times " <> wh

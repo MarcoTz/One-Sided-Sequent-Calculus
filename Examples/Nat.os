@@ -1,12 +1,21 @@
 module Nat 
 
+import Fun;
+
 data Nat:+ { 
   Z,
   S(Nat)
 }
 
-nat1 :: Nat:+;
-nat1 := S(S(Z));
 
-nat2 :: Nat:-;
-nat2 := case { Z => Done, S(n) => Done};
+succ :: Fun(Nat,Nat) : +;
+succ := case { Ap(n,a) => <S(n) | + | a> };
+
+-- recursive 
+--pred :: Fun(Nat,Nat) : + ;
+--pred := case { Ap(n,a) => 
+--  <  case {
+--    Z => <Z|+|a>,
+--    S(m) => <mu b. <pred | + | Ap(m,b)> |+|a>
+--  } | - | n> 
+--};

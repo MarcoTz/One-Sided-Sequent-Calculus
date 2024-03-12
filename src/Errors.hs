@@ -11,7 +11,7 @@ data Error =
    ErrXtorArity       !XtorName !String
    | ErrBadPattern    ![XtorName] !String
    | ErrTyArity       !TypeName !String
-   | ErrKind          !KindReason !String
+   | ErrKind          !KindReason !T.Ty !T.Ty !String
    | ErrTypeNeq       !P.Ty !P.Ty !String
    | ErrNotTyDecl     !TypeName !T.Ty !String
    | ErrNotTyShift    !T.Ty !String

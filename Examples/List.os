@@ -1,6 +1,6 @@
 module List
 
-import Bool; 
+import Fun;
 
 -- Lists
 data List(a:+) : + {
@@ -9,8 +9,20 @@ data List(a:+) : + {
 }
 
 
-exList :: List(Bool):+;
-exList := Cons(True,Cons(False,Nil));
+tail :: forall X. Fun(List(X),List(X)) : +;
+tail := case { Ap(ls,a) => 
+  < case { 
+    Nil         => <Nil | + | a>,
+    Cons(hd,rs) => <rs  | + | a>
+  } | - | ls> 
+};
 
-head :: Bool:-;
-head := mu x. <Cons(True,Cons(True,Nil)) | List(Bool) | + | case { Nil => < True | + | x >, Cons(a,b) => <a | + | x> } >;
+--recursive definitions not implemented yet
+--len :: forall X. Fun(List(X),Nat):+;
+--len := case { Ap(ls,a) => 
+--  < case {
+--    Nil => <Z|+|a>,
+--    Cons(l1,lrs) => 
+--      <S ( mu b. <len | + | Ap(lrs,b)> ) | + | a>
+--  } | - | ls>
+--};

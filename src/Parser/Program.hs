@@ -13,6 +13,7 @@ import Text.Megaparsec.Char
 import Control.Monad
 import Data.Map qualified as M
 
+
 parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule
