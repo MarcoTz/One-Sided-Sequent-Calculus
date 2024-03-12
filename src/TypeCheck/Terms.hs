@@ -20,6 +20,8 @@ import Control.Monad.Except
 import Control.Monad.State
 import Data.Map qualified as M
 
+import Debug.Trace
+
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 checkTerm t (T.TyForall args ty) = do 
   forM_ args addTyVar 
@@ -48,6 +50,7 @@ checkTerm (D.Var v) ty = do
   case (M.lookup v vars,mdecl) of 
     (Nothing,Nothing)   -> throwError (ErrMissingVar v "checkTerm Var")
     (Just (T.TyVar tyv pol),_) -> do
+      trace ("checking variable " <> show v <> " : " <> show ty <> " found type " <> show tyv <> " : " <> show pol) $ return ()
       unless (pol == getKind ty) $ throwError (ErrKind ShouldEq "checkTerm Var")
       tyVars <- gets checkTyVars 
       if tyv `elem` tyVars then return $ T.Var v ty
@@ -55,7 +58,7 @@ checkTerm (D.Var v) ty = do
     (Just ty',_) -> 
       if ty' == ty then return (T.Var v ty') 
       else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (checkVars), variable " <> show v))
-    (_,Just (T.MkVar _ _ ty' _)) -> 
+    (_,Just (T.MkVar _ ty' _)) -> 
       if ty' == ty then return (T.Var v ty') 
       else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (declvars), variable " <> show v))
 

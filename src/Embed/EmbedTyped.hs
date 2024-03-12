@@ -63,7 +63,7 @@ instance Embed T.TypedVar D.MTypedVar where
   embed (v,ty) = (v,Just . embed $ ty)
 
 instance Embed T.VarDecl D.VarDecl where 
-  embed (T.MkVar var args ty body) = D.MkVar var (embed <$> args) (Just (embed ty)) (embed body)
+  embed (T.MkVar var ty body) = D.MkVar var (Just (embed ty)) (embed body)
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 

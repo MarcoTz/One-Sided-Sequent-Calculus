@@ -32,8 +32,7 @@ instance Show T.DataDecl where
   show = show . (embed :: T.DataDecl -> P.DataDecl)
 
 instance Show P.VarDecl where
-  show (P.MkVar n [] t) = show n <> ":=" <> show t <> ";"
-  show (P.MkVar n args t) = show n <> "(" <> intercalate ", " (show <$> args) <> ")" <> " := " <> show t <> ";"
+  show (P.MkVar n t) = show n <> ":=" <> show t <> ";"
 instance Show D.VarDecl where 
   show = show . (embed :: D.VarDecl -> P.VarDecl) 
 instance Show T.VarDecl where 

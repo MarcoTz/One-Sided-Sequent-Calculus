@@ -59,13 +59,12 @@ inferProgram mn = do
   forM_ (D.progVars prog'') (inferVarDecl mn)
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
-inferVarDecl mn (D.MkVar n _ Nothing t) = do 
+inferVarDecl mn (D.MkVar n Nothing t) = do 
   t' <- inferTerm t
-  -- this is not yet correct
-  let newDecl = T.MkVar n [] (T.getType t') t'
+  let newDecl = T.MkVar n (T.getType t') t'
   addVarDecl mn newDecl
   return newDecl 
-inferVarDecl mn v@(D.MkVar _ _ (Just _) _) = do 
+inferVarDecl mn v@(D.MkVar _ (Just _) _) = do 
   env <- gets drvEnv
   debug ("checking variable declaration " <> show v) 
   let v' = runCheckM env (checkVarDecl v)

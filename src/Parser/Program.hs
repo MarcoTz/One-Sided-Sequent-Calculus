@@ -67,17 +67,13 @@ parseVarDecl :: Parser VarDecl
 parseVarDecl = do 
   nm <- parseVariable 
   sc
-  vars <- optional $ parseParens (parseMTypedVar `sepBy` parseCommaSep)
-  sc
   parseSymbol SymColon
   parseSymbol SymEq
   sc
   t <- parseTerm
   sc
   parseSymbol SymSemi
-  case vars of 
-    Nothing -> return (MkVar nm [] t)
-    Just vars' -> return (MkVar nm vars' t)
+  return (MkVar nm t)
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 
