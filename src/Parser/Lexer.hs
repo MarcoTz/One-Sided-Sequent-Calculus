@@ -57,7 +57,7 @@ parseModulename :: Parser Modulename
 parseModulename = MkModule <$> parseIdentifier
 
 parseVariable :: Parser Variable
-parseVariable = MkVar <$>  parseIdentifier
+parseVariable = MkVariable <$>  parseIdentifier
 
 parseXtorName :: Parser XtorName 
 parseXtorName = MkXtorName <$> parseIdentifier 

@@ -5,14 +5,14 @@ import Files
 import Errors
 import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
-import Syntax.Desugared.Terms    qualified as D
 import Syntax.Desugared.Program  qualified as D
-import Syntax.Typed.Terms        qualified as T
 import Syntax.Typed.Program      qualified as T
-import Syntax.Typed.Substitution qualified as T
 
 import Parser.Definition (runFileParser)
 import Parser.Program (parseProgram)
+
+import Dependencies.Definition
+import Dependencies.ImportsGraph (depOrderModule)
 
 import Desugar.Definition (runDesugarM)
 import Desugar.Program (desugarProgram)
@@ -20,10 +20,6 @@ import Desugar.Program (desugarProgram)
 import TypeCheck.Definition
 import TypeCheck.Program (checkVarDecl) 
 
-import TypeInference.GenerateConstraints.Definition (runGenM)
-import TypeInference.GenerateConstraints.Terms (genConstraintsCmd, genConstraintsTerm)
-import TypeInference.SolveConstraints.Definition (runSolveM)
-import TypeInference.SolveConstraints.Solver (solve)
 import TypeInference.InferDecl (runDeclM, inferDecl)
 
 import Pretty.Terms ()
@@ -34,66 +30,64 @@ import Pretty.Environment ()
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad
+import Data.List (elemIndex,sortBy)
 
+inferModule :: Modulename -> DriverM () 
+inferModule mn = do 
+  debug ("loading module " <> show mn) 
+  prog <- loadProgram mn
+  inferProgram prog
 
-inferProgram :: Modulename -> DriverM () 
-inferProgram mn = do 
-  loaded <- gets drvLoaded
-  when (mn `elem` loaded) $ throwError (ErrDuplModule mn "Driver inferProgram")
-  progCont <- loadModule mn
-  debug ("Inferring module " <> show mn)
-  let progParser = runFileParser "" parseProgram progCont
-  prog <- liftErr progParser
-  addLoaded mn
-  debug ("successfully parsed program: \n" <> show prog <> "\n") 
-  forM_ (P.importName <$> P.progImports prog) inferProgram
+loadProgram :: Modulename -> DriverM P.Program
+loadProgram mn = do
+  debug ("parsing module " <> show mn)
+  progText <- loadModule mn
+  let progParsed = runFileParser "" parseProgram progText
+  liftErr progParsed
+
+getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
+getInferOrder mn progs = do
+  let progList = foldr (\(P.MkProgram mn' _ _ _ imps) ls -> (mn',imps):ls) [] progs 
+  let order = runDepM (depOrderModule mn progList)
+  order' <- liftErr order 
+  let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
+  return $ sortBy indexFun progs
+
+inferProgram :: P.Program -> DriverM () 
+inferProgram prog = do
+  let mn = P.progName prog
+  let imports = (\(P.MkImport mn') -> mn') <$> P.progImports prog
+  debug ("loading imports " <> show imports)
+  deps <- forM imports loadProgram
+  debug "ordering imports"
+  depsOrdered <- getInferOrder mn deps
+  debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
+  forM_ depsOrdered inferProgram
+  debug ("infering program " <> show mn) 
+  D.MkProgram mn' decls vars <- desugarProg prog
+  forM_ decls (inferDataDecl mn')
+  forM_ vars (inferVarDecl mn)
+
+desugarProg :: P.Program -> DriverM D.Program 
+desugarProg prog = do
+  debug ("desugaring program " <> show (P.progName prog))
   env <- gets drvEnv
-  let prog' = runDesugarM env mn (desugarProgram prog)
-  prog'' <- liftErr prog'
-  debug "sucessfully desugared program"
-  forM_ (D.progDecls prog'') (\d -> do 
-    let inferred = runDeclM (inferDecl d)
-    inferred' <- liftErr inferred
-    addDecl mn inferred')
-  debug "inferred declarations sucessfully"
-  forM_ (D.progVars prog'') (inferVarDecl mn)
+  let prog' = runDesugarM env (P.progName prog) (desugarProgram prog)
+  liftErr prog'
+
+inferDataDecl :: Modulename -> D.DataDecl -> DriverM () 
+inferDataDecl mn decl = do 
+  debug ("infering declaration " <> show (D.declName decl)) 
+  let decl' = runDeclM (inferDecl decl)
+  decl'' <- liftErr decl'
+  addDecl mn decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
-inferVarDecl mn (D.MkVar n Nothing t) = do 
-  t' <- inferTerm t
-  let newDecl = T.MkVar n (T.getType t') t'
-  addVarDecl mn newDecl
-  return newDecl 
-inferVarDecl mn v@(D.MkVar _ (Just _) _) = do 
+inferVarDecl _ (D.MkVar _ Nothing _) = throwError (ErrMissingType "inferVarDecl, type inference not implemented yet")
+inferVarDecl mn v@(D.MkVar vn (Just _) _) = do 
+  debug ("type checking variable " <> show vn)
   env <- gets drvEnv
-  debug ("checking variable declaration " <> show v) 
   let v' = runCheckM env (checkVarDecl v)
   v'' <- liftErr v' 
   addVarDecl mn v''
   return v''
-
-inferCommand :: D.Command -> DriverM T.Command
-inferCommand c = do 
-  env <- gets drvEnv
-  debug ("Inferring " <> show c)
-  (c',ctrs) <- liftErr (runGenM env (genConstraintsCmd c))
-  debug (show ctrs)
-  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug ("Substitutions " <> show varmap)
-  debug ("\t" <> show kndmap)
-  let c'' = T.substTyVars varmap c'
-  return c''
-
-inferTerm :: D.Term -> DriverM T.Term
-inferTerm t = do 
-  env <- gets drvEnv 
-  debug (" Inferring " <> show t)
-  (t',ctrs) <- liftErr (runGenM env (genConstraintsTerm t))
-  debug (show ctrs) 
-  (_,varmap,kndmap) <- liftErr (runSolveM ctrs solve)
-  debug ("Substitutions " <> show varmap)
-  debug ("\t" <> show kndmap)
-  let t'' = T.substTyVars varmap t'
-  debug ("Final Type : " <> show (T.getType t''))
-  return t''
-

@@ -8,7 +8,7 @@ newtype TypeVar  = MkTypeVar String
   deriving (Eq,Ord)
 newtype TypeName = MkTypeName String 
   deriving (Eq,Ord)
-newtype Variable = MkVar String
+newtype Variable = MkVariable String
   deriving (Eq,Ord)
 newtype KindVar  = MkKVar String
   deriving (Eq,Ord)

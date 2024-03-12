@@ -46,6 +46,10 @@ library lang
                     Parser.Types,
                     Parser.Terms,
 
+                    Dependencies.Definition,
+                    Dependencies.ImportsGraph,
+                    Dependencies.VariablesGraph,
+
                     Desugar.Definition,
                     Desugar.Terms,
                     Desugar.Program,

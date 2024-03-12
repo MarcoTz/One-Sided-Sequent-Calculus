@@ -28,4 +28,4 @@ instance FreeVars Command where
   freeVars Done = S.empty
 
 freshVar :: Int -> S.Set Variable -> Variable 
-freshVar n vars = let newV = MkVar ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV
+freshVar n vars = let newV = MkVariable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV

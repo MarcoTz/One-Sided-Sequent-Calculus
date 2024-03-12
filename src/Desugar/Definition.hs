@@ -29,7 +29,7 @@ runDesugarM env nm m = case runExcept (runStateT (runReaderT (getDesugarM m) env
   Right (x,_) ->  Right x 
 
 varToXtor :: Variable -> XtorName
-varToXtor (MkVar v) = MkXtorName v
+varToXtor (MkVariable v) = MkXtorName v
 
 tyvarToTyName :: TypeVar -> TypeName
 tyvarToTyName (MkTypeVar v) = MkTypeName v

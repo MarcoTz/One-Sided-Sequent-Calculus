@@ -13,7 +13,7 @@ instance Show KindVar where
   show (MkKVar kv) = kv
 
 instance Show Variable where 
-  show (MkVar v) = v
+  show (MkVariable v) = v
 
 instance Show XtorName where 
   show (MkXtorName xtn) = xtn 
