@@ -11,8 +11,9 @@ import Common
 
 import Text.Megaparsec
 
+
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> parseShift <|> parseLam <|> try parseXtor <|> parseVar
+parseTerm = parseMu <|> parseXCase <|> parseShiftPos <|> parseShiftNeg <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
 parseVar = Var <$> parseVariable 
@@ -70,15 +71,15 @@ parseXCase = do
   sc
   return (XCase pts)
 
-parseShift :: Parser Term 
-parseShift = do 
+parseShiftPos :: Parser Term 
+parseShiftPos = do 
   parseSymbol SymBrackO
   t <- parseTerm
   parseSymbol SymBrackC
   return (ShiftPos t)
 
-parseLam :: Parser Term
-parseLam = do 
+parseShiftNeg :: Parser Term
+parseShiftNeg = do 
   parseSymbol SymBrackO
   sc
   v <- parseVariable 

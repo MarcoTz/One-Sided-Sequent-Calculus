@@ -8,16 +8,16 @@ data Bool : + {
 }
 
 
-ifthenelse :: Forall X. Fun(Bool,X) : -;
+ifthenelse :: Forall X Y. Fun(Bool,Fun(X,Y)): +;
 ifthenelse := 
   case { Ap(b,a) => 
     <case { 
       True => 
-        < case { Ap(t1,c) => <t1|c> } | + | a >,
+        < case { Ap(t1,c) => <t1| + | c> } | + | a >,
       False => 
-        < case { Ap(t1,d) => <t2|d> } | + | a > 
+        < case { Ap(t2,d) => <t2| + | d> } | + | a > 
       }
-    | + | b >}; 
+    | - | b >}; 
 
 bool1 :: Bool:+;
 bool1 := True;

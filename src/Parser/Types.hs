@@ -26,7 +26,7 @@ parseTyForall :: Parser Ty
 parseTyForall = do
   parseKeyword KwForall <|> parseKeyword Kwforall 
   sc 
-  args <- parseTypeVar `sepBy` parseCommaSep
+  args <- parseTypeVar `sepBy` space1 
   sc 
   parseSymbol SymDot
   sc 
