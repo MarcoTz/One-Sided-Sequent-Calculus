@@ -1,5 +1,6 @@
 module Eval.Eval where 
 
+import Eval.Definition
 import Syntax.Typed.Terms
 import Syntax.Typed.Program
 import Syntax.Typed.Substitution 
@@ -9,19 +10,18 @@ import Environment
 import Errors
 
 import Control.Monad.Except
-import Control.Monad.Reader
-
-
-newtype EvalM a = MkEvalM { getEvalM :: ReaderT Environment (Except Error) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError Error, MonadReader Environment)
-
-runEvalM :: Environment -> EvalM a -> Either Error a
-runEvalM env m = runExcept (runReaderT (getEvalM m) env)
 
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
 coTrans (Cut t pol u) = Cut u (flipPol pol) t
 coTrans Done = Done
+
+eval :: Command -> EvalM Command 
+eval c = do
+  c' <- evalOnce c
+  case c' of 
+    Done -> return Done
+    _c'' -> if c == c' then return c else eval c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Cut (Var v _) pol u) = do

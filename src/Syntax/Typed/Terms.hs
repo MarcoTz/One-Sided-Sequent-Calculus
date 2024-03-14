@@ -8,8 +8,10 @@ type TypedVar = (Variable,Ty)
 data Command = 
   Cut !Term !Pol !Term
   | Done
+  deriving (Eq)
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
+  deriving (Eq)
 
 data Term = 
   Var !Variable !Ty
@@ -18,6 +20,7 @@ data Term =
   | XCase ![Pattern] !Ty
   | ShiftPos !Term !Ty
   | ShiftNeg !Variable !Command !Ty
+  deriving (Eq)
 
 getType :: Term -> Ty
 getType (Var _ ty)    = ty

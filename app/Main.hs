@@ -30,5 +30,5 @@ run nm = do
   res <- runDriverM st (runModule (MkModule nm))
   case res of 
     Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> show err <> colorDefault)
-    Right _  -> putStrLn (colorSuccess <> "Successfully inferred program " <> nm <> colorDefault)
-
+    Right (Nothing,_) -> putStrLn (colorSuccess <> "Successfully inferred program " <> nm <> colorDefault)
+    Right (Just c,_) -> putStrLn (colorSuccess <> "Successfully ran program " <> nm <> "\nwith result "<> show c <> colorDefault)

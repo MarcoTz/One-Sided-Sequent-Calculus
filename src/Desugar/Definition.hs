@@ -7,6 +7,7 @@ import Embed.Definition
 import Embed.EmbedTyped ()
 import Syntax.Typed.Program     qualified as T
 import Syntax.Desugared.Program qualified as D
+import Syntax.Desugared.Terms   qualified as D
 import Syntax.Parsed.Program    qualified as P
 
 import Control.Monad.State
@@ -75,3 +76,6 @@ addDecl decl = modify (\s -> MkDesugarState (desCurrDecl s) (D.addDeclProgram de
 
 addVar :: D.VarDecl -> DesugarM ()
 addVar var = modify (\s -> MkDesugarState (desCurrDecl s) (D.addVarProgram var (desDone s)))
+
+setMain :: D.Command -> DesugarM () 
+setMain m = modify (\s -> MkDesugarState (desCurrDecl s) (D.setMainProgram m (desDone s)))

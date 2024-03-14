@@ -8,6 +8,7 @@ import Desugar.Types
 import Embed.Definition
 import Embed.EmbedDesugared ()
 import Syntax.Parsed.Program    qualified as P
+import Syntax.Parsed.Terms      qualified as P
 import Syntax.Desugared.Program qualified as D
 
 import Control.Monad.Except
@@ -33,6 +34,7 @@ desugarProgram prog = do
   forM_ decls desugarDecl 
   forM_ (P.progVars prog) desugarVar
   forM_ (P.progAnnots prog) desugarAnnot
+  desugarMain (P.progMain prog)
   gets desDone
     
 
@@ -61,3 +63,9 @@ desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do
   args' <- forM args desugarTy
   return (D.MkXtorSig xtn args')
+
+desugarMain :: Maybe P.Command -> DesugarM  ()
+desugarMain Nothing = return ()
+desugarMain (Just c) = do 
+  c' <- desugarCommand c 
+  setMain c'

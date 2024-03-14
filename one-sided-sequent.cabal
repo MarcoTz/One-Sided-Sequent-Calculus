@@ -67,6 +67,7 @@ library lang
                     TypeInference.Constraints,
                     TypeInference.InferDecl,
 
+                    Eval.Definition,
                     Eval.Eval,
                     
                     Embed.Definition,

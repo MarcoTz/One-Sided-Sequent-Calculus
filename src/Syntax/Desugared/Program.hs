@@ -27,3 +27,6 @@ addDeclProgram decl (MkProgram nm dat vars main) = MkProgram nm (M.insert (declN
 
 addVarProgram :: VarDecl -> Program -> Program
 addVarProgram var (MkProgram nm dat vars main) = MkProgram nm dat (M.insert (varName var) var vars) main
+
+setMainProgram :: Command -> Program -> Program 
+setMainProgram c (MkProgram nm dat vars _) = MkProgram nm dat vars (Just c)

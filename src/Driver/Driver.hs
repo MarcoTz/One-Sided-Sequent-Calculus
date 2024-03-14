@@ -26,7 +26,8 @@ import TypeCheck.Terms (checkCommand)
 
 import TypeInference.InferDecl (runDeclM, inferDecl)
 
-import Eval.Eval
+import Eval.Definition (runEvalM)
+import Eval.Eval (eval)
 
 import Pretty.Terms ()
 import Pretty.Program ()
@@ -40,7 +41,7 @@ import Data.List (elemIndex,sortBy)
 import Data.Map qualified as M
 
 
-runModule :: Modulename ->  DriverM () 
+runModule :: Modulename ->  DriverM (Maybe T.Command) 
 runModule mn = do
   prog <- inferModule mn
   runProgram prog
@@ -93,13 +94,12 @@ inferProgram prog = do
   main' <- forM main inferCommand
   return (T.MkProgram mn decls' varMap main')
 
-runProgram :: T.Program -> DriverM () 
-runProgram (T.MkProgram _ _ _ Nothing) = return ()
+runProgram :: T.Program -> DriverM (Maybe T.Command)
+runProgram (T.MkProgram _ _ _ Nothing) = return Nothing
 runProgram (T.MkProgram _ _ _ (Just c)) = do
   env <- gets drvEnv
-  let evaled = runEvalM env (evalOnce c)
-  _ <- liftErr evaled
-  return ()
+  let evaled = runEvalM env (eval c)
+  Just <$> liftErr evaled
 
 desugarProg :: P.Program -> DriverM D.Program 
 desugarProg prog = do
