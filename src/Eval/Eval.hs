@@ -22,10 +22,11 @@ eval c = do
   c' <- evalOnce c
   case c' of 
     Done -> return Done
-    _c'' -> if c == c' then return c else eval c'
+    _c'' -> if c == c'  || coTrans c == c' then return c else eval c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err err) = return $ Err err
+-- substitute variables 
 evalOnce (Cut (Var v _) pol u) = do
   t <- lookupVar v
   return $ Cut (varBd t) pol u
@@ -33,24 +34,19 @@ evalOnce (Cut t pol (Var v _)) = do
   u <- lookupVar v 
   return $ Cut t pol (varBd u)
 -- beta mu
-evalOnce s@(Cut t pol (Mu v c _)) = if isValue pol t then return $ substVar c t v else return s
+evalOnce (Cut t pol (Mu v c _)) | isValue pol t =   return $ substVar c t v
 -- beta shift 
 evalOnce (Cut (ShiftPos t _) Pos (ShiftNeg v c _)) = return $ substVar c t v
 -- beta K
-evalOnce s@(Cut (Xtor nm args _) _ (XCase pats _)) = 
-  if all (isValue Pos) args then do 
-    pt <- findXtor nm pats
-    substCase pt args 
-  else return s
+evalOnce (Cut (Xtor nm args _) _ (XCase pats _)) | all (isValue Pos) args = do 
+  pt <- findXtor nm pats
+  substCase pt args 
 -- eta K
-evalOnce s@(Cut t pol (Xtor nm args ty)) = 
-  if isValue pol t 
-  then do
-    let frV = freshVar 0 (freeVars s)
-    case splitArgs args pol of 
-      (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ) ty)) ty)
-      (_, Nothing,_) -> return s
-  else return s
+evalOnce s@(Cut t pol (Xtor nm args ty)) | isValue pol t && not (all (isValue pol) args) = do
+  let frV = freshVar 0 (freeVars s)
+  case splitArgs args pol of 
+    (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ) ty)) ty)
+    (_, Nothing,_) -> return s
   where
     splitArgs :: [Term] -> Pol -> ([Term],Maybe Term,[Term])
     splitArgs [] _ = ([],Nothing,[])
@@ -60,8 +56,7 @@ evalOnce s@(Cut t pol (Xtor nm args ty)) =
         case t' of 
           Nothing -> (vals,Nothing,rst)
           Just t'' ->(vals,Just t,t'':rst)
--- if no other rule applies, swap producer and consumer
-evalOnce cmd = evalOnce (coTrans cmd)
+evalOnce cmd = evalOnce (coTrans cmd) 
 
 substCase :: Pattern -> [Term] -> EvalM Command
 --MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}

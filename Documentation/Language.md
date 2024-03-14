@@ -82,6 +82,7 @@ For example, given a data type `Bool` of booleans with constructors `True` and `
 This way, a case of `Bool` used as a producer is actually a cocase of the dual type `co Bool`.
 
 When a type is used to annotate a term or cut, it always needs to be followed by `: +/-` to indicate whether a type or its dual type is used.
+The polarity after a cut annotation refers to the polarity of the first term in the cut, that is `<t|ty:+|+|u>` requires `t` to be a producer and `<t|ty:=|+|u>` requires `t` to be a comsumer.
 
 ## Programs 
 
