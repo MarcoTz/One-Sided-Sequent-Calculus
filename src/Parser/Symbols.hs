@@ -15,6 +15,7 @@ data Sym =
   | SymAngC
   | SymBar
   | SymDot
+  | SymQuot
 
 instance Show Sym where 
   show SymParensO = "("
@@ -31,4 +32,5 @@ instance Show Sym where
   show SymAngC    = ">"
   show SymBar     = "|"
   show SymDot     = "."
+  show SymQuot    = "\""
 

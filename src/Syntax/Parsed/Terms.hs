@@ -7,6 +7,7 @@ type MTypedVar = (Variable,Maybe PolTy)
 data Command = 
   Cut !Term !Pol !Term
   | CutAnnot !Term !PolTy !Pol !Term
+  | Err !String
   | Done
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
@@ -18,3 +19,4 @@ data Term =
   | XCase ![Pattern]
   | ShiftPos !Term
   | ShiftNeg !Variable !Command
+

@@ -10,6 +10,7 @@ data Command =
   Cut !Term !Pol !Term
   | CutAnnot !Term !PolTy !Pol !Term
   | Done
+  | Err !String
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
 

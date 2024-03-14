@@ -8,6 +8,7 @@ type TypedVar = (Variable,Ty)
 data Command = 
   Cut !Term !Pol !Term
   | Done
+  | Err !String
   deriving (Eq)
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}

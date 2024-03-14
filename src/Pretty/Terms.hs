@@ -36,6 +36,8 @@ instance Show P.Command where
   show (P.Cut t pol u) = "<" <> show t <> " | " <> show pol <> " | " <> show u <> ">"
   show (P.CutAnnot t ty pol u) = "<" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u <> ">"
   show P.Done = "Done"
+  show (P.Err err) = "error " <> err
+
 instance Show D.Command where 
   show = show . (embed :: D.Command -> P.Command)
 instance Show T.Command where 

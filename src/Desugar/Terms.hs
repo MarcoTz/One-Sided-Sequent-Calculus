@@ -46,3 +46,4 @@ desugarCommand (P.CutAnnot t ty pol u) = do
   ty' <- desugarPolTy ty 
   return $ D.CutAnnot t' ty' pol u'
 desugarCommand P.Done = return D.Done
+desugarCommand (P.Err str) = return $ D.Err str

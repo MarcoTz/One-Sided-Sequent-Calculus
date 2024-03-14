@@ -72,6 +72,7 @@ instance SubstTyVars Pattern where
 instance SubstTyVars Command where 
   substTyVars varmap (Cut t pol u) = Cut (substTyVars varmap t) pol (substTyVars varmap u) 
   substTyVars _ Done = Done
+  substTyVars _ (Err err) = Err err
 
 --------------------------------
 -- Term Variable Substitution --
@@ -120,3 +121,4 @@ instance Subst Term where
 instance Subst Command where 
   substVar (Cut t1 pol t2) t3 v = Cut (substVar t1 t3 v) pol (substVar t2 t3 v)
   substVar Done _ _ = Done
+  substVar (Err err) _ _ = Err err

@@ -35,6 +35,7 @@ genConstraintsCmd (D.Cut t pol u) = do
     return (T.Cut t' pol u')
 genConstraintsCmd (D.CutAnnot t _ pol u) = genConstraintsCmd (D.Cut t pol u)
 genConstraintsCmd D.Done = return T.Done
+genConstraintsCmd (D.Err err) = return $ T.Err err
   
 genConstraintsTerm :: D.Term -> GenM T.Term 
 genConstraintsTerm (D.Var v) = do 

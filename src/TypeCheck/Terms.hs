@@ -138,6 +138,7 @@ checkCommand (D.CutAnnot t ty pol u) = do
   when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (T.getType t') (T.getType u') "checkCommand annot")
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
+checkCommand (D.Err err) = return $ T.Err err
 
 getTyCommand :: D.Term -> D.Term -> CheckM T.Ty 
 getTyCommand (D.Var v) _ = do 

@@ -15,6 +15,7 @@ import Control.Monad.Except
 coTrans :: Command -> Command
 coTrans (Cut t pol u) = Cut u (flipPol pol) t
 coTrans Done = Done
+coTrans (Err err) = Err err
 
 eval :: Command -> EvalM Command 
 eval c = do
@@ -24,6 +25,7 @@ eval c = do
     _c'' -> if c == c' then return c else eval c'
 
 evalOnce :: Command -> EvalM Command
+evalOnce (Err err) = return $ Err err
 evalOnce (Cut (Var v _) pol u) = do
   t <- lookupVar v
   return $ Cut (varBd t) pol u

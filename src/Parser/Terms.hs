@@ -10,7 +10,8 @@ import Syntax.Parsed.Types
 import Common
 
 import Text.Megaparsec
-
+import Data.Functor
+import Data.Text qualified as T
 
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> parseShiftPos <|> parseShiftNeg <|> try parseXtor <|> parseVar
@@ -39,20 +40,11 @@ parseXtor = do
   parseSymbol SymParensC 
   return $ Xtor nm args
 
-parsePatternVars :: Parser [Variable]
-parsePatternVars = (do 
-  parseSymbol SymParensO
-  args <- parseVariable `sepBy` (parseSymbol SymComma >> sc)
-  parseSymbol SymParensC 
-  return args)
-  <|>
-  return []
-
 parsePattern :: Parser Pattern 
 parsePattern = do 
   nm <- parseXtorName 
   sc
-  args <- parsePatternVars 
+  args <- parseParens (parseVariable `sepBy` parseCommaSep) <|> sc $> []
   sc
   parseSymbol SymEq 
   parseSymbol SymAngC
@@ -90,6 +82,7 @@ parseShiftNeg = do
   sc
   ShiftNeg v <$> parseCommand
 
+
 parseMTypedVar :: Parser MTypedVar 
 parseMTypedVar = try (do 
   var <- parseVariable 
@@ -103,7 +96,7 @@ parseMTypedVar = try (do
 
 
 parseCommand :: Parser Command 
-parseCommand = parseCut <|> parseDone
+parseCommand = parseCut <|> parseDone <|> parseErr
 
 parseCut :: Parser Command
 parseCut = do 
@@ -148,3 +141,13 @@ parseTyBarPol = do
 
 parseDone :: Parser Command
 parseDone = parseKeyword KwDone  >> return Done
+
+parseErr :: Parser Command 
+parseErr = do 
+  parseKeyword KwError
+  sc 
+  parseSymbol SymQuot
+  msg <- T.unpack <$> takeWhileP (Just "character") (/= '"')
+  parseSymbol SymQuot
+  sc
+  return (Err msg)

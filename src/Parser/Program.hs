@@ -15,7 +15,6 @@ import Control.Monad
 import Data.Map qualified as M
 import Data.Maybe (isNothing)
 
-
 parseProgram :: Parser Program 
 parseProgram = do 
   parseKeyword KwModule

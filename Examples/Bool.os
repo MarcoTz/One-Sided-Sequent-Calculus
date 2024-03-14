@@ -24,7 +24,7 @@ and := case { Ap(b1,a) =>
     } | - | b1 > 
   } | + | a>
 };
-
+ 
 or :: Fun(Bool,Fun(Bool,Bool)) : +;
 or := case { Ap(b1,a) => 
   < case { Ap(b2, b) => 

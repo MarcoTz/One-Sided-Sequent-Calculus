@@ -18,6 +18,15 @@ tail := case { Ap(ls,a) =>
   } | - | ls> 
 };
 
+head :: forall X. Fun(List(X),X) : +;
+head := case { Ap(ls,a) => 
+  < case { 
+    Nil         => error "cannot take head of empty list",
+    Cons(hd,rs) => <hd  | + | a>
+  } | - | ls> 
+};
+
+
 --recursive definitions not implemented yet
 --len :: forall X. Fun(List(X),Nat):+;
 --len := case { Ap(ls,a) => 
