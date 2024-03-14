@@ -27,4 +27,4 @@ instance Show Error where
   show (ErrTypeAmbig t wh)              = "Type of term " <> show t <> " is unclear "  <> wh
   show (ErrMissingType str)             = "Missing type: " <> str
   show (ErrModuleNotFound mn str)       = "Module " <> show mn <> " not found " <> str
-  show (ErrDuplModule mn str)           = "Circular imports for module " <> show mn <> str
+  show (ErrDuplModule mn str)           = "Circular imports in module  " <> show mn <> str

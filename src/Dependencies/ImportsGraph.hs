@@ -13,8 +13,9 @@ type DepModule a = DepM Modulename a
 
 depOrderModule :: Modulename -> [(Modulename,[Import])] -> DepModule [Modulename]
 depOrderModule mn m = do
- _<-addVertexM mn
+ v<-addVertexM mn
  createGraph m
+ ensureAcyclic v (ErrDuplModule mn "ensureAcyclic")
  getImportOrder mn
 
 createGraph :: [(Modulename,[Import])] -> DepModule () 
