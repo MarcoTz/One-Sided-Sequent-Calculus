@@ -45,7 +45,9 @@ loadProgram mn = do
   debug ("parsing module " <> show mn)
   progText <- loadModule mn
   let progParsed = runFileParser "" parseProgram progText
-  liftErr progParsed
+  prog <- liftErr progParsed
+  unless (P.progName prog == mn) $ throwError (ErrModuleNotFound mn " wrong module name in file") 
+  return prog
 
 getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
