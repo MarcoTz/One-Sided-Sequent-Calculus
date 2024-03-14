@@ -72,6 +72,7 @@ inferProgram prog = do
   debug ("ordering variables in " <> show mn) 
   let varOrder = runDepM (depOrderProgram prog)
   varOrder' <- liftErr varOrder
+  debug ("inferring variables in order " <> show varOrder')
   let indexFun v1 v2 = compare (elemIndex (D.varName v1) varOrder') (elemIndex (D.varName v2)  varOrder')
   let vars' = sortBy indexFun (snd <$> M.toList vars)
   forM_ vars' (inferVarDecl mn)

@@ -9,12 +9,8 @@ import Control.Monad.State
 import Control.Monad.Except
 
 
-data Vertex a = MkVertex !Int !a
-  deriving (Eq, Show)
-instance Eq a => Ord (Vertex a) where 
-  compare (MkVertex i _) (MkVertex j _) = compare i j
-  (MkVertex i _) <= (MkVertex j _) = i <= j
-
+newtype Vertex a = MkVertex a
+  deriving (Eq, Ord, Show)
 data Edge   a = MkEdge   !(Vertex a) !(Vertex a)
   deriving (Eq, Show) 
 data Graph  a = MkGraph {grVerts :: !(S.Set (Vertex a)), grEdges :: ![Edge a]}
@@ -23,20 +19,19 @@ data Graph  a = MkGraph {grVerts :: !(S.Set (Vertex a)), grEdges :: ![Edge a]}
 emptyGraph :: Graph a 
 emptyGraph = MkGraph S.empty []
 
-addVertex :: Eq a => a -> Graph a -> (Vertex a, Graph a)
+addVertex :: Eq a => Ord a => a -> Graph a -> (Vertex a, Graph a)
 addVertex v gr@(MkGraph verts edges) = 
   case getVertex v gr of 
     Just vert -> (vert,gr)
     Nothing ->  
-      let n = length verts
-          newVert = MkVertex (n+1) v in
+      let newVert = MkVertex v in
       (newVert, MkGraph (S.insert newVert verts) edges)
 
 getVertex :: Eq a => a -> Graph a -> Maybe (Vertex a)
-getVertex lb (MkGraph verts _) = find (\(MkVertex _ lb') -> lb == lb') verts 
+getVertex lb (MkGraph verts _) = find (\(MkVertex lb') -> lb == lb') verts 
 
 getVertexLabel :: Vertex a -> a 
-getVertexLabel (MkVertex _ l) = l
+getVertexLabel (MkVertex l) = l
 
 addEdge :: Eq a => (Vertex a,Vertex a) -> Graph a -> Graph a
 addEdge (a1,a2) gr@(MkGraph verts edges) = 
@@ -58,7 +53,7 @@ getEdgesEndingAt vert (MkGraph _ edges) = filter (\e -> getEndingVert e==vert) e
 newtype DepM a b = DepM { getCheckM :: (StateT (Graph a) (Except Error)) b }
   deriving newtype (Functor, Applicative, Monad, MonadError Error, MonadState (Graph a))
 
-addVertexM :: Eq a => a -> DepM a (Vertex a)
+addVertexM :: Eq a => Ord a => a -> DepM a (Vertex a)
 addVertexM a = do
   gr <- get
   let (newV,gr') = addVertex a gr
