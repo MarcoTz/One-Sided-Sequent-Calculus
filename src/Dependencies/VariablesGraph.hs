@@ -10,8 +10,6 @@ import Control.Monad
 import Control.Monad.State
 import Data.Map qualified as M
 
-import Debug.Trace 
-import Pretty.Common ()
 type DepVar a = DepM Variable a
 
 depOrderProgram :: Program -> DepVar [Variable]
@@ -20,8 +18,6 @@ depOrderProgram (MkProgram mn decls vars _ _) = do
   vertsTerms <- forM vars' addVariable
   let ignore = (\(MkXtorName nm) -> MkVariable nm) . sigName <$> concatMap declXtors decls
   forM_ vertsTerms (\(v,t) -> addEdgesVariableT v ignore t)
-  gr <- get 
-  trace (show gr) $ return ()
   removeSelfLoops
   ensureAcyclic (ErrMutualRec mn "depOrderProgram")
   order <- getVarOrder

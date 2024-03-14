@@ -53,10 +53,10 @@ checkTerm (D.Var v) ty = do
       if tyv `elem` tyVars then return $ T.Var v ty
       else throwError (ErrMissingTyVar tyv "checkTerm Var")
     (Just ty',_) -> 
-      if ty' == ty then return (T.Var v ty') 
+      if T.isSubsumed ty ty' || T.isSubsumed ty' ty then return (T.Var v ty') 
       else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (checkVars), variable " <> show v))
     (_,Just (T.MkVar _ ty' _)) -> 
-      if ty' == ty then return (T.Var v ty') 
+      if T.isSubsumed ty ty' || T.isSubsumed ty' ty then return (T.Var v ty') 
       else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (declvars), variable " <> show v))
 
 checkTerm (D.Mu v c) ty = do
