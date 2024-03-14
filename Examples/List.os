@@ -1,6 +1,7 @@
 module List
 
 import Fun;
+import Unit;
 
 -- Lists
 data List(a:+) : + {
@@ -27,4 +28,4 @@ tail := case { Ap(ls,a) =>
 --  } | - | ls>
 --};
 
-main := <case { Nil => Done, Cons(x,y) => Done } | + | Nil>;
+main := <case { Nil => Done, Cons(x,y) => Done } | List(Unit) | + | Nil>;

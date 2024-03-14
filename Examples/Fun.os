@@ -1,11 +1,8 @@
 module Fun
 
+import Unit;
 data Fun(a:+,b:-):- 
 { Ap(a,b)
-}
-
-data Unit : + { 
-  MkUnit
 }
 
 id :: forall X. Fun(X,X) : +;

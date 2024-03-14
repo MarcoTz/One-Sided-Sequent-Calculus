@@ -23,7 +23,7 @@ parseProgram = do
   sc
   nm <- parseModulename
   sc
-  decls <- manyTill (parseDecl <* sc) eof 
+  decls <- manyTill (parseDecl <* sc) eof
   foldM foldFun (emptyProg nm) decls
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 

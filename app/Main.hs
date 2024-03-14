@@ -26,7 +26,7 @@ run nm = do
   putStrLn  "\n================================\n"
   putStrLn ("=====checking Module " <> nm <> "=====")
   putStrLn  "'\n================================\n"
-  let st = MkDriverState True emptyEnv []
+  let st = MkDriverState True emptyEnv 
   res <- runDriverM st (runModule (MkModule nm))
   case res of 
     Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> show err <> colorDefault)

@@ -3,6 +3,7 @@ module Driver.Driver where
 import Common
 import Files
 import Errors
+import Environment
 import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Program  qualified as D
@@ -38,6 +39,7 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad
 import Data.List (elemIndex,sortBy)
+import Data.Maybe (isNothing)
 import Data.Map qualified as M
 
 
@@ -78,7 +80,9 @@ inferProgram prog = do
   debug "ordering imports"
   depsOrdered <- getInferOrder mn deps
   debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
-  forM_ depsOrdered inferProgram
+  env <- gets drvEnv 
+  let depsOrdered' = filter (\dep -> isNothing $ M.lookup (P.progName dep) (envDefs env)) depsOrdered
+  forM_ depsOrdered' inferProgram
   debug ("desugaring program " <> show mn) 
   D.MkProgram mn' decls vars main <- desugarProg prog
   debug ("inferring declarations in " <> show mn)
