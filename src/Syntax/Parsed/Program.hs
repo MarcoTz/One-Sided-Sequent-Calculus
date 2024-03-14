@@ -18,22 +18,26 @@ data Program = MkProgram {
   progDecls   :: !(M.Map TypeName DataDecl), 
   progVars    :: !(M.Map Variable VarDecl), 
   progAnnots  :: !(M.Map Variable AnnotDecl),
-  progImports :: ![Import]} 
+  progImports :: ![Import],
+  progMain    :: !(Maybe Command)} 
 
 emptyProg :: Modulename -> Program 
-emptyProg mn = MkProgram mn M.empty M.empty M.empty []
+emptyProg mn = MkProgram mn M.empty M.empty M.empty [] Nothing
 
 addDeclProgram :: DataDecl -> Program -> Program 
-addDeclProgram decl (MkProgram mn decls vars annots imports) = MkProgram mn (M.insert (declName decl) decl decls) vars annots imports 
+addDeclProgram decl (MkProgram mn decls vars annots imports main) = MkProgram mn (M.insert (declName decl) decl decls) vars annots imports  main
 
 addVarProgram :: VarDecl -> Program -> Program 
-addVarProgram var (MkProgram mn decls vars annots imports) = MkProgram mn decls (M.insert (varName var) var vars) annots imports 
+addVarProgram var (MkProgram mn decls vars annots imports main) = MkProgram mn decls (M.insert (varName var) var vars) annots imports main
 
 addAnnotProgram :: AnnotDecl -> Program -> Program 
-addAnnotProgram annot (MkProgram mn decls vars annots imports) = MkProgram mn decls vars (M.insert (annotName annot) annot annots) imports
+addAnnotProgram annot (MkProgram mn decls vars annots imports main) = MkProgram mn decls vars (M.insert (annotName annot) annot annots) imports main
 
 addImportProgram :: Import -> Program -> Program
-addImportProgram imp (MkProgram mn decls vars annots imports) = MkProgram mn decls vars annots (imp:imports)
+addImportProgram imp (MkProgram mn decls vars annots imports main) = MkProgram mn decls vars annots (imp:imports) main
+
+setMainProgram :: Command -> Program -> Program
+setMainProgram c (MkProgram mn decls vars annots imports _) = MkProgram mn decls vars annots imports (Just c)
 
 --data RecDecl  = MkRecDecl{recVar  :: !Variable, recTy :: !Ty, recBd :: !Term}
 --data Eps = MkEps 

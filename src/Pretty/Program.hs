@@ -45,12 +45,15 @@ instance Show P.Import where
   show (P.MkImport mn) = "import " <> show mn
 
 instance Show P.Program where 
-  show (P.MkProgram nm decls vars annots imports) = 
+  show (P.MkProgram nm decls vars annots imports Nothing) = 
     "module " <> show nm  <>
     "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList vars) <> 
-    "\n\tAnnotations: " <> show (snd <$> M.toList annots) 
+    "\n\tAnnotations: " <> show (snd <$> M.toList annots)
+  show (P.MkProgram nm decls vars annots imports (Just c)) = 
+    show (P.MkProgram nm decls vars annots imports Nothing) <> 
+    "\n\t Main: "<>show c
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 

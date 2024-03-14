@@ -6,7 +6,9 @@ import Errors
 import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Program  qualified as D
+import Syntax.Desugared.Terms    qualified as D
 import Syntax.Typed.Program      qualified as T
+import Syntax.Typed.Terms        qualified as T
 
 import Parser.Definition (runFileParser)
 import Parser.Program (parseProgram)
@@ -20,8 +22,11 @@ import Desugar.Program (desugarProgram)
 
 import TypeCheck.Definition
 import TypeCheck.Program (checkVarDecl) 
+import TypeCheck.Terms (checkCommand)
 
 import TypeInference.InferDecl (runDeclM, inferDecl)
+
+import Eval.Eval
 
 import Pretty.Terms ()
 import Pretty.Program ()
@@ -34,7 +39,13 @@ import Control.Monad
 import Data.List (elemIndex,sortBy)
 import Data.Map qualified as M
 
-inferModule :: Modulename -> DriverM () 
+
+runModule :: Modulename ->  DriverM () 
+runModule mn = do
+  prog <- inferModule mn
+  runProgram prog
+
+inferModule :: Modulename -> DriverM T.Program
 inferModule mn = do 
   debug ("loading module " <> show mn) 
   prog <- loadProgram mn
@@ -51,13 +62,13 @@ loadProgram mn = do
 
 getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
-  let progList = foldr (\(P.MkProgram mn' _ _ _ imps) ls -> (mn',imps):ls) [] progs 
+  let progList = foldr (\(P.MkProgram mn' _ _ _ imps _) ls -> (mn',imps):ls) [] progs 
   let order = runDepM (depOrderModule mn progList)
   order' <- liftErr order 
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
 
-inferProgram :: P.Program -> DriverM () 
+inferProgram :: P.Program -> DriverM T.Program
 inferProgram prog = do
   let mn = P.progName prog
   let imports = (\(P.MkImport mn') -> mn') <$> P.progImports prog
@@ -68,16 +79,27 @@ inferProgram prog = do
   debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
   forM_ depsOrdered inferProgram
   debug ("desugaring program " <> show mn) 
-  D.MkProgram mn' decls vars <- desugarProg prog
+  D.MkProgram mn' decls vars main <- desugarProg prog
   debug ("inferring declarations in " <> show mn)
-  forM_ decls (inferDataDecl mn')
+  decls' <- forM decls (inferDataDecl mn')
   debug ("ordering variables in " <> show mn) 
   let varOrder = runDepM (depOrderProgram prog)
   varOrder' <- liftErr varOrder
   debug ("inferring variables in order " <> show varOrder')
   let indexFun v1 v2 = compare (elemIndex (D.varName v1) varOrder') (elemIndex (D.varName v2)  varOrder')
   let vars' = sortBy indexFun (snd <$> M.toList vars)
-  forM_ vars' (inferVarDecl mn)
+  vars'' <- forM vars' (inferVarDecl mn)
+  let varMap = M.fromList ((\v -> (T.varName v,v))<$>vars'')
+  main' <- forM main inferCommand
+  return (T.MkProgram mn decls' varMap main')
+
+runProgram :: T.Program -> DriverM () 
+runProgram (T.MkProgram _ _ _ Nothing) = return ()
+runProgram (T.MkProgram _ _ _ (Just c)) = do
+  env <- gets drvEnv
+  let evaled = runEvalM env (evalOnce c)
+  _ <- liftErr evaled
+  return ()
 
 desugarProg :: P.Program -> DriverM D.Program 
 desugarProg prog = do
@@ -86,12 +108,13 @@ desugarProg prog = do
   let prog' = runDesugarM env (P.progName prog) (desugarProgram prog)
   liftErr prog'
 
-inferDataDecl :: Modulename -> D.DataDecl -> DriverM () 
+inferDataDecl :: Modulename -> D.DataDecl -> DriverM T.DataDecl
 inferDataDecl mn decl = do 
   debug ("infering declaration " <> show (D.declName decl)) 
   let decl' = runDeclM (inferDecl decl)
   decl'' <- liftErr decl'
   addDecl mn decl''
+  return decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
 inferVarDecl _ (D.MkVar _ Nothing _) = throwError (ErrMissingType "inferVarDecl, type inference not implemented yet")
@@ -102,3 +125,9 @@ inferVarDecl mn v@(D.MkVar vn (Just _) _) = do
   v'' <- liftErr v' 
   addVarDecl mn v''
   return v''
+
+inferCommand :: D.Command -> DriverM T.Command
+inferCommand c = do 
+  env <- gets drvEnv
+  let c' = runCheckM env (checkCommand c)
+  liftErr c'

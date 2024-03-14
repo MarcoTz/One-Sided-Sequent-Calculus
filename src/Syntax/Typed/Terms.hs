@@ -29,3 +29,11 @@ getType (ShiftNeg _ _ ty)  = ty
 
 instance GetKind Term where 
   getKind t = getKind (getType t)
+
+isValue :: Pol -> Term -> Bool
+isValue Pos (Var _ _ ) = True 
+isValue Pos (Xtor _ args _) = all (isValue Pos) args
+isValue Pos (XCase _ _) = True
+isValue Pos (ShiftPos _ _) = True
+isValue Pos _ = False 
+isValue Neg _ = True

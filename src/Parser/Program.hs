@@ -7,11 +7,13 @@ import Parser.Lexer
 import Parser.Keywords
 import Parser.Symbols
 import Syntax.Parsed.Program
+import Syntax.Parsed.Terms
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Monad
 import Data.Map qualified as M
+import Data.Maybe (isNothing)
 
 
 parseProgram :: Parser Program 
@@ -35,15 +37,32 @@ parseProgram = do
       return $ addVarProgram var prog 
     foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
     foldFun prog (MkI imp) = return $ addImportProgram imp prog
+    foldFun prog (MkM mn) = do 
+      guard (isNothing (progMain prog)) 
+      return $ setMainProgram mn prog
+
 
 
 parseDecl :: Parser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
+ (MkM <$> parseMain)         <|>
  (MkV <$> try parseVarDecl)  <|> 
- (MkA <$> try parseTypeAnnot) 
+ (MkA <$> try parseTypeAnnot)
 
+parseMain :: Parser Command 
+parseMain = do 
+  parseKeyword KwMain <|> parseKeyword Kwmain 
+  sc 
+  parseSymbol SymColon
+  parseSymbol SymEq 
+  sc 
+  c <- parseCommand
+  sc 
+  parseSymbol SymSemi
+  return c
+  
 parseImport :: Parser Import
 parseImport = do
   parseKeyword KwImport

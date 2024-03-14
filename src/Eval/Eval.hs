@@ -1,25 +1,22 @@
 module Eval.Eval where 
 
 import Syntax.Typed.Terms
+import Syntax.Typed.Program
 import Syntax.Typed.Substitution 
 import Syntax.Typed.FreeVars
 import Common
+import Environment
 import Errors
 
 import Control.Monad.Except
+import Control.Monad.Reader
 
 
-newtype EvalM a = MkEvalM { getGenM :: Except Error a }
-  deriving newtype (Functor, Applicative, Monad, MonadError Error)
+newtype EvalM a = MkEvalM { getEvalM :: ReaderT Environment (Except Error) a }
+  deriving newtype (Functor, Applicative, Monad, MonadError Error, MonadReader Environment)
 
-
-isValue :: Pol -> Term -> Bool
-isValue Pos (Var _ _ ) = True 
-isValue Pos (Xtor _ args _) = all (isValue Pos) args
-isValue Pos (XCase _ _) = True
-isValue Pos (ShiftPos _ _) = True
-isValue Pos _ = False 
-isValue Neg _ = True
+runEvalM :: Environment -> EvalM a -> Either Error a
+runEvalM env m = runExcept (runReaderT (getEvalM m) env)
 
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
@@ -27,6 +24,12 @@ coTrans (Cut t pol u) = Cut u (flipPol pol) t
 coTrans Done = Done
 
 evalOnce :: Command -> EvalM Command
+evalOnce (Cut (Var v _) pol u) = do
+  t <- lookupVar v
+  return $ Cut (varBd t) pol u
+evalOnce (Cut t pol (Var v _)) = do 
+  u <- lookupVar v 
+  return $ Cut t pol (varBd u)
 -- beta mu
 evalOnce s@(Cut t pol (Mu v c _)) = if isValue pol t then return $ substVar c t v else return s
 -- beta shift 
@@ -57,7 +60,6 @@ evalOnce s@(Cut t pol (Xtor nm args ty)) =
           Just t'' ->(vals,Just t,t'':rst)
 -- if no other rule applies, swap producer and consumer
 evalOnce cmd = evalOnce (coTrans cmd)
-
 
 substCase :: Pattern -> [Term] -> EvalM Command
 --MkPattern{ptxt :: !String, ptv :: ![Variable], ptcmd :: !Command}

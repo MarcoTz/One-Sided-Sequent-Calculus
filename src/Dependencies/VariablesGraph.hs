@@ -13,7 +13,7 @@ import Data.Map qualified as M
 type DepVar a = DepM Variable a
 
 depOrderProgram :: Program -> DepVar [Variable]
-depOrderProgram (MkProgram mn decls vars _ _) = do 
+depOrderProgram (MkProgram mn decls vars _ _ _) = do 
   let vars' = snd <$> M.toList vars
   vertsTerms <- forM vars' addVariable
   let ignore = (\(MkXtorName nm) -> MkVariable nm) . sigName <$> concatMap declXtors decls

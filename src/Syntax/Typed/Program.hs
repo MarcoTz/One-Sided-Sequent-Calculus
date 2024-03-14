@@ -8,19 +8,23 @@ import Data.Map qualified as M
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
 
-data DataDecl  = MkData {declName :: !TypeName, declArgs :: ![PolVar],   declPol  :: !Pol, declXtors :: ![XtorSig]} 
-data VarDecl   = MkVar  {varName  :: !Variable, varTy    :: !Ty,  varBd     :: !Term}
+data DataDecl  = MkData {declName :: !TypeName, declArgs :: ![PolVar], declPol :: !Pol, declXtors :: ![XtorSig]} 
+data VarDecl   = MkVar  {varName  :: !Variable, varTy    :: !Ty,       varBd   :: !Term}
 
-data Program = MkProgram {progName :: !Modulename, progDecls :: !(M.Map TypeName DataDecl), progVars :: !(M.Map Variable VarDecl) }
+data Program = MkProgram {
+  progName :: !Modulename, 
+  progDecls :: !(M.Map TypeName DataDecl), 
+  progVars :: !(M.Map Variable VarDecl),
+  progMain :: !(Maybe Command)}
 
 emptyProg :: Modulename -> Program
-emptyProg nm = MkProgram nm M.empty M.empty  
+emptyProg nm = MkProgram nm M.empty M.empty Nothing
 
 addDeclProgram :: DataDecl -> Program -> Program
-addDeclProgram decl (MkProgram nm decls vars) = MkProgram nm (M.insert (declName decl) decl decls) vars
+addDeclProgram decl (MkProgram nm decls vars main) = MkProgram nm (M.insert (declName decl) decl decls) vars main
 
 addVarProgram :: VarDecl -> Program -> Program
-addVarProgram var (MkProgram nm decls vars) = MkProgram nm decls (M.insert (varName var) var vars)
+addVarProgram var (MkProgram nm decls vars main) = MkProgram nm decls (M.insert (varName var) var vars) main
 
 
 --not implemented
