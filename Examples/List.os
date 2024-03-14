@@ -26,3 +26,5 @@ tail := case { Ap(ls,a) =>
 --      <S ( mu b. <len | + | Ap(lrs,b)> ) | + | a>
 --  } | - | ls>
 --};
+
+main := <case { Nil => Done, Cons(x,y) => Done } | + | Nil>;
