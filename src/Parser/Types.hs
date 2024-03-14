@@ -64,5 +64,4 @@ parsePolTy = do
   sc 
   parseSymbol SymColon
   sc 
-  pol <- parsePol
-  return (ty, pol)
+  MkPolTy ty <$> parsePol

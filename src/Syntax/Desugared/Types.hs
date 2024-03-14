@@ -10,4 +10,8 @@ data Ty =
   | TyForall ![TypeVar] !Ty
   deriving (Eq)
 
-type PolTy = (Ty,Pol)
+data PolTy = MkPolTy !Ty !Pol
+  deriving (Eq)
+
+instance FlipPol PolTy where 
+  flipPol (MkPolTy ty pol) = MkPolTy ty (flipPol pol) 

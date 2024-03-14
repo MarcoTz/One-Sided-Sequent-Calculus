@@ -56,7 +56,9 @@ instance Embed T.Ty P.Ty where
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
 instance Embed T.Ty D.PolTy where 
-  embed ty = (embed ty, getKind ty)
+  embed ty = D.MkPolTy (embed ty) (getKind ty)
+instance Embed T.Ty P.PolTy where 
+  embed = (embed :: D.PolTy -> P.PolTy) . (embed  :: T.Ty -> D.PolTy)
 instance Embed T.TypedVar D.TypedVar where
   embed (v,ty) = (v,embed ty)
 instance Embed T.TypedVar D.MTypedVar where 

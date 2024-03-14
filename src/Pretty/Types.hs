@@ -10,6 +10,11 @@ import Pretty.Common ()
 
 import Data.List (intercalate)
 
+instance Show P.PolTy where 
+  show (P.MkPolTy ty pol) = show ty<> " : " <> show pol
+instance Show D.PolTy where 
+  show = show . (embed :: D.PolTy -> P.PolTy)
+
 instance Show P.Ty where 
   show (P.TyVar v) = show v 
   show (P.TyDecl nm []) = show nm
@@ -17,9 +22,7 @@ instance Show P.Ty where
   show (P.TyCo ty) = "co " <> show ty
   show (P.TyForall args ty) = "forall " <> intercalate ", " (show <$> args) <> ". " <> show ty
 
---  show (P.TyForall vars ty) = "forall " <> intercalate ", " (show <$> vars) <> ". " <> show ty 
 instance Show D.Ty where 
   show = show . (embed :: D.Ty -> P.Ty)
-
 instance Show T.Ty where 
-  show = show . (embed :: T.Ty -> P.Ty)
+  show = show . (embed :: T.Ty->P.PolTy)

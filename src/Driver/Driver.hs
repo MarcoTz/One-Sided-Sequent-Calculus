@@ -82,7 +82,10 @@ inferProgram prog = do
   debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
   env <- gets drvEnv 
   let depsOrdered' = filter (\dep -> isNothing $ M.lookup (P.progName dep) (envDefs env)) depsOrdered
+  oldDebug <- gets drvDebug
+  setDebug False
   forM_ depsOrdered' inferProgram
+  setDebug oldDebug
   debug ("desugaring program " <> show mn) 
   D.MkProgram mn' decls vars main <- desugarProg prog
   debug ("inferring declarations in " <> show mn)

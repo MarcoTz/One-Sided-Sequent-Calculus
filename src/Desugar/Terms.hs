@@ -43,6 +43,6 @@ desugarCommand (P.Cut t pol u) = do
 desugarCommand (P.CutAnnot t ty pol u) = do
   t' <- desugarTerm t
   u' <- desugarTerm u
-  ty' <- desugarTy ty 
+  ty' <- desugarPolTy ty 
   return $ D.CutAnnot t' ty' pol u'
 desugarCommand P.Done = return D.Done

@@ -19,7 +19,7 @@ instance GetKind Ty where
 
 instance FlipPol Ty where 
   flipPol (TyVar v knd) = TyVar v (flipPol knd)
-  flipPol (TyDecl tyn args knd) = TyDecl tyn (flipPol <$> args) (flipPol knd)
+  flipPol (TyDecl tyn args knd) = TyDecl tyn args (flipPol knd)
   flipPol (TyShift _) = error "Cannot flip polarity of shift"
   flipPol (TyCo ty) = TyCo (flipPol ty)
   flipPol (TyForall args ty) = TyForall args (flipPol ty)

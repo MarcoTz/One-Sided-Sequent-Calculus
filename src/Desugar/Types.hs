@@ -22,7 +22,9 @@ desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
 desugarTy (P.TyForall args ty) = D.TyForall args <$> desugarTy ty
 
 desugarPolTy :: P.PolTy -> DesugarM D.PolTy
-desugarPolTy (ty,pol) = (,pol) <$> desugarTy ty
+desugarPolTy (P.MkPolTy ty pol) = do
+  ty' <- desugarTy ty 
+  return (D.MkPolTy ty' pol)
 
 desugarVarTy :: P.MTypedVar -> DesugarM D.MTypedVar 
 desugarVarTy (v,Nothing) = return (v,Nothing) 

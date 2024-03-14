@@ -41,8 +41,6 @@ parseProgram = do
       guard (isNothing (progMain prog)) 
       return $ setMainProgram mn prog
 
-
-
 parseDecl :: Parser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>

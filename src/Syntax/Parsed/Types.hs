@@ -9,4 +9,4 @@ data Ty =
   | TyCo !Ty
   | TyForall ![TypeVar] !Ty
 
-type PolTy = (Ty,Pol)
+data PolTy = MkPolTy !Ty !Pol

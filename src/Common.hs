@@ -24,6 +24,12 @@ instance FlipPol Pol where
   flipPol Pos = Neg 
   flipPol Neg = Pos 
 
+multPol :: Pol -> Pol -> Pol
+multPol Pos Neg = Neg 
+multPol Neg Pos = Neg 
+multPol Pos Pos = Pos 
+multPol Neg Neg = Pos
+
 data Kind = MkKind !Pol | MkKindVar !KindVar 
   deriving (Eq)
 

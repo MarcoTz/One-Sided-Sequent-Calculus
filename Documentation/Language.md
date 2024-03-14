@@ -81,6 +81,8 @@ The `co` type of a type is what makes the one-sidedness possible, it changes a d
 For example, given a data type `Bool` of booleans with constructors `True` and `False`, the corresponding codata type `co Bool` is defined by destructors `True` and `False`.
 This way, a case of `Bool` used as a producer is actually a cocase of the dual type `co Bool`.
 
+When a type is used to annotate a term or cut, it always needs to be followed by `: +/-` to indicate whether a type or its dual type is used.
+
 ## Programs 
 
 A program has the form 

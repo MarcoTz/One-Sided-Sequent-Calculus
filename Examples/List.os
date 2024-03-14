@@ -28,4 +28,4 @@ tail := case { Ap(ls,a) =>
 --  } | - | ls>
 --};
 
-main := <case { Nil => Done, Cons(x,y) => Done } | List(Unit) | + | Nil>;
+main := <case { Nil => Done, Cons(x,y) => Done } | List(Unit):- | + | Nil>;

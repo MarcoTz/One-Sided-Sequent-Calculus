@@ -52,7 +52,9 @@ instance Embed D.XtorSig P.XtorSig where
   embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
 
 instance Embed D.PolTy P.PolTy  where 
-  embed (ty,pol) = (embed ty,pol)
+  embed (D.MkPolTy ty pol) = P.MkPolTy (embed ty) pol 
+instance Embed D.PolTy P.Ty where 
+  embed (D.MkPolTy ty _) = embed ty
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)

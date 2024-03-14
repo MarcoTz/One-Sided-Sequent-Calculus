@@ -124,22 +124,22 @@ parseCut = do
     Nothing -> return (Cut t pol u)
     Just ty -> return (CutAnnot t ty pol u)
 
-parseCutAnnot :: Parser (Pol,Maybe Ty)
+parseCutAnnot :: Parser (Pol,Maybe PolTy)
 parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
 
-parsePolBarTy :: Parser (Pol, Maybe Ty)
+parsePolBarTy :: Parser (Pol, Maybe PolTy)
 parsePolBarTy = do
   pol <- parsePol 
   sc 
   parseSymbol SymBar
   sc 
-  ty <- parseTy 
+  ty <- parsePolTy 
   notFollowedBy (sc >> parseSymbol SymAngC)
   return (pol,Just ty)
 
-parseTyBarPol :: Parser (Pol,Maybe Ty)
+parseTyBarPol :: Parser (Pol,Maybe PolTy)
 parseTyBarPol = do 
-  ty <- parseTy 
+  ty <- parsePolTy
   sc 
   parseSymbol SymBar 
   sc 

@@ -80,3 +80,4 @@ inferType (D.TyDecl tyn args) = do
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkData _ _ pol _) -> return $ T.TyDecl tyn args' pol
 inferType (D.TyCo ty) = T.TyCo <$> inferType ty
+inferType (D.TyForall _ _ ) = throwError (ErrForallNotAllowed "infertype")
