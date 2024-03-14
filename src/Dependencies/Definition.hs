@@ -7,18 +7,18 @@ import Data.Foldable (find)
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
-import Data.Functor
 
 
 data Vertex a = MkVertex !Int !a
-  deriving (Eq)
+  deriving (Eq, Show)
 instance Eq a => Ord (Vertex a) where 
   compare (MkVertex i _) (MkVertex j _) = compare i j
   (MkVertex i _) <= (MkVertex j _) = i <= j
 
 data Edge   a = MkEdge   !(Vertex a) !(Vertex a)
-  deriving (Eq) 
+  deriving (Eq, Show) 
 data Graph  a = MkGraph {grVerts :: !(S.Set (Vertex a)), grEdges :: ![Edge a]}
+  deriving (Show)
 
 emptyGraph :: Graph a 
 emptyGraph = MkGraph S.empty []
@@ -39,7 +39,9 @@ getVertexLabel :: Vertex a -> a
 getVertexLabel (MkVertex _ l) = l
 
 addEdge :: Eq a => (Vertex a,Vertex a) -> Graph a -> Graph a
-addEdge (a1,a2) (MkGraph verts edges) = MkGraph (S.insert a2 $ S.insert a1 verts)  (MkEdge a1 a2 : edges) 
+addEdge (a1,a2) gr@(MkGraph verts edges) = 
+  if MkEdge a1 a2 `elem` edges then gr else
+  MkGraph verts  (MkEdge a1 a2 : edges) 
 
 getStartingVert :: Edge a -> Vertex a
 getStartingVert (MkEdge v _) = v
@@ -74,14 +76,23 @@ getVertexError lb err = do
 addEdgeM :: Eq a => (Vertex a, Vertex a) -> DepM a () 
 addEdgeM e = modify (addEdge e)
 
-ensureAcyclic :: Eq a => Vertex a -> Error -> DepM a () 
-ensureAcyclic start err = traverseGraph start [] [] $> ()
+removeSelfLoops :: Eq a => DepM a () 
+removeSelfLoops = do 
+  MkGraph verts edgs <- get
+  let newEdgs = filter (\(MkEdge v1 v2) -> v1 /= v2) edgs
+  let gr' = MkGraph verts newEdgs
+  modify (const gr')
+
+ensureAcyclic :: Eq a => Error -> DepM a () 
+ensureAcyclic err = do
+  gr <- get 
+  forM_ (grVerts gr) (\v -> traverseGraph v [] [])
   where 
     traverseGraph :: Eq a => Vertex a -> [Vertex a] -> [Edge a] -> DepM a ([Vertex a],[Edge a])
     traverseGraph startV seenV seenE = do 
       when (startV `elem` seenV) $ throwError err
       gr <- get 
-      let outg = getEdgesEndingAt startV gr
+      let outg = getEdgesStartingAt startV gr
       let outgF = filter (`notElem` seenE) outg
       let newSeenV = startV : seenV
       case outgF of 

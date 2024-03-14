@@ -28,6 +28,7 @@ data Error =
    | ErrParser        !String
    | ErrModuleNotFound !Modulename !String
    | ErrDuplModule    !Modulename !String
+   | ErrMutualRec     !Modulename !String
 
 
 data KindReason = ShouldEq | ShouldNeq

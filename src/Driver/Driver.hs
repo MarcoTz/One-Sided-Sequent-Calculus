@@ -13,6 +13,7 @@ import Parser.Program (parseProgram)
 
 import Dependencies.Definition
 import Dependencies.ImportsGraph (depOrderModule)
+import Dependencies.VariablesGraph (depOrderProgram)
 
 import Desugar.Definition (runDesugarM)
 import Desugar.Program (desugarProgram)
@@ -31,6 +32,7 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad
 import Data.List (elemIndex,sortBy)
+import Data.Map qualified as M
 
 inferModule :: Modulename -> DriverM () 
 inferModule mn = do 
@@ -63,10 +65,16 @@ inferProgram prog = do
   depsOrdered <- getInferOrder mn deps
   debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
   forM_ depsOrdered inferProgram
-  debug ("infering program " <> show mn) 
+  debug ("desugaring program " <> show mn) 
   D.MkProgram mn' decls vars <- desugarProg prog
+  debug ("inferring declarations in " <> show mn)
   forM_ decls (inferDataDecl mn')
-  forM_ vars (inferVarDecl mn)
+  debug ("ordering variables in " <> show mn) 
+  let varOrder = runDepM (depOrderProgram prog)
+  varOrder' <- liftErr varOrder
+  let indexFun v1 v2 = compare (elemIndex (D.varName v1) varOrder') (elemIndex (D.varName v2)  varOrder')
+  let vars' = sortBy indexFun (snd <$> M.toList vars)
+  forM_ vars' (inferVarDecl mn)
 
 desugarProg :: P.Program -> DriverM D.Program 
 desugarProg prog = do
