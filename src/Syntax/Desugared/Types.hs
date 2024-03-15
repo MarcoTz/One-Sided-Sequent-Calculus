@@ -7,6 +7,7 @@ data Ty =
   TyVar !TypeVar
   | TyDecl !TypeName ![Ty] 
   | TyCo !Ty
+  | TyShift !Ty
   | TyForall ![TypeVar] !Ty
   deriving (Eq)
 

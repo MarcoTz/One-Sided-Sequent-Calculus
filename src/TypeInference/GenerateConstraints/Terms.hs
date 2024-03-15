@@ -1,6 +1,5 @@
 module TypeInference.GenerateConstraints.Terms where 
 
-
 import Syntax.Typed.Types 
 import Syntax.Typed.Program
 import Syntax.Desugared.Terms qualified as D
@@ -79,12 +78,12 @@ genConstraintsTerm (D.XCase pts)  = do
 genConstraintsTerm (D.ShiftPos t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
-  if pol /= Pos then throwError (ErrKind  ShouldEq (T.getType t') (TyShift (T.getType t')) "genConstraintsTerm (Shift)") else do 
-    let newT = TyShift (T.getType t')
+  if pol /= Pos then throwError (ErrKind  ShouldEq (T.getType t') (TyShift (T.getType t') Pos) "genConstraintsTerm (Shift)") else do 
+    let newT = TyShift (T.getType t') Pos
     return (T.ShiftPos t' newT)
 genConstraintsTerm (D.ShiftNeg v cmd) = do  
   tyV <- freshTyVar Pos 
   addVar v tyV
   cmd' <- genConstraintsCmd cmd
-  let newT = TyShift tyV 
+  let newT = TyShift tyV Neg
   return (T.ShiftNeg v cmd' newT)

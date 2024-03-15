@@ -49,8 +49,8 @@ unifyTypeConstraint ty1@(TyDecl n1 args1 _) ty2@(TyDecl n2 args2 _)
  | n1 /= n2 = throwError (ErrTypeNeq (embed ty1) (embed ty2) "unifyTypeConstraint (solver)")
  | otherwise = do 
      addConstraintsArgs n1 args1 args2
-unifyTypeConstraint (TyShift ty1) (TyShift ty2) = do 
-  unifyTypeConstraint ty1 ty2
+unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do
+  if knd1 == knd2 then unifyTypeConstraint ty1 ty2 else throwError (ErrKind ShouldEq ty1 ty2 "uniftTypeConstratint")
 unifyTypeConstraint (TyCo ty1) (TyCo ty2) = do 
   unifyTypeConstraint ty1 ty2 
 unifyTypeConstraint ty1 ty2 = throwError (ErrTypeNeq (embed ty1) (embed ty2) "unifypeConstraint (solver)")

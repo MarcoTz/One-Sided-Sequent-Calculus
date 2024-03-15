@@ -19,6 +19,7 @@ desugarTy (P.TyDecl tyn args) = do
   args' <- forM args desugarTy 
   return $ D.TyDecl tyn args' 
 desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
+desugarTy (P.TyShift ty) = D.TyShift <$> desugarTy ty
 desugarTy (P.TyForall args ty) = D.TyForall args <$> desugarTy ty
 
 desugarPolTy :: P.PolTy -> DesugarM D.PolTy

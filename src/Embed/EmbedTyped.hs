@@ -33,6 +33,7 @@ instance Embed T.Pattern P.Pattern where
 instance Embed T.Command D.Command where 
   embed (T.Cut t pol s) = D.CutAnnot (embed t) (embed $ T.getType t) pol (embed s)
   embed T.Done = D.Done
+  embed (T.Err err) = D.Err err
 instance Embed T.Command P.Command where 
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t
 
@@ -49,7 +50,7 @@ instance Embed T.XtorSig P.XtorSig where
 instance Embed T.Ty D.Ty where 
   embed (T.TyVar v _) = D.TyVar v
   embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
-  embed (T.TyShift ty)  = embed ty
+  embed (T.TyShift ty _)  = embed ty
   embed (T.TyCo ty) = D.TyCo (embed ty)
   embed (T.TyForall args ty) = D.TyForall args (embed ty)
 instance Embed T.Ty P.Ty where 

@@ -11,7 +11,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 parseTy :: Parser Ty 
-parseTy = parseTyParens <|> parseTyForall <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
+parseTy = parseTyParens <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
 
 parseTyParens :: Parser Ty
 parseTyParens = do 
@@ -51,6 +51,15 @@ parseTyArgs = (do
 
 parseTyVar :: Parser Ty
 parseTyVar = TyVar <$> parseTypeVar
+
+parseTyShift :: Parser Ty 
+parseTyShift = do 
+  parseSymbol SymBrackO
+  sc
+  ty <- parseTy
+  sc
+  parseSymbol SymBrackC 
+  return (TyShift ty)
 
 parseTyCo :: Parser Ty 
 parseTyCo = do 

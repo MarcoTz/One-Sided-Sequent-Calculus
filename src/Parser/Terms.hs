@@ -14,7 +14,7 @@ import Data.Functor
 import Data.Text qualified as T
 
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> parseShiftPos <|> parseShiftNeg <|> try parseXtor <|> parseVar
+parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
 parseVar = Var <$> parseVariable 

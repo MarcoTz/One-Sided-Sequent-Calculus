@@ -20,6 +20,7 @@ instance Show P.Ty where
   show (P.TyDecl nm []) = show nm
   show (P.TyDecl nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (P.TyCo ty) = "co " <> show ty
+  show (P.TyShift ty) = "{" <> show ty <> "}"
   show (P.TyForall args ty) = "forall " <> intercalate ", " (show <$> args) <> ". " <> show ty
 
 instance Show D.Ty where 

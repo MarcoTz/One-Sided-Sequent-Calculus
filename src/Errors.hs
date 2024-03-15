@@ -29,7 +29,7 @@ data Error =
    | ErrModuleNotFound !Modulename !String
    | ErrDuplModule    !Modulename !String
    | ErrMutualRec     !Modulename !String
-   | ErrForallNotAllowed !String
+   | ErrTyNotAllowed  !P.Ty !String
 
 
 data KindReason = ShouldEq | ShouldNeq

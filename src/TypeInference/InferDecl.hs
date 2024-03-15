@@ -4,6 +4,8 @@ import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types   qualified as D
 import Syntax.Typed.Program     qualified as T
 import Syntax.Typed.Types       qualified as T
+import Embed.Definition
+import Embed.EmbedDesugared ()
 import Errors
 import Common
 
@@ -80,4 +82,5 @@ inferType (D.TyDecl tyn args) = do
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkData _ _ pol _) -> return $ T.TyDecl tyn args' pol
 inferType (D.TyCo ty) = T.TyCo <$> inferType ty
-inferType (D.TyForall _ _ ) = throwError (ErrForallNotAllowed "infertype")
+inferType ty@(D.TyShift _) = throwError (ErrTyNotAllowed (embed ty) "inferType (inferDecl)")
+inferType ty@(D.TyForall _ _ ) = throwError (ErrTyNotAllowed (embed ty) "infertype (inferDecl)")

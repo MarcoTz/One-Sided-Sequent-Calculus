@@ -11,7 +11,6 @@ import Syntax.Parsed.Types       qualified as P
 
 import Data.Map qualified as M
 
-
 instance Embed D.Term P.Term where 
   embed (D.Var v) = P.Var v
   embed (D.Mu v c) = P.Mu v (embed c)
@@ -60,4 +59,6 @@ instance Embed D.Ty P.Ty where
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)
   embed (D.TyCo ty) = P.TyCo (embed ty)
+  embed (D.TyShift ty) = P.TyShift (embed ty)
   embed (D.TyForall vars ty) = P.TyForall vars (embed ty)
+

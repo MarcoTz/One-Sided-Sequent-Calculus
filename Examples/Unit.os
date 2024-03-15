@@ -2,5 +2,8 @@ module Unit
 
 data Unit : + { MkUnit }
 
-test :: Unit : +;
-test := mu a. error "test";
+posU :: {Unit} : +;
+posU := {MkUnit};
+
+negU :: {Unit} : -;
+negU := {x}.<x|+|case {MkUnit => Done }>;

@@ -103,19 +103,16 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
       modify (MkCheckState currVars . checkTyVars)
       return $ T.MkPattern xtn vars c'
 
--- tyshift is not in desugared yet
---checkTerm (D.Shift t) (D.TyShift ty) = do 
---  t' <- checkTerm t ty 
---  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
---  case t' of 
---    T.Shift t'' ty' -> return $ T.Shift t'' (T.TyShift ty') 
---    badTerm -> throwError (ErrNotTyShift (T.getType badTerm) "checkTerm Shift")
+checkTerm (D.ShiftPos t) (T.TyShift ty Pos) = do 
+  t' <- checkTerm t ty 
+  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq (T.getType t') (T.TyShift ty Pos) "checkTerm Shift")
+  return $ T.ShiftPos t' (T.TyShift (T.getType t') Pos)
 
---checkTerm (D.Lam v c) (T.TyShift ty) = do 
---  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq "checkTerm Shift")
---  addVar v ty
---  c' <- checkCommand c
---  return $ T.Lam v c' ty
+checkTerm (D.ShiftNeg v c) (T.TyShift ty Neg) = do 
+  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq ty (flipPol ty) "checkTerm Shift")
+  addVarPol v ty
+  c' <- checkCommand c
+  return $ T.ShiftNeg v c' ty
   
 checkTerm t ty = throwError (ErrTypeAmbig t ("checkterm other, type to check "<> show ty))
 

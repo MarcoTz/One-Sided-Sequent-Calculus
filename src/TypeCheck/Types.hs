@@ -24,6 +24,7 @@ checkType (D.TyDecl tyn args) pol = do
    return $ T.TyDecl tyn args' pol 
 
 checkType (D.TyCo ty) pol = T.TyCo <$> checkType ty (flipPol pol)
+checkType (D.TyShift ty) pol = (`T.TyShift` pol) <$> checkType ty Pos
 checkType (D.TyForall args ty) pol = do
   forM_ args addTyVar 
   T.TyForall args <$> checkType ty pol
@@ -39,3 +40,4 @@ checkPolTy (D.MkPolTy (D.TyCo ty) pol) = T.TyCo <$> checkPolTy (D.MkPolTy ty (fl
 checkPolTy (D.MkPolTy (D.TyForall args ty) pol) = do
   forM_ args addTyVar
   T.TyForall args <$> checkPolTy (D.MkPolTy ty pol)
+checkPolTy (D.MkPolTy (D.TyShift ty) pol) = (`T.TyShift` pol) <$> checkType ty Pos

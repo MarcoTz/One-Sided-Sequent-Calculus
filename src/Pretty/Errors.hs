@@ -29,4 +29,4 @@ instance Show Error where
   show (ErrModuleNotFound mn str)       = "Module " <> show mn <> " not found " <> str
   show (ErrDuplModule mn str)           = "Circular imports in module  " <> show mn <> " " <> str
   show (ErrMutualRec mn str)            = "Mutual Recursive Definition in " <> show mn <>" " <> str
-  show (ErrForallNotAllowed str)        = "Cannot use generalized type here " <> str
+  show (ErrTyNotAllowed ty str)         = "Cannot use type " <> show ty <> " here " <> str
