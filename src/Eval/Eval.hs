@@ -1,9 +1,9 @@
 module Eval.Eval where 
 
 import Eval.Definition
+import Eval.Focusing
 import Syntax.Typed.Terms
 import Syntax.Typed.Substitution 
-import Syntax.Typed.FreeVars
 import Common
 import Environment
 import Errors
@@ -17,11 +17,15 @@ coTrans Done = Done
 coTrans (Err err) = Err err
 
 eval :: Command -> EvalM Command 
-eval c = do
+eval c = let c' = focus c in evalFocused c'
+
+evalFocused :: Command -> EvalM Command 
+evalFocused c = do
   c' <- evalOnce c
   case c' of 
     Done -> return Done
-    _c'' -> if c == c'  || coTrans c == c' then return c else eval c'
+    (Err err) -> return (Err err)
+    _c'' -> evalFocused c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err err) = return $ Err err
@@ -33,28 +37,14 @@ evalOnce (Cut t pol (Var v _)) = do
   u <- lookupBody v 
   return $ Cut t pol u 
 -- beta mu
-evalOnce (Cut t pol (Mu v c _)) | isValue pol t =   return $ substVar c t v
+evalOnce (Cut t pol (Mu v c _)) | isValue pol t = return $ substVar c t v
 -- beta shift 
 evalOnce (Cut (ShiftPos t _) Pos (ShiftNeg v c _)) = return $ substVar c t v
 -- beta K
-evalOnce (Cut (Xtor nm args _) _ (XCase pats _)) | all (isValue Pos) args = do 
+
+evalOnce (Cut (Xtor nm args _) pol (XCase pats _)) | all (isValue pol) args = do 
   pt <- findXtor nm pats
   substCase pt args 
--- eta K
-evalOnce s@(Cut t pol (Xtor nm args ty)) | isValue pol t && not (all (isValue pol) args) = do
-  let frV = freshVar 0 (freeVars s)
-  case splitArgs args pol of 
-    (vals,Just t',ts) -> return $ Cut t Pos (Mu frV (Cut t pol (Xtor nm (vals ++ [t'] ++ ts ) ty)) ty)
-    (_, Nothing,_) -> return s
-  where
-    splitArgs :: [Term] -> Pol -> ([Term],Maybe Term,[Term])
-    splitArgs [] _ = ([],Nothing,[])
-    splitArgs (tm:ts) pl = let (vals,t',rst) = splitArgs ts pl in 
-      if isValue pl tm then (t:vals,t',rst)
-      else 
-        case t' of 
-          Nothing -> (vals,Nothing,rst)
-          Just t'' ->(vals,Just t,t'':rst)
 evalOnce cmd = evalOnce (coTrans cmd) 
 
 substCase :: Pattern -> [Term] -> EvalM Command

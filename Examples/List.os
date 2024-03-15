@@ -10,7 +10,6 @@ data List(a:+) : + {
   Nil
 }
 
-
 tail :: forall X. Fun(List(X),List(X)) : +;
 tail := case { Ap(ls,a) => 
   < case { 
@@ -33,7 +32,7 @@ rec len := case { Ap(ls,a) =>
   < case {
     Nil => <Z|+|a>,
     Cons(l1,lrs) => 
-      <S ( mu b. <len | + | Ap(lrs,b)> ) | + | a>
+     <len | + | Ap(lrs,mu x.<S(x)|+|a>)>
   } | - | ls>
 };
 

@@ -69,6 +69,7 @@ library lang
                     TypeInference.InferDecl,
 
                     Eval.Definition,
+                    Eval.Focusing,
                     Eval.Eval,
                     
                     Embed.Definition,
