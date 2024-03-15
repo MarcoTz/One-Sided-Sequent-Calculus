@@ -29,7 +29,7 @@ head := case { Ap(ls,a) =>
 
 
 len :: forall X. Fun(List(X),Nat):+;
-len := case { Ap(ls,a) => 
+rec len := case { Ap(ls,a) => 
   < case {
     Nil => <Z|+|a>,
     Cons(l1,lrs) => 
@@ -37,4 +37,4 @@ len := case { Ap(ls,a) =>
   } | - | ls>
 };
 
-main := <len | List(Unit):- | + | Ap(Nil,mu x.Done)>;
+main := <len | Fun(List(Nat),Nat):+ | + | Ap(Cons(Z,Nil),mu x.Done)>;

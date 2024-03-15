@@ -44,22 +44,26 @@ checkTerm t (T.TyCo ty) = do
 checkTerm (D.Var v) ty = do
   vars <- gets checkVars
   mdecl <- lookupMVar v
-  case (M.lookup v vars,mdecl) of 
-    (Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
-    (Just (T.TyVar tyv pol),_) -> do
+  mrec <- lookupMRec v
+  case (M.lookup v vars,mdecl,mrec) of 
+    (Nothing,Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
+    (Just (T.TyVar tyv pol),_,_) -> do
       unless (pol == getKind ty) $ throwError (ErrKind ShouldEq (T.TyVar tyv pol) ty "checkTerm Var")
       tyVars <- gets checkTyVars 
       if tyv `elem` tyVars then return $ T.Var v ty
       else throwError (ErrMissingTyVar tyv "checkTerm Var")
-    (Just ty',_) -> 
-      if T.isSubsumed ty ty' || T.isSubsumed ty' ty then return (T.Var v ty') 
-      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (checkVars), variable " <> show v))
-    (_,Just (T.MkVar _ ty' _)) -> 
-      if T.isSubsumed ty ty' || T.isSubsumed ty' ty then return (T.Var v ty') 
-      else throwError (ErrTypeNeq (embed ty') (embed ty) ("checkTerm Var (declvars), variable " <> show v))
+    (Just ty',_,_) -> T.Var v <$> checkTys ty ty'
+    (_,Just (T.MkVar _ ty' _),_) ->  T.Var v <$> checkTys ty ty'
+    (_,_,Just (T.MkRec _ ty' _)) ->  T.Var v <$> checkTys ty ty'
+  where 
+    checkTys :: T.Ty -> T.Ty -> CheckM T.Ty
+    checkTys ty1 ty2 = do
+      unless (getKind ty1 == getKind ty2) $ throwError (ErrKind ShouldEq ty1 ty2 ("checkTerm var " <> show v))
+      if T.isSubsumed ty1 ty2 || T.isSubsumed ty2 ty1 then return ty2
+      else throwError (ErrTypeNeq (embed ty2) (embed ty1) ("checkTerm Var" <> show v))
 
 checkTerm (D.Mu v c) ty = do
-  addVarPol v ty
+  addVarPol v (flipPol ty)
   c' <- checkCommand c
   return (T.Mu v c' ty)
 

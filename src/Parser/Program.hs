@@ -40,12 +40,14 @@ parseProgram = do
     foldFun prog (MkM mn) = do 
       guard (isNothing (progMain prog)) 
       return $ setMainProgram mn prog
+    foldFun prog (MkR rec) = return $ addRecProgram rec prog
 
 parseDecl :: Parser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
  (MkM <$> parseMain)         <|>
+ (MkR <$> parseRecDecl)      <|>
  (MkV <$> try parseVarDecl)  <|> 
  (MkA <$> try parseTypeAnnot)
 
@@ -92,6 +94,13 @@ parseVarDecl = do
   sc
   parseSymbol SymSemi
   return (MkVar nm t)
+
+parseRecDecl :: Parser RecDecl 
+parseRecDecl = do 
+  parseKeyword KwRec
+  sc
+  (MkVar nm t) <- parseVarDecl
+  return (MkRec nm t)
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 

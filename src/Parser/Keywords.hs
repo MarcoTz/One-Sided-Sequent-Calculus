@@ -15,6 +15,7 @@ data Keyword =
   | KwMain
   | Kwmain
   | KwError 
+  | KwRec 
 
 instance Show Keyword where 
   show KwModule = "module"
@@ -31,6 +32,7 @@ instance Show Keyword where
   show KwMain   = "Main"
   show Kwmain   = "main"
   show KwError  = "error"
+  show KwRec    = "rec"
 
 allKws :: [Keyword]
-allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwMain,KwMain,KwError]
+allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwMain,KwMain,KwError,KwRec]

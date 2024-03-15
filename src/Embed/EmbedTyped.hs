@@ -70,7 +70,13 @@ instance Embed T.VarDecl D.VarDecl where
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 
+instance Embed T.RecDecl D.RecDecl where 
+  embed (T.MkRec var ty body) = D.MkRec var (Just (embed ty)) (embed body)
+instance Embed T.RecDecl P.RecDecl where 
+  embed t = (embed :: D.RecDecl -> P.RecDecl) $ (embed :: T.RecDecl -> D.RecDecl) t
+
 instance Embed T.Program D.Program where 
-  embed (T.MkProgram nm decls vars main) = D.MkProgram nm (M.map embed decls) (M.map embed vars) (embed <$> main)
+  embed (T.MkProgram nm decls vars recs main) = 
+    D.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (embed <$> main)
 instance Embed T.Program P.Program where 
   embed t = (embed :: D.Program -> P.Program) $ (embed :: T.Program -> D.Program) t 

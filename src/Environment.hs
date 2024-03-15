@@ -1,6 +1,7 @@
 module Environment where 
 
 import Syntax.Typed.Program 
+import Syntax.Typed.Terms
 import Errors 
 import Common 
 
@@ -26,6 +27,12 @@ addVarEnv nm var (MkEnv defs) =
     Nothing -> let newProg = addVarProgram var (emptyProg nm) in MkEnv (M.insert nm newProg defs) 
     Just prog -> MkEnv (M.insert nm (addVarProgram var prog) defs) 
 
+addRecEnv :: Modulename -> RecDecl -> Environment -> Environment 
+addRecEnv nm rec (MkEnv defs) = 
+  case M.lookup nm defs of 
+    Nothing -> let newProg = addRecProgram rec (emptyProg nm) in MkEnv (M.insert nm newProg defs)
+    Just prog -> MkEnv (M.insert nm (addRecProgram rec prog) defs)
+
 type EnvReader a m = (MonadError Error m, MonadReader Environment m)
 
 getDecls :: EnvReader a m => m (M.Map TypeName DataDecl)
@@ -41,6 +48,13 @@ getVars = do
   let progs = snd <$> M.toList defs
   let vars = M.unions (progVars <$> progs) 
   return vars
+
+getRecs :: EnvReader a m => m (M.Map Variable RecDecl)
+getRecs = do 
+  defs <- asks envDefs 
+  let progs = snd <$> M.toList defs
+  let recs = M.unions (progRecs <$> progs)
+  return recs
 
 lookupMDecl :: EnvReader a m => TypeName -> m (Maybe DataDecl)
 lookupMDecl tyn = M.lookup tyn <$> getDecls
@@ -61,6 +75,25 @@ lookupVar v = do
   case mvar of 
     Nothing -> throwError (ErrMissingVar v "lookupVar (Env)")
     Just decl -> return decl
+
+lookupMRec :: EnvReader a m => Variable -> m (Maybe RecDecl)
+lookupMRec v = M.lookup v <$> getRecs
+
+lookupRec :: EnvReader a m => Variable -> m RecDecl 
+lookupRec v = do 
+  mrec <- lookupMRec v 
+  case mrec of 
+    Nothing -> throwError (ErrMissingVar v "lookupRec (Env)")
+    Just decl -> return decl
+
+lookupBody :: EnvReader a m => Variable -> m Term
+lookupBody v = do 
+  mvar <- lookupMVar v 
+  mrec <- lookupMRec v
+  case (mvar,mrec) of 
+    (Nothing,Nothing) -> throwError (ErrMissingVar v "lookupbody (env)")
+    (Just var,_) -> return (varBody var)
+    (_,Just rec) -> return (recBody rec)
 
 lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
 lookupMXtor xtn = do

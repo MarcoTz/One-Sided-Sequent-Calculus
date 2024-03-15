@@ -40,8 +40,12 @@ instance Embed D.DataDecl P.DataDecl where
 instance Embed D.VarDecl P.VarDecl where 
   embed (D.MkVar var _ body) = P.MkVar var (embed body)
 
+instance Embed D.RecDecl P.RecDecl where 
+  embed (D.MkRec var _ body) = P.MkRec var (embed body)
+
 instance Embed D.Program P.Program where 
-  embed (D.MkProgram nm decls vars main) = P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.fromList . embedAnnots . M.toList $ vars) [] (embed <$> main)
+  embed (D.MkProgram nm decls vars recs main) = 
+    P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (M.fromList . embedAnnots . M.toList $ vars) [] (embed <$> main)
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 

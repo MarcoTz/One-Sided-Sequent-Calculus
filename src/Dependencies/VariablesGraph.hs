@@ -16,11 +16,13 @@ import Data.Maybe (isJust)
 type DepVar a = DepM Variable a
 
 depOrderProgram :: Program -> DepVar [Variable]
-depOrderProgram (MkProgram mn decls vars _ _ _) = do 
+depOrderProgram (MkProgram mn decls vars recs _ _ _) = do 
   let vars' = snd <$> M.toList vars
+  let recs' = snd <$> M.toList recs
   vertsTerms <- forM vars' addVariable
+  recsTerms <- forM recs' addRec
   let ignore = (\(MkXtorName nm) -> MkVariable nm) . sigName <$> concatMap declXtors decls
-  forM_ vertsTerms (\(v,t) -> addEdgesVariableT v ignore t)
+  forM_ (vertsTerms++recsTerms) (\(v,t) -> addEdgesVariableT v ignore t)
   removeSelfLoops
   ensureAcyclic (ErrMutualRec mn "depOrderProgram")
   order <- getVarOrder
@@ -29,6 +31,11 @@ depOrderProgram (MkProgram mn decls vars _ _ _) = do
 addVariable :: VarDecl -> DepVar (Vertex Variable,Term)
 addVariable (MkVar v t) = do
   vert <- addVertexM v
+  return (vert,t)
+
+addRec :: RecDecl -> DepVar (Vertex Variable, Term)
+addRec (MkRec v t) = do 
+  vert <- addVertexM v 
   return (vert,t)
 
 addEdgesVariableT :: Vertex Variable -> [Variable] -> Term -> DepVar ()

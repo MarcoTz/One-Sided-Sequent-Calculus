@@ -27,6 +27,9 @@ addDecl nm decl = modify (\s -> MkDriverState (drvDebug s) (addDeclEnv nm decl (
 addVarDecl :: Modulename -> VarDecl -> DriverM ()
 addVarDecl nm var = modify (\s -> MkDriverState (drvDebug s) (addVarEnv nm var (drvEnv s)))
 
+addRecDecl :: Modulename -> RecDecl -> DriverM () 
+addRecDecl nm rec = modify (\s -> MkDriverState (drvDebug s) (addRecEnv nm rec (drvEnv s)))
+
 setDebug :: Bool -> DriverM () 
 setDebug b = modify (MkDriverState b . drvEnv)
 

@@ -2,7 +2,6 @@ module Eval.Eval where
 
 import Eval.Definition
 import Syntax.Typed.Terms
-import Syntax.Typed.Program
 import Syntax.Typed.Substitution 
 import Syntax.Typed.FreeVars
 import Common
@@ -28,11 +27,11 @@ evalOnce :: Command -> EvalM Command
 evalOnce (Err err) = return $ Err err
 -- substitute variables 
 evalOnce (Cut (Var v _) pol u) = do
-  t <- lookupVar v
-  return $ Cut (varBd t) pol u
+  t <- lookupBody v
+  return $ Cut t pol u
 evalOnce (Cut t pol (Var v _)) = do 
-  u <- lookupVar v 
-  return $ Cut t pol (varBd u)
+  u <- lookupBody v 
+  return $ Cut t pol u 
 -- beta mu
 evalOnce (Cut t pol (Mu v c _)) | isValue pol t =   return $ substVar c t v
 -- beta shift 

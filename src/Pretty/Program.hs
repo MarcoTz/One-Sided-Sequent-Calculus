@@ -38,6 +38,13 @@ instance Show D.VarDecl where
 instance Show T.VarDecl where 
   show = show . (embed :: T.VarDecl -> P.VarDecl)
 
+instance Show P.RecDecl where 
+  show (P.MkRec n t) = "rec "<>show n <> ":=" <> show t <> ";"
+instance Show D.RecDecl where 
+  show = show . (embed :: D.RecDecl -> P.RecDecl)
+instance Show T.RecDecl where 
+  show = show . (embed :: T.RecDecl -> P.RecDecl)
+
 instance Show P.AnnotDecl where 
   show (P.MkAnnot n ty) = show n <> " :: " <> show ty
 
@@ -45,14 +52,15 @@ instance Show P.Import where
   show (P.MkImport mn) = "import " <> show mn
 
 instance Show P.Program where 
-  show (P.MkProgram nm decls vars annots imports Nothing) = 
+  show (P.MkProgram nm decls vars recs annots imports Nothing) = 
     "module " <> show nm  <>
     "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList vars) <> 
+    "\n\tRecursive Variables: " <> show (snd <$> M.toList recs) <>
     "\n\tAnnotations: " <> show (snd <$> M.toList annots)
-  show (P.MkProgram nm decls vars annots imports (Just c)) = 
-    show (P.MkProgram nm decls vars annots imports Nothing) <> 
+  show (P.MkProgram nm decls vars recs annots imports (Just c)) = 
+    show (P.MkProgram nm decls vars recs annots imports Nothing) <> 
     "\n\t Main: "<>show c
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)

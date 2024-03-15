@@ -64,18 +64,23 @@ getMXtor xtn = do
     (Just sig,_) -> return $ (Just . (embed :: T.XtorSig -> D.XtorSig)) sig
     (_, Just sig) -> return (Just sig)
 
-getDoneVar :: Variable -> DesugarM D.VarDecl 
+getDoneVar :: Variable -> DesugarM (Either D.VarDecl D.RecDecl)
 getDoneVar v = do 
   doneVars <- gets (D.progVars . desDone)
-  case M.lookup v doneVars of 
-    Nothing -> throwError (ErrMissingVar v "getDoneVar (desugar)")
-    Just vdecl -> return vdecl
+  doneRecs <- gets (D.progRecs . desDone)
+  case (M.lookup v doneVars,M.lookup v doneRecs) of 
+    (Nothing,Nothing) -> throwError (ErrMissingVar v "getDoneVar (desugar)")
+    (Just vdecl,_) -> return $ Left vdecl
+    (_,Just rdecl) -> return $ Right rdecl
 
 addDecl :: D.DataDecl -> DesugarM () 
 addDecl decl = modify (\s -> MkDesugarState (desCurrDecl s) (D.addDeclProgram decl (desDone s)))
 
 addVar :: D.VarDecl -> DesugarM ()
 addVar var = modify (\s -> MkDesugarState (desCurrDecl s) (D.addVarProgram var (desDone s)))
+
+addRec :: D.RecDecl -> DesugarM () 
+addRec rec = modify (\s -> MkDesugarState (desCurrDecl s) (D.addRecProgram rec (desDone s)))
 
 setMain :: D.Command -> DesugarM () 
 setMain m = modify (\s -> MkDesugarState (desCurrDecl s) (D.setMainProgram m (desDone s)))
