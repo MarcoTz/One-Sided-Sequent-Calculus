@@ -39,7 +39,7 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad
 import Data.List (elemIndex,sortBy)
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, fromMaybe)
 import Data.Map qualified as M
 
 
@@ -66,40 +66,45 @@ loadProgram mn = do
 getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
   let progList = foldr (\(P.MkProgram mn' _ _ _ imps _) ls -> (mn',imps):ls) [] progs 
-  let order = runDepM (depOrderModule mn progList)
+  env <- gets drvEnv
+  let order = runDepM env (depOrderModule mn progList)
   order' <- liftErr order 
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
 
 inferProgram :: P.Program -> DriverM T.Program
 inferProgram prog = do
+  env <- gets drvEnv
   let mn = P.progName prog
-  let imports = (\(P.MkImport mn') -> mn') <$> P.progImports prog
-  debug ("loading imports " <> show imports)
-  deps <- forM imports loadProgram
-  debug "ordering imports"
-  depsOrdered <- getInferOrder mn deps
-  debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
-  env <- gets drvEnv 
-  let depsOrdered' = filter (\dep -> isNothing $ M.lookup (P.progName dep) (envDefs env)) depsOrdered
-  oldDebug <- gets drvDebug
-  setDebug False
-  forM_ depsOrdered' inferProgram
-  setDebug oldDebug
-  debug ("desugaring program " <> show mn) 
-  D.MkProgram mn' decls vars main <- desugarProg prog
-  debug ("inferring declarations in " <> show mn)
-  decls' <- forM decls (inferDataDecl mn')
-  debug ("ordering variables in " <> show mn) 
-  let varOrder = runDepM (depOrderProgram prog)
-  varOrder' <- liftErr varOrder
-  debug ("inferring variables in order " <> show varOrder')
-  let indexFun v1 v2 = compare (elemIndex (D.varName v1) varOrder') (elemIndex (D.varName v2)  varOrder')
-  let vars' = sortBy indexFun (snd <$> M.toList vars)
-  vars'' <- forM vars' (inferVarDecl mn)
-  let varMap = M.fromList ((\v -> (T.varName v,v))<$>vars'')
-  main' <- forM main inferCommand
-  return (T.MkProgram mn decls' varMap main')
+  let currProg = fromMaybe (T.emptyProg mn) (M.lookup (P.progName prog) (envDefs env))
+  debug (show currProg) 
+  if not $ T.isEmpty currProg  then return currProg else do 
+    let imports = (\(P.MkImport mn') -> mn') <$> P.progImports prog
+    let imports' = filter (\mn' -> isNothing $ M.lookup mn' (envDefs env)) imports 
+    debug ("loading imports " <> show imports')
+    deps <- forM imports' loadProgram
+    debug "ordering imports"
+    depsOrdered <- getInferOrder mn deps
+    debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
+    oldDebug <- gets drvDebug
+    setDebug False
+    forM_ depsOrdered inferProgram
+    setDebug oldDebug
+    debug ("desugaring program " <> show mn) 
+    D.MkProgram mn' decls vars main <- desugarProg prog
+    debug ("inferring declarations in " <> show mn)
+    decls' <- forM decls (inferDataDecl mn')
+    debug ("ordering variables in " <> show mn) 
+    env' <- gets drvEnv
+    let varOrder = runDepM env' (depOrderProgram prog)
+    varOrder' <- liftErr varOrder
+    debug ("inferring variables in order " <> show varOrder')
+    let indexFun v1 v2 = compare (elemIndex (D.varName v1) varOrder') (elemIndex (D.varName v2)  varOrder')
+    let vars' = sortBy indexFun (snd <$> M.toList vars)
+    vars'' <- forM vars' (inferVarDecl mn)
+    let varMap = M.fromList ((\v -> (T.varName v,v))<$>vars'')
+    main' <- forM main inferCommand
+    return (T.MkProgram mn decls' varMap main')
 
 runProgram :: T.Program -> DriverM (Maybe T.Command)
 runProgram (T.MkProgram _ _ _ Nothing) = return Nothing

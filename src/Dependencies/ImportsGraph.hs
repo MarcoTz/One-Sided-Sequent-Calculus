@@ -1,6 +1,7 @@
 module Dependencies.ImportsGraph where 
 
 import Dependencies.Definition
+import Dependencies.Graph
 import Syntax.Parsed.Program
 import Common
 import Errors

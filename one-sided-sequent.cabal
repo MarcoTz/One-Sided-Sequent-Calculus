@@ -46,6 +46,7 @@ library lang
                     Parser.Types,
                     Parser.Terms,
 
+                    Dependencies.Graph,
                     Dependencies.Definition,
                     Dependencies.ImportsGraph,
                     Dependencies.VariablesGraph,

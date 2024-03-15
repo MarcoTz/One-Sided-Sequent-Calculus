@@ -1,6 +1,8 @@
 module Dependencies.VariablesGraph where 
 
 import Dependencies.Definition
+import Dependencies.Graph
+import Environment
 import Common
 import Errors
 import Syntax.Parsed.Program
@@ -9,6 +11,7 @@ import Syntax.Parsed.Terms
 import Control.Monad
 import Control.Monad.State
 import Data.Map qualified as M
+import Data.Maybe (isJust)
 
 type DepVar a = DepM Variable a
 
@@ -29,8 +32,11 @@ addVariable (MkVar v t) = do
   return (vert,t)
 
 addEdgesVariableT :: Vertex Variable -> [Variable] -> Term -> DepVar ()
-addEdgesVariableT vert ignore (Var v) = 
-  if v `elem` ignore then return () else do
+addEdgesVariableT vert ignore (Var v) = do 
+  mdef <- lookupMVar v
+  mxtor <- lookupMXtor ((\(MkVariable v') -> MkXtorName v') v)
+  if isJust mdef || isJust mxtor || v `elem` ignore then return ()
+  else do
     vert' <- getVertexError v (ErrMissingVar v "addEdgesVariable")
     addEdgeM (vert,vert')
 addEdgesVariableT vert ignore (Mu v c) = addEdgesVariableC vert (v:ignore) c 

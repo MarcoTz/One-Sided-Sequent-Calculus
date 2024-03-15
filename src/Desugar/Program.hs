@@ -16,6 +16,8 @@ import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
 
+import Debug.Trace 
+import Pretty.Common ()
 
 checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
 checkNames [] _ = return ()
@@ -24,6 +26,7 @@ checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else chec
 
 desugarProgram :: P.Program -> DesugarM D.Program
 desugarProgram prog = do 
+  trace ("inferring program " <> show (P.progName prog)) $ return ()
   let decls = P.progDecls prog
   envTyNames <- getTypeNames
   let declNames = (fst <$> M.toList decls) ++ envTyNames 

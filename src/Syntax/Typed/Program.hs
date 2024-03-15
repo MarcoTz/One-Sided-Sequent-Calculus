@@ -20,6 +20,10 @@ data Program = MkProgram {
 emptyProg :: Modulename -> Program
 emptyProg nm = MkProgram nm M.empty M.empty Nothing
 
+isEmpty :: Program -> Bool
+isEmpty (MkProgram _ decls vars Nothing) =  null decls && null vars
+isEmpty (MkProgram _ _ _ (Just _)) = False
+
 addDeclProgram :: DataDecl -> Program -> Program
 addDeclProgram decl (MkProgram nm decls vars main) = MkProgram nm (M.insert (declName decl) decl decls) vars main
 

@@ -1,6 +1,7 @@
 module List
 
 import Fun;
+import Nat;
 import Unit;
 
 -- Lists
@@ -27,14 +28,13 @@ head := case { Ap(ls,a) =>
 };
 
 
---recursive definitions not implemented yet
---len :: forall X. Fun(List(X),Nat):+;
---len := case { Ap(ls,a) => 
---  < case {
---    Nil => <Z|+|a>,
---    Cons(l1,lrs) => 
---      <S ( mu b. <len | + | Ap(lrs,b)> ) | + | a>
---  } | - | ls>
---};
+len :: forall X. Fun(List(X),Nat):+;
+len := case { Ap(ls,a) => 
+  < case {
+    Nil => <Z|+|a>,
+    Cons(l1,lrs) => 
+      <S ( mu b. <len | + | Ap(lrs,b)> ) | + | a>
+  } | - | ls>
+};
 
-main := <case { Nil => Done, Cons(x,y) => Done } | List(Unit):- | + | Nil>;
+main := <len | List(Unit):- | + | Ap(Nil,mu x.Done)>;
