@@ -103,3 +103,9 @@ executable test-suite
   main-is:        Main.hs
   build-depends:  lang
   hs-source-dirs: test
+
+executable web-app
+  import:         all 
+  main-is:        Main.hs
+  build-depends:  lang
+  hs-source-dirs: web-app

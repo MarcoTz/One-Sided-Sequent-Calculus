@@ -43,10 +43,19 @@ import Data.Maybe (isNothing, fromMaybe)
 import Data.Either (isLeft,isRight)
 import Data.Map qualified as M
 
+import Data.Text qualified as T
+
 
 runModule :: Modulename ->  DriverM (Maybe T.Command) 
 runModule mn = do
   prog <- inferModule mn
+  runProgram prog
+
+runStr :: String -> DriverM (Maybe T.Command) 
+runStr progText = do 
+  let progParsed = runFileParser "" parseProgram (T.pack progText)
+  progParsed' <- liftErr progParsed
+  prog <- inferProgram progParsed'
   runProgram prog
 
 inferModule :: Modulename -> DriverM T.Program
