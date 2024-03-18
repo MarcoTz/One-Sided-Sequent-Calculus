@@ -10,7 +10,7 @@ common all
   default-extensions: DataKinds,
                       DerivingStrategies
   default-language:   GHC2021
-  build-depends:      base ^>=4.18.1.0,
+  build-depends:      base >=4.18.1.0,
                       containers,
                       megaparsec,
                       monadplus,
@@ -27,12 +27,12 @@ library lang
                     Syntax.Parsed.Terms,
                     Syntax.Parsed.Program,
                     Syntax.Parsed.Types,
-                    
+
                     Syntax.Desugared.Program,
                     Syntax.Desugared.Terms,
                     Syntax.Desugared.Types,
 
-                    Syntax.Typed.Terms, 
+                    Syntax.Typed.Terms,
                     Syntax.Typed.Types,
                     Syntax.Typed.Program,
                     Syntax.Typed.Substitution,
@@ -71,7 +71,7 @@ library lang
                     Eval.Definition,
                     Eval.Focusing,
                     Eval.Eval,
-                    
+
                     Embed.Definition,
                     Embed.EmbedDesugared,
                     Embed.EmbedTyped,
@@ -92,14 +92,14 @@ library lang
   hs-source-dirs:   src
 
 
-executable main 
+executable main
   import:           all
   main-is:          Main.hs
   build-depends:    lang
   hs-source-dirs:   app
 
-executable test-suite 
-  import:         all 
+executable test-suite
+  import:         all
   main-is:        Main.hs
   build-depends:  lang
   hs-source-dirs: test
