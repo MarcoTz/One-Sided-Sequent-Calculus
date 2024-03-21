@@ -64,7 +64,7 @@ setSimplified s = withCString s setSimplifiedInternal
 
 -- "id=evaluation"
 
-foreign import javascript "((arr,offset) => document.getElementById('evaluation').value = h$decodeUtf8z(arr,offset))"
+foreign import javascript "((arr,offset) => document.getElementById('evaluation').innerHTML = h$decodeUtf8z(arr,offset))"
   setEvaluationInternal :: CString -> IO ()
 
 setEvaluation :: String -> IO ()

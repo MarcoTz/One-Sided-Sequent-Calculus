@@ -1,9 +1,28 @@
 <html>
   <head>
-    <script type="module" src="main.js"></script>
+    <script src="all.js"></script>
+    <script>
+      function runEx(){
+        contents = document.getElementById("example").innerHtml
+        globalCompiler(contents)
+      }
+    </script>
   </head>
   <body>
+    <div id="example"> 
+       module Fun
+       data Fun(a:+,b:-):- { 
+         Ap(a,b)
+       }
+       id :: forall X. Fun(X,X) : +;
+       id := case { Ap(x,a) => <x | + | a> };
+       
+       id2 :: Forall X. Fun(X,X) : +;
+       id2 := id;
+    </div>
     Testing
+    <div id="evaluation"></div>
+    <button id="runButton" onClick="runEx()" >Run Example </button>
   </body>
 </html>
 
