@@ -3,7 +3,7 @@ module JSBits
   , setFocused
   , setSimplified
   , setErrorpane
-  , setEvaluation
+  , setEvaluationResult
   , setInputInvalid
   , setInputValid
   ) where
@@ -62,10 +62,10 @@ foreign import javascript "((arr,offset) => document.getElementById('simplified'
 setSimplified :: String -> IO ()
 setSimplified s = withCString s setSimplifiedInternal
 
--- "id=evaluation"
+-- "id=evalResult"
 
-foreign import javascript "((arr,offset) => document.getElementById('evaluation').innerHTML = h$decodeUtf8z(arr,offset))"
-  setEvaluationInternal :: CString -> IO ()
+foreign import javascript "((arr,offset) => document.getElementById('evalResult').innerHTML = h$decodeUtf8z(arr,offset))"
+  setEvaluationResultInternal :: CString -> IO ()
 
-setEvaluation :: String -> IO ()
-setEvaluation s = withCString s setEvaluationInternal
+setEvaluationResult :: String -> IO ()
+setEvaluationResult s = withCString s setEvaluationResultInternal

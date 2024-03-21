@@ -1,24 +1,32 @@
 <html>
   <head>
+    <title>One-Sided Sequent Calculus</title>
+    <link rel="stylesheet" href="main.css"/>
     <script>
       function runEx(){
-        contents = document.getElementById("example").value
+        contents = document.getElementById("progInput").value
         console.log(contents)
         globalCompiler(contents)
       }
 
       function setExample() {
-        document.getElementById("example").value = "module Fun\ndata Fun(a:+,b:-):- { \nAp(a,b)\n}\n\nid :: forall X. Fun(X,X) : +;\nid := case { Ap(x,a) => <x | + | a> };\n\nid2 :: Forall X. Fun(X,X) : +;\nid2 := id;"
+        document.getElementById("progInput").value = "module Fun\ndata Fun(a:+,b:-):- { \nAp(a,b)\n}\n\nid :: forall X. Fun(X,X) : +;\nid := case { Ap(x,a) => <x | + | a> };\n\nid2 :: Forall X. Fun(X,X) : +;\nid2 := id;"
       }
 
     </script>
   </head>
   <body onLoad = "setExample()">
-    <textarea id="example"> 
-    </textarea>
-    <div id="evaluation"></div>
-    <button id="runButton" onClick="runEx()" >Run Example </button>
+    <h1>One Sided Sequent Calculus</h1>
+    <div>Enter Program:</div>
+    <div class="prog">
+      <textarea id="progInput"> 
+      </textarea>
+      <button id="runButton" onClick="runEx()" >Run</button>
+    </div>
+    <div class="results">
+      <h2>Results</h2>
+      <div id="evalResult"></div>
+    </div>
   </body>
   <script src="all.js" defer></script>
 </html>
-
