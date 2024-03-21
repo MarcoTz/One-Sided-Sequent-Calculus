@@ -8,6 +8,7 @@ import Parser.Keywords
 import Parser.Symbols
 import Syntax.Parsed.Program
 import Syntax.Parsed.Terms
+import Common
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -15,13 +16,17 @@ import Control.Monad
 import Data.Map qualified as M
 import Data.Maybe (isNothing)
 
+parseModuleDecl :: Parser Modulename
+parseModuleDecl = (do 
+  parseKeyword KwModule 
+  space1 
+  sc 
+  parseModulename)
+  <|> return (MkModule "")
 
 parseProgram :: Parser Program 
 parseProgram = do 
-  parseKeyword KwModule
-  space1 
-  sc
-  nm <- parseModulename
+  nm <-parseModuleDecl
   sc
   decls <- manyTill (parseDecl <* sc) eof
   foldM foldFun (emptyProg nm) decls
