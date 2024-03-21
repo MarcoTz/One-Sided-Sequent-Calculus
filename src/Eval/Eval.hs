@@ -29,6 +29,7 @@ evalFocused c = do
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err err) = return $ Err err
+evalOnce Done = return Done
 -- substitute variables 
 evalOnce (Cut (Var v _) pol u) = do
   t <- lookupBody v
