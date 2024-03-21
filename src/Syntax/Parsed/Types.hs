@@ -9,5 +9,7 @@ data Ty =
   | TyCo !Ty
   | TyShift !Ty
   | TyForall ![TypeVar] !Ty
+  deriving (Eq,Ord)
 
 data PolTy = MkPolTy !Ty !Pol
+  deriving (Eq,Ord)

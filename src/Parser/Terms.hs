@@ -11,7 +11,6 @@ import Common
 
 import Text.Megaparsec
 import Data.Functor
-import Data.Text qualified as T
 
 parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar
@@ -147,7 +146,7 @@ parseErr = do
   parseKeyword KwError
   sc 
   parseSymbol SymQuot
-  msg <- T.unpack <$> takeWhileP (Just "character") (/= '"')
+  msg <- takeWhileP (Just "character") (/= '"')
   parseSymbol SymQuot
   sc
   return (Err msg)

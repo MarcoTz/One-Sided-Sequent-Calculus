@@ -5,6 +5,6 @@ data A : + {
   MkA
 }
 
-data A : - { 
-  MkB
+data B : - { 
+  MkA
 }

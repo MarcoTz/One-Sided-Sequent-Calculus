@@ -9,8 +9,10 @@ data Command =
   | CutAnnot !Term !PolTy !Pol !Term
   | Err !String
   | Done
+  deriving (Eq,Ord)
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
+  deriving (Eq,Ord)
 
 data Term = 
   Var !Variable
@@ -19,4 +21,5 @@ data Term =
   | XCase ![Pattern]
   | ShiftPos !Term
   | ShiftNeg !Variable !Command
+  deriving (Eq,Ord)
 

@@ -3,7 +3,7 @@ module Common where
 newtype Modulename = MkModule String
   deriving (Eq,Ord)
 newtype XtorName = MkXtorName String
-  deriving (Eq)
+  deriving (Eq,Ord)
 newtype TypeVar  = MkTypeVar String
   deriving (Eq,Ord)
 newtype TypeName = MkTypeName String 

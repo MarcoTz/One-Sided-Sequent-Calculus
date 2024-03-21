@@ -2,6 +2,6 @@ module cex04
 
 import Unit;
 
-text :: Unti
-var test := test2;
-var test2 := test;
+test :: Unit : +;
+test := test2;
+test2 := test;

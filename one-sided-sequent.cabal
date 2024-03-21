@@ -14,10 +14,7 @@ common all
                       containers,
                       megaparsec,
                       monadplus,
-                      mtl,
-                      text,
-                      directory,
-                      filepath
+                      mtl
 
 library lang
   import:           all
@@ -87,21 +84,32 @@ library lang
 
                     Environment,
                     Common,
-                    Files,
                     Errors
   hs-source-dirs:   src
+
+library fs
+  import:          all 
+  build-depends:   lang,
+                   directory,
+                   filepath,
+                   text
+  exposed-modules: Files.Definition,
+                   Files.Loader
+  hs-source-dirs:  fs
 
 
 executable main
   import:           all
   main-is:          Main.hs
-  build-depends:    lang
+  build-depends:    lang,
+                    fs
   hs-source-dirs:   app
 
 executable test-suite
   import:         all
   main-is:        Main.hs
-  build-depends:  lang
+  build-depends:  lang,
+                  fs
   hs-source-dirs: test
 
 executable web-app

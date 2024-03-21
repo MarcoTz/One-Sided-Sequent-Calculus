@@ -7,12 +7,18 @@ import Syntax.Parsed.Types
 import Data.Map qualified as M
 
 data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
+  deriving (Eq,Ord)
 
 data DataDecl  = MkData   {declName   :: !TypeName, declArgs  :: ![PolVar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
+  deriving (Eq,Ord)
 data VarDecl   = MkVar    {varName    :: !Variable, varBody   :: !Term}
+  deriving (Eq,Ord)
 data RecDecl   = MkRec    {recName    :: !Variable, recBody   :: !Term}
+  deriving (Eq,Ord)
 data AnnotDecl = MkAnnot  {annotName  :: !Variable, annotType :: !PolTy} 
+  deriving (Eq,Ord)
 newtype Import = MkImport {importName :: Modulename }
+  deriving (Eq,Ord)
 
 data Program = MkProgram { 
   progName    :: !Modulename, 
@@ -22,6 +28,7 @@ data Program = MkProgram {
   progAnnots  :: !(M.Map Variable AnnotDecl),
   progImports :: ![Import],
   progMain    :: !(Maybe Command)} 
+  deriving (Eq,Ord)
 
 emptyProg :: Modulename -> Program 
 emptyProg mn = MkProgram mn M.empty M.empty M.empty M.empty [] Nothing

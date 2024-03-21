@@ -9,7 +9,6 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 import Control.Monad
-import Data.Text qualified as T
 
 
 parseParens :: Parser a -> Parser a
@@ -23,12 +22,12 @@ parseParens p = do
 
 parseKeyword :: Keyword -> Parser () 
 parseKeyword kw = do
- _ <- string (T.pack (show kw))
+ _ <- string (show kw)
  return () 
 
 parseSymbol :: Sym -> Parser () 
 parseSymbol sym = do 
-  _ <- string (T.pack (show sym))
+  _ <- string (show sym)
   return ()
 
 parseComment :: Parser()

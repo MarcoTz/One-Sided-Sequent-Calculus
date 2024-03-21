@@ -1,3 +1,7 @@
 module cex03 
 
-forall := Done;
+import Unit;
+
+x :: Unit(Unit) : +;
+x := Mu y.Done;
+

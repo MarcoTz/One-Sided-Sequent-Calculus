@@ -1,7 +1,6 @@
 module Driver.Driver where 
 
 import Common
-import Files
 import Errors
 import Environment
 import Driver.Definition
@@ -43,35 +42,18 @@ import Data.Maybe (isNothing, fromMaybe)
 import Data.Either (isLeft,isRight)
 import Data.Map qualified as M
 
-import Data.Text qualified as T
-
-
-runModule :: Modulename ->  DriverM (Maybe T.Command) 
-runModule mn = do
-  prog <- inferModule mn
-  runProgram prog
 
 runStr :: String -> DriverM (Maybe T.Command) 
 runStr progText = do 
-  let progParsed = runFileParser "" parseProgram (T.pack progText)
+  let progParsed = runFileParser "" parseProgram progText
   progParsed' <- liftErr progParsed
-  prog <- inferProgram progParsed'
+  prog <- inferProgram progParsed' []
   runProgram prog
 
-inferModule :: Modulename -> DriverM T.Program
-inferModule mn = do 
-  debug ("loading module " <> show mn) 
-  prog <- loadProgram mn
-  inferProgram prog
-
-loadProgram :: Modulename -> DriverM P.Program
-loadProgram mn = do
-  debug ("parsing module " <> show mn)
-  progText <- loadModule mn
-  let progParsed = runFileParser "" parseProgram progText
-  prog <- liftErr progParsed
-  unless (P.progName prog == mn) $ throwError (ErrModuleNotFound mn " wrong module name in file") 
-  return prog
+inferAndRun :: P.Program -> [P.Program] -> DriverM (Maybe T.Command)
+inferAndRun prog imports = do
+  prog' <- inferProgram prog imports
+  runProgram prog'
 
 getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
@@ -82,22 +64,19 @@ getInferOrder mn progs = do
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
 
-inferProgram :: P.Program -> DriverM T.Program
-inferProgram prog = do
+inferProgram :: P.Program -> [P.Program] -> DriverM T.Program
+inferProgram prog imports = do
   env <- gets drvEnv
   let mn = P.progName prog
   let currProg = fromMaybe (T.emptyProg mn) (M.lookup (P.progName prog) (envDefs env))
   if not $ T.isEmpty currProg  then return currProg else do 
-    let imports = (\(P.MkImport mn') -> mn') <$> P.progImports prog
-    let imports' = filter (\mn' -> isNothing $ M.lookup mn' (envDefs env)) imports 
-    debug ("loading imports " <> show imports')
-    deps <- forM imports' loadProgram
+    let imports' = filter (\prog' -> isNothing $ M.lookup (P.progName prog') (envDefs env)) imports 
     debug "ordering imports"
-    depsOrdered <- getInferOrder mn deps
+    depsOrdered <- getInferOrder mn imports'
     debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
     oldDebug <- gets drvDebug
     setDebug False
-    forM_ depsOrdered inferProgram
+    forM_ depsOrdered (`inferProgram` [])
     setDebug oldDebug
     debug ("desugaring program " <> show mn) 
     D.MkProgram mn' decls vars recs main <- desugarProg prog
