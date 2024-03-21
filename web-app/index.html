@@ -1,28 +1,24 @@
 <html>
   <head>
-    <script src="all.js"></script>
     <script>
       function runEx(){
-        contents = document.getElementById("example").innerHtml
+        contents = document.getElementById("example").value
+        console.log(contents)
         globalCompiler(contents)
       }
+
+      function setExample() {
+        document.getElementById("example").value = "module Fun\ndata Fun(a:+,b:-):- { \nAp(a,b)\n}\n\nid :: forall X. Fun(X,X) : +;\nid := case { Ap(x,a) => <x | + | a> };\n\nid2 :: Forall X. Fun(X,X) : +;\nid2 := id;"
+      }
+
     </script>
   </head>
-  <body>
-    <div id="example"> 
-       module Fun
-       data Fun(a:+,b:-):- { 
-         Ap(a,b)
-       }
-       id :: forall X. Fun(X,X) : +;
-       id := case { Ap(x,a) => <x | + | a> };
-       
-       id2 :: Forall X. Fun(X,X) : +;
-       id2 := id;
-    </div>
-    Testing
+  <body onLoad = "setExample()">
+    <textarea id="example"> 
+    </textarea>
     <div id="evaluation"></div>
     <button id="runButton" onClick="runEx()" >Run Example </button>
   </body>
+  <script src="all.js" defer></script>
 </html>
 
