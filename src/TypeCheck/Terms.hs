@@ -38,8 +38,8 @@ checkTerm t (T.TyCo ty) = do
     T.Xtor xtn xtargs ty' -> return $ T.Xtor xtn xtargs (T.TyCo ty')
     T.Mu v c ty' -> return $ T.Mu v c (T.TyCo ty')
     T.XCase pts ty' -> return $ T.XCase pts (T.TyCo ty')
-    T.ShiftPos{} -> throwError (ErrKind ShouldEq (T.getType t') (T.TyCo ty) "checkTerm TyCo")
-    T.ShiftNeg{} -> throwError (ErrKind ShouldEq (T.getType t') (T.TyCo ty) "checkTerm TyCo")
+    T.ShiftPos{} -> throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.TyCo ty) "checkTerm TyCo")
+    T.ShiftNeg{} -> throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.TyCo ty) "checkTerm TyCo")
 
 checkTerm (D.Var v) ty = do
   vars <- gets checkVars
@@ -48,7 +48,7 @@ checkTerm (D.Var v) ty = do
   case (M.lookup v vars,mdecl,mrec) of 
     (Nothing,Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
     (Just (T.TyVar tyv pol),_,_) -> do
-      unless (pol == getKind ty) $ throwError (ErrKind ShouldEq (T.TyVar tyv pol) ty "checkTerm Var")
+      unless (pol == getKind ty) $ throwError (ErrKind ShouldEq (embed $ T.TyVar tyv pol) (embed ty) "checkTerm Var")
       tyVars <- gets checkTyVars 
       if tyv `elem` tyVars then return $ T.Var v ty
       else throwError (ErrMissingTyVar tyv "checkTerm Var")
@@ -58,7 +58,7 @@ checkTerm (D.Var v) ty = do
   where 
     checkTys :: T.Ty -> T.Ty -> CheckM T.Ty
     checkTys ty1 ty2 = do
-      unless (getKind ty1 == getKind ty2) $ throwError (ErrKind ShouldEq ty1 ty2 ("checkTerm var " <> show v))
+      unless (getKind ty1 == getKind ty2) $ throwError (ErrKind ShouldEq (embed ty1) (embed ty2) ("checkTerm var " <> show v))
       if T.isSubsumed ty1 ty2 || T.isSubsumed ty2 ty1 then return ty2
       else throwError (ErrTypeNeq (embed ty2) (embed ty1) ("checkTerm Var" <> show v))
 
@@ -69,9 +69,9 @@ checkTerm (D.Mu v c) ty = do
 
 checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' _ <- lookupXtorDecl xtn 
-  let kindErr = ErrKind ShouldEq ty (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
+  let kindErr = ErrKind ShouldEq (embed ty) (embed $ T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
   unless (pol' == pol) $ throwError (kindErr ("kind of declaration " <> show pol' <> " and of type to check " <> show pol <> ", checkTerm Xtor" ))
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm Xtor")
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (embed $ T.TyDecl tyn [] pol') "checkTerm Xtor")
   tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTyArity tyn "checkTerm xtor")
   unless (all (uncurry (==)) tyargsZipped) $ throwError (kindErr ("type arguments " <> show tyargsZipped))
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
@@ -83,9 +83,9 @@ checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do
 
 checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
-  let kindErr = ErrKind ShouldNeq ty (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
+  let kindErr = ErrKind ShouldNeq (embed ty) (embed $ T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
   unless (pol' /= pol) $ throwError (kindErr "checkTerm XCase")
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') "checkTerm XCase")
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (embed $ T.TyDecl tyn [] pol') "checkTerm XCase")
   tyArgsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTyArity tyn "checkTerm xcase")
   unless (all (uncurry (==)) tyArgsZipped) $ throwError (kindErr  ("checkTerm XCase  type arguments " <> show tyArgsZipped))
   let ptxtns = D.ptxt <$> pts
@@ -109,16 +109,16 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
 
 checkTerm (D.ShiftPos t) (T.TyShift ty Pos) = do 
   t' <- checkTerm t ty 
-  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq (T.getType t') (T.TyShift ty Pos) "checkTerm Shift")
+  unless (getKind t' == Pos) $ throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.TyShift ty Pos) "checkTerm Shift")
   return $ T.ShiftPos t' (T.TyShift (T.getType t') Pos)
 
 checkTerm (D.ShiftNeg v c) (T.TyShift ty Neg) = do 
-  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq ty (flipPol ty) "checkTerm Shift")
+  unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq (embed ty) (embed (flipPol ty)) "checkTerm Shift")
   addVarPol v ty
   c' <- checkCommand c
   return $ T.ShiftNeg v c' ty
   
-checkTerm t ty = throwError (ErrTypeAmbig t ("checkterm other, type to check "<> show ty))
+checkTerm t ty = throwError (ErrTypeAmbig (embed t) ("checkterm other, type to check "<> show ty))
 
 checkCommand :: D.Command -> CheckM T.Command
 checkCommand (D.Cut t pol u) = do 
@@ -127,7 +127,7 @@ checkCommand (D.Cut t pol u) = do
   u' <- checkTerm u (flipPol ty)
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (T.getType t') (T.getType u') "checkCommand cut")
+  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (embed $ T.getType t') (embed $ T.getType u') "checkCommand cut")
   return $ T.Cut t' pol u'
 checkCommand (D.CutAnnot t ty pol u) = do
   ty' <- checkPolTy ty 
@@ -136,7 +136,7 @@ checkCommand (D.CutAnnot t ty pol u) = do
   u' <- checkTerm u  ty'' 
   let pol1 = getKind t' 
   let pol2 = getKind u' 
-  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (T.getType t') (T.getType u') "checkCommand annot")
+  when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (embed $ T.getType t') (embed $ T.getType u') "checkCommand annot")
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 checkCommand (D.Err err) = return $ T.Err err
@@ -148,4 +148,4 @@ getTyCommand (D.Var v) _ = do
     Nothing -> throwError (ErrMissingVar v "checkCommand")
     Just ty -> return ty
 getTyCommand t1 t2@D.Var{} = flipPol <$> getTyCommand t2 t1
-getTyCommand t _ = throwError (ErrTypeAmbig t "checkCommand")
+getTyCommand t _ = throwError (ErrTypeAmbig (embed t) "checkCommand")

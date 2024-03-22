@@ -1,9 +1,8 @@
 module Errors where 
 
 import Common 
-import Syntax.Parsed.Types    qualified as P
-import Syntax.Typed.Types     qualified as T
-import Syntax.Desugared.Terms qualified as D
+import Syntax.Parsed.Types
+import Syntax.Parsed.Terms
 
 import Control.Monad.Except
 
@@ -11,10 +10,10 @@ data Error =
    ErrXtorArity       !XtorName !String
    | ErrBadPattern    ![XtorName] !String
    | ErrTyArity       !TypeName !String
-   | ErrKind          !KindReason !T.Ty !T.Ty !String
-   | ErrTypeNeq       !P.Ty !P.Ty !String
-   | ErrNotTyDecl     !TypeName !T.Ty !String
-   | ErrNotTyShift    !T.Ty !String
+   | ErrKind          !KindReason !Ty !Ty !String
+   | ErrTypeNeq       !Ty !Ty !String
+   | ErrNotTyDecl     !TypeName !Ty !String
+   | ErrNotTyShift    !Ty !String
    | ErrMissingDecl   !TypeName !String
    | ErrDuplDecl      !TypeName !String
    | ErrMissingVar    !Variable !String
@@ -24,12 +23,12 @@ data Error =
    | ErrDuplXtor      !XtorName !String
    | ErrMissingType   !String
    | ErrMissingXtorPt !XtorName !String
-   | ErrTypeAmbig     !D.Term !String
+   | ErrTypeAmbig     !Term !String
    | ErrParser        !String
    | ErrModuleNotFound !Modulename !String
    | ErrDuplModule    !Modulename !String
    | ErrMutualRec     !Modulename !String
-   | ErrTyNotAllowed  !P.Ty !String
+   | ErrTyNotAllowed  !Ty !String
 
 
 data KindReason = ShouldEq | ShouldNeq

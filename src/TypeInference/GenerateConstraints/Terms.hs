@@ -10,6 +10,8 @@ import TypeInference.Constraints
 import Errors
 import Common
 import Environment
+import Embed.Definition
+import Embed.EmbedTyped ()
 
 import Control.Monad.Except
 import Control.Monad.State
@@ -29,7 +31,7 @@ genConstraintsCmd (D.Cut t pol u) = do
   u' <- genConstraintsTerm u
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  if pol1 == pol2 then throwError (ErrKind ShouldEq (T.getType t') (T.getType u') "genConstraintsCmd") else do 
+  if pol1 == pol2 then throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.getType u') "genConstraintsCmd") else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut t' pol u')
 genConstraintsCmd (D.CutAnnot t _ pol u) = genConstraintsCmd (D.Cut t pol u)
@@ -78,7 +80,7 @@ genConstraintsTerm (D.XCase pts)  = do
 genConstraintsTerm (D.ShiftPos t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
-  if pol /= Pos then throwError (ErrKind  ShouldEq (T.getType t') (TyShift (T.getType t') Pos) "genConstraintsTerm (Shift)") else do 
+  if pol /= Pos then throwError (ErrKind  ShouldEq (embed $ T.getType t') (embed $ TyShift (T.getType t') Pos) "genConstraintsTerm (Shift)") else do 
     let newT = TyShift (T.getType t') Pos
     return (T.ShiftPos t' newT)
 genConstraintsTerm (D.ShiftNeg v cmd) = do  

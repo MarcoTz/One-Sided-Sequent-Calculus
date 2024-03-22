@@ -16,25 +16,11 @@ common all
                       monadplus,
                       mtl
 
-library lang
-  import:           all
-  exposed-modules:  Driver.Driver,
-                    Driver.Definition,
-
-                    Syntax.Parsed.Terms,
+library parser 
+  import:           all 
+  exposed-modules:  Syntax.Parsed.Terms,
                     Syntax.Parsed.Program,
                     Syntax.Parsed.Types,
-
-                    Syntax.Desugared.Program,
-                    Syntax.Desugared.Terms,
-                    Syntax.Desugared.Types,
-
-                    Syntax.Typed.Terms,
-                    Syntax.Typed.Types,
-                    Syntax.Typed.Program,
-                    Syntax.Typed.Substitution,
-                    Syntax.Typed.FreeVars,
-
                     Parser.Definition,
                     Parser.Keywords,
                     Parser.Symbols,
@@ -42,6 +28,28 @@ library lang
                     Parser.Program,
                     Parser.Types,
                     Parser.Terms,
+                    Common,
+                    Errors,
+                    Pretty.Errors,
+                    Pretty.Common,
+                    Pretty.Parsed
+  hs-source-dirs:   one-sided-parser
+
+
+library lang
+  import:           all
+  build-depends:    parser
+  exposed-modules:  Driver.Driver,
+                    Driver.Definition,
+
+                    Syntax.Desugared.Program,
+                    Syntax.Desugared.Terms,
+                    Syntax.Desugared.Types,
+                    Syntax.Typed.Terms,
+                    Syntax.Typed.Types,
+                    Syntax.Typed.Program,
+                    Syntax.Typed.Substitution,
+                    Syntax.Typed.FreeVars,
 
                     Dependencies.Graph,
                     Dependencies.Definition,
@@ -73,18 +81,14 @@ library lang
                     Embed.EmbedDesugared,
                     Embed.EmbedTyped,
 
-                    Pretty.Common,
                     Pretty.Driver,
                     Pretty.Program,
                     Pretty.Terms,
                     Pretty.TypeInference,
                     Pretty.Types,
-                    Pretty.Errors,
                     Pretty.Environment,
 
                     Environment,
-                    Common,
-                    Errors
   hs-source-dirs:   src
 
 library fs
@@ -92,7 +96,8 @@ library fs
   build-depends:   lang,
                    directory,
                    filepath,
-                   text
+                   text,
+                   parser
   exposed-modules: Files.Definition,
                    Files.Loader
   hs-source-dirs:  fs
@@ -102,20 +107,23 @@ executable main
   import:           all
   main-is:          Main.hs
   build-depends:    lang,
-                    fs
+                    fs,
+                    parser
   hs-source-dirs:   app
 
 executable test-suite
   import:         all
   main-is:        Main.hs
   build-depends:  lang,
-                  fs
+                  fs,
+                  parser
   hs-source-dirs: test
 
 executable web-app
   import:          all
   main-is:         Main.hs 
-  build-depends:   lang
+  build-depends:   lang,
+                   parser
   hs-source-dirs:  web-app
   other-modules:   Callback,
                    JSBits

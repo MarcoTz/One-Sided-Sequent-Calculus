@@ -1,8 +1,7 @@
 module Pretty.Errors where 
 
 import Errors 
-import Pretty.Types () 
-import Pretty.Terms ()
+import Pretty.Parsed () 
 
 import Data.List (intercalate)
 

@@ -7,61 +7,30 @@ import Embed.Definition
 import Embed.EmbedTyped  () 
 import Embed.EmbedDesugared () 
 import Pretty.Common ()
+import Pretty.Parsed ()
 import Pretty.Types ()
 import Pretty.Terms ()
 
-import Data.List (intercalate)
-import Data.Map qualified as M
-
-
-instance Show P.XtorSig where 
-  show (P.MkXtorSig nm [])   = show nm
-  show (P.MkXtorSig nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
 instance Show D.XtorSig where 
   show = show . (embed :: D.XtorSig -> P.XtorSig)
 instance Show T.XtorSig where
   show = show . (embed :: T.XtorSig -> P.XtorSig)
 
-instance Show P.DataDecl where 
-  show (P.MkData n [] pol sigs) = "data " <> show n <> ": " <> show pol <> "{" <> intercalate ", " (show <$> sigs) <> "}"
-  show (P.MkData n args pol sigs) =  
-    "data " <> show n <> "(" <> intercalate ", " (show <$> args) <> ") : " <> show pol <> " {" <> intercalate ",  " (show <$> sigs) <> "}"
 instance Show D.DataDecl where 
   show = show . (embed :: D.DataDecl -> P.DataDecl)
 instance Show T.DataDecl where 
   show = show . (embed :: T.DataDecl -> P.DataDecl)
 
-instance Show P.VarDecl where
-  show (P.MkVar n t) = show n <> ":=" <> show t <> ";"
 instance Show D.VarDecl where 
   show = show . (embed :: D.VarDecl -> P.VarDecl) 
 instance Show T.VarDecl where 
   show = show . (embed :: T.VarDecl -> P.VarDecl)
 
-instance Show P.RecDecl where 
-  show (P.MkRec n t) = "rec "<>show n <> ":=" <> show t <> ";"
 instance Show D.RecDecl where 
   show = show . (embed :: D.RecDecl -> P.RecDecl)
 instance Show T.RecDecl where 
   show = show . (embed :: T.RecDecl -> P.RecDecl)
 
-instance Show P.AnnotDecl where 
-  show (P.MkAnnot n ty) = show n <> " :: " <> show ty
-
-instance Show P.Import where 
-  show (P.MkImport mn) = "import " <> show mn
-
-instance Show P.Program where 
-  show (P.MkProgram nm decls vars recs annots imports Nothing) = 
-    "module " <> show nm  <>
-    "\n\tImports: " <> intercalate "," (show <$> imports) <> 
-    "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
-    "\n\tVariables: " <> show (snd <$> M.toList vars) <> 
-    "\n\tRecursive Variables: " <> show (snd <$> M.toList recs) <>
-    "\n\tAnnotations: " <> show (snd <$> M.toList annots)
-  show (P.MkProgram nm decls vars recs annots imports (Just c)) = 
-    show (P.MkProgram nm decls vars recs annots imports Nothing) <> 
-    "\n\t Main: "<>show c
 instance Show D.Program where 
   show = show . (embed :: D.Program -> P.Program)
 instance Show T.Program where 
