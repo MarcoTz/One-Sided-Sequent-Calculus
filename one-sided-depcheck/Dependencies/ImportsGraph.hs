@@ -6,7 +6,6 @@ import Dependencies.Definition
 import Dependencies.Graph
 import Syntax.Parsed.Program
 import Common
-import Errors
 
 import Control.Monad
 import Control.Monad.State
@@ -18,7 +17,7 @@ depOrderModule :: Modulename -> [(Modulename,[Import])] -> DepModule [Modulename
 depOrderModule mn m = do
  _<-addVertexM mn
  createGraph m
- ensureAcyclic (ErrDuplModule mn "ensureAcyclic")
+ ensureAcyclic (ErrDuplModule mn)
  getImportOrder mn
 
 createGraph :: [(Modulename,[Import])] -> DepModule () 
@@ -33,11 +32,11 @@ addImport mn imps = forM_ imps (\(MkImport mn') -> do
 getImportOrder :: Modulename -> DepModule [Modulename]
 getImportOrder mn = do
   gr <- get
-  vert <- getVertexError mn (ErrModuleNotFound mn "dependency graph")
+  vert <- getVertexError mn (ErrUndefinedModule mn)
   let preds = getVertexLabel . getStartingVert <$> getEdgesEndingAt vert gr
   case preds of 
     [] -> return [mn]
     preds' -> do
       orders <- concat <$> forM preds' getImportOrder 
-      when (mn `elem` orders) $ throwError (ErrDuplModule mn "getimportorder")
+      when (mn `elem` orders) $ throwError (ErrDuplModule mn)
       return $ orders ++ [mn] 

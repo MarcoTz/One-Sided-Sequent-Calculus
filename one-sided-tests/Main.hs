@@ -7,7 +7,6 @@ import Files.Definition
 import Environment
 import Common
 import Errors
-import Pretty.Errors ()
 
 import Control.Monad
 
@@ -22,11 +21,11 @@ printSucc :: Modulename -> Bool -> IO ()
 printSucc mn False = putStrLn (colorSuccess <> "Example " <> show mn <> " inferred successfully " <> colorDefault)
 printSucc mn True = putStrLn (colorError <> "CounterExample " <> show mn <> " did not fail " <> colorDefault)
 
-printErr :: Modulename -> Bool -> Error -> IO () 
-printErr mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> show err <> colorDefault)
+printErr :: Error e => Modulename -> Bool -> e -> IO () 
+printErr mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> getMessage err <> colorDefault)
 printErr mn True _ = putStrLn (colorSuccess <> "Counterexmaples " <> show mn <> " failed successfully" <> colorDefault)
 
-printRes :: Modulename -> Bool -> Either Error a -> IO () 
+printRes :: Error e => Modulename -> Bool -> Either e a -> IO () 
 printRes mn shouldFail (Left err) = printErr mn shouldFail err
 printRes mn shouldFail (Right _) = printSucc mn shouldFail 
 
@@ -34,7 +33,7 @@ parseExample :: Bool -> Modulename -> IO()
 parseExample shouldFail mn = do
   res <- runFileLoaderM (loadProgramWithImports mn)
   case res of 
-    Left err -> putStrLn (colorError <> " Error parsing " <> show mn <> " with error " <> show err <> colorDefault)
+    Left err -> putStrLn (colorError <> " Error parsing " <> show mn <> " with error " <> getMessage err <> colorDefault)
     Right (prog,imps) -> do
       let drvSt = MkDriverState False emptyEnv
       res' <- runDriverM drvSt (inferAndRun prog imps)

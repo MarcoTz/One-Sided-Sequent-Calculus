@@ -6,7 +6,6 @@ import Dependencies.Definition
 import Dependencies.Graph
 import Environment
 import Common
-import Errors
 import Syntax.Parsed.Program
 import Syntax.Parsed.Terms
 
@@ -26,7 +25,7 @@ depOrderProgram (MkProgram mn decls vars recs _ _ _) = do
   let ignore = (\(MkXtorName nm) -> MkVariable nm) . sigName <$> concatMap declXtors decls
   forM_ (vertsTerms++recsTerms) (\(v,t) -> addEdgesVariableT v ignore t)
   removeSelfLoops
-  ensureAcyclic (ErrMutualRec mn "depOrderProgram")
+  ensureAcyclic (ErrMutualRec mn)
   order <- getVarOrder
   return $ getVertexLabel <$> order
 
@@ -46,7 +45,7 @@ addEdgesVariableT vert ignore (Var v) = do
   mxtor <- lookupMXtor ((\(MkVariable v') -> MkXtorName v') v)
   if isJust mdef || isJust mxtor || v `elem` ignore then return ()
   else do
-    vert' <- getVertexError v (ErrMissingVar v "addEdgesVariable")
+    vert' <- getVertexError v (ErrUndefinedVar v)
     addEdgeM (vert,vert')
 addEdgesVariableT vert ignore (Mu v c) = addEdgesVariableC vert (v:ignore) c 
 addEdgesVariableT vert ignore (Xtor (MkXtorName nm) args) = forM_ args (addEdgesVariableT vert (MkVariable nm : ignore))

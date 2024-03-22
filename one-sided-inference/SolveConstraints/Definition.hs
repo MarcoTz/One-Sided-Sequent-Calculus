@@ -8,13 +8,17 @@ module SolveConstraints.Definition (
   getSlvTyVars,
   getNextConstr,
   addConstraintsArgs,
-  addConstraint
+  addConstraint,
+  SolverError (..)
 ) where 
 
 import Constraints
 import Syntax.Typed.Types
 import Common 
 import Errors
+import Loc
+import Pretty.Common ()
+import Pretty.Typed ()
 
 import Data.Map qualified as M
 import Control.Monad.Except
@@ -32,13 +36,27 @@ data SolverState = MkSolverState
 
 data ConstrTy = Eq | Neq
 
+data SolverError = 
+  ErrTyArity !TypeName 
+  | ErrTyNeq !Ty !Ty
+  | ErrKindNeq !Kind !Kind
+  | ErrTypeKindNeq !Ty !Ty
+
+instance Error SolverError where 
+  getMessage (ErrTyArity tyn) = "Wrong number of type arguments for type " <> show tyn
+  getMessage (ErrTyNeq ty1 ty2) = "Types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
+  getMessage (ErrKindNeq knd1 knd2) = "Kinds " <> show knd1 <> " and " <> show knd2 <> " are not equal"
+  getMessage (ErrTypeKindNeq ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
+  getLoc _ = defaultLoc
+  toError _ = error "not implemented"
+
 initialSolverState :: ConstraintSet -> SolverState
 initialSolverState = MkSolverState M.empty M.empty
 
-newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except Error) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError Error)
+newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except SolverError) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError SolverError)
 
-runSolveM :: ConstraintSet -> SolverM a -> Either Error (a,M.Map PolVar Ty,M.Map KindVar Pol)
+runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map PolVar Ty,M.Map KindVar Pol)
 runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
@@ -75,8 +93,8 @@ addConstraint constr = do
 
 addConstraintsArgs :: TypeName -> [Ty] -> [Ty] -> SolverM () 
 addConstraintsArgs _ [] [] = return () 
-addConstraintsArgs tyn [] _ = throwError (ErrTyArity tyn "addConstraintsArgs (solveConstraings)")
-addConstraintsArgs tyn _ [] = throwError (ErrTyArity tyn "addConstraintsArgs (solveConstraings)")
+addConstraintsArgs tyn [] _ = throwError (ErrTyArity tyn)
+addConstraintsArgs tyn _ [] = throwError (ErrTyArity tyn)
 addConstraintsArgs tyn (ty1:tys1) (ty2:tys2) = do
   addConstraint (MkTyEq ty1 ty2)
   addConstraintsArgs tyn tys1 tys2

@@ -5,7 +5,6 @@ module Files.Loader (
 
 import Files.Definition
 import Common 
-import Errors
 import Syntax.Parsed.Program qualified as P
 import Parser.Definition
 import Parser.Program
@@ -39,8 +38,8 @@ findModuleFile (MkModule mn) = do
     if ex then return (Right fp) else return (Left ()))
   let found = find isRight existing
   case found of 
-    Nothing -> throwError (ErrModuleNotFound (MkModule mn) "findFile")
-    Just (Left _) -> throwError (ErrModuleNotFound (MkModule mn) "findFile") 
+    Nothing -> throwError (ErrModuleNotFound (MkModule mn))
+    Just (Left _) -> throwError (ErrModuleNotFound (MkModule mn)) 
     Just (Right fp) -> return fp
 
 loadModule :: Modulename -> FileLoaderM String 
@@ -54,8 +53,8 @@ loadProgram :: Modulename -> FileLoaderM P.Program
 loadProgram mn = do
   progText <- loadModule mn
   let progParsed = runFileParser "" parseProgram progText
-  progParsed' <- liftFileError progParsed 
-  unless (P.progName progParsed' == mn) $ throwError (ErrModuleNotFound mn " wrong module name in file")
+  progParsed' <- liftFileError progParsed
+  unless (P.progName progParsed' == mn) $ throwError (ErrModuleNotFound mn)
   return progParsed'
 
 loadProgramWithImports :: Modulename -> FileLoaderM (P.Program,[P.Program])

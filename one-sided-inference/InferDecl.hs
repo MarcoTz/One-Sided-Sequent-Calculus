@@ -7,10 +7,12 @@ import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types   qualified as D
 import Syntax.Typed.Program     qualified as T
 import Syntax.Typed.Types       qualified as T
-import Embed.Definition
 import Embed.EmbedDesugared ()
 import Errors
 import Common
+import Loc
+import Pretty.Common ()
+import Pretty.Desugared ()
 
 import Control.Monad
 import Control.Monad.State
@@ -26,11 +28,23 @@ data DeclState = MkDeclState{
 initialDeclState :: DeclState 
 initialDeclState = MkDeclState M.empty M.empty Nothing
 
+data InferDeclError = 
+  ErrUndefinedTyVar !TypeVar
+  | ErrUndefinedType !TypeName
+  | ErrIllegalType !D.Ty
 
-newtype DeclM a = DeclM { getGenM :: StateT DeclState (Except Error) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DeclState, MonadError Error)
+instance Error InferDeclError where 
+  getMessage (ErrUndefinedTyVar tyv) = "Type Variable " <> show tyv <> " was not defined" 
+  getMessage (ErrUndefinedType tyn) = "Type " <> show tyn <> " was not defined"
+  getMessage (ErrIllegalType ty) = "Type " <> show ty <> " is not allowed in data declaration"
 
-runDeclM :: DeclM a -> Either Error a 
+  getLoc _ = defaultLoc
+  toError = error "not implemented"
+
+newtype DeclM a = DeclM { getGenM :: StateT DeclState (Except InferDeclError) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState DeclState, MonadError InferDeclError)
+
+runDeclM :: DeclM a -> Either InferDeclError a 
 runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
   Left err -> Left err 
   Right (x, _) ->  Right x
@@ -59,7 +73,7 @@ inferType :: D.Ty -> DeclM T.Ty
 inferType (D.TyVar v) = do 
   vars <- gets currVars 
   case M.lookup v vars of 
-    Nothing -> throwError (ErrMissingTyVar v "inferType (inferdecl)")
+    Nothing -> throwError (ErrUndefinedTyVar v)
     Just pol -> return $ T.TyVar v pol
 inferType (D.TyDecl tyn args) = do
   args' <- forM args inferType
@@ -68,9 +82,9 @@ inferType (D.TyDecl tyn args) = do
     Nothing -> do 
       pol <- gets currPol 
       case pol of 
-        Nothing -> throwError (ErrMissingDecl tyn "inferType (inferdecl)")
+        Nothing -> throwError (ErrUndefinedType tyn)
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkData _ _ pol _) -> return $ T.TyDecl tyn args' pol
 inferType (D.TyCo ty) = T.TyCo <$> inferType ty
-inferType ty@(D.TyShift _) = throwError (ErrTyNotAllowed (embed ty) "inferType (inferDecl)")
-inferType ty@(D.TyForall _ _ ) = throwError (ErrTyNotAllowed (embed ty) "infertype (inferDecl)")
+inferType ty@(D.TyShift _) = throwError (ErrIllegalType ty)
+inferType ty@(D.TyForall _ _ ) = throwError (ErrIllegalType ty)

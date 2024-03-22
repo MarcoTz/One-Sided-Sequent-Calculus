@@ -11,18 +11,22 @@ module Desugar.Definition (
   setDesCurrDecl,
   addDesRec,
   addDesVar,
-  addDesDecl
+  addDesDecl,
+  DesugarError (..),
 ) where 
 
 import Errors 
 import Common 
+import Loc
 import Environment
 import Embed.Definition
 import Embed.EmbedTyped ()
 import Syntax.Typed.Program     qualified as T
 import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Terms   qualified as D
+import Syntax.Desugared.Types   qualified as D
 import Syntax.Parsed.Program    qualified as P
+import Pretty.Desugared ()
 
 import Control.Monad.State
 import Control.Monad.Except
@@ -32,13 +36,28 @@ import Data.List (find)
 
 data DesugarState = MkDesugarState { desCurrDecl :: !(Maybe P.DataDecl), desDone :: !D.Program} 
 
+data DesugarError = 
+  ErrVariable !Variable
+  | ErrMultiple !String
+  | ErrMultipleAnnot !Variable !D.PolTy !D.PolTy
+  | EnvErr !String !Loc
+
+instance Error DesugarError where 
+  getMessage (EnvErr msg _) = msg 
+  getMessage (ErrVariable var) = "Definition for variable " <> show var <> "could not be found"
+  getMessage (ErrMultiple str) = str <> " was defined multiple times"
+  getMessage (ErrMultipleAnnot var ty1 ty2) = "Multiple incompatible annotations for variable" <> show var <> ": " <> show ty1 <> " and " <> show ty2
+  getLoc _ = defaultLoc
+  toError = EnvErr
+
 initialDesugarState :: Modulename -> DesugarState 
 initialDesugarState nm = MkDesugarState Nothing (D.emptyProg nm)
 
-newtype DesugarM a = DesugarM { getDesugarM :: ReaderT Environment (StateT DesugarState (Except Error)) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DesugarState, MonadError Error, MonadReader Environment)
+newtype DesugarM a = DesugarM { getDesugarM :: ReaderT Environment (StateT DesugarState (Except DesugarError)) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState DesugarState, MonadError DesugarError, MonadReader Environment)
 
-runDesugarM :: Environment -> Modulename -> DesugarM a -> Either Error a
+
+runDesugarM :: Environment -> Modulename -> DesugarM a -> Either DesugarError a
 runDesugarM env nm m = case runExcept (runStateT (runReaderT (getDesugarM m) env) (initialDesugarState nm)) of
   Left err -> Left err 
   Right (x,_) ->  Right x 
@@ -79,7 +98,7 @@ getDesDoneVar v = do
   doneVars <- gets (D.progVars . desDone)
   doneRecs <- gets (D.progRecs . desDone)
   case (M.lookup v doneVars,M.lookup v doneRecs) of 
-    (Nothing,Nothing) -> throwError (ErrMissingVar v "getDoneVar (desugar)")
+    (Nothing,Nothing) -> throwError (ErrVariable v)
     (Just vdecl,_) -> return $ Left vdecl
     (_,Just rdecl) -> return $ Right rdecl
 

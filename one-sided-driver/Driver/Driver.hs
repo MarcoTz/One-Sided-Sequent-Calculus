@@ -4,7 +4,6 @@ module Driver.Driver (
 ) where 
 
 import Common
-import Errors
 import Environment
 import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
@@ -128,7 +127,7 @@ inferDataDecl mn decl = do
   return decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
-inferVarDecl _ (D.MkVar _ Nothing _) = throwError (ErrMissingType "inferVarDecl, type inference not implemented yet")
+inferVarDecl _ (D.MkVar _ Nothing _) = throwError ErrTypeInference
 inferVarDecl mn v@(D.MkVar vn (Just _) _) = do 
   debug ("type checking variable " <> show vn)
   env <- gets drvEnv
@@ -138,7 +137,7 @@ inferVarDecl mn v@(D.MkVar vn (Just _) _) = do
   return v''
 
 inferRecDecl :: Modulename -> D.RecDecl -> DriverM T.RecDecl 
-inferRecDecl _ (D.MkRec _ Nothing _) = throwError (ErrMissingType "inferRecDecl, type inference not implemneted yet")
+inferRecDecl _ (D.MkRec _ Nothing _) = throwError ErrTypeInference 
 inferRecDecl mn r@(D.MkRec vn (Just _) _) = do
   debug ("type checking recursive variable " <> show vn)
   env <- gets drvEnv 

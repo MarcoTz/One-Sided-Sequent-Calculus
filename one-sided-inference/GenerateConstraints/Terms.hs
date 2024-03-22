@@ -9,10 +9,8 @@ import Syntax.Typed.Terms qualified as T
 import Syntax.Typed.Substitution qualified as T
 import GenerateConstraints.Definition
 import Constraints
-import Errors
 import Common
 import Environment
-import Embed.Definition
 import Embed.EmbedTyped ()
 
 import Control.Monad.Except
@@ -32,7 +30,7 @@ genConstraintsCmd (D.Cut t pol u) = do
   u' <- genConstraintsTerm u
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  if pol1 == pol2 then throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.getType u') "genConstraintsCmd") else do 
+  if pol1 == pol2 then throwError (ErrKindNeq (T.getType t') (T.getType u')) else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut t' pol u')
 genConstraintsCmd (D.CutAnnot t _ pol u) = genConstraintsCmd (D.Cut t pol u)
@@ -68,7 +66,7 @@ genConstraintsTerm (D.Xtor nm args) = do
 genConstraintsTerm (D.XCase pts)  = do 
   decl <- checkPts pts
   case decl of 
-    Nothing -> throwError (ErrBadPattern (D.ptxt <$> pts) "genConstraintsTerm (XCase)")
+    Nothing -> throwError (ErrBadPattern (D.ptxt <$> pts))
     Just (MkData tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
@@ -81,7 +79,7 @@ genConstraintsTerm (D.XCase pts)  = do
 genConstraintsTerm (D.ShiftPos t) = do 
   t' <- genConstraintsTerm t 
   let pol = getKind t' 
-  if pol /= Pos then throwError (ErrKind  ShouldEq (embed $ T.getType t') (embed $ TyShift (T.getType t') Pos) "genConstraintsTerm (Shift)") else do 
+  if pol /= Pos then throwError (ErrKindNeq (T.getType t') (TyShift (T.getType t') Pos)) else do 
     let newT = TyShift (T.getType t') Pos
     return (T.ShiftPos t' newT)
 genConstraintsTerm (D.ShiftNeg v cmd) = do  

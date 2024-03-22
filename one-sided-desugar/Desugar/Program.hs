@@ -2,12 +2,10 @@ module Desugar.Program (
   desugarProgram
 ) where 
 
-import Errors
 import Environment
 import Desugar.Definition
 import Desugar.Terms
 import Desugar.Types
-import Embed.Definition
 import Embed.EmbedDesugared ()
 import Syntax.Parsed.Program    qualified as P
 import Syntax.Parsed.Terms      qualified as P
@@ -17,9 +15,9 @@ import Control.Monad.Except
 import Control.Monad
 import Data.Map qualified as M
 
-checkNames :: Eq a => [a] -> (a -> Error) -> DesugarM () 
-checkNames [] _ = return ()
-checkNames (nm1:nms) err = if nm1 `elem` nms then throwError (err nm1) else checkNames nms err
+checkNames :: Eq a => Show a => [a] -> DesugarM () 
+checkNames [] = return ()
+checkNames (nm1:nms) = if nm1 `elem` nms then throwError (ErrMultiple (show nm1)) else checkNames nms 
 
 
 desugarProgram :: P.Program -> DesugarM D.Program
@@ -27,10 +25,10 @@ desugarProgram prog = do
   let decls = P.progDecls prog
   envTyNames <- getTypeNames
   let declNames = (fst <$> M.toList decls) ++ envTyNames 
-  checkNames declNames (`ErrDuplDecl` "desugarProgram")
+  checkNames declNames 
   envXtns <- getXtorNames
   let xtns = (P.sigName <$> concatMap P.declXtors decls) ++ envXtns
-  checkNames xtns (`ErrDuplXtor` "desugarProgram")
+  checkNames xtns 
   forM_ decls desugarDecl 
   forM_ (P.progVars prog) desugarVar
   forM_ (P.progRecs prog) desugarRec
@@ -64,9 +62,9 @@ desugarAnnot (P.MkAnnot v ty) = do
   ty' <- desugarPolTy ty
   case decl of 
     Left (D.MkVar _ Nothing t) -> addDesVar (D.MkVar v (Just ty') t)
-    Left (D.MkVar _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
+    Left (D.MkVar _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrMultipleAnnot v ty' ty'')
     Right (D.MkRec _ Nothing t) -> addDesRec (D.MkRec v (Just ty') t)
-    Right (D.MkRec _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
+    Right (D.MkRec _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrMultipleAnnot v ty' ty'')
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.MkXtorSig xtn args) = do

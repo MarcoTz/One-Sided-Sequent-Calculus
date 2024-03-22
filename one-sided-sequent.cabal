@@ -47,7 +47,7 @@ library definitions
                    Pretty.Common,
 
                    Errors,
-                   Pretty.Errors,
+                   Loc
   hs-source-dirs:  one-sided-defs
 
 library parser 

@@ -3,8 +3,7 @@ module Main where
 import Driver.Definition
 import Driver.Driver 
 import Environment
-import Pretty.Driver ()
-import Pretty.Errors()
+import Errors
 import Callback
 import JSBits
 import GHC.JS.Prim
@@ -22,7 +21,7 @@ runProg val = do
   let drvSt = MkDriverState False emptyEnv
   res <- runDriverM drvSt (runStr progSource)
   case res of 
-    Left err  -> setError (show err) 
+    Left err  -> setError (getMessage err) 
     Right (Nothing,_) -> setSuccess "No Function main was defined" 
     Right (Just mainRes,_) -> setSuccess (show mainRes) 
   return ()

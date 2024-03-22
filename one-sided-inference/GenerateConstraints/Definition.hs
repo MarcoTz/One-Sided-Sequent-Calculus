@@ -6,20 +6,25 @@ module GenerateConstraints.Definition (
   freshTyVar,
   freshTyVarsDecl,
   addConstraint,
-  addConstraintsXtor
+  addConstraintsXtor,
+  GenerateError (..)
 ) where 
 
 import Constraints
 import Syntax.Typed.Types
 import Common
 import Errors
+import Loc
 import Environment
+import Pretty.Common ()
+import Pretty.Typed ()
 
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Map qualified as M
+import Data.List (intercalate)
 
 ----------------------
 -- Constraint Monad --
@@ -36,11 +41,22 @@ data GenerateState = MkGenState{
 initialGenState :: GenerateState 
 initialGenState = MkGenState M.empty 0 0 (MkConstraintSet [])
 
+data GenerateError =
+  ErrXtorArity !XtorName
+  | ErrKindNeq !Ty !Ty
+  | ErrBadPattern ![XtorName]
 
-newtype GenM a = GenM { getGenM :: ReaderT Environment (StateT GenerateState (Except Error)) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError Error, MonadReader Environment)
+instance Error GenerateError where 
+  getMessage (ErrXtorArity xtn) = "Wrong number of arguments for xtor " <> show xtn
+  getMessage (ErrKindNeq ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
+  getMessage (ErrBadPattern xts) = "Malformed pattern: " <> intercalate ", " (show <$> xts)
+  getLoc _ = defaultLoc 
+  toError _ _ = error "undefined"
 
-runGenM :: Environment -> GenM a -> Either Error (a, ConstraintSet)
+newtype GenM a = GenM { getGenM :: ReaderT Environment (StateT GenerateState (Except GenerateError)) a }
+  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError GenerateError, MonadReader Environment)
+
+runGenM :: Environment -> GenM a -> Either GenerateError (a, ConstraintSet)
 runGenM env m = case runExcept (runStateT (runReaderT (getGenM m) env) initialGenState) of
   Left err -> Left err 
   Right (x, st) ->  Right (x,constrSet st)
@@ -78,8 +94,8 @@ addGenVar v ty = do
 
 addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
 addConstraintsXtor _ [] [] = return ()
-addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt "addConstraintsXtor (generate constraints)")
-addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt "addConstraintsXtor (generate constraints)")
+addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt)
+addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt)
 addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
   addConstraintsXtor xt tys1 tys2

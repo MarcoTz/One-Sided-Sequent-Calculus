@@ -18,7 +18,9 @@ module Environment (
 import Syntax.Typed.Program 
 import Syntax.Typed.Terms
 import Errors 
-import Common 
+import Common
+import Loc
+import Pretty.Common ()
 
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -26,6 +28,13 @@ import Data.Map qualified as M
 import Data.List (find)
 
 newtype Environment = MkEnv { envDefs :: M.Map Modulename Program }
+
+declErr :: Error e => TypeName -> e
+declErr tyn = toError ("Type " <> show tyn <> " not found in environment") defaultLoc
+varErr :: Error e => Variable -> e
+varErr var = toError ("Variable " <> show var <> " not found in environment") defaultLoc
+xtorErr :: Error e => XtorName -> e
+xtorErr xtn = toError ("Xtor " <> show xtn <> " not found in environment") defaultLoc
 
 emptyEnv :: Environment
 emptyEnv = MkEnv M.empty 
@@ -48,84 +57,84 @@ addRecEnv nm rec (MkEnv defs) =
     Nothing -> let newProg = addRecProgram rec (emptyProg nm) in MkEnv (M.insert nm newProg defs)
     Just prog -> MkEnv (M.insert nm (addRecProgram rec prog) defs)
 
-type EnvReader a m = (MonadError Error m, MonadReader Environment m)
+type EnvReader e a m = (Error e, MonadError e m, MonadReader Environment m)
 
-getDecls :: EnvReader a m => m (M.Map TypeName DataDecl)
+getDecls :: Error e => EnvReader e a m => m (M.Map TypeName DataDecl)
 getDecls = do
   defs <- asks envDefs
   let progs = snd <$> M.toList defs
   let decls = M.unions (progDecls <$> progs)
   return decls
 
-getVars :: EnvReader a m => m (M.Map Variable VarDecl)
+getVars :: EnvReader e a m => m (M.Map Variable VarDecl)
 getVars = do 
   defs <- asks envDefs 
   let progs = snd <$> M.toList defs
   let vars = M.unions (progVars <$> progs) 
   return vars
 
-getRecs :: EnvReader a m => m (M.Map Variable RecDecl)
+getRecs :: EnvReader e a m => m (M.Map Variable RecDecl)
 getRecs = do 
   defs <- asks envDefs 
   let progs = snd <$> M.toList defs
   let recs = M.unions (progRecs <$> progs)
   return recs
 
-lookupMDecl :: EnvReader a m => TypeName -> m (Maybe DataDecl)
+lookupMDecl :: EnvReader e a m => TypeName -> m (Maybe DataDecl)
 lookupMDecl tyn = M.lookup tyn <$> getDecls
 
-lookupDecl :: EnvReader a m => TypeName -> m DataDecl 
+lookupDecl :: EnvReader e a m => TypeName -> m DataDecl 
 lookupDecl tyn = do   
   mdecl <- lookupMDecl tyn
   case mdecl of 
-    Nothing -> throwError (ErrMissingDecl tyn "lookupDecl (Env)")
+    Nothing -> throwError (declErr tyn)
     Just decl -> return decl
 
-lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
+lookupMVar :: EnvReader e a m => Variable -> m (Maybe VarDecl)
 lookupMVar v = M.lookup v <$> getVars
 
 
-lookupMRec :: EnvReader a m => Variable -> m (Maybe RecDecl)
+lookupMRec :: EnvReader e a m => Variable -> m (Maybe RecDecl)
 lookupMRec v = M.lookup v <$> getRecs
 
-lookupBody :: EnvReader a m => Variable -> m Term
+lookupBody :: EnvReader e a m => Variable -> m Term
 lookupBody v = do 
   mvar <- lookupMVar v 
   mrec <- lookupMRec v
   case (mvar,mrec) of 
-    (Nothing,Nothing) -> throwError (ErrMissingVar v "lookupbody (env)")
+    (Nothing,Nothing) -> throwError (varErr v)
     (Just var,_) -> return (varBody var)
     (_,Just rec) -> return (recBody rec)
 
-lookupMXtor :: EnvReader a m => XtorName -> m (Maybe XtorSig)
+lookupMXtor :: EnvReader e a m => XtorName -> m (Maybe XtorSig)
 lookupMXtor xtn = do
   decls <- getDecls 
   let sigs = concatMap (declXtors . snd) (M.toList decls)
   return $ find (\x -> sigName x == xtn) sigs 
 
-lookupXtor :: EnvReader a m => XtorName -> m XtorSig
+lookupXtor :: EnvReader e a m => XtorName -> m XtorSig
 lookupXtor xtn = do
   mxt <- lookupMXtor xtn
   case mxt of 
-    Nothing -> throwError (ErrMissingXtor xtn "lookupXtor (Env)") 
+    Nothing -> throwError (xtorErr xtn) 
     Just xt -> return xt
 
-lookupXtorMDecl :: EnvReader a m => XtorName -> m (Maybe DataDecl)
+lookupXtorMDecl :: EnvReader e a m => XtorName -> m (Maybe DataDecl)
 lookupXtorMDecl xtn = find (\x -> xtn `elem` (sigName <$> declXtors x)) <$> getDecls
 
-lookupXtorDecl :: EnvReader a m => XtorName -> m DataDecl 
+lookupXtorDecl :: EnvReader e a m => XtorName -> m DataDecl 
 lookupXtorDecl xtn = do
   decl <- lookupXtorMDecl xtn
   case decl of 
-    Nothing -> throwError (ErrMissingXtor xtn "lookupXtorDecl (Env)") 
+    Nothing -> throwError (xtorErr xtn) 
     Just decl' -> return decl'
 
-getTypeNames :: EnvReader a m => m [TypeName]
+getTypeNames :: EnvReader e a m => m [TypeName]
 getTypeNames = do 
   decls <- getDecls 
   return $ fst <$> M.toList decls
 
-getXtorNames :: EnvReader a m => m [XtorName]
+getXtorNames :: EnvReader e a m => m [XtorName]
 getXtorNames = do 
   decls <- getDecls 
   return (sigName <$> concatMap declXtors decls)

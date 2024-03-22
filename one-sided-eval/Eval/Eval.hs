@@ -8,7 +8,6 @@ import Syntax.Typed.Terms
 import Syntax.Typed.Substitution 
 import Common
 import Environment
-import Errors
 
 import Control.Monad.Except
 
@@ -56,9 +55,9 @@ substCase MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
 substCase MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
   let newcmd = substVar cmd t v 
   in substCase MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
-substCase (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity xt "substCase (Eval)") 
-substCase (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity xt "substCase (Eval)") 
+substCase (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity xt) 
+substCase (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity xt) 
 
 findXtor :: XtorName -> [Pattern] -> EvalM Pattern
-findXtor xt [] = throwError (ErrMissingXtorPt xt "findXtor (Eval)") 
+findXtor xt [] = throwError (ErrMissingPt xt) 
 findXtor xt (pt:pts) = if ptxt pt == xt then return pt else findXtor xt pts

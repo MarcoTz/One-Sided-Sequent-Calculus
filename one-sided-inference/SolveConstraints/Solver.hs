@@ -6,8 +6,6 @@ import SolveConstraints.Definition
 import Constraints
 import Syntax.Typed.Types
 import Common
-import Errors
-import Embed.Definition
 import Embed.EmbedTyped ()
 
 import Control.Monad
@@ -44,28 +42,24 @@ unifyTypeConstraint (TyVar v knd) ty = do
     Just ty' -> addConstraint (MkTyEq ty' ty) 
 unifyTypeConstraint ty1 ty2@TyVar{} = unifyTypeConstraint ty2 ty1
 unifyTypeConstraint ty1@(TyDecl n1 args1 _) ty2@(TyDecl n2 args2 _) 
- | n1 /= n2 = throwError (ErrTypeNeq (embed ty1) (embed ty2) "unifyTypeConstraint (solver)")
+ | n1 /= n2 = throwError (ErrTyNeq ty1 ty2)
  | otherwise = do 
      addConstraintsArgs n1 args1 args2
 unifyTypeConstraint (TyShift ty1 knd1) (TyShift ty2 knd2) = do
-  if knd1 == knd2 then unifyTypeConstraint ty1 ty2 else throwError (ErrKind ShouldEq (embed ty1) (embed ty2) "uniftTypeConstratint")
+  if knd1 == knd2 then unifyTypeConstraint ty1 ty2 else throwError (ErrTypeKindNeq ty1 ty2)
 unifyTypeConstraint (TyCo ty1) (TyCo ty2) = do 
   unifyTypeConstraint ty1 ty2 
-unifyTypeConstraint ty1 ty2 = throwError (ErrTypeNeq (embed ty1) (embed ty2) "unifypeConstraint (solver)")
-
-
-genTy :: Pol -> Ty
-genTy = TyVar (MkTypeVar "a") 
+unifyTypeConstraint ty1 ty2 = throwError (ErrTyNeq ty1 ty2)
 
 unifyKindConstraint :: ConstrTy -> Kind -> Kind -> SolverM ()
-unifyKindConstraint Eq (MkKind p1) (MkKind p2)  = when (p1 /= p2) $ throwError (ErrKind ShouldEq (embed $ genTy p1) (embed $ genTy p2) "unifyKindConstraint (solver)")
-unifyKindConstraint Neq (MkKind p1) (MkKind p2) = when (p1==p2)   $ throwError (ErrKind ShouldNeq (embed $ genTy p1) (embed $ genTy p2) "unifyTypeConstraint (solver)")
+unifyKindConstraint Eq (MkKind p1) (MkKind p2)  = when (p1 /= p2) $ throwError (ErrKindNeq (MkKind p1) (MkKind p2))
+unifyKindConstraint Neq (MkKind p1) (MkKind p2) = when (p1==p2)   $ throwError (ErrKindNeq (MkKind p1) (MkKind p2))
 
 unifyKindConstraint Eq (MkKindVar v1) (MkKind pol) = do
   kndEnv <- getSlvKndVars 
   case M.lookup v1 kndEnv of 
     Nothing -> addSlvKndVar v1 pol
-    Just pol' -> if pol == pol' then return () else throwError (ErrKind ShouldEq (embed $ genTy pol) (embed $ genTy pol') "unifyKindConstraint (solver)")
+    Just pol' -> if pol == pol' then return () else throwError (ErrKindNeq (MkKind pol) (MkKind pol'))
 unifyKindConstraint Eq p@MkKind{} v@MkKindVar{} = unifyKindConstraint Eq v p
 unifyKindConstraint Eq (MkKindVar v1) (MkKindVar v2) = do
   kndEnv <- getSlvKndVars 
@@ -73,7 +67,7 @@ unifyKindConstraint Eq (MkKindVar v1) (MkKindVar v2) = do
     (Nothing, Nothing) -> return ()
     (Just pol,Nothing) -> addSlvKndVar v2 pol
     (Nothing, Just pol) -> addSlvKndVar v1 pol
-    (Just pol1, Just pol2) -> when (pol1 /= pol2) $ throwError (ErrKind ShouldEq (embed $ genTy pol1) (embed $ genTy pol2) "unifyKindConstraint (solver)")
+    (Just pol1, Just pol2) -> when (pol1 /= pol2) $ throwError (ErrKindNeq (MkKind pol1) (MkKind pol2))
 
 
 unifyKindConstraint Neq v@MkKindVar{} (MkKind p) = unifyKindConstraint Eq v (MkKind $ flipPol p)
@@ -84,4 +78,4 @@ unifyKindConstraint Neq (MkKindVar v1) (MkKindVar v2) = do
     (Nothing, Nothing) -> return ()
     (Just pol,Nothing) -> addSlvKndVar v2 (flipPol pol)
     (Nothing, Just pol) -> addSlvKndVar v1 (flipPol pol)
-    (Just pol1, Just pol2) -> when (pol1 == pol2) $ throwError (ErrKind ShouldNeq (embed $ genTy pol1) (embed $ genTy pol2) "unifyKindConstraint (solver)")
+    (Just pol1, Just pol2) -> when (pol1 == pol2) $ throwError (ErrKindNeq (MkKind pol1) (MkKind pol2))

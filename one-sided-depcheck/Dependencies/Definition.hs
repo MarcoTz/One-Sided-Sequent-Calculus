@@ -6,19 +6,36 @@ module Dependencies.Definition (
   getVertexError,
   ensureAcyclic,
   removeSelfLoops,
+  DepError (..)
 ) where
 
 import Dependencies.Graph
 import Environment
+import Common
 import Errors 
+import Loc
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Except
 
+data DepError = 
+  ErrDuplModule !Modulename
+  | ErrUndefinedModule !Modulename
+  | ErrMutualRec !Modulename
+  | ErrUndefinedVar !Variable
 
-newtype DepM a b = DepM { getCheckM :: ReaderT Environment (StateT (Graph a) (Except Error)) b }
-  deriving newtype (Functor, Applicative, Monad, MonadError Error, MonadState (Graph a), MonadReader Environment)
+instance Error DepError where 
+    getMessage (ErrDuplModule mn) = "Module " <> show mn <> " was defined multiple times"
+    getMessage (ErrUndefinedModule mn) = "Module " <> show mn <> " was not defined"
+    getMessage (ErrMutualRec mn) = "Mutual Recusrion in module " <> show mn
+    getMessage (ErrUndefinedVar v) = "Variable " <> show v <> " was not defined"
+    getLoc _ = defaultLoc
+    toError _ _ = error " not implemented"
+  
+
+newtype DepM a b = DepM { getCheckM :: ReaderT Environment (StateT (Graph a) (Except DepError)) b }
+  deriving newtype (Functor, Applicative, Monad, MonadError DepError, MonadState (Graph a), MonadReader Environment)
 
 addVertexM :: Eq a => Ord a => a -> DepM a (Vertex a)
 addVertexM a = do
@@ -27,7 +44,7 @@ addVertexM a = do
   modify (const gr')
   return newV
 
-getVertexError :: Eq a => a -> Error -> DepM a (Vertex a) 
+getVertexError :: Eq a => a -> DepError -> DepM a (Vertex a) 
 getVertexError lb err = do 
   gr <- get 
   let mvert = getVertex lb gr 
@@ -45,7 +62,7 @@ removeSelfLoops = do
   let gr' = MkGraph verts newEdgs
   modify (const gr')
 
-ensureAcyclic :: Eq a => Error -> DepM a () 
+ensureAcyclic :: Eq a => DepError -> DepM a () 
 ensureAcyclic err = do
   gr <- get 
   forM_ (grVerts gr) (\v -> traverseGraph v [] [])
@@ -62,7 +79,7 @@ ensureAcyclic err = do
         edgs -> foldM (\(seenV',seenE') edg@(MkEdge v1 v2) -> traverseGraph v2 (v1:seenV') (edg:seenE')) (newSeenV, seenE) edgs
     
 
-runDepM :: Environment -> DepM a b -> Either Error b
+runDepM :: Environment -> DepM a b -> Either DepError b
 runDepM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) emptyGraph) of 
   Left err -> Left err
   Right (x,_) -> Right x
