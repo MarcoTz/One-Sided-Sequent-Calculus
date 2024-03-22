@@ -7,17 +7,20 @@ build-type:    Simple
 
 common all
   ghc-options: -Wall -Wno-orphans
-  default-extensions: DataKinds,
+  default-extensions: 
                       DerivingStrategies
   default-language:   GHC2021
   build-depends:      base >=4.18.0.0,
-                      containers,
-                      megaparsec,
-                      monadplus,
-                      mtl
+
+common libs
+  build-depends: containers,
+                 mtl
 
 library parser 
-  import:          all 
+  import:          all,
+                   libs
+  build-depends:   megaparsec,
+                   monadplus,
   exposed-modules: Syntax.Parsed.Terms,
                    Syntax.Parsed.Program,
                    Syntax.Parsed.Types,
@@ -36,9 +39,10 @@ library parser
   hs-source-dirs:  one-sided-parser
 
 library depcheck
-  import: all 
+  import:          all,
+                   libs
   build-depends:   parser,
-                   env
+                   env,
   exposed-modules: Dependencies.Graph,
                    Dependencies.Definition,
                    Dependencies.ImportsGraph,
@@ -46,8 +50,9 @@ library depcheck
   hs-source-dirs: one-sided-depcheck
 
 library env
-  import:          all
-  build-depends:   parser
+  import:          all,
+                   libs
+  build-depends:   parser,
   exposed-modules: Syntax.Typed.Terms,
                    Syntax.Typed.Types,
                    Syntax.Typed.Program,
@@ -57,9 +62,10 @@ library env
   hs-source-dirs:  one-sided-env
 
 library desugar 
-  import:          all
+  import:          all,
+                   libs
   build-depends:   parser,
-                   env
+                   env,
   exposed-modules: Syntax.Desugared.Program,
                    Syntax.Desugared.Terms,
                    Syntax.Desugared.Types,
@@ -76,10 +82,11 @@ library desugar
   hs-source-dirs:  one-sided-desugar
 
 library inference
-  import:          all 
+  import:          all,
+                   libs
   build-depends:   parser,
                    desugar,
-                   env
+                   env,
   exposed-modules: GenerateConstraints.Definition,
                    GenerateConstraints.Terms,
                    SolveConstraints.Definition,
@@ -90,10 +97,11 @@ library inference
   hs-source-dirs:  one-sided-inference
 
 library typecheck
-  import:          all 
+  import:          all,
+                   libs
   build-depends:   parser,
                    desugar,
-                   env
+                   env,
   exposed-modules: TypeCheck.Definition,
                    TypeCheck.Terms,
                    TypeCheck.Types,
@@ -102,34 +110,37 @@ library typecheck
 
                    
 library driver
-  import:           all
+  import:           all,
+                    libs
   build-depends:    parser,
                     desugar,
                     env,
                     inference,
                     typecheck,
                     eval,
-                    depcheck
+                    depcheck,
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
                     Pretty.Driver,
   hs-source-dirs:   one-sided-driver
 
 library eval
-  import:          all
+  import:          all, 
+                   libs
   build-depends:   parser,
-                   env
+                   env,
   exposed-modules: Eval.Definition,
                    Eval.Focusing,
                    Eval.Eval,
   hs-source-dirs:  one-sided-eval
 
 library fs
-  import:          all 
-  build-depends:   directory,
+  import:          all,
+                   libs
+  build-depends:   parser,
+                   directory,
                    filepath,
                    text,
-                   parser
   exposed-modules: Files.Definition,
                    Files.Loader
   hs-source-dirs:  fs
@@ -140,10 +151,8 @@ executable main
   main-is:          Main.hs
   build-depends:    driver,
                     fs,
-                    parser,
-                    desugar,
-                    inference,
-                    env
+                    env,
+                    parser
   hs-source-dirs:   app
 
 executable test-suite
@@ -160,8 +169,6 @@ executable web-app
   main-is:         Main.hs 
   build-depends:   driver,
                    parser,
-                   desugar,
-                   inference,
                    env
   hs-source-dirs:  web-app
   other-modules:   Callback,
