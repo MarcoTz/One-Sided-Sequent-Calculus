@@ -1,6 +1,6 @@
-module TypeInference.GenerateConstraints.Definition where 
+module GenerateConstraints.Definition where 
 
-import TypeInference.Constraints
+import Constraints
 import Syntax.Typed.Types
 import Common
 import Errors

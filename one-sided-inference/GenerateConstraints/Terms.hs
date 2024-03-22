@@ -1,12 +1,12 @@
-module TypeInference.GenerateConstraints.Terms where 
+module GenerateConstraints.Terms where 
 
 import Syntax.Typed.Types 
 import Syntax.Typed.Program
 import Syntax.Desugared.Terms qualified as D
 import Syntax.Typed.Terms qualified as T
 import Syntax.Typed.Substitution qualified as T
-import TypeInference.GenerateConstraints.Definition
-import TypeInference.Constraints
+import GenerateConstraints.Definition
+import Constraints
 import Errors
 import Common
 import Environment

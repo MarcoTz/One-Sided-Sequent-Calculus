@@ -1,7 +1,7 @@
-module TypeInference.SolveConstraints.Solver where 
+module SolveConstraints.Solver where 
 
-import TypeInference.SolveConstraints.Definition
-import TypeInference.Constraints
+import SolveConstraints.Definition
+import Constraints
 import Syntax.Typed.Types
 import Common
 import Errors

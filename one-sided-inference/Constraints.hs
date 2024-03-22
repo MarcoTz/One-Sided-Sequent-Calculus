@@ -1,4 +1,4 @@
-module TypeInference.Constraints where 
+module Constraints where 
 
 import Syntax.Typed.Types
 import Common

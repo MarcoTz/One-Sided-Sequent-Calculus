@@ -1,4 +1,4 @@
-module TypeInference.InferDecl where 
+module InferDecl where 
 
 import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types   qualified as D

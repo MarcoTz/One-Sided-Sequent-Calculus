@@ -64,12 +64,28 @@ library desugar
                    Pretty.Typed,
                    Pretty.Environment
   hs-source-dirs:  one-sided-desugar
+
+library inference
+  import:          all 
+  build-depends:   parser,
+                   desugar,
+                   env
+  exposed-modules: GenerateConstraints.Definition,
+                   GenerateConstraints.Terms,
+                   SolveConstraints.Definition,
+                   SolveConstraints.Solver,
+                   Constraints,
+                   InferDecl,
+                   Pretty.TypeInference
+  hs-source-dirs:  one-sided-inference
+
                    
 library lang
   import:           all
   build-depends:    parser,
                     desugar,
-                    env
+                    env,
+                    inference
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
 
@@ -83,19 +99,11 @@ library lang
                     TypeCheck.Types,
                     TypeCheck.Program,
 
-                    TypeInference.GenerateConstraints.Definition,
-                    TypeInference.GenerateConstraints.Terms,
-                    TypeInference.SolveConstraints.Definition,
-                    TypeInference.SolveConstraints.Solver,
-                    TypeInference.Constraints,
-                    TypeInference.InferDecl,
-
                     Eval.Definition,
                     Eval.Focusing,
                     Eval.Eval,
 
                     Pretty.Driver,
-                    Pretty.TypeInference,
   hs-source-dirs:   src
 
 library fs
@@ -117,6 +125,7 @@ executable main
                     fs,
                     parser,
                     desugar,
+                    inference,
                     env
   hs-source-dirs:   app
 
@@ -127,6 +136,7 @@ executable test-suite
                   fs,
                   parser,
                   desugar,
+                  inference,
                   env
   hs-source-dirs: test
 
@@ -136,6 +146,7 @@ executable web-app
   build-depends:   lang,
                    parser,
                    desugar,
+                   inference,
                    env
   hs-source-dirs:  web-app
   other-modules:   Callback,

@@ -24,7 +24,7 @@ import TypeCheck.Definition
 import TypeCheck.Program (checkVarDecl,checkRecDecl) 
 import TypeCheck.Terms (checkCommand)
 
-import TypeInference.InferDecl (runDeclM, inferDecl)
+import InferDecl (runDeclM, inferDecl)
 
 import Eval.Definition (runEvalM)
 import Eval.Eval (eval)
