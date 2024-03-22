@@ -21,12 +21,10 @@ runProg val = do
   let progSource = fromJSString val
   let drvSt = MkDriverState False emptyEnv
   res <- runDriverM drvSt (runStr progSource)
-  let errStr err = "Error inferring program :\n <div class=\"resError\">" <> show err <> "</div>"
-  let succStr res' = "Program was successfully inferred and ran with result: \n <div class=\"resSucc\">" <> show res' <> "</div>"
   case res of 
-    Left err  -> setEvaluationResult (errStr err)
-    Right (Nothing,_) -> setEvaluationResult (succStr "No function main was defined")
-    Right (Just mainRes,_) -> setEvaluationResult (succStr mainRes)
+    Left err  -> setError (show err) 
+    Right (Nothing,_) -> setSuccess "No Function main was defined" 
+    Right (Just mainRes,_) -> setSuccess (show mainRes) 
   return ()
 
 main :: IO () 

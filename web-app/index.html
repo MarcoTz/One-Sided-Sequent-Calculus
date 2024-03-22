@@ -5,7 +5,6 @@
     <script>
       function runEx(){
         contents = document.getElementById("progInput").value
-        console.log(contents)
         globalCompiler(contents)
       }
 
@@ -25,7 +24,14 @@
     </div>
     <div class="results">
       <h2>Results</h2>
-      <div id="evalResult"></div>
+      <div id="successMessage">
+        Program evaluated successfully with result:
+        <div id="evalSucc"></div>
+      </div>
+      <div id="errorMessage">
+        Program failed with error:
+        <div id="evalError"></div>
+      </div>
     </div>
   </body>
   <script src="all.js" defer></script>

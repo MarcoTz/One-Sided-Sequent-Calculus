@@ -12,15 +12,20 @@ body {
   height:2em;
   border-radius:2px;
 }
-
-.prog {
-  height:40em
+#successMessage { 
+  visibility: hidden
 }
-
-.resSucc {
+#errorMessage {
+  visibility : hidden
+}
+#evalSucc {
   color: green
 }
 
-.resError {
+#evalError {
   color: red
+}
+
+.prog {
+  height:40em
 }
