@@ -79,13 +79,25 @@ library inference
                    Pretty.TypeInference
   hs-source-dirs:  one-sided-inference
 
+library typecheck
+  import:          all 
+  build-depends:   parser,
+                   desugar,
+                   env
+  exposed-modules: TypeCheck.Definition,
+                   TypeCheck.Terms,
+                   TypeCheck.Types,
+                   TypeCheck.Program,
+  hs-source-dirs:  one-sided-checking
+
                    
 library lang
   import:           all
   build-depends:    parser,
                     desugar,
                     env,
-                    inference
+                    inference,
+                    typecheck
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
 
@@ -93,11 +105,6 @@ library lang
                     Dependencies.Definition,
                     Dependencies.ImportsGraph,
                     Dependencies.VariablesGraph,
-
-                    TypeCheck.Definition,
-                    TypeCheck.Terms,
-                    TypeCheck.Types,
-                    TypeCheck.Program,
 
                     Eval.Definition,
                     Eval.Focusing,
@@ -135,8 +142,6 @@ executable test-suite
   build-depends:  lang,
                   fs,
                   parser,
-                  desugar,
-                  inference,
                   env
   hs-source-dirs: test
 
