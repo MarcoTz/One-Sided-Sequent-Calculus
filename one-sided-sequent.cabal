@@ -101,7 +101,7 @@ library typecheck
   hs-source-dirs:  one-sided-checking
 
                    
-library lang
+library driver
   import:           all
   build-depends:    parser,
                     desugar,
@@ -112,9 +112,8 @@ library lang
                     depcheck
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
-
                     Pretty.Driver,
-  hs-source-dirs:   src
+  hs-source-dirs:   one-sided-driver
 
 library eval
   import:          all
@@ -127,8 +126,7 @@ library eval
 
 library fs
   import:          all 
-  build-depends:   lang,
-                   directory,
+  build-depends:   directory,
                    filepath,
                    text,
                    parser
@@ -140,7 +138,7 @@ library fs
 executable main
   import:           all
   main-is:          Main.hs
-  build-depends:    lang,
+  build-depends:    driver,
                     fs,
                     parser,
                     desugar,
@@ -151,7 +149,7 @@ executable main
 executable test-suite
   import:         all
   main-is:        Main.hs
-  build-depends:  lang,
+  build-depends:  driver,
                   fs,
                   parser,
                   env
@@ -160,7 +158,7 @@ executable test-suite
 executable web-app
   import:          all
   main-is:         Main.hs 
-  build-depends:   lang,
+  build-depends:   driver,
                    parser,
                    desugar,
                    inference,
