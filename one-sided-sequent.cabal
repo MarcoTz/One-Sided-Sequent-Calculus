@@ -153,7 +153,7 @@ executable main
                     fs,
                     env,
                     parser
-  hs-source-dirs:   app
+  hs-source-dirs:   main
 
 executable test-suite
   import:         all
