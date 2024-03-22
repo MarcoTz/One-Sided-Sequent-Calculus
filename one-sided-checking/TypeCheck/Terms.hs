@@ -90,6 +90,7 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
   unless (all (uncurry (==)) tyArgsZipped) $ throwError (kindErr  ("checkTerm XCase  type arguments " <> show tyArgsZipped))
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
+  unless (all (`elem` ptxtns) declxtns) $ throwError (ErrBadPattern declxtns "checkTerm XCase")
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns "checkTerm XCase")
   varmap <- M.fromList <$> zipWithError argVars tyargs (ErrTyArity tyn "checkTerm XCase")
   pts' <- forM pts (`checkPattern` varmap)
