@@ -34,7 +34,7 @@ jobs:
         - name: Deploy
           uses: JamesIves/github-pages-deploy-action@v4
           with:
-            folder: ./public
+            folder: ../public
             git-config-name: one-sided-sc
             git-config-email: '<>'
             repository-name: one-sided-sc/one-sided-sc.io
