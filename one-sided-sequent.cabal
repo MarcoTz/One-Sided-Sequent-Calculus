@@ -97,7 +97,8 @@ library lang
                     desugar,
                     env,
                     inference,
-                    typecheck
+                    typecheck,
+                    eval
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
 
@@ -106,12 +107,17 @@ library lang
                     Dependencies.ImportsGraph,
                     Dependencies.VariablesGraph,
 
-                    Eval.Definition,
-                    Eval.Focusing,
-                    Eval.Eval,
-
                     Pretty.Driver,
   hs-source-dirs:   src
+
+library eval
+  import:          all
+  build-depends:   parser,
+                   env
+  exposed-modules: Eval.Definition,
+                   Eval.Focusing,
+                   Eval.Eval,
+  hs-source-dirs:  one-sided-eval
 
 library fs
   import:          all 
