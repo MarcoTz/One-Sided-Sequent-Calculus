@@ -1,4 +1,17 @@
-module Parser.Lexer where 
+module Parser.Lexer (
+  sc,
+  parseSymbol,
+  parseKeyword,
+  parsePol,
+  parseTypeVar,
+  parsePolVar,
+  parseTypeName,
+  parseXtorName,
+  parseModulename,
+  parseVariable,
+  parseCommaSep,
+  parseParens
+) where 
 
 import Parser.Keywords
 import Parser.Symbols

@@ -1,4 +1,4 @@
-module Parser.Program where 
+module Parser.Program (parseProgram) where 
 
 import Parser.Definition
 import Parser.Types

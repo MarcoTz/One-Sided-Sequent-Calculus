@@ -1,4 +1,16 @@
-module Dependencies.Graph where
+module Dependencies.Graph (
+  Edge (..),
+  Vertex,
+  Graph (..),
+  emptyGraph,
+  getEdgesStartingAt,
+  getEdgesEndingAt,
+  addEdge,
+  addVertex,
+  getStartingVert,
+  getVertex,
+  getVertexLabel
+) where
 
 import Data.Set qualified as S
 import Data.List (find) 

@@ -1,4 +1,15 @@
-module Syntax.Typed.Program where 
+module Syntax.Typed.Program (
+  Program (..),
+  RecDecl (..),
+  VarDecl (..),
+  DataDecl (..),
+  XtorSig (..),
+  addRecProgram,
+  addVarProgram,
+  addDeclProgram,
+  emptyProg,
+  isEmpty
+) where 
 
 import Common 
 import Syntax.Typed.Types

@@ -1,4 +1,19 @@
-module Environment where 
+module Environment (
+  Environment (..),
+  lookupMXtor,
+  lookupXtor,
+  lookupXtorDecl,
+  lookupMVar,
+  lookupBody,
+  lookupDecl,
+  lookupMRec,
+  getTypeNames,
+  getXtorNames,
+  emptyEnv,
+  addDeclEnv,
+  addVarEnv,
+  addRecEnv,
+) where 
 
 import Syntax.Typed.Program 
 import Syntax.Typed.Terms
@@ -69,22 +84,9 @@ lookupDecl tyn = do
 lookupMVar :: EnvReader a m => Variable -> m (Maybe VarDecl)
 lookupMVar v = M.lookup v <$> getVars
 
-lookupVar :: EnvReader a m => Variable -> m VarDecl
-lookupVar v = do 
-  mvar <- lookupMVar v 
-  case mvar of 
-    Nothing -> throwError (ErrMissingVar v "lookupVar (Env)")
-    Just decl -> return decl
 
 lookupMRec :: EnvReader a m => Variable -> m (Maybe RecDecl)
 lookupMRec v = M.lookup v <$> getRecs
-
-lookupRec :: EnvReader a m => Variable -> m RecDecl 
-lookupRec v = do 
-  mrec <- lookupMRec v 
-  case mrec of 
-    Nothing -> throwError (ErrMissingVar v "lookupRec (Env)")
-    Just decl -> return decl
 
 lookupBody :: EnvReader a m => Variable -> m Term
 lookupBody v = do 

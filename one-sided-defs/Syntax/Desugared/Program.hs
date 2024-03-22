@@ -1,4 +1,15 @@
-module Syntax.Desugared.Program where 
+module Syntax.Desugared.Program (
+  XtorSig (..),
+  VarDecl (..),
+  RecDecl (..),
+  DataDecl (..),
+  Program (..),
+  setMainProgram,
+  addRecProgram,
+  addVarProgram,
+  addDeclProgram,
+  emptyProg
+) where 
 
 import Common
 import Syntax.Desugared.Terms

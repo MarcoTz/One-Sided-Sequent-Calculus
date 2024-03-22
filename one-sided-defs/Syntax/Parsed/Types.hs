@@ -1,4 +1,7 @@
-module Syntax.Parsed.Types where 
+module Syntax.Parsed.Types (
+  PolTy (..),
+  Ty (..)
+) where 
 
 import Common
 

@@ -1,4 +1,4 @@
-module Pretty.Parsed where 
+module Pretty.Parsed () where 
 
 import Pretty.Common ()
 import Syntax.Parsed.Terms

@@ -1,4 +1,9 @@
-module Files.Definition where 
+module Files.Definition (
+  runFileLoaderM,
+  FileLoaderM,
+  liftFileError,
+  allowedDirs
+) where 
 
 import Errors
 
@@ -14,6 +19,6 @@ newtype FileLoaderM a = FileLoaderM { getLoaderM :: (ExceptT Error IO) a }
 runFileLoaderM :: FileLoaderM a -> IO (Either Error a)
 runFileLoaderM m = runExceptT (getLoaderM m)
 
-liftError :: Either Error a -> FileLoaderM a
-liftError (Left err) = throwError err
-liftError (Right a) = return a
+liftFileError :: Either Error a -> FileLoaderM a
+liftFileError (Left err) = throwError err
+liftFileError (Right a) = return a

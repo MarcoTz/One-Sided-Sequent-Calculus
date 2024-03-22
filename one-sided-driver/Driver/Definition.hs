@@ -1,4 +1,14 @@
-module Driver.Definition where 
+module Driver.Definition (
+  DriverM,
+  runDriverM,
+  liftErr,
+  debug,
+  setDebug,
+  addRecDecl,
+  addVarDecl,
+  addDecl,
+  DriverState (..)
+) where 
 
 import Syntax.Typed.Program
 import Errors
@@ -14,9 +24,6 @@ data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: !Environment}
 
 newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT Error IO) a }
   deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError Error, MonadIO)
-
-initialDriverState :: DriverState
-initialDriverState = MkDriverState False emptyEnv
 
 runDriverM :: DriverState -> DriverM a -> IO(Either Error (a,DriverState))
 runDriverM drvst m = runExceptT $ runStateT (getDriverM m) drvst 

@@ -1,4 +1,11 @@
-module Syntax.Typed.Terms where 
+module Syntax.Typed.Terms (
+  Command (..),
+  Term (..),
+  Pattern (..),
+  TypedVar,
+  getType,
+  isValue
+) where 
 
 import Syntax.Typed.Types 
 import Common

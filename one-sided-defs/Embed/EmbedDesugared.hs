@@ -1,4 +1,4 @@
-module Embed.EmbedDesugared where 
+module Embed.EmbedDesugared () where 
 
 import Embed.Definition
 import Common

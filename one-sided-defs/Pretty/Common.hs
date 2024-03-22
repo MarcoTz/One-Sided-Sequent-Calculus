@@ -1,4 +1,4 @@
-module Pretty.Common where 
+module Pretty.Common () where 
 
 import Common 
 

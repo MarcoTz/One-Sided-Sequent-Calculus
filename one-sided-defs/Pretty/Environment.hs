@@ -1,4 +1,4 @@
-module Pretty.Environment where 
+module Pretty.Environment () where 
 
 import Environment 
 import Pretty.Typed ()

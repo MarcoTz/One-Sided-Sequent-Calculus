@@ -1,4 +1,8 @@
-module Parser.Definition where 
+module Parser.Definition (
+  Parser,
+  runFileParser,
+  ParseDecl (..),
+) where 
 
 import Errors
 import Syntax.Parsed.Program

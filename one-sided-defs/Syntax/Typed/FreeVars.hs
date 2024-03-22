@@ -1,4 +1,7 @@
-module Syntax.Typed.FreeVars where 
+module Syntax.Typed.FreeVars (
+  freeVars,
+  freshVar
+) where 
 
 import Common 
 import Syntax.Typed.Terms 

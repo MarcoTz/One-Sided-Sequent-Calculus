@@ -1,4 +1,6 @@
-module GenerateConstraints.Terms where 
+module GenerateConstraints.Terms (
+  genConstraintsTerm
+) where 
 
 import Syntax.Typed.Types 
 import Syntax.Typed.Program
@@ -14,7 +16,6 @@ import Embed.Definition
 import Embed.EmbedTyped ()
 
 import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
 
@@ -40,17 +41,17 @@ genConstraintsCmd (D.Err err) = return $ T.Err err
   
 genConstraintsTerm :: D.Term -> GenM T.Term 
 genConstraintsTerm (D.Var v) = do 
-   vars <- gets varEnv
+   vars <- getGenVars 
    case M.lookup v vars of 
      Nothing -> do 
        tyV <- freshTyVar Pos 
-       addVar v tyV
+       addGenVar v tyV
        return (T.Var v tyV) 
      Just ty -> return (T.Var v ty)
 
 genConstraintsTerm (D.Mu v  c) = do 
   tyV <- freshTyVar Pos 
-  addVar v tyV
+  addGenVar v tyV
   c' <- genConstraintsCmd c
   return $ T.Mu v c' tyV 
 
@@ -71,7 +72,7 @@ genConstraintsTerm (D.XCase pts)  = do
     Just (MkData tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs
       pts' <- forM pts (\pt -> do 
-        forM_ (zip (D.ptv pt) newVars) (uncurry addVar) 
+        forM_ (zip (D.ptv pt) newVars) (uncurry addGenVar) 
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
       let pts'' = T.substTyVars varmap <$> pts'
@@ -85,7 +86,7 @@ genConstraintsTerm (D.ShiftPos t) = do
     return (T.ShiftPos t' newT)
 genConstraintsTerm (D.ShiftNeg v cmd) = do  
   tyV <- freshTyVar Pos 
-  addVar v tyV
+  addGenVar v tyV
   cmd' <- genConstraintsCmd cmd
   let newT = TyShift tyV Neg
   return (T.ShiftNeg v cmd' newT)

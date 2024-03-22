@@ -1,4 +1,7 @@
-module Syntax.Desugared.Types where 
+module Syntax.Desugared.Types (
+  PolTy (..),
+  Ty (..)
+) where 
 
 import Common 
 

@@ -1,4 +1,7 @@
-module TypeCheck.Types where 
+module TypeCheck.Types (
+  checkPolTy
+) 
+where 
 
 import TypeCheck.Definition
 import Syntax.Desugared.Types qualified as D
@@ -9,12 +12,11 @@ import Common
 import Environment
 
 import Control.Monad
-import Control.Monad.State
 import Control.Monad.Except
 
 checkType :: D.Ty -> Pol -> CheckM T.Ty
 checkType (D.TyVar v) pol = do
-  tyVars <- gets checkTyVars
+  tyVars <- getCheckerTyVars 
   if v `elem` tyVars then return $ T.TyVar v pol else throwError (ErrMissingTyVar v "checkType TyVar")
 
 checkType (D.TyDecl tyn args) pol = do 
@@ -26,7 +28,7 @@ checkType (D.TyDecl tyn args) pol = do
 checkType (D.TyCo ty) pol = T.TyCo <$> checkType ty (flipPol pol)
 checkType (D.TyShift ty) pol = (`T.TyShift` pol) <$> checkType ty Pos
 checkType (D.TyForall args ty) pol = do
-  forM_ args addTyVar 
+  forM_ args addCheckerTyVar 
   T.TyForall args <$> checkType ty pol
 
 checkPolTy :: D.PolTy -> CheckM T.Ty
@@ -38,6 +40,6 @@ checkPolTy (D.MkPolTy (D.TyDecl tyn tyargs) pol) = do
   return $ T.TyDecl tyn args' pol
 checkPolTy (D.MkPolTy (D.TyCo ty) pol) = T.TyCo <$> checkPolTy (D.MkPolTy ty (flipPol pol))
 checkPolTy (D.MkPolTy (D.TyForall args ty) pol) = do
-  forM_ args addTyVar
+  forM_ args addCheckerTyVar
   T.TyForall args <$> checkPolTy (D.MkPolTy ty pol)
 checkPolTy (D.MkPolTy (D.TyShift ty) pol) = (`T.TyShift` pol) <$> checkType ty Pos

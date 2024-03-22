@@ -1,4 +1,7 @@
-module InferDecl where 
+module InferDecl (
+  runDeclM,
+  inferDecl
+) where 
 
 import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Types   qualified as D
@@ -32,12 +35,6 @@ runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
   Left err -> Left err 
   Right (x, _) ->  Right x
 
-addDecl :: T.DataDecl -> DeclM ()
-addDecl decl = do
-  currDecls <- gets declsDone 
-  let newM = M.insert (T.declName decl) decl currDecls
-  modify (\s -> MkDeclState newM (currVars s) (currPol s))
-
 setCurrVars :: [PolVar] -> DeclM () 
 setCurrVars vars = do
   let newM = M.fromList ((\(MkPolVar tyv pol) -> (tyv,pol)) <$> vars)
@@ -45,13 +42,6 @@ setCurrVars vars = do
 
 setCurrPol :: Pol -> DeclM () 
 setCurrPol pol = modify (\s -> MkDeclState (declsDone s) (currVars s) (Just pol))
-
-inferDecls :: [D.DataDecl] -> DeclM [T.DataDecl] 
-inferDecls decls = 
-  forM decls (\d -> do
-    d' <- inferDecl d 
-    addDecl d'
-    return d')
 
 inferDecl :: D.DataDecl -> DeclM T.DataDecl
 inferDecl (D.MkData tyn args pol xtors) = do 

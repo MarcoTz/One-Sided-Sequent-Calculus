@@ -1,4 +1,7 @@
-module TypeCheck.Program where 
+module TypeCheck.Program (
+  checkVarDecl,
+  checkRecDecl
+) where 
 
 import TypeCheck.Definition
 import TypeCheck.Terms
@@ -21,7 +24,7 @@ checkVarDecl (D.MkVar nm Nothing _) = throwError (ErrMissingType ("Cannot typech
 checkRecDecl :: D.RecDecl -> CheckM T.RecDecl 
 checkRecDecl (D.MkRec nm (Just polty) t) = do 
   ty <- checkPolTy polty
-  addVarPol nm ty
+  addCheckerVar nm ty
   t' <- checkTerm t ty 
   return $ T.MkRec nm (T.getType t') t'
 checkRecDecl (D.MkRec nm Nothing _) = throwError (ErrMissingType ("Cannot typecheck recursive variable " <> show nm <> "without a tpye annotation"))

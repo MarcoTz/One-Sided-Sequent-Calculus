@@ -1,4 +1,6 @@
-module Desugar.Program where 
+module Desugar.Program (  
+  desugarProgram
+) where 
 
 import Errors
 import Environment
@@ -12,7 +14,6 @@ import Syntax.Parsed.Terms      qualified as P
 import Syntax.Desugared.Program qualified as D
 
 import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad
 import Data.Map qualified as M
 
@@ -35,36 +36,36 @@ desugarProgram prog = do
   forM_ (P.progRecs prog) desugarRec
   forM_ (P.progAnnots prog) desugarAnnot
   desugarMain (P.progMain prog)
-  gets desDone
+  getDesDoneProg
     
 
 desugarDecl :: P.DataDecl -> DesugarM () 
 desugarDecl d@(P.MkData tyn tyargs  pol sigs)= do 
-  setCurrDecl d
+  setDesCurrDecl d
   sigs' <- forM sigs desugarXtorSig
   let newD = D.MkData tyn tyargs pol sigs'
-  addDecl newD
+  addDesDecl newD
 
 desugarVar :: P.VarDecl -> DesugarM () 
 desugarVar (P.MkVar v t) = do 
   t' <- desugarTerm t
   let newV = D.MkVar v Nothing t'
-  addVar newV
+  addDesVar newV
 
 desugarRec :: P.RecDecl -> DesugarM ()
 desugarRec (P.MkRec v t) = do
   t' <- desugarTerm t 
   let newR = D.MkRec v Nothing t'
-  addRec newR
+  addDesRec newR
 
 desugarAnnot :: P.AnnotDecl -> DesugarM () 
 desugarAnnot (P.MkAnnot v ty) = do 
-  decl <- getDoneVar v
+  decl <- getDesDoneVar v
   ty' <- desugarPolTy ty
   case decl of 
-    Left (D.MkVar _ Nothing t) -> addVar (D.MkVar v (Just ty') t)
+    Left (D.MkVar _ Nothing t) -> addDesVar (D.MkVar v (Just ty') t)
     Left (D.MkVar _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
-    Right (D.MkRec _ Nothing t) -> addRec (D.MkRec v (Just ty') t)
+    Right (D.MkRec _ Nothing t) -> addDesRec (D.MkRec v (Just ty') t)
     Right (D.MkRec _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrTypeNeq (embed ty'') (embed ty') "desugarAnnot")
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
@@ -76,4 +77,4 @@ desugarMain :: Maybe P.Command -> DesugarM  ()
 desugarMain Nothing = return ()
 desugarMain (Just c) = do 
   c' <- desugarCommand c 
-  setMain c'
+  setDesMain c'

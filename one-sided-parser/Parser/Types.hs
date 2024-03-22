@@ -1,4 +1,8 @@
-module Parser.Types where 
+module Parser.Types (
+  parsePolTy,
+  parseTy,
+  parseTyArgs,
+) where 
 
 import Parser.Definition
 import Parser.Symbols

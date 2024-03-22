@@ -1,4 +1,6 @@
-module Dependencies.ImportsGraph where 
+module Dependencies.ImportsGraph (
+  depOrderModule
+) where 
 
 import Dependencies.Definition
 import Dependencies.Graph

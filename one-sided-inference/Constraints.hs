@@ -1,4 +1,8 @@
-module Constraints where 
+module Constraints (
+  ConstraintSet (..),
+  Constraint (..),
+  insertConstraint
+) where 
 
 import Syntax.Typed.Types
 import Common

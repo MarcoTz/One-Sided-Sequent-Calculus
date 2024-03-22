@@ -1,4 +1,18 @@
-module Desugar.Definition where 
+module Desugar.Definition (
+  DesugarM,
+  runDesugarM,
+  tyvarToTyName,
+  varToXtor,
+  getDesDefNames,
+  getDesMXtor,
+  getDesDoneVar,
+  getDesDoneProg,
+  setDesMain,
+  setDesCurrDecl,
+  addDesRec,
+  addDesVar,
+  addDesDecl
+) where 
 
 import Errors 
 import Common 
@@ -35,26 +49,22 @@ varToXtor (MkVariable v) = MkXtorName v
 tyvarToTyName :: TypeVar -> TypeName
 tyvarToTyName (MkTypeVar v) = MkTypeName v
 
-getDefNames :: DesugarM [TypeName]
-getDefNames = do
+getDesDoneProg :: DesugarM D.Program
+getDesDoneProg = gets desDone
+
+getDesDefNames :: DesugarM [TypeName]
+getDesDefNames = do
   doneNames <-  gets (map fst .  M.toList . D.progDecls . desDone)
   curr <- gets desCurrDecl
   case curr of 
     Nothing -> return doneNames 
     Just (P.MkData tyn _ _ _) -> return (tyn : doneNames)
 
-setCurrDecl :: P.DataDecl -> DesugarM () 
-setCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
+setDesCurrDecl :: P.DataDecl -> DesugarM () 
+setDesCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
 
-getCurrDecl :: Error -> DesugarM P.DataDecl
-getCurrDecl err = do 
-  curr <- gets desCurrDecl 
-  case curr of 
-    Nothing -> throwError err 
-    Just decl -> return decl
-
-getMXtor :: XtorName -> DesugarM (Maybe D.XtorSig)
-getMXtor xtn = do
+getDesMXtor :: XtorName -> DesugarM (Maybe D.XtorSig)
+getDesMXtor xtn = do
   msig <- lookupMXtor xtn
   doneDecls <- gets (D.progDecls . desDone)
   let xtors = concatMap D.declXtors doneDecls
@@ -64,8 +74,8 @@ getMXtor xtn = do
     (Just sig,_) -> return $ (Just . (embed :: T.XtorSig -> D.XtorSig)) sig
     (_, Just sig) -> return (Just sig)
 
-getDoneVar :: Variable -> DesugarM (Either D.VarDecl D.RecDecl)
-getDoneVar v = do 
+getDesDoneVar :: Variable -> DesugarM (Either D.VarDecl D.RecDecl)
+getDesDoneVar v = do 
   doneVars <- gets (D.progVars . desDone)
   doneRecs <- gets (D.progRecs . desDone)
   case (M.lookup v doneVars,M.lookup v doneRecs) of 
@@ -73,14 +83,14 @@ getDoneVar v = do
     (Just vdecl,_) -> return $ Left vdecl
     (_,Just rdecl) -> return $ Right rdecl
 
-addDecl :: D.DataDecl -> DesugarM () 
-addDecl decl = modify (\s -> MkDesugarState (desCurrDecl s) (D.addDeclProgram decl (desDone s)))
+addDesDecl :: D.DataDecl -> DesugarM () 
+addDesDecl decl = modify (\s -> MkDesugarState (desCurrDecl s) (D.addDeclProgram decl (desDone s)))
 
-addVar :: D.VarDecl -> DesugarM ()
-addVar var = modify (\s -> MkDesugarState (desCurrDecl s) (D.addVarProgram var (desDone s)))
+addDesVar :: D.VarDecl -> DesugarM ()
+addDesVar var = modify (\s -> MkDesugarState (desCurrDecl s) (D.addVarProgram var (desDone s)))
 
-addRec :: D.RecDecl -> DesugarM () 
-addRec rec = modify (\s -> MkDesugarState (desCurrDecl s) (D.addRecProgram rec (desDone s)))
+addDesRec :: D.RecDecl -> DesugarM () 
+addDesRec rec = modify (\s -> MkDesugarState (desCurrDecl s) (D.addRecProgram rec (desDone s)))
 
-setMain :: D.Command -> DesugarM () 
-setMain m = modify (\s -> MkDesugarState (desCurrDecl s) (D.setMainProgram m (desDone s)))
+setDesMain :: D.Command -> DesugarM () 
+setDesMain m = modify (\s -> MkDesugarState (desCurrDecl s) (D.setMainProgram m (desDone s)))

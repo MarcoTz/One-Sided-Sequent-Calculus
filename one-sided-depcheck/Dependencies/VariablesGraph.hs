@@ -1,4 +1,6 @@
-module Dependencies.VariablesGraph where 
+module Dependencies.VariablesGraph (
+  depOrderProgram
+) where 
 
 import Dependencies.Definition
 import Dependencies.Graph

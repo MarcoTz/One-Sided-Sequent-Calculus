@@ -1,4 +1,7 @@
-module Parser.Terms where
+module Parser.Terms (
+  parseTerm,
+  parseCommand
+) where
 
 import Parser.Definition
 import Parser.Lexer
@@ -80,19 +83,6 @@ parseShiftNeg = do
   parseSymbol SymDot
   sc
   ShiftNeg v <$> parseCommand
-
-
-parseMTypedVar :: Parser MTypedVar 
-parseMTypedVar = try (do 
-  var <- parseVariable 
-  sc 
-  parseSymbol SymColon
-  sc 
-  pty <- parsePolTy
-  return (var, Just pty)) 
-  <|>
-  (,Nothing) <$> parseVariable
-
 
 parseCommand :: Parser Command 
 parseCommand = parseCut <|> parseDone <|> parseErr

@@ -1,4 +1,7 @@
-module Files.Loader where 
+module Files.Loader (
+  listRecursive,
+  loadProgramWithImports
+) where 
 
 import Files.Definition
 import Common 
@@ -51,7 +54,7 @@ loadProgram :: Modulename -> FileLoaderM P.Program
 loadProgram mn = do
   progText <- loadModule mn
   let progParsed = runFileParser "" parseProgram progText
-  progParsed' <- liftError progParsed 
+  progParsed' <- liftFileError progParsed 
   unless (P.progName progParsed' == mn) $ throwError (ErrModuleNotFound mn " wrong module name in file")
   return progParsed'
 

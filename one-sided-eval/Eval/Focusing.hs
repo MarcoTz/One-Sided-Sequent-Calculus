@@ -1,4 +1,6 @@
-module Eval.Focusing where 
+module Eval.Focusing (
+  focus
+) where 
 
 import Syntax.Typed.Terms
 import Syntax.Typed.FreeVars
@@ -9,7 +11,7 @@ import Data.Set qualified as S
 focus :: Command -> Command 
 focus Done        = Done
 focus (Err err)   = Err err
-focus (Cut t u p) = Cut t u p 
+focus (Cut t p u) = Cut (focusTerm p t) p (focusTerm p u) 
 
 focusTerm :: Pol -> Term -> Term 
 focusTerm _ (Var v ty)        = Var v ty

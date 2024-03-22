@@ -1,4 +1,4 @@
-module Pretty.TypeInference where 
+module Pretty.TypeInference () where 
 
 import Constraints
 import Pretty.Typed ()

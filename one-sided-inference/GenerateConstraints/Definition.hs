@@ -1,4 +1,13 @@
-module GenerateConstraints.Definition where 
+module GenerateConstraints.Definition (
+  GenM,
+  runGenM,
+  addGenVar,
+  getGenVars,
+  freshTyVar,
+  freshTyVarsDecl,
+  addConstraint,
+  addConstraintsXtor
+) where 
 
 import Constraints
 import Syntax.Typed.Types
@@ -44,14 +53,6 @@ freshTyVar pol = do
   modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (constrSet s))
   return (TyVar newVar pol)
 
-freshKVar :: GenM Kind
-freshKVar = do 
-  cnt <- gets kVarCnt
-  let newVar = MkKVar ("k" <> show cnt)
-  modify (\s -> MkGenState (varEnv s) (tyVarCnt s) (cnt+1) (constrSet s))
-  return (MkKindVar newVar)
-
-
 freshTyVarsDecl :: [PolVar] -> GenM ([Ty],M.Map PolVar Ty) 
 freshTyVarsDecl vars = do
   varL <- forM vars (\(MkPolVar v p) -> do
@@ -66,8 +67,11 @@ freshTyVarsDecl vars = do
 addConstraint :: Constraint -> GenM () 
 addConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (insertConstraint ctr (constrSet s)))
 
-addVar :: Variable -> Ty -> GenM ()
-addVar v ty = do 
+getGenVars :: GenM (M.Map Variable Ty)
+getGenVars = gets varEnv
+
+addGenVar :: Variable -> Ty -> GenM ()
+addGenVar v ty = do 
   vars <- gets varEnv
   modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (constrSet s))
 

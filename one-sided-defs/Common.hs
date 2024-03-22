@@ -1,4 +1,18 @@
-module Common where 
+module Common (
+  FlipPol, 
+  flipPol,
+  GetKind, 
+  getKind,
+  TypeVar (..),
+  Pol (..),
+  TypeName (..),
+  Variable (..),
+  XtorName (..),
+  Modulename (..),
+  PolVar (..),
+  KindVar (..),
+  Kind (..)
+) where 
 
 newtype Modulename = MkModule String
   deriving (Eq,Ord)

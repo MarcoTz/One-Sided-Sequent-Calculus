@@ -1,4 +1,7 @@
-module Desugar.Terms where 
+module Desugar.Terms (
+  desugarCommand,
+  desugarTerm
+) where 
 
 import Desugar.Definition
 import Desugar.Types
@@ -10,7 +13,7 @@ import Control.Monad
 desugarTerm :: P.Term -> DesugarM D.Term
 desugarTerm (P.Var v) = do
   let vxt = varToXtor v
-  mxt <- getMXtor vxt
+  mxt <- getDesMXtor vxt
   case mxt of 
     Nothing -> return $ D.Var v
     Just _ -> return $ D.Xtor vxt [] 

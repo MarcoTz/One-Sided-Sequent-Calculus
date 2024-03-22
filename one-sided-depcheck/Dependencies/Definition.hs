@@ -1,4 +1,12 @@
-module Dependencies.Definition where
+module Dependencies.Definition (
+  DepM,
+  runDepM,
+  addEdgeM,
+  addVertexM,
+  getVertexError,
+  ensureAcyclic,
+  removeSelfLoops,
+) where
 
 import Dependencies.Graph
 import Environment

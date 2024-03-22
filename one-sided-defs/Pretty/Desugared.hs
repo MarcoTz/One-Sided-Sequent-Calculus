@@ -1,4 +1,4 @@
-module Pretty.Desugared where 
+module Pretty.Desugared () where 
 
 import Syntax.Desugared.Program qualified as D 
 import Syntax.Desugared.Terms qualified as D

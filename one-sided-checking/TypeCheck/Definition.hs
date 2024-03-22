@@ -1,4 +1,12 @@
-module TypeCheck.Definition where 
+module TypeCheck.Definition (
+  runCheckM,
+  CheckM,
+  getCheckerVars,
+  getCheckerTyVars,
+  addCheckerVar,
+  addCheckerTyVar,
+  withCheckerVars
+) where 
 
 import Errors 
 import Environment
@@ -22,8 +30,22 @@ runCheckM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) initi
   Left err -> Left err
   Right (x,_) -> Right x
 
-addVarPol :: Variable -> T.Ty -> CheckM () 
-addVarPol v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
+addCheckerVar :: Variable -> T.Ty -> CheckM () 
+addCheckerVar v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
 
-addTyVar :: TypeVar -> CheckM ()
-addTyVar tyv = modify (\s -> MkCheckState (checkVars s) (tyv:checkTyVars s))
+addCheckerTyVar :: TypeVar -> CheckM ()
+addCheckerTyVar tyv = modify (\s -> MkCheckState (checkVars s) (tyv:checkTyVars s))
+
+getCheckerVars :: CheckM (M.Map Variable T.Ty)
+getCheckerVars = gets checkVars
+
+getCheckerTyVars :: CheckM [TypeVar] 
+getCheckerTyVars = gets checkTyVars
+
+withCheckerVars :: M.Map Variable T.Ty -> CheckM a -> CheckM  a
+withCheckerVars newVars fun = do
+  currVars <- gets checkVars
+  modify (MkCheckState newVars . checkTyVars) 
+  res <- fun  
+  modify (MkCheckState currVars . checkTyVars)
+  return res

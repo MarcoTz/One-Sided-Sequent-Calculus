@@ -1,4 +1,7 @@
-module Driver.Driver where 
+module Driver.Driver (
+  inferAndRun,
+  runStr
+) where 
 
 import Common
 import Errors

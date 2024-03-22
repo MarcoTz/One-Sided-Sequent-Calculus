@@ -1,4 +1,7 @@
-module Parser.Keywords where 
+module Parser.Keywords (
+  Keyword (..),
+  allKws
+) where 
 
 data Keyword = 
   KwModule

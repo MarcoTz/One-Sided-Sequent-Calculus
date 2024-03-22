@@ -1,4 +1,4 @@
-module Embed.EmbedTyped where 
+module Embed.EmbedTyped () where 
 
 import Embed.Definition
 import Embed.EmbedDesugared () 

@@ -1,4 +1,7 @@
-module Eval.Definition where
+module Eval.Definition (
+  EvalM,
+  runEvalM
+) where
 
 import Environment 
 import Errors 

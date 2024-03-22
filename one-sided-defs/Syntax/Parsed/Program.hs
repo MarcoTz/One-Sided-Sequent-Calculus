@@ -1,4 +1,19 @@
-module Syntax.Parsed.Program where 
+module Syntax.Parsed.Program (
+  XtorSig (..),
+  AnnotDecl (..),
+  RecDecl (..),
+  VarDecl (..),
+  DataDecl (..),
+  Import (..),
+  Program (..),
+  addRecProgram,
+  setMainProgram,
+  addImportProgram,
+  addAnnotProgram,
+  addVarProgram,
+  addDeclProgram,
+  emptyProg,
+) where 
 
 import Common
 import Syntax.Parsed.Terms

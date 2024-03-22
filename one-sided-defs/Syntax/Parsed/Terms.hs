@@ -1,4 +1,9 @@
-module Syntax.Parsed.Terms where 
+module Syntax.Parsed.Terms (
+  Term (..),
+  Command (..),
+  Pattern (..),
+  MTypedVar
+) where 
 
 import Common 
 import Syntax.Parsed.Types

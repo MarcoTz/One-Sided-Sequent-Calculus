@@ -1,4 +1,4 @@
-module Parser.Symbols where 
+module Parser.Symbols (Sym (..)) where 
 
 data Sym = 
   SymParensO

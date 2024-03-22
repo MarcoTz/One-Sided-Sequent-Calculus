@@ -1,4 +1,4 @@
-module Pretty.Typed where 
+module Pretty.Typed () where 
 
 import Syntax.Parsed.Types    qualified as P
 import Syntax.Parsed.Program  qualified as P

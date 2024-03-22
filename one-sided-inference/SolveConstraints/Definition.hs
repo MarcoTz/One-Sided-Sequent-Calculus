@@ -1,4 +1,15 @@
-module SolveConstraints.Definition where 
+module SolveConstraints.Definition (
+  SolverM,
+  runSolveM,
+  ConstrTy (..),
+  addSlvKndVar,
+  getSlvKndVars,
+  addSlvTyVar,
+  getSlvTyVars,
+  getNextConstr,
+  addConstraintsArgs,
+  addConstraint
+) where 
 
 import Constraints
 import Syntax.Typed.Types
@@ -32,13 +43,28 @@ runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverStat
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
 
-addTyVar :: PolVar -> Ty -> SolverM ()
-addTyVar v ty = do 
+getNextConstr :: SolverM (Maybe Constraint)
+getNextConstr = do 
+  (MkConstraintSet constrs) <- gets remConstrs 
+  case constrs of 
+    [] -> return Nothing 
+    (c1:ctrs) -> do 
+      modify (\s  -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet ctrs))
+      return (Just c1)
+
+getSlvTyVars :: SolverM (M.Map PolVar Ty)
+getSlvTyVars = gets slvTyVars 
+
+addSlvTyVar :: PolVar -> Ty -> SolverM ()
+addSlvTyVar v ty = do 
   vars <- gets slvTyVars
   modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))
 
-addKndVar :: KindVar -> Pol -> SolverM () 
-addKndVar kv pol = do
+getSlvKndVars :: SolverM (M.Map KindVar Pol)
+getSlvKndVars = gets slvKndVars
+
+addSlvKndVar :: KindVar -> Pol -> SolverM () 
+addSlvKndVar kv pol = do
   kndVars <- gets slvKndVars 
   modify (\s -> MkSolverState (slvTyVars s) (M.insert kv pol kndVars) (remConstrs s))
 

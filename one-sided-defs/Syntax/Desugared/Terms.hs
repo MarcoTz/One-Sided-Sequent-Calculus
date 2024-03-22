@@ -1,4 +1,10 @@
-module Syntax.Desugared.Terms where 
+module Syntax.Desugared.Terms (
+  Command (..),
+  Term (..),
+  Pattern (..),
+  TypedVar,
+  MTypedVar
+) where 
 
 import Common 
 import Syntax.Desugared.Types

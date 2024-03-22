@@ -1,4 +1,8 @@
-module Errors where 
+module Errors (
+  Error (..),
+  KindReason (..),
+  zipWithError
+) where 
 
 import Common 
 import Syntax.Parsed.Types
@@ -37,14 +41,3 @@ zipWithError [] [] _ = return []
 zipWithError [] (_:_) err = throwError err
 zipWithError (_:_) [] err = throwError err
 zipWithError (a1:as) (b1:bs) err = (\z -> (a1,b1) : z) <$> zipWithError as bs err
-
-fromMaybeWithError :: MonadError Error m => Maybe a -> Error -> m a 
-fromMaybeWithError Nothing err = throwError err
-fromMaybeWithError (Just a) _ = return a
-
-allEqWithError :: MonadError Error m => Eq a => [a] -> Error -> m ()
-allEqWithError [] _ = return ()
-allEqWithError [_] _ = return () 
-allEqWithError (a1:(a2:as)) err = if a1 == a2 then allEqWithError (a2:as) err else throwError err
-
-

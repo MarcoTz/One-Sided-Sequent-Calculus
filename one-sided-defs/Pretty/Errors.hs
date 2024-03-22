@@ -1,4 +1,4 @@
-module Pretty.Errors where 
+module Pretty.Errors () where 
 
 import Errors 
 import Pretty.Parsed () 

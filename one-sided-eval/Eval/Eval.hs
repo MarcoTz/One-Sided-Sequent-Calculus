@@ -1,4 +1,6 @@
-module Eval.Eval where 
+module Eval.Eval (
+  eval
+) where 
 
 import Eval.Definition
 import Eval.Focusing

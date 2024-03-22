@@ -1,4 +1,7 @@
-module Syntax.Typed.Types where 
+module Syntax.Typed.Types (
+  Ty (..),
+  isSubsumed 
+) where 
 
 import Common 
 

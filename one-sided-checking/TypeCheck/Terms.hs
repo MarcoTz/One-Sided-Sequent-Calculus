@@ -1,4 +1,7 @@
-module TypeCheck.Terms where 
+module TypeCheck.Terms (
+  checkTerm,
+  checkCommand
+) where 
 
 import TypeCheck.Definition
 import TypeCheck.Types
@@ -16,12 +19,11 @@ import Pretty.Typed ()
 
 import Control.Monad
 import Control.Monad.Except
-import Control.Monad.State
 import Data.Map qualified as M
 
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 checkTerm t (T.TyForall args ty) = do 
-  forM_ args addTyVar 
+  forM_ args addCheckerTyVar 
   t' <- checkTerm t ty
   case t' of 
     T.Var v ty' -> return $ T.Var v (T.TyForall args ty')
@@ -42,14 +44,14 @@ checkTerm t (T.TyCo ty) = do
     T.ShiftNeg{} -> throwError (ErrKind ShouldEq (embed $ T.getType t') (embed $ T.TyCo ty) "checkTerm TyCo")
 
 checkTerm (D.Var v) ty = do
-  vars <- gets checkVars
+  vars <- getCheckerVars 
   mdecl <- lookupMVar v
   mrec <- lookupMRec v
   case (M.lookup v vars,mdecl,mrec) of 
     (Nothing,Nothing,Nothing) -> throwError (ErrMissingVar v "checkTerm Var")
     (Just (T.TyVar tyv pol),_,_) -> do
       unless (pol == getKind ty) $ throwError (ErrKind ShouldEq (embed $ T.TyVar tyv pol) (embed ty) "checkTerm Var")
-      tyVars <- gets checkTyVars 
+      tyVars <- getCheckerTyVars 
       if tyv `elem` tyVars then return $ T.Var v ty
       else throwError (ErrMissingTyVar tyv "checkTerm Var")
     (Just ty',_,_) -> T.Var v <$> checkTys ty ty'
@@ -63,7 +65,7 @@ checkTerm (D.Var v) ty = do
       else throwError (ErrTypeNeq (embed ty2) (embed ty1) ("checkTerm Var" <> show v))
 
 checkTerm (D.Mu v c) ty = do
-  addVarPol v (flipPol ty)
+  addCheckerVar v (flipPol ty)
   c' <- checkCommand c
   return (T.Mu v c' ty)
 
@@ -101,11 +103,9 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
       T.MkXtorSig _ xtargs <- lookupXtor xtn
       let xtargs' = T.substTyVars varmap <$> xtargs
       argsZipped <- zipWithError vars xtargs' (ErrXtorArity xtn "checkTerm XCase" )
-      currVars <- gets checkVars
+      currVars <- getCheckerVars 
       let newVars = foldr (\(v,ty') m -> M.insert v ty' m)  currVars argsZipped 
-      modify (MkCheckState newVars . checkTyVars) 
-      c' <- checkCommand c
-      modify (MkCheckState currVars . checkTyVars)
+      c' <- withCheckerVars newVars (checkCommand c)
       return $ T.MkPattern xtn vars c'
 
 checkTerm (D.ShiftPos t) (T.TyShift ty Pos) = do 
@@ -115,7 +115,7 @@ checkTerm (D.ShiftPos t) (T.TyShift ty Pos) = do
 
 checkTerm (D.ShiftNeg v c) (T.TyShift ty Neg) = do 
   unless (getKind ty == Pos) $ throwError (ErrKind ShouldEq (embed ty) (embed (flipPol ty)) "checkTerm Shift")
-  addVarPol v ty
+  addCheckerVar v ty
   c' <- checkCommand c
   return $ T.ShiftNeg v c' ty
   
@@ -144,7 +144,7 @@ checkCommand (D.Err err) = return $ T.Err err
 
 getTyCommand :: D.Term -> D.Term -> CheckM T.Ty 
 getTyCommand (D.Var v) _ = do 
-  vars <- gets checkVars
+  vars <- getCheckerVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrMissingVar v "checkCommand")
     Just ty -> return ty

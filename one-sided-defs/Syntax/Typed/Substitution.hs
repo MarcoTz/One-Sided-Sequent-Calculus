@@ -1,4 +1,7 @@
-module Syntax.Typed.Substitution where 
+module Syntax.Typed.Substitution (
+  substVar,
+  substTyVars
+) where 
 
 import Syntax.Typed.Types 
 import Syntax.Typed.Program

@@ -1,4 +1,4 @@
-module Pretty.Driver where 
+module Pretty.Driver () where 
 
 import Driver.Definition
 import Pretty.Typed ()
