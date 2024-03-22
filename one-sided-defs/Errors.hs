@@ -3,7 +3,6 @@ module Errors where
 import Common 
 import Syntax.Parsed.Types
 import Syntax.Parsed.Terms
-
 import Control.Monad.Except
 
 data Error =

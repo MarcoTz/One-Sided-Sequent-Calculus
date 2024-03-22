@@ -16,77 +16,80 @@ common libs
   build-depends: containers,
                  mtl
 
+library definitions
+  import:          all,
+                   libs
+  exposed-modules: Syntax.Parsed.Terms,
+                   Syntax.Parsed.Program,
+                   Syntax.Parsed.Types,
+                   Pretty.Parsed,
+
+                   Syntax.Typed.Terms,
+                   Syntax.Typed.Types,
+                   Syntax.Typed.Program,
+                   Syntax.Typed.Substitution,
+                   Syntax.Typed.FreeVars,
+                   Pretty.Typed,
+
+                   Syntax.Desugared.Program,
+                   Syntax.Desugared.Terms,
+                   Syntax.Desugared.Types,
+                   Pretty.Desugared,
+
+                   Environment,
+                   Pretty.Environment,
+
+                   Embed.Definition,
+                   Embed.EmbedDesugared,
+                   Embed.EmbedTyped,
+
+                   Common,
+                   Pretty.Common,
+
+                   Errors,
+                   Pretty.Errors,
+  hs-source-dirs:  one-sided-defs
+
 library parser 
   import:          all,
                    libs
   build-depends:   megaparsec,
                    monadplus,
-  exposed-modules: Syntax.Parsed.Terms,
-                   Syntax.Parsed.Program,
-                   Syntax.Parsed.Types,
-                   Parser.Definition,
+                   definitions
+  exposed-modules: Parser.Definition,
                    Parser.Keywords,
                    Parser.Symbols,
                    Parser.Lexer,
                    Parser.Program,
                    Parser.Types,
                    Parser.Terms,
-                   Common,
-                   Errors,
-                   Pretty.Errors,
-                   Pretty.Common,
-                   Pretty.Parsed
   hs-source-dirs:  one-sided-parser
 
 library depcheck
   import:          all,
                    libs
-  build-depends:   parser,
-                   env,
+  build-depends:   definitions,
   exposed-modules: Dependencies.Graph,
                    Dependencies.Definition,
                    Dependencies.ImportsGraph,
                    Dependencies.VariablesGraph,
   hs-source-dirs: one-sided-depcheck
 
-library env
-  import:          all,
-                   libs
-  build-depends:   parser,
-  exposed-modules: Syntax.Typed.Terms,
-                   Syntax.Typed.Types,
-                   Syntax.Typed.Program,
-                   Syntax.Typed.Substitution,
-                   Syntax.Typed.FreeVars,
-                   Environment,
-  hs-source-dirs:  one-sided-env
-
 library desugar 
   import:          all,
                    libs
-  build-depends:   parser,
-                   env,
-  exposed-modules: Syntax.Desugared.Program,
-                   Syntax.Desugared.Terms,
-                   Syntax.Desugared.Types,
-                   Desugar.Definition,
+  build-depends:   definitions,
+  exposed-modules: Desugar.Definition,
                    Desugar.Terms,
                    Desugar.Program,
                    Desugar.Types,
-                   Embed.Definition,
-                   Embed.EmbedDesugared,
-                   Embed.EmbedTyped,
-                   Pretty.Desugared,
-                   Pretty.Typed,
-                   Pretty.Environment
   hs-source-dirs:  one-sided-desugar
 
 library inference
   import:          all,
                    libs
-  build-depends:   parser,
+  build-depends:   definitions,
                    desugar,
-                   env,
   exposed-modules: GenerateConstraints.Definition,
                    GenerateConstraints.Terms,
                    SolveConstraints.Definition,
@@ -99,9 +102,8 @@ library inference
 library typecheck
   import:          all,
                    libs
-  build-depends:   parser,
+  build-depends:   definitions,
                    desugar,
-                   env,
   exposed-modules: TypeCheck.Definition,
                    TypeCheck.Terms,
                    TypeCheck.Types,
@@ -112,9 +114,9 @@ library typecheck
 library driver
   import:           all,
                     libs
-  build-depends:    parser,
+  build-depends:    definitions,
+                    parser,
                     desugar,
-                    env,
                     inference,
                     typecheck,
                     eval,
@@ -127,8 +129,7 @@ library driver
 library eval
   import:          all, 
                    libs
-  build-depends:   parser,
-                   env,
+  build-depends:   definitions,
   exposed-modules: Eval.Definition,
                    Eval.Focusing,
                    Eval.Eval,
@@ -138,6 +139,7 @@ library fs
   import:          all,
                    libs
   build-depends:   parser,
+                   definitions,
                    directory,
                    filepath,
                    text,
@@ -149,27 +151,25 @@ library fs
 executable main
   import:           all
   main-is:          Main.hs
-  build-depends:    driver,
+  build-depends:    definitions, 
+                    driver,
                     fs,
-                    env,
-                    parser
-  hs-source-dirs:   main
+  hs-source-dirs:   one-sided-main
 
 executable test-suite
   import:         all
   main-is:        Main.hs
   build-depends:  driver,
                   fs,
-                  parser,
-                  env
-  hs-source-dirs: test
+                  definitions,
+  hs-source-dirs: one-sided-tests
 
 executable web-app
   import:          all
   main-is:         Main.hs 
   build-depends:   driver,
                    parser,
-                   env
+                   definitions,
   hs-source-dirs:  web-app
   other-modules:   Callback,
                    JSBits
