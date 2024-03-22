@@ -37,7 +37,7 @@ jobs:
             folder: ../public
             git-config-name: one-sided-sc
             git-config-email: '<>'
-            repository-name: one-sided-sc/one-sided-sc.io
+            repository-name: ps-tuebingen/one-sided-sc-web.io
             ssh-key: ${{ secrets.ONE_SIDED_SSH }}
             commit-message: 'Deploy webdemo'
             single-commit: true
