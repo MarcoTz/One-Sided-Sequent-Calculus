@@ -24,7 +24,7 @@ jobs:
         - name: Update cabal
           run: cabal update
         - name: Build project
-          run: cabal build --with-compiler=javascript-unknown-ghcjs-ghc --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg web-demo
+          run: cabal build --with-compiler=javascript-unknown-ghcjs-ghc --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg web-app
         - name: Move files
           run: |
             mkdir ../public
