@@ -4,8 +4,6 @@ import TypeInference.Constraints
 import Syntax.Typed.Types
 import Common 
 import Errors
-import Pretty.Common ()
-import Pretty.Types ()
 
 import Data.Map qualified as M
 import Control.Monad.Except

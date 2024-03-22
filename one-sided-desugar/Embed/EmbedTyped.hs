@@ -1,8 +1,8 @@
 module Embed.EmbedTyped where 
 
 import Embed.Definition
-import Common
 import Embed.EmbedDesugared () 
+import Common
 import Syntax.Typed.Terms        qualified as T 
 import Syntax.Typed.Program      qualified as T 
 import Syntax.Typed.Types        qualified as T

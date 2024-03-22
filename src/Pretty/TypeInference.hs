@@ -1,7 +1,7 @@
 module Pretty.TypeInference where 
 
 import TypeInference.Constraints
-import Pretty.Types ()
+import Pretty.Typed ()
 
 import Data.List (intercalate)
 

@@ -12,7 +12,7 @@ import Errors
 import Common
 import Embed.EmbedTyped () 
 import Embed.Definition
-import Pretty.Types ()
+import Pretty.Typed ()
 
 import Control.Monad
 import Control.Monad.Except

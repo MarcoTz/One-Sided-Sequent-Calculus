@@ -17,49 +17,66 @@ common all
                       mtl
 
 library parser 
-  import:           all 
-  exposed-modules:  Syntax.Parsed.Terms,
-                    Syntax.Parsed.Program,
-                    Syntax.Parsed.Types,
-                    Parser.Definition,
-                    Parser.Keywords,
-                    Parser.Symbols,
-                    Parser.Lexer,
-                    Parser.Program,
-                    Parser.Types,
-                    Parser.Terms,
-                    Common,
-                    Errors,
-                    Pretty.Errors,
-                    Pretty.Common,
-                    Pretty.Parsed
-  hs-source-dirs:   one-sided-parser
+  import:          all 
+  exposed-modules: Syntax.Parsed.Terms,
+                   Syntax.Parsed.Program,
+                   Syntax.Parsed.Types,
+                   Parser.Definition,
+                   Parser.Keywords,
+                   Parser.Symbols,
+                   Parser.Lexer,
+                   Parser.Program,
+                   Parser.Types,
+                   Parser.Terms,
+                   Common,
+                   Errors,
+                   Pretty.Errors,
+                   Pretty.Common,
+                   Pretty.Parsed
+  hs-source-dirs:  one-sided-parser
 
+library env
+  import:          all
+  build-depends:   parser
+  exposed-modules: Syntax.Typed.Terms,
+                   Syntax.Typed.Types,
+                   Syntax.Typed.Program,
+                   Syntax.Typed.Substitution,
+                   Syntax.Typed.FreeVars,
+                   Environment,
+  hs-source-dirs:  one-sided-env
 
+library desugar 
+  import:          all
+  build-depends:   parser,
+                   env
+  exposed-modules: Syntax.Desugared.Program,
+                   Syntax.Desugared.Terms,
+                   Syntax.Desugared.Types,
+                   Desugar.Definition,
+                   Desugar.Terms,
+                   Desugar.Program,
+                   Desugar.Types,
+                   Embed.Definition,
+                   Embed.EmbedDesugared,
+                   Embed.EmbedTyped,
+                   Pretty.Desugared,
+                   Pretty.Typed,
+                   Pretty.Environment
+  hs-source-dirs:  one-sided-desugar
+                   
 library lang
   import:           all
-  build-depends:    parser
+  build-depends:    parser,
+                    desugar,
+                    env
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
-
-                    Syntax.Desugared.Program,
-                    Syntax.Desugared.Terms,
-                    Syntax.Desugared.Types,
-                    Syntax.Typed.Terms,
-                    Syntax.Typed.Types,
-                    Syntax.Typed.Program,
-                    Syntax.Typed.Substitution,
-                    Syntax.Typed.FreeVars,
 
                     Dependencies.Graph,
                     Dependencies.Definition,
                     Dependencies.ImportsGraph,
                     Dependencies.VariablesGraph,
-
-                    Desugar.Definition,
-                    Desugar.Terms,
-                    Desugar.Program,
-                    Desugar.Types,
 
                     TypeCheck.Definition,
                     TypeCheck.Terms,
@@ -77,18 +94,8 @@ library lang
                     Eval.Focusing,
                     Eval.Eval,
 
-                    Embed.Definition,
-                    Embed.EmbedDesugared,
-                    Embed.EmbedTyped,
-
                     Pretty.Driver,
-                    Pretty.Program,
-                    Pretty.Terms,
                     Pretty.TypeInference,
-                    Pretty.Types,
-                    Pretty.Environment,
-
-                    Environment,
   hs-source-dirs:   src
 
 library fs
@@ -108,7 +115,9 @@ executable main
   main-is:          Main.hs
   build-depends:    lang,
                     fs,
-                    parser
+                    parser,
+                    desugar,
+                    env
   hs-source-dirs:   app
 
 executable test-suite
@@ -116,14 +125,18 @@ executable test-suite
   main-is:        Main.hs
   build-depends:  lang,
                   fs,
-                  parser
+                  parser,
+                  desugar,
+                  env
   hs-source-dirs: test
 
 executable web-app
   import:          all
   main-is:         Main.hs 
   build-depends:   lang,
-                   parser
+                   parser,
+                   desugar,
+                   env
   hs-source-dirs:  web-app
   other-modules:   Callback,
                    JSBits

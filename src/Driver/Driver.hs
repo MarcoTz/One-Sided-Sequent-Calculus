@@ -29,8 +29,7 @@ import TypeInference.InferDecl (runDeclM, inferDecl)
 import Eval.Definition (runEvalM)
 import Eval.Eval (eval)
 
-import Pretty.Terms ()
-import Pretty.Program ()
+import Pretty.Parsed ()
 import Pretty.TypeInference ()
 import Pretty.Environment ()
 
