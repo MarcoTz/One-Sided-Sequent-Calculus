@@ -35,6 +35,16 @@ library parser
                    Pretty.Parsed
   hs-source-dirs:  one-sided-parser
 
+library depcheck
+  import: all 
+  build-depends:   parser,
+                   env
+  exposed-modules: Dependencies.Graph,
+                   Dependencies.Definition,
+                   Dependencies.ImportsGraph,
+                   Dependencies.VariablesGraph,
+  hs-source-dirs: one-sided-depcheck
+
 library env
   import:          all
   build-depends:   parser
@@ -98,14 +108,10 @@ library lang
                     env,
                     inference,
                     typecheck,
-                    eval
+                    eval,
+                    depcheck
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
-
-                    Dependencies.Graph,
-                    Dependencies.Definition,
-                    Dependencies.ImportsGraph,
-                    Dependencies.VariablesGraph,
 
                     Pretty.Driver,
   hs-source-dirs:   src
