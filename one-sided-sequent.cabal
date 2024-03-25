@@ -135,7 +135,7 @@ library eval
                    Eval.Eval,
   hs-source-dirs:  one-sided-eval
 
-library fs
+library fileload
   import:          all,
                    libs
   build-depends:   parser,
@@ -145,7 +145,7 @@ library fs
                    text,
   exposed-modules: Files.Definition,
                    Files.Loader
-  hs-source-dirs:  fs
+  hs-source-dirs:  one-sided-files
 
 
 executable main
@@ -153,14 +153,14 @@ executable main
   main-is:          Main.hs
   build-depends:    definitions, 
                     driver,
-                    fs,
+                    fileload,
   hs-source-dirs:   one-sided-main
 
 executable test-suite
   import:         all
   main-is:        Main.hs
   build-depends:  driver,
-                  fs,
+                  fileload,
                   definitions,
   hs-source-dirs: one-sided-tests
 
