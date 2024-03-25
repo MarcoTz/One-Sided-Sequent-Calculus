@@ -108,6 +108,7 @@ library typecheck
                    TypeCheck.Terms,
                    TypeCheck.Types,
                    TypeCheck.Program,
+                   TypeCheck.Errors
   hs-source-dirs:  one-sided-checking
 
                    

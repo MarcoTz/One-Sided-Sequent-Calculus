@@ -49,30 +49,30 @@ checkTerm (D.Var v) ty = do
   case (M.lookup v vars,mdecl,mrec) of 
     (Nothing,Nothing,Nothing) -> throwError (ErrUndefinedVar v)
     (Just (T.TyVar tyv pol),_,_) -> do
-      unless (pol == getKind ty) $ throwError (ErrKindNeq (T.TyVar tyv pol) ty)
+      unless (pol == getKind ty) $ throwError (ErrKindNeq (T.TyVar tyv pol) ty (D.Var v))
       tyVars <- getCheckerTyVars 
       if tyv `elem` tyVars then return $ T.Var v ty
-      else throwError (ErrUndefinedTyVar tyv)
+      else throwError (ErrUndefinedTyVar tyv (D.Var v))
     (Just ty',_,_) -> T.Var v <$> checkTys ty ty'
     (_,Just (T.MkVar _ ty' _),_) ->  T.Var v <$> checkTys ty ty'
     (_,_,Just (T.MkRec _ ty' _)) ->  T.Var v <$> checkTys ty ty'
   where 
     checkTys :: T.Ty -> T.Ty -> CheckM T.Ty
     checkTys ty1 ty2 = do
-      unless (getKind ty1 == getKind ty2) $ throwError (ErrKindNeq ty1 ty2)
+      unless (getKind ty1 == getKind ty2) $ throwError (ErrKindNeq ty1 ty2 (D.Var v))
       if T.isSubsumed ty1 ty2 || T.isSubsumed ty2 ty1 then return ty2
-      else throwError (ErrTypeNeq ty2 ty1)
+      else throwError (ErrTypeNeq ty2 ty1 (D.Var v))
 
 checkTerm (D.Mu v c) ty = do
   addCheckerVar v (flipPol ty)
   c' <- checkCommand c
   return (T.Mu v c' ty)
 
-checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
+checkTerm xtt@(D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' _ <- lookupXtorDecl xtn 
-  let kindErr = ErrKindNeq ty (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
+  let kindErr = ErrKindNeq ty (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') xtt
   unless (pol' == pol) $ throwError kindErr 
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol'))
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') xtt)
   tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTypeArity tyn)
   unless (all (uncurry (==)) tyargsZipped) $ throwError kindErr 
   T.MkXtorSig _ xtargs'  <- lookupXtor xtn
@@ -82,17 +82,17 @@ checkTerm (D.Xtor xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do
   xtargs''' <- forM xtArgsZipped (uncurry checkTerm)
   return (T.Xtor xtn xtargs''' ty)
 
-checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
+checkTerm xct@(D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData tyn' argVars pol' xtors <- lookupXtorDecl (D.ptxt pt1)
-  let kindErr = ErrKindNeq (flipPol ty) (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') 
+  let kindErr = ErrKindNeq (flipPol ty) (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol')  xct
   unless (pol' /= pol) $ throwError kindErr
-  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol'))
+  unless (tyn == tyn') $ throwError (ErrNotTyDecl tyn' (T.TyDecl tyn [] pol') xct)
   tyArgsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTypeArity tyn)
   unless (all (uncurry (==)) tyArgsZipped) $ throwError kindErr
   let ptxtns = D.ptxt <$> pts
   let declxtns = T.sigName <$> xtors
-  unless (all (`elem` ptxtns) declxtns) $ throwError (ErrBadPattern ptxtns declxtns)
-  unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns declxtns)
+  unless (all (`elem` ptxtns) declxtns) $ throwError (ErrBadPattern ptxtns declxtns xct)
+  unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern ptxtns declxtns xct)
   varmap <- M.fromList <$> zipWithError argVars tyargs (ErrTypeArity tyn)
   pts' <- forM pts (`checkPattern` varmap)
   return $ T.XCase pts' ty 
@@ -109,11 +109,11 @@ checkTerm (D.XCase pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
 
 checkTerm (D.ShiftPos t) (T.TyShift ty Pos) = do 
   t' <- checkTerm t ty 
-  unless (getKind t' == Pos) $ throwError (ErrKindNeq (T.getType t') (T.TyShift ty Pos))
+  unless (getKind t' == Pos) $ throwError (ErrKindNeq (T.getType t') (T.TyShift ty Pos) (D.ShiftPos t))
   return $ T.ShiftPos t' (T.TyShift (T.getType t') Pos)
 
 checkTerm (D.ShiftNeg v c) (T.TyShift ty Neg) = do 
-  unless (getKind ty == Pos) $ throwError (ErrKindNeq ty (T.TyShift ty Neg))
+  unless (getKind ty == Pos) $ throwError (ErrKindNeq ty (T.TyShift ty Neg) (D.ShiftNeg v c))
   addCheckerVar v ty
   c' <- checkCommand c
   return $ T.ShiftNeg v c' ty
@@ -121,22 +121,22 @@ checkTerm (D.ShiftNeg v c) (T.TyShift ty Neg) = do
 checkTerm t ty = throwError (ErrBadType t ty)
 
 checkCommand :: D.Command -> CheckM T.Command
-checkCommand (D.Cut t pol u) = do 
+checkCommand c@(D.Cut t pol u) = do 
   ty <- getTyCommand t u
   t' <- checkTerm t ty
   u' <- checkTerm u (flipPol ty)
   let pol1 = getKind t' 
   let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrCutKind (T.getType t') (T.getType u'))
+  when (pol1 == pol2) $ throwError (ErrCutKind (T.getType t') (T.getType u') c)
   return $ T.Cut t' pol u'
-checkCommand (D.CutAnnot t ty pol u) = do
+checkCommand c@(D.CutAnnot t ty pol u) = do
   ty' <- checkPolTy ty 
   ty'' <- checkPolTy (flipPol ty)
   t' <- checkTerm t ty' 
   u' <- checkTerm u  ty'' 
   let pol1 = getKind t' 
   let pol2 = getKind u' 
-  when (pol1 == pol2) $ throwError (ErrCutKind (T.getType t') (T.getType u'))
+  when (pol1 == pol2) $ throwError (ErrCutKind (T.getType t') (T.getType u') c)
   return $ T.Cut t' pol u'
 checkCommand D.Done = return T.Done 
 checkCommand (D.Err err) = return $ T.Err err

@@ -17,7 +17,7 @@ import Control.Monad.Except
 checkType :: D.Ty -> Pol -> CheckM T.Ty
 checkType (D.TyVar v) pol = do
   tyVars <- getCheckerTyVars 
-  if v `elem` tyVars then return $ T.TyVar v pol else throwError (ErrUndefinedTyVar v)
+  if v `elem` tyVars then return $ T.TyVar v pol else throwError (ErrFreeTyVar v)
 
 checkType (D.TyDecl tyn args) pol = do 
    T.MkData _ argVars _  _ <- lookupDecl tyn
