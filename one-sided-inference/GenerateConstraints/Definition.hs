@@ -10,11 +10,10 @@ module GenerateConstraints.Definition (
   GenerateError (..)
 ) where 
 
+import GenerateConstraints.Errors
 import Constraints
 import Syntax.Typed.Types
 import Common
-import Errors
-import Loc
 import Environment
 import Pretty.Common ()
 import Pretty.Typed ()
@@ -24,7 +23,6 @@ import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Map qualified as M
-import Data.List (intercalate)
 
 ----------------------
 -- Constraint Monad --
@@ -40,18 +38,6 @@ data GenerateState = MkGenState{
 
 initialGenState :: GenerateState 
 initialGenState = MkGenState M.empty 0 0 (MkConstraintSet [])
-
-data GenerateError =
-  ErrXtorArity !XtorName
-  | ErrKindNeq !Ty !Ty
-  | ErrBadPattern ![XtorName]
-
-instance Error GenerateError where 
-  getMessage (ErrXtorArity xtn) = "Wrong number of arguments for xtor " <> show xtn
-  getMessage (ErrKindNeq ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
-  getMessage (ErrBadPattern xts) = "Malformed pattern: " <> intercalate ", " (show <$> xts)
-  getLoc _ = defaultLoc 
-  toError _ _ = error "undefined"
 
 newtype GenM a = GenM { getGenM :: ReaderT Environment (StateT GenerateState (Except GenerateError)) a }
   deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError GenerateError, MonadReader Environment)

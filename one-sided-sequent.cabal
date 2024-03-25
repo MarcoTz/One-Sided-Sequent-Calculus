@@ -73,6 +73,7 @@ library depcheck
                    Dependencies.Definition,
                    Dependencies.ImportsGraph,
                    Dependencies.VariablesGraph,
+                   Dependencies.Errors
   hs-source-dirs: one-sided-depcheck
 
 library desugar 
@@ -83,6 +84,7 @@ library desugar
                    Desugar.Terms,
                    Desugar.Program,
                    Desugar.Types,
+                   Desugar.Errors
   hs-source-dirs:  one-sided-desugar
 
 library inference
@@ -92,8 +94,10 @@ library inference
                    desugar,
   exposed-modules: GenerateConstraints.Definition,
                    GenerateConstraints.Terms,
+                   GenerateConstraints.Errors,
                    SolveConstraints.Definition,
                    SolveConstraints.Solver,
+                   SolveConstraints.Errors,
                    Constraints,
                    InferDecl,
                    Pretty.TypeInference
@@ -124,6 +128,7 @@ library driver
                     depcheck,
   exposed-modules:  Driver.Driver,
                     Driver.Definition,
+                    Driver.Errors,
                     Pretty.Driver,
   hs-source-dirs:   one-sided-driver
 

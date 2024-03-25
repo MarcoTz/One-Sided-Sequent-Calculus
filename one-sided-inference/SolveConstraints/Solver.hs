@@ -3,6 +3,7 @@ module SolveConstraints.Solver (
 ) where 
 
 import SolveConstraints.Definition
+import SolveConstraints.Errors
 import Constraints
 import Syntax.Typed.Types
 import Common

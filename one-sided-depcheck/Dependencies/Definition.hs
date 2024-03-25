@@ -10,29 +10,12 @@ module Dependencies.Definition (
 ) where
 
 import Dependencies.Graph
+import Dependencies.Errors
 import Environment
-import Common
-import Errors 
-import Loc
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Except
-
-data DepError = 
-  ErrDuplModule !Modulename
-  | ErrUndefinedModule !Modulename
-  | ErrMutualRec !Modulename
-  | ErrUndefinedVar !Variable
-
-instance Error DepError where 
-    getMessage (ErrDuplModule mn) = "Module " <> show mn <> " was defined multiple times"
-    getMessage (ErrUndefinedModule mn) = "Module " <> show mn <> " was not defined"
-    getMessage (ErrMutualRec mn) = "Mutual Recusrion in module " <> show mn
-    getMessage (ErrUndefinedVar v) = "Variable " <> show v <> " was not defined"
-    getLoc _ = defaultLoc
-    toError _ _ = error " not implemented"
-  
+import Control.Monad.Except  
 
 newtype DepM a b = DepM { getCheckM :: ReaderT Environment (StateT (Graph a) (Except DepError)) b }
   deriving newtype (Functor, Applicative, Monad, MonadError DepError, MonadState (Graph a), MonadReader Environment)

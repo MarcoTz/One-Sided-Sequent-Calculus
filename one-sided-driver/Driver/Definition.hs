@@ -11,10 +11,10 @@ module Driver.Definition (
   DriverError (..)
 ) where 
 
+import Driver.Errors
 import Syntax.Typed.Program
 import Errors
 import Common
-import Loc
 import Environment
 
 import Control.Monad.State 
@@ -22,16 +22,6 @@ import Control.Monad.Except
 import Control.Monad 
 
 data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: !Environment} 
-
-data DriverError = 
-  ErrTypeInference
-  | ErrOther !String !Loc
-
-instance Error DriverError where 
-  getMessage ErrTypeInference = "Type Inference is not implemented yet"
-  getMessage (ErrOther str _) = str
-  getLoc _ = defaultLoc
-  toError = ErrOther
 
 newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT DriverError IO) a }
   deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError DriverError, MonadIO)
@@ -52,7 +42,7 @@ setDebug :: Bool -> DriverM ()
 setDebug b = modify (MkDriverState b . drvEnv)
 
 liftErr :: Error e => Either e a -> DriverM a
-liftErr (Left err) = throwError (toError (getMessage err) (getLoc err))
+liftErr (Left err) = throwError (convertError err)
 liftErr (Right a) = return a 
 
 debug :: String -> DriverM () 

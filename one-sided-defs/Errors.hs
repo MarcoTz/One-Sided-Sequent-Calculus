@@ -1,6 +1,7 @@
 module Errors (
   Error (..),
-  zipWithError
+  zipWithError,
+  convertError
 ) where 
 
 import Loc
@@ -17,3 +18,6 @@ zipWithError [] [] _ = return []
 zipWithError [] (_:_) err = throwError err
 zipWithError (_:_) [] err = throwError err
 zipWithError (a1:as) (b1:bs) err = (\z -> (a1,b1) : z) <$> zipWithError as bs err
+
+convertError :: Error e => Error e' => e -> e'
+convertError e = toError (getMessage e) (getLoc e)

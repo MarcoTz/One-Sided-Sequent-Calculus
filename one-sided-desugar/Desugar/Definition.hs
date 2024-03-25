@@ -15,16 +15,14 @@ module Desugar.Definition (
   DesugarError (..),
 ) where 
 
-import Errors 
+import Desugar.Errors
 import Common 
-import Loc
 import Environment
 import Embed.Definition
 import Embed.EmbedTyped ()
 import Syntax.Typed.Program     qualified as T
 import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Terms   qualified as D
-import Syntax.Desugared.Types   qualified as D
 import Syntax.Parsed.Program    qualified as P
 import Pretty.Desugared ()
 
@@ -35,20 +33,6 @@ import Data.Map qualified as M
 import Data.List (find)
 
 data DesugarState = MkDesugarState { desCurrDecl :: !(Maybe P.DataDecl), desDone :: !D.Program} 
-
-data DesugarError = 
-  ErrVariable !Variable
-  | ErrMultiple !String
-  | ErrMultipleAnnot !Variable !D.PolTy !D.PolTy
-  | EnvErr !String !Loc
-
-instance Error DesugarError where 
-  getMessage (EnvErr msg _) = msg 
-  getMessage (ErrVariable var) = "Definition for variable " <> show var <> "could not be found"
-  getMessage (ErrMultiple str) = str <> " was defined multiple times"
-  getMessage (ErrMultipleAnnot var ty1 ty2) = "Multiple incompatible annotations for variable" <> show var <> ": " <> show ty1 <> " and " <> show ty2
-  getLoc _ = defaultLoc
-  toError = EnvErr
 
 initialDesugarState :: Modulename -> DesugarState 
 initialDesugarState nm = MkDesugarState Nothing (D.emptyProg nm)

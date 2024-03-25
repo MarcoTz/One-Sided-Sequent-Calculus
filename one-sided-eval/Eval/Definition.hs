@@ -15,12 +15,14 @@ import Control.Monad.Reader
 data EvalError = 
   ErrXtorArity !XtorName
   | ErrMissingPt !XtorName
+  | ErrGeneric !String !Loc
 
 instance Error EvalError where 
   getMessage (ErrXtorArity xtn) = "Wrong number of arguments for xtor " <> show xtn
   getMessage (ErrMissingPt xtn) = "No pattern for xtor " <> show xtn 
+  getMessage (ErrGeneric str _) = str
   getLoc _  = defaultLoc
-  toError _ = error "not implemented" 
+  toError = ErrGeneric 
 
 newtype EvalM a = MkEvalM { getEvalM :: ReaderT Environment (Except EvalError) a }
   deriving newtype (Functor, Applicative, Monad, MonadError EvalError, MonadReader Environment)
