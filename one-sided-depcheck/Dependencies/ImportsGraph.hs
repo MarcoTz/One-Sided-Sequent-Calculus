@@ -24,7 +24,7 @@ createGraph :: [(Modulename,[Import])] -> DepModule ()
 createGraph m = forM_ m (uncurry addImport)
 
 addImport :: Modulename -> [Import] -> DepModule ()
-addImport mn imps = forM_ imps (\(MkImport mn') -> do
+addImport mn imps = forM_ imps (\(MkImport _ mn') -> do
   v1 <- addVertexM mn
   v2 <- addVertexM mn'
   addEdgeM (v1,v2))

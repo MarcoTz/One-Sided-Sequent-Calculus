@@ -14,22 +14,22 @@ import Pretty.Desugared()
 
 import Data.List (intercalate)
 
-data CheckerError =
-  ErrNoAnnot !Variable
-  | ErrUndefinedVar !Variable
-  | ErrUndefinedTyVar !TypeVar !D.Term
-  | ErrFreeTyVar !TypeVar
-  | ErrTyCoForShift !T.Term !Ty
-  | ErrKindNeq !Ty !Ty !D.Term
-  | ErrTypeNeq !Ty !Ty !D.Term
-  | ErrNotTyDecl !TypeName !Ty !D.Term
-  | ErrTypeArity !TypeName
-  | ErrXtorArity !XtorName
-  | ErrBadPattern ![XtorName] ![XtorName] !D.Term
-  | ErrCutKind !Ty !Ty !D.Command
-  | ErrBadType !D.Term !Ty
-  | ErrUnclearTypeCut !D.Term !D.Term
-  | ErrEnv !String !Loc
+data CheckerError where 
+  ErrNoAnnot        :: Loc -> Variable -> CheckerError 
+  ErrUndefinedVar   :: Loc -> Variable -> CheckerError 
+  ErrUndefinedTyVar :: Loc -> TypeVar -> D.Term-> CheckerError 
+  ErrFreeTyVar      :: Loc -> TypeVar-> CheckerError 
+  ErrTyCoForShift   :: Loc -> T.Term ->Ty-> CheckerError 
+  ErrKindNeq        :: Loc -> Ty ->Ty ->D.Term-> CheckerError 
+  ErrTypeNeq        :: Loc -> Ty ->Ty -> D.Term-> CheckerError 
+  ErrNotTyDecl      :: Loc -> TypeName -> Ty -> D.Term-> CheckerError 
+  ErrTypeArity      :: Loc -> TypeName-> CheckerError 
+  ErrXtorArity      :: Loc -> XtorName-> CheckerError 
+  ErrBadPattern     :: Loc -> [XtorName] -> [XtorName] -> D.Term-> CheckerError 
+  ErrCutKind        :: Loc -> Ty -> Ty -> D.Command-> CheckerError 
+  ErrBadType        :: Loc -> D.Term -> Ty-> CheckerError 
+  ErrUnclearTypeCut :: Loc -> D.Term -> D.Term-> CheckerError 
+  ErrOther          :: Loc -> String -> CheckerError 
 
 
 whileTerm :: D.Term -> String 
@@ -38,21 +38,36 @@ whileCmd :: D.Command -> String
 whileCmd c = "while type checking " <> show c
 
 instance Error CheckerError where 
-  getMessage (ErrNoAnnot var) = "No annotation for " <> show var <> ", cannot type check."
-  getMessage (ErrUndefinedVar var) = "Variable " <> show var <> " was not defined "
-  getMessage (ErrUndefinedTyVar tyv t) = "Type Variable " <> show tyv <> " was not defined " <> whileTerm t
-  getMessage (ErrFreeTyVar tyv) = "Type Variable " <> show tyv <> " cannot appear free"
-  getMessage (ErrTyCoForShift t ty) = "Cannot use co-type of " <> show ty <> " for shift term " <> show t
-  getMessage (ErrKindNeq ty1 ty2 t) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"  <> whileTerm t
-  getMessage (ErrTypeNeq ty1 ty2 t) = "Types " <> show ty1 <> " and " <> show ty2 <> " should be equal " <> whileTerm t
-  getMessage (ErrNotTyDecl tyn ty t) = "Type " <> show ty <> " should be " <> show tyn <> " " <> whileTerm t
-  getMessage (ErrTypeArity tyn) = "Wrong number of arguments for type " <> show tyn
-  getMessage (ErrXtorArity xtn) = "Wrong number of arguments for xtor " <> show xtn
-  getMessage (ErrBadPattern exPts shouldPts t) = "Malformed case: found patterns for " <> intercalate ", " (show <$> exPts) <> ", expected " <> intercalate ", " (show <$> shouldPts) <> " " <> whileTerm t
-  getMessage (ErrCutKind ty1 ty2 c) = "Kind of types " <> show ty1 <> " and " <> show ty2 <> " in cut are not equal " <> whileCmd c
-  getMessage (ErrBadType t ty) = "Cannot typecheck " <> show t <> " with type " <> show ty
-  getMessage (ErrUnclearTypeCut t1 t2) = "Types of terms " <> show t1 <> " and " <> show t2 <> " in cut unclear"
-  getMessage (ErrEnv str _) = str
+  getMessage (ErrNoAnnot _ var) = "No annotation for " <> show var <> ", cannot type check."
+  getMessage (ErrUndefinedVar _ var) = "Variable " <> show var <> " was not defined "
+  getMessage (ErrUndefinedTyVar _ tyv t) = "Type Variable " <> show tyv <> " was not defined " <> whileTerm t
+  getMessage (ErrFreeTyVar _ tyv) = "Type Variable " <> show tyv <> " cannot appear free"
+  getMessage (ErrTyCoForShift _ t ty) = "Cannot use co-type of " <> show ty <> " for shift term " <> show t
+  getMessage (ErrKindNeq _ ty1 ty2 t) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"  <> whileTerm t
+  getMessage (ErrTypeNeq _ ty1 ty2 t) = "Types " <> show ty1 <> " and " <> show ty2 <> " should be equal " <> whileTerm t
+  getMessage (ErrNotTyDecl _ tyn ty t) = "Type " <> show ty <> " should be " <> show tyn <> " " <> whileTerm t
+  getMessage (ErrTypeArity _ tyn) = "Wrong number of arguments for type " <> show tyn
+  getMessage (ErrXtorArity _ xtn) = "Wrong number of arguments for xtor " <> show xtn
+  getMessage (ErrBadPattern _ exPts shouldPts t) = "Malformed case: found patterns for " <> intercalate ", " (show <$> exPts) <> ", expected " <> intercalate ", " (show <$> shouldPts) <> " " <> whileTerm t
+  getMessage (ErrCutKind _ ty1 ty2 c) = "Kind of types " <> show ty1 <> " and " <> show ty2 <> " in cut are not equal " <> whileCmd c
+  getMessage (ErrBadType _ t ty) = "Cannot typecheck " <> show t <> " with type " <> show ty
+  getMessage (ErrUnclearTypeCut _ t1 t2) = "Types of terms " <> show t1 <> " and " <> show t2 <> " in cut unclear"
+  getMessage (ErrOther _ str)  = str
 
-  getLoc _ = defaultLoc
-  toError = ErrEnv
+  getLocation (ErrNoAnnot loc _) = loc
+  getLocation (ErrUndefinedVar loc _) = loc 
+  getLocation (ErrUndefinedTyVar loc _ _) = loc
+  getLocation (ErrFreeTyVar loc _) = loc 
+  getLocation (ErrTyCoForShift loc _ _) = loc 
+  getLocation (ErrKindNeq loc _ _ _) = loc
+  getLocation (ErrTypeNeq loc _ _ _) = loc
+  getLocation (ErrNotTyDecl loc _ _ _) = loc
+  getLocation (ErrTypeArity loc _) = loc 
+  getLocation (ErrXtorArity loc _) = loc 
+  getLocation (ErrBadPattern loc _ _ _) = loc
+  getLocation (ErrCutKind loc _ _ _) = loc 
+  getLocation (ErrBadType loc _ _) = loc 
+  getLocation (ErrUnclearTypeCut loc _ _) = loc 
+  getLocation (ErrOther loc _) = loc
+
+  toError = ErrOther 

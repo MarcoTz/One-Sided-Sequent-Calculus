@@ -18,16 +18,18 @@ import Data.List (intercalate)
 allowedDirs :: [FilePath] 
 allowedDirs = ["Examples","CounterExamples"]
 
-data FilesError = 
-  ErrModuleNotFound !Modulename
-  | ErrParser !String !Loc
+data FilesError where
+  ErrModuleNotFound :: Modulename -> FilesError
+  ErrOther :: Loc -> String -> FilesError
 
 instance Error FilesError where 
   getMessage (ErrModuleNotFound mn) = "Module " <> show mn <> " not found in " <> intercalate ", " (show <$> allowedDirs)
-  getMessage (ErrParser str _) = "Error parsing: " <> show str
+  getMessage (ErrOther _ str) = "Error parsing: " <> show str
 
-  getLoc _ = defaultLoc
-  toError= ErrParser
+  getLocation (ErrModuleNotFound _)  = defaultLoc
+  getLocation (ErrOther loc _) = loc
+
+  toError= ErrOther
 
 newtype FileLoaderM a = FileLoaderM { getLoaderM :: (ExceptT FilesError IO) a }
   deriving newtype (Functor, Applicative, Monad,MonadError FilesError, MonadIO)
@@ -36,5 +38,5 @@ runFileLoaderM :: FileLoaderM a -> IO (Either FilesError a)
 runFileLoaderM m = runExceptT (getLoaderM m)
 
 liftFileError :: Error e => Either e a -> FileLoaderM a
-liftFileError (Left err) = throwError (toError (getMessage err) (getLoc err))
+liftFileError (Left err) = throwError (convertError err) 
 liftFileError (Right a) = return a

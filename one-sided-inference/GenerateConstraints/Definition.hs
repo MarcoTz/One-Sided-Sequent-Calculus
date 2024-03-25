@@ -14,6 +14,7 @@ import GenerateConstraints.Errors
 import Constraints
 import Syntax.Typed.Types
 import Common
+import Loc
 import Environment
 import Pretty.Common ()
 import Pretty.Typed ()
@@ -78,10 +79,10 @@ addGenVar v ty = do
   modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (constrSet s))
 
 
-addConstraintsXtor :: XtorName -> [Ty] -> [Ty] -> GenM () 
-addConstraintsXtor _ [] [] = return ()
-addConstraintsXtor xt _ [] = throwError (ErrXtorArity xt)
-addConstraintsXtor xt [] _ = throwError (ErrXtorArity xt)
-addConstraintsXtor xt (ty1:tys1) (ty2:tys2) = do 
+addConstraintsXtor :: Loc -> XtorName -> [Ty] -> [Ty] -> GenM () 
+addConstraintsXtor _ _ [] [] = return ()
+addConstraintsXtor loc xt _ [] = throwError (ErrXtorArity loc xt)
+addConstraintsXtor loc xt [] _ = throwError (ErrXtorArity loc xt)
+addConstraintsXtor loc xt (ty1:tys1) (ty2:tys2) = do 
   addConstraint (MkTyEq ty1 ty2)
-  addConstraintsXtor xt tys1 tys2
+  addConstraintsXtor loc xt tys1 tys2

@@ -16,24 +16,47 @@ module Syntax.Parsed.Program (
 ) where 
 
 import Common
+import Loc 
 import Syntax.Parsed.Terms
 import Syntax.Parsed.Types
 
 import Data.Map qualified as M
 
-data XtorSig = MkXtorSig{sigName :: !XtorName, sigArgs :: ![Ty]} 
+data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !XtorName, sigArgs :: ![Ty]} 
   deriving (Eq,Ord)
+instance HasLoc XtorSig where 
+  getLoc = sigPos
+  setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args
 
-data DataDecl  = MkData   {declName   :: !TypeName, declArgs  :: ![PolVar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !TypeName, declArgs  :: ![PolVar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
   deriving (Eq,Ord)
-data VarDecl   = MkVar    {varName    :: !Variable, varBody   :: !Term}
+instance HasLoc DataDecl where 
+  getLoc = declPos
+  setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
+
+data VarDecl   = MkVar    {varPos    :: !Loc, varName    :: !Variable, varBody   :: !Term}
   deriving (Eq,Ord)
-data RecDecl   = MkRec    {recName    :: !Variable, recBody   :: !Term}
+instance HasLoc VarDecl where 
+  getLoc = varPos
+  setLoc loc (MkVar _ nm bd) = MkVar loc nm bd
+
+data RecDecl   = MkRec    {recPos    :: !Loc, recName    :: !Variable, recBody   :: !Term}
   deriving (Eq,Ord)
-data AnnotDecl = MkAnnot  {annotName  :: !Variable, annotType :: !PolTy} 
+instance HasLoc RecDecl where 
+  getLoc = recPos 
+  setLoc loc (MkRec _ nm bd) = MkRec loc nm bd
+
+data AnnotDecl = MkAnnot  {annotPos  :: !Loc, annotName  :: !Variable, annotType :: !PolTy} 
   deriving (Eq,Ord)
-newtype Import = MkImport {importName :: Modulename }
+instance HasLoc AnnotDecl where 
+  getLoc = annotPos 
+  setLoc loc (MkAnnot _ nm ty) = MkAnnot loc nm ty
+
+data Import = MkImport    {importPos :: !Loc, importName :: !Modulename }
   deriving (Eq,Ord)
+instance HasLoc Import where 
+  getLoc = importPos
+  setLoc loc (MkImport _ nm) = MkImport loc nm
 
 data Program = MkProgram { 
   progName    :: !Modulename, 
@@ -66,5 +89,4 @@ addImportProgram imp (MkProgram mn decls vars recs annots imports main) = MkProg
 setMainProgram :: Command -> Program -> Program
 setMainProgram c (MkProgram mn decls vars recs annots imports _) = MkProgram mn decls vars recs annots imports (Just c)
 
---data Eps = MkEps 
 --newtype Codecl = MkCo DataDecl 

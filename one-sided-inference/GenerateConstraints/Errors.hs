@@ -11,14 +11,22 @@ import Pretty.Typed ()
 
 import Data.List (intercalate)
 
-data GenerateError =
-  ErrXtorArity !XtorName
-  | ErrKindNeq !Ty !Ty
-  | ErrBadPattern ![XtorName]
+data GenerateError where 
+  ErrXtorArity  :: Loc -> XtorName -> GenerateError
+  ErrKindNeq    :: Loc -> Ty -> Ty -> GenerateError
+  ErrBadPattern :: Loc -> [XtorName] -> GenerateError
+  ErrOther      :: Loc -> String -> GenerateError
 
 instance Error GenerateError where 
-  getMessage (ErrXtorArity xtn) = "Wrong number of arguments for xtor " <> show xtn
-  getMessage (ErrKindNeq ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
-  getMessage (ErrBadPattern xts) = "Malformed pattern: " <> intercalate ", " (show <$> xts)
-  getLoc _ = defaultLoc 
-  toError _ _ = error "undefined"
+  getMessage (ErrXtorArity _ xtn) = "Wrong number of arguments for xtor " <> show xtn
+  getMessage (ErrKindNeq _ ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
+  getMessage (ErrBadPattern _ xts) = "Malformed pattern: " <> intercalate ", " (show <$> xts)
+  getMessage (ErrOther _ str) = str
+
+  getLocation (ErrXtorArity loc _) = loc 
+  getLocation (ErrKindNeq loc _ _) = loc 
+  getLocation (ErrBadPattern loc _) = loc 
+  getLocation (ErrOther loc _) = loc
+
+  toError = ErrOther
+

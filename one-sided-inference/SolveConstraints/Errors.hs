@@ -20,5 +20,5 @@ instance Error SolverError where
   getMessage (ErrTyNeq ty1 ty2) = "Types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
   getMessage (ErrKindNeq knd1 knd2) = "Kinds " <> show knd1 <> " and " <> show knd2 <> " are not equal"
   getMessage (ErrTypeKindNeq ty1 ty2) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"
-  getLoc _ = defaultLoc
+  getLocation _ = defaultLoc
   toError _ = error "not implemented"

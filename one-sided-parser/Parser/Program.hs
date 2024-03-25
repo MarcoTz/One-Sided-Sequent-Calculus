@@ -9,6 +9,7 @@ import Parser.Symbols
 import Syntax.Parsed.Program
 import Syntax.Parsed.Terms
 import Common
+import Loc
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -74,7 +75,7 @@ parseImport = do
   space1
   mn <- parseModulename
   parseSymbol SymSemi
-  return (MkImport mn)
+  return (MkImport defaultLoc mn)
 
 parseTypeAnnot :: Parser AnnotDecl 
 parseTypeAnnot = do
@@ -86,7 +87,7 @@ parseTypeAnnot = do
   ty <- parsePolTy
   sc
   parseSymbol SymSemi
-  return $ MkAnnot nm ty 
+  return $ MkAnnot defaultLoc nm ty 
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
@@ -98,14 +99,14 @@ parseVarDecl = do
   t <- parseTerm
   sc
   parseSymbol SymSemi
-  return (MkVar nm t)
+  return (MkVar defaultLoc nm t)
 
 parseRecDecl :: Parser RecDecl 
 parseRecDecl = do 
   parseKeyword KwRec
   sc
-  (MkVar nm t) <- parseVarDecl
-  return (MkRec nm t)
+  (MkVar loc nm t) <- parseVarDecl
+  return (MkRec loc nm t)
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 
@@ -124,11 +125,11 @@ parseDataDecl = do
   xtors <- parseXtorSig `sepBy` parseCommaSep
   sc
   parseSymbol SymBrackC
-  return $ MkData nm args pol xtors
+  return $ MkData defaultLoc nm args pol xtors
 
 
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
  nm <- parseXtorName 
  args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
- return $ MkXtorSig nm args 
+ return $ MkXtorSig defaultLoc nm args 

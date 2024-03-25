@@ -11,6 +11,7 @@ import Parser.Types
 import Syntax.Parsed.Terms
 import Syntax.Parsed.Types
 import Common
+import Loc
 
 import Text.Megaparsec
 import Data.Functor
@@ -19,7 +20,7 @@ parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
-parseVar = Var <$> parseVariable 
+parseVar = Var defaultLoc <$> parseVariable 
 
 parseMu :: Parser Term
 parseMu = do
@@ -29,7 +30,7 @@ parseMu = do
   sc
   parseSymbol SymDot
   sc
-  Mu v <$> parseCommand
+  Mu defaultLoc v <$> parseCommand
 
 parseXtor :: Parser Term
 parseXtor = do
@@ -40,7 +41,7 @@ parseXtor = do
   args <- parseTerm `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymParensC 
-  return $ Xtor nm args
+  return $ Xtor defaultLoc nm args
 
 parsePattern :: Parser Pattern 
 parsePattern = do 
@@ -63,14 +64,14 @@ parseXCase = do
   sc
   parseSymbol SymBrackC
   sc
-  return (XCase pts)
+  return (XCase defaultLoc pts)
 
 parseShiftPos :: Parser Term 
 parseShiftPos = do 
   parseSymbol SymBrackO
   t <- parseTerm
   parseSymbol SymBrackC
-  return (ShiftPos t)
+  return (ShiftPos defaultLoc t)
 
 parseShiftNeg :: Parser Term
 parseShiftNeg = do 
@@ -82,7 +83,7 @@ parseShiftNeg = do
   sc
   parseSymbol SymDot
   sc
-  ShiftNeg v <$> parseCommand
+  ShiftNeg defaultLoc v <$> parseCommand
 
 parseCommand :: Parser Command 
 parseCommand = parseCut <|> parseDone <|> parseErr
@@ -103,8 +104,8 @@ parseCut = do
   sc
   parseSymbol SymAngC
   case mty of 
-    Nothing -> return (Cut t pol u)
-    Just ty -> return (CutAnnot t ty pol u)
+    Nothing -> return (Cut defaultLoc t pol u)
+    Just ty -> return (CutAnnot defaultLoc t ty pol u)
 
 parseCutAnnot :: Parser (Pol,Maybe PolTy)
 parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
@@ -129,7 +130,7 @@ parseTyBarPol = do
   return (pol,Just ty)
 
 parseDone :: Parser Command
-parseDone = parseKeyword KwDone  >> return Done
+parseDone = parseKeyword KwDone  >> return (Done defaultLoc)
 
 parseErr :: Parser Command 
 parseErr = do 
@@ -139,4 +140,4 @@ parseErr = do
   msg <- takeWhileP (Just "character") (/= '"')
   parseSymbol SymQuot
   sc
-  return (Err msg)
+  return (Err defaultLoc msg)

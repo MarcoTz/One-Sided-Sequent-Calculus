@@ -11,27 +11,27 @@ import Syntax.Desugared.Terms qualified as D
 import Control.Monad
 
 desugarTerm :: P.Term -> DesugarM D.Term
-desugarTerm (P.Var v) = do
+desugarTerm (P.Var loc v) = do
   let vxt = varToXtor v
   mxt <- getDesMXtor vxt
   case mxt of 
-    Nothing -> return $ D.Var v
-    Just _ -> return $ D.Xtor vxt [] 
-desugarTerm (P.Mu v c) = do 
+    Nothing -> return $ D.Var loc v
+    Just _ -> return $ D.Xtor loc vxt [] 
+desugarTerm (P.Mu loc v c) = do 
   c' <- desugarCommand c
-  return $ D.Mu v c'
-desugarTerm (P.Xtor xtn args) = do 
+  return $ D.Mu loc v c'
+desugarTerm (P.Xtor loc xtn args) = do 
   args' <- forM args desugarTerm
-  return $ D.Xtor xtn args'
-desugarTerm (P.XCase pts) = do
+  return $ D.Xtor loc xtn args'
+desugarTerm (P.XCase loc pts) = do
   pts' <- forM pts desugarPattern
-  return $ D.XCase pts'
-desugarTerm (P.ShiftPos t) = do
+  return $ D.XCase loc pts'
+desugarTerm (P.ShiftPos loc t) = do
   t' <- desugarTerm t
-  return $ D.ShiftPos t'
-desugarTerm (P.ShiftNeg v c) = do 
+  return $ D.ShiftPos loc t'
+desugarTerm (P.ShiftNeg loc v c) = do 
   c' <- desugarCommand c
-  return $ D.ShiftNeg v c'
+  return $ D.ShiftNeg loc v c'
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.MkPattern xtn vars c) = do 
@@ -39,14 +39,14 @@ desugarPattern (P.MkPattern xtn vars c) = do
   return $ D.MkPattern xtn vars c'
 
 desugarCommand :: P.Command -> DesugarM D.Command 
-desugarCommand (P.Cut t pol u) = do 
+desugarCommand (P.Cut loc t pol u) = do 
   t' <- desugarTerm t
   u' <- desugarTerm u 
-  return $ D.Cut t' pol u'
-desugarCommand (P.CutAnnot t ty pol u) = do
+  return $ D.Cut loc t' pol u'
+desugarCommand (P.CutAnnot loc t ty pol u) = do
   t' <- desugarTerm t
   u' <- desugarTerm u
   ty' <- desugarPolTy ty 
-  return $ D.CutAnnot t' ty' pol u'
-desugarCommand P.Done = return D.Done
-desugarCommand (P.Err str) = return $ D.Err str
+  return $ D.CutAnnot loc t' ty' pol u'
+desugarCommand (P.Done loc) = return (D.Done loc)
+desugarCommand (P.Err loc str) = return $ D.Err loc str

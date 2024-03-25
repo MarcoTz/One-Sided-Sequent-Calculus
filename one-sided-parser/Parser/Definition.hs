@@ -18,7 +18,7 @@ newtype Parser a = Parser { getParser :: Parsec String String  a }
 
 instance Error (ParseErrorBundle String String) where 
   getMessage _ = ""
-  getLoc _ = defaultLoc
+  getLocation _ = defaultLoc
   toError = error "not implemented"
 
 runFileParser :: FilePath -> Parser b -> String -> Either (ParseErrorBundle String String) b

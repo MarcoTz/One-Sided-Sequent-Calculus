@@ -30,42 +30,42 @@ depOrderProgram (MkProgram mn decls vars recs _ _ _) = do
   return $ getVertexLabel <$> order
 
 addVariable :: VarDecl -> DepVar (Vertex Variable,Term)
-addVariable (MkVar v t) = do
+addVariable (MkVar _ v t) = do
   vert <- addVertexM v
   return (vert,t)
 
 addRec :: RecDecl -> DepVar (Vertex Variable, Term)
-addRec (MkRec v t) = do 
+addRec (MkRec _ v t) = do 
   vert <- addVertexM v 
   return (vert,t)
 
 addEdgesVariableT :: Vertex Variable -> [Variable] -> Term -> DepVar ()
-addEdgesVariableT vert ignore (Var v) = do 
+addEdgesVariableT vert ignore (Var loc v) = do 
   mdef <- lookupMVar v
   mxtor <- lookupMXtor ((\(MkVariable v') -> MkXtorName v') v)
   if isJust mdef || isJust mxtor || v `elem` ignore then return ()
   else do
-    vert' <- getVertexError v (ErrUndefinedVar v)
+    vert' <- getVertexError v (ErrUndefinedVar loc v)
     addEdgeM (vert,vert')
-addEdgesVariableT vert ignore (Mu v c) = addEdgesVariableC vert (v:ignore) c 
-addEdgesVariableT vert ignore (Xtor (MkXtorName nm) args) = forM_ args (addEdgesVariableT vert (MkVariable nm : ignore))
-addEdgesVariableT vert ignore (XCase pts) = forM_ pts (addEdgesVariablePt vert ignore)
-addEdgesVariableT vert ignore (ShiftPos t) = addEdgesVariableT vert ignore t
-addEdgesVariableT vert ignore (ShiftNeg v c) = addEdgesVariableC vert (v:ignore) c 
+addEdgesVariableT vert ignore (Mu _ v c) = addEdgesVariableC vert (v:ignore) c 
+addEdgesVariableT vert ignore (Xtor _ (MkXtorName nm) args) = forM_ args (addEdgesVariableT vert (MkVariable nm : ignore))
+addEdgesVariableT vert ignore (XCase _ pts) = forM_ pts (addEdgesVariablePt vert ignore)
+addEdgesVariableT vert ignore (ShiftPos _ t) = addEdgesVariableT vert ignore t
+addEdgesVariableT vert ignore (ShiftNeg _ v c) = addEdgesVariableC vert (v:ignore) c 
 
 addEdgesVariablePt :: Vertex Variable -> [Variable] -> Pattern -> DepVar ()
 addEdgesVariablePt vert ignore (MkPattern (MkXtorName nm) vars c) = do 
   addEdgesVariableC vert (vars ++ (MkVariable nm : ignore)) c
 
 addEdgesVariableC :: Vertex Variable -> [Variable] -> Command -> DepVar ()
-addEdgesVariableC vert ignore (Cut t _ u) = do
+addEdgesVariableC vert ignore (Cut _ t _ u) = do
   addEdgesVariableT vert ignore t 
   addEdgesVariableT vert ignore u
-addEdgesVariableC vert ignore (CutAnnot t _ _ u) = do
+addEdgesVariableC vert ignore (CutAnnot _ t _ _ u) = do
   addEdgesVariableT vert ignore t 
   addEdgesVariableT vert ignore u 
-addEdgesVariableC _ _ Done = return ()
-addEdgesVariableC _ _ (Err _) = return ()
+addEdgesVariableC _ _ (Done _) = return ()
+addEdgesVariableC _ _ (Err _ _) = return ()
 
 getVarOrder :: DepVar [Vertex Variable] 
 getVarOrder = do 

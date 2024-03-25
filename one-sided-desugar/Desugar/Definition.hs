@@ -17,6 +17,7 @@ module Desugar.Definition (
 
 import Desugar.Errors
 import Common 
+import Loc
 import Environment
 import Embed.Definition
 import Embed.EmbedTyped ()
@@ -61,7 +62,7 @@ getDesDefNames = do
   curr <- gets desCurrDecl
   case curr of 
     Nothing -> return doneNames 
-    Just (P.MkData tyn _ _ _) -> return (tyn : doneNames)
+    Just (P.MkData _ tyn _ _ _) -> return (tyn : doneNames)
 
 setDesCurrDecl :: P.DataDecl -> DesugarM () 
 setDesCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
@@ -77,12 +78,12 @@ getDesMXtor xtn = do
     (Just sig,_) -> return $ (Just . (embed :: T.XtorSig -> D.XtorSig)) sig
     (_, Just sig) -> return (Just sig)
 
-getDesDoneVar :: Variable -> DesugarM (Either D.VarDecl D.RecDecl)
-getDesDoneVar v = do 
+getDesDoneVar :: Loc -> Variable -> DesugarM (Either D.VarDecl D.RecDecl)
+getDesDoneVar loc v = do 
   doneVars <- gets (D.progVars . desDone)
   doneRecs <- gets (D.progRecs . desDone)
   case (M.lookup v doneVars,M.lookup v doneRecs) of 
-    (Nothing,Nothing) -> throwError (ErrVariable v)
+    (Nothing,Nothing) -> throwError (ErrVariable loc v)
     (Just vdecl,_) -> return $ Left vdecl
     (_,Just rdecl) -> return $ Right rdecl
 

@@ -5,13 +5,12 @@ module Syntax.Parsed.Types (
 
 import Common
 
-
-data Ty = 
-  TyVar !TypeVar 
-  | TyDecl !TypeName ![Ty]
-  | TyCo !Ty
-  | TyShift !Ty
-  | TyForall ![TypeVar] !Ty
+data Ty where 
+  TyVar    :: TypeVar -> Ty
+  TyDecl   :: TypeName -> [Ty] -> Ty
+  TyCo     :: Ty -> Ty
+  TyShift  :: Ty -> Ty 
+  TyForall :: [TypeVar] -> Ty -> Ty
   deriving (Eq,Ord)
 
 data PolTy = MkPolTy !Ty !Pol

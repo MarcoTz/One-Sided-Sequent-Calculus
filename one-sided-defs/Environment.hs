@@ -29,12 +29,12 @@ import Data.List (find)
 
 newtype Environment = MkEnv { envDefs :: M.Map Modulename Program }
 
-declErr :: Error e => TypeName -> e
-declErr tyn = toError ("Type " <> show tyn <> " not found in environment") defaultLoc
-varErr :: Error e => Variable -> e
-varErr var = toError ("Variable " <> show var <> " not found in environment") defaultLoc
-xtorErr :: Error e => XtorName -> e
-xtorErr xtn = toError ("Xtor " <> show xtn <> " not found in environment") defaultLoc
+declErr :: Loc -> Error e => TypeName -> e
+declErr loc tyn = toError loc ("Type " <> show tyn <> " not found in environment") 
+varErr :: Loc -> Error e => Variable -> e
+varErr loc var = toError loc ("Variable " <> show var <> " not found in environment") 
+xtorErr :: Loc -> Error e => XtorName -> e
+xtorErr loc xtn = toError loc ("Xtor " <> show xtn <> " not found in environment") 
 
 emptyEnv :: Environment
 emptyEnv = MkEnv M.empty 
@@ -83,11 +83,11 @@ getRecs = do
 lookupMDecl :: EnvReader e a m => TypeName -> m (Maybe DataDecl)
 lookupMDecl tyn = M.lookup tyn <$> getDecls
 
-lookupDecl :: EnvReader e a m => TypeName -> m DataDecl 
-lookupDecl tyn = do   
+lookupDecl :: EnvReader e a m => Loc -> TypeName -> m DataDecl 
+lookupDecl loc tyn = do   
   mdecl <- lookupMDecl tyn
   case mdecl of 
-    Nothing -> throwError (declErr tyn)
+    Nothing -> throwError (declErr loc tyn)
     Just decl -> return decl
 
 lookupMVar :: EnvReader e a m => Variable -> m (Maybe VarDecl)
@@ -97,12 +97,12 @@ lookupMVar v = M.lookup v <$> getVars
 lookupMRec :: EnvReader e a m => Variable -> m (Maybe RecDecl)
 lookupMRec v = M.lookup v <$> getRecs
 
-lookupBody :: EnvReader e a m => Variable -> m Term
-lookupBody v = do 
+lookupBody :: EnvReader e a m => Loc -> Variable -> m Term
+lookupBody loc v = do 
   mvar <- lookupMVar v 
   mrec <- lookupMRec v
   case (mvar,mrec) of 
-    (Nothing,Nothing) -> throwError (varErr v)
+    (Nothing,Nothing) -> throwError (varErr loc v)
     (Just var,_) -> return (varBody var)
     (_,Just rec) -> return (recBody rec)
 
@@ -112,21 +112,21 @@ lookupMXtor xtn = do
   let sigs = concatMap (declXtors . snd) (M.toList decls)
   return $ find (\x -> sigName x == xtn) sigs 
 
-lookupXtor :: EnvReader e a m => XtorName -> m XtorSig
-lookupXtor xtn = do
+lookupXtor :: EnvReader e a m => Loc -> XtorName -> m XtorSig
+lookupXtor loc xtn = do
   mxt <- lookupMXtor xtn
   case mxt of 
-    Nothing -> throwError (xtorErr xtn) 
+    Nothing -> throwError (xtorErr loc xtn) 
     Just xt -> return xt
 
 lookupXtorMDecl :: EnvReader e a m => XtorName -> m (Maybe DataDecl)
 lookupXtorMDecl xtn = find (\x -> xtn `elem` (sigName <$> declXtors x)) <$> getDecls
 
-lookupXtorDecl :: EnvReader e a m => XtorName -> m DataDecl 
-lookupXtorDecl xtn = do
+lookupXtorDecl :: EnvReader e a m => Loc -> XtorName -> m DataDecl 
+lookupXtorDecl loc xtn = do
   decl <- lookupXtorMDecl xtn
   case decl of 
-    Nothing -> throwError (xtorErr xtn) 
+    Nothing -> throwError (xtorErr loc xtn) 
     Just decl' -> return decl'
 
 getTypeNames :: EnvReader e a m => m [TypeName]

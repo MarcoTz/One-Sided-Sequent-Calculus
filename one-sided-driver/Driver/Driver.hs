@@ -127,8 +127,8 @@ inferDataDecl mn decl = do
   return decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
-inferVarDecl _ (D.MkVar _ Nothing _) = throwError ErrTypeInference
-inferVarDecl mn v@(D.MkVar vn (Just _) _) = do 
+inferVarDecl _ (D.MkVar loc _ Nothing _) = throwError (ErrTypeInference loc)
+inferVarDecl mn v@(D.MkVar _ vn (Just _) _) = do 
   debug ("type checking variable " <> show vn)
   env <- gets drvEnv
   let v' = runCheckM env (checkVarDecl v)
@@ -137,8 +137,8 @@ inferVarDecl mn v@(D.MkVar vn (Just _) _) = do
   return v''
 
 inferRecDecl :: Modulename -> D.RecDecl -> DriverM T.RecDecl 
-inferRecDecl _ (D.MkRec _ Nothing _) = throwError ErrTypeInference 
-inferRecDecl mn r@(D.MkRec vn (Just _) _) = do
+inferRecDecl _ (D.MkRec loc _ Nothing _) = throwError (ErrTypeInference loc)
+inferRecDecl mn r@(D.MkRec _ vn (Just _) _) = do
   debug ("type checking recursive variable " <> show vn)
   env <- gets drvEnv 
   let r' = runCheckM env (checkRecDecl r)

@@ -16,12 +16,12 @@ import Syntax.Parsed.Types       qualified as P
 import Data.Map qualified as M
 
 instance Embed T.Term D.Term where 
-  embed (T.Var v _) = D.Var v
-  embed (T.Mu v c _) = D.Mu v (embed c)
-  embed (T.Xtor nm args _) = D.Xtor nm (embed <$> args)
-  embed (T.XCase pts _) = D.XCase (embed <$> pts)
-  embed (T.ShiftPos t _) = D.ShiftPos (embed t)
-  embed (T.ShiftNeg v c _) = D.ShiftNeg v (embed c)
+  embed (T.Var loc v _) = D.Var loc v
+  embed (T.Mu loc v c _) = D.Mu loc v (embed c)
+  embed (T.Xtor loc nm args _) = D.Xtor loc nm (embed <$> args)
+  embed (T.XCase loc pts _) = D.XCase loc (embed <$> pts)
+  embed (T.ShiftPos loc t _) = D.ShiftPos loc (embed t)
+  embed (T.ShiftNeg loc v c _) = D.ShiftNeg loc v (embed c)
 instance Embed T.Term P.Term where 
   embed t = (embed :: D.Term -> P.Term) $  (embed :: T.Term -> D.Term) t 
 
@@ -31,19 +31,19 @@ instance Embed T.Pattern P.Pattern where
   embed t = (embed :: D.Pattern -> P.Pattern) $ (embed :: T.Pattern -> D.Pattern) t
 
 instance Embed T.Command D.Command where 
-  embed (T.Cut t pol s) = D.CutAnnot (embed t) (embed $ T.getType t) pol (embed s)
-  embed T.Done = D.Done
-  embed (T.Err err) = D.Err err
+  embed (T.Cut loc t pol s) = D.CutAnnot loc (embed t) (embed $ T.getType t) pol (embed s)
+  embed (T.Done loc) = D.Done loc
+  embed (T.Err loc err) = D.Err loc err
 instance Embed T.Command P.Command where 
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t
 
 instance Embed T.DataDecl D.DataDecl where 
-  embed (T.MkData nm vars pol sigs) = D.MkData nm vars pol (embed <$> sigs)
+  embed (T.MkData loc nm vars pol sigs) = D.MkData loc nm vars pol (embed <$> sigs)
 instance Embed T.DataDecl P.DataDecl where 
   embed t = (embed :: D.DataDecl -> P.DataDecl) $ (embed :: T.DataDecl -> D.DataDecl) t
 
 instance Embed T.XtorSig D.XtorSig where 
-  embed (T.MkXtorSig nm args) = D.MkXtorSig nm (embed <$> args)
+  embed (T.MkXtorSig loc nm args) = D.MkXtorSig loc nm (embed <$> args)
 instance Embed T.XtorSig P.XtorSig where 
   embed t = (embed :: D.XtorSig -> P.XtorSig) $ (embed :: T.XtorSig -> D.XtorSig) t
 
@@ -66,12 +66,12 @@ instance Embed T.TypedVar D.MTypedVar where
   embed (v,ty) = (v,Just . embed $ ty)
 
 instance Embed T.VarDecl D.VarDecl where 
-  embed (T.MkVar var ty body) = D.MkVar var (Just (embed ty)) (embed body)
+  embed (T.MkVar loc var ty body) = D.MkVar loc var (Just (embed ty)) (embed body)
 instance Embed T.VarDecl P.VarDecl where 
   embed t = (embed :: D.VarDecl -> P.VarDecl) $ (embed :: T.VarDecl -> D.VarDecl) t
 
 instance Embed T.RecDecl D.RecDecl where 
-  embed (T.MkRec var ty body) = D.MkRec var (Just (embed ty)) (embed body)
+  embed (T.MkRec loc var ty body) = D.MkRec loc var (Just (embed ty)) (embed body)
 instance Embed T.RecDecl P.RecDecl where 
   embed t = (embed :: D.RecDecl -> P.RecDecl) $ (embed :: T.RecDecl -> D.RecDecl) t
 

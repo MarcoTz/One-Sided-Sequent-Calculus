@@ -12,12 +12,12 @@ import Syntax.Parsed.Types       qualified as P
 import Data.Map qualified as M
 
 instance Embed D.Term P.Term where 
-  embed (D.Var v) = P.Var v
-  embed (D.Mu v c) = P.Mu v (embed c)
-  embed (D.Xtor nm args) = P.Xtor nm (embed <$> args)
-  embed (D.XCase pts) = P.XCase (embed <$> pts)
-  embed (D.ShiftPos t) = P.ShiftPos (embed t)
-  embed (D.ShiftNeg v c) = P.ShiftNeg v (embed c)
+  embed (D.Var loc v) = P.Var loc v
+  embed (D.Mu loc v c) = P.Mu loc v (embed c)
+  embed (D.Xtor loc nm args) = P.Xtor loc nm (embed <$> args)
+  embed (D.XCase loc pts) = P.XCase loc (embed <$> pts)
+  embed (D.ShiftPos loc t) = P.ShiftPos loc (embed t)
+  embed (D.ShiftNeg loc v c) = P.ShiftNeg loc v (embed c)
 
 instance Embed D.TypedVar P.MTypedVar where 
   embed (v,ty) = (v,Just . embed $ ty)
@@ -29,19 +29,19 @@ instance Embed D.Pattern P.Pattern where
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)
 
 instance Embed D.Command P.Command where 
-  embed (D.Cut t pol u) = P.Cut (embed t) pol (embed u)
-  embed (D.CutAnnot t ty pol u) = P.CutAnnot (embed t) (embed ty) pol (embed u)
-  embed D.Done = P.Done
-  embed (D.Err err) = P.Err err
+  embed (D.Cut loc t pol u) = P.Cut loc (embed t) pol (embed u)
+  embed (D.CutAnnot loc t ty pol u) = P.CutAnnot loc (embed t) (embed ty) pol (embed u)
+  embed (D.Done loc) = P.Done loc
+  embed (D.Err loc err) = P.Err loc err
 
 instance Embed D.DataDecl P.DataDecl where 
-  embed (D.MkData nm vars pol sigs) = P.MkData nm vars pol (embed <$> sigs) 
+  embed (D.MkData loc nm vars pol sigs) = P.MkData loc nm vars pol (embed <$> sigs) 
 
 instance Embed D.VarDecl P.VarDecl where 
-  embed (D.MkVar var _ body) = P.MkVar var (embed body)
+  embed (D.MkVar loc var _ body) = P.MkVar loc var (embed body)
 
 instance Embed D.RecDecl P.RecDecl where 
-  embed (D.MkRec var _ body) = P.MkRec var (embed body)
+  embed (D.MkRec loc var _ body) = P.MkRec loc var (embed body)
 
 instance Embed D.Program P.Program where 
   embed (D.MkProgram nm decls vars recs main) = 
@@ -49,11 +49,11 @@ instance Embed D.Program P.Program where
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 
-      embedAnnots ((_,D.MkVar _ Nothing _):ds) = embedAnnots ds
-      embedAnnots ((_,D.MkVar v (Just ty) _):ds) = (v,P.MkAnnot v (embed ty)):embedAnnots ds
+      embedAnnots ((_,D.MkVar _ _ Nothing _):ds) = embedAnnots ds
+      embedAnnots ((_,D.MkVar loc v (Just ty) _):ds) = (v,P.MkAnnot loc v (embed ty)):embedAnnots ds
 
 instance Embed D.XtorSig P.XtorSig where 
-  embed (D.MkXtorSig nm args) = P.MkXtorSig nm (embed <$> args)
+  embed (D.MkXtorSig loc nm args) = P.MkXtorSig loc nm (embed <$> args)
 
 instance Embed D.PolTy P.PolTy  where 
   embed (D.MkPolTy ty pol) = P.MkPolTy (embed ty) pol 
@@ -65,4 +65,3 @@ instance Embed D.Ty P.Ty where
   embed (D.TyCo ty) = P.TyCo (embed ty)
   embed (D.TyShift ty) = P.TyShift (embed ty)
   embed (D.TyForall vars ty) = P.TyForall vars (embed ty)
-
