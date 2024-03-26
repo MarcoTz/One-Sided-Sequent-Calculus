@@ -26,8 +26,8 @@ data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: !Environment}
 newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT DriverError IO) a }
   deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError DriverError, MonadIO)
 
-runDriverM :: DriverState -> DriverM a -> IO(Either DriverError (a,DriverState))
-runDriverM drvst m = runExceptT $ runStateT (getDriverM m) drvst 
+runDriverM :: DriverState -> DriverM a -> IO (Either DriverError (a,DriverState))
+runDriverM drvst m = runExceptT (runStateT (getDriverM m) drvst)
 
 addDecl :: Modulename -> DataDecl -> DriverM ()
 addDecl nm decl = modify (\s -> MkDriverState (drvDebug s) (addDeclEnv nm decl (drvEnv s)) )

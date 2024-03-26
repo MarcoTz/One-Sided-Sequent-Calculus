@@ -31,11 +31,11 @@ run nm = do
   putStrLn  "'\n================================\n"
   loaded <- runFileLoaderM (loadProgramWithImports (MkModule nm))
   case loaded of 
-    Left err -> putStrLn (colorError <> " Error parsing module " <> nm <> ": " <> getMessage err) 
+    Left err -> putStrLn (colorError <> " Error parsing module " <> nm <> ": " <> showWithLoc err) 
     Right (prog, imps) -> do 
       let st = MkDriverState True emptyEnv 
       res <- runDriverM st (inferAndRun prog imps)
       case res of 
-        Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> getMessage err <> colorDefault)
+        Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> showWithLoc err <> colorDefault)
         Right (Nothing,_) -> putStrLn (colorSuccess <> "Successfully inferred program " <> nm <> colorDefault)
         Right (Just c,_) -> putStrLn (colorSuccess <> "Successfully ran program " <> nm <> "\nwith result "<> show c <> colorDefault)

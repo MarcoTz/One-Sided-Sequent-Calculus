@@ -1,7 +1,8 @@
 module Errors (
   Error (..),
   zipWithError,
-  convertError
+  convertError,
+  showWithLoc
 ) where 
 
 import Loc
@@ -20,3 +21,6 @@ zipWithError (a1:as) (b1:bs) err = (\z -> (a1,b1) : z) <$> zipWithError as bs er
 
 convertError :: Error e => Error e' => e -> e'
 convertError e = toError (getLocation e) (getMessage e) 
+
+showWithLoc :: Error e => e -> String
+showWithLoc e = getMessage e <> "\n" <> show (getLocation e)

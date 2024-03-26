@@ -22,7 +22,7 @@ printSucc mn False = putStrLn (colorSuccess <> "Example " <> show mn <> " inferr
 printSucc mn True = putStrLn (colorError <> "CounterExample " <> show mn <> " did not fail " <> colorDefault)
 
 printErr :: Error e => Modulename -> Bool -> e -> IO () 
-printErr mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> getMessage err <> colorDefault)
+printErr mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> showWithLoc err <> colorDefault)
 printErr mn True _ = putStrLn (colorSuccess <> "Counterexmaples " <> show mn <> " failed successfully" <> colorDefault)
 
 printRes :: Error e => Modulename -> Bool -> Either e a -> IO () 
@@ -33,7 +33,7 @@ parseExample :: Bool -> Modulename -> IO()
 parseExample shouldFail mn = do
   res <- runFileLoaderM (loadProgramWithImports mn)
   case res of 
-    Left err -> putStrLn (colorError <> " Error parsing " <> show mn <> " with error " <> getMessage err <> colorDefault)
+    Left err -> putStrLn (colorError <> " Error parsing " <> show mn <> " with error " <> showWithLoc err <> colorDefault)
     Right (prog,imps) -> do
       let drvSt = MkDriverState False emptyEnv
       res' <- runDriverM drvSt (inferAndRun prog imps)
