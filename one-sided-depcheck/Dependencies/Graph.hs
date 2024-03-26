@@ -8,6 +8,7 @@ module Dependencies.Graph (
   addEdge,
   addVertex,
   getStartingVert,
+  getEndingVert,
   getVertex,
   getVertexLabel
 ) where

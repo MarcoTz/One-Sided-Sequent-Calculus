@@ -56,11 +56,10 @@ inferAndRun prog imports = do
   prog' <- inferProgram prog imports
   runProgram prog'
 
-getInferOrder :: Modulename -> [P.Program] -> DriverM [P.Program]
+getInferOrder :: P.Program -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
-  let progList = foldr (\(P.MkProgram mn' _ _ _ _ imps _) ls -> (mn',imps):ls) [] progs 
   env <- gets drvEnv
-  let order = runDepM env (depOrderModule mn progList)
+  let order = runDepM env (depOrderModule mn progs)
   order' <- liftErr order 
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
@@ -73,7 +72,7 @@ inferProgram prog imports = do
   if not $ T.isEmpty currProg  then return currProg else do 
     let imports' = filter (\prog' -> isNothing $ M.lookup (P.progName prog') (envDefs env)) imports 
     debug "ordering imports"
-    depsOrdered <- getInferOrder mn imports'
+    depsOrdered <- getInferOrder prog imports'
     debug ("infering imports in order: " <> show (P.progName <$> depsOrdered))
     oldDebug <- gets drvDebug
     setDebug False
@@ -83,7 +82,7 @@ inferProgram prog imports = do
     D.MkProgram mn' decls vars recs main <- desugarProg prog
     debug ("inferring declarations in " <> show mn)
     decls' <- forM decls (inferDataDecl mn')
-    debug ("ordering variables in " <> show mn) 
+    debug ("ordering variables " <> show (fst <$> (M.toList . P.progVars) prog) <> " in " <> show mn) 
     env' <- gets drvEnv
     let progOrder = runDepM env' (depOrderProgram prog)
     progOrder' <- liftErr progOrder

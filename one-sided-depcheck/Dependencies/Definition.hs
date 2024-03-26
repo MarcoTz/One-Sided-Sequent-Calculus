@@ -38,29 +38,26 @@ getVertexError lb err = do
 addEdgeM :: Eq a => (Vertex a, Vertex a) -> DepM a () 
 addEdgeM e = modify (addEdge e)
 
-removeSelfLoops :: Eq a => DepM a () 
+removeSelfLoops :: Show a => Eq a => DepM a () 
 removeSelfLoops = do 
   MkGraph verts edgs <- get
   let newEdgs = filter (\(MkEdge v1 v2) -> v1 /= v2) edgs
   let gr' = MkGraph verts newEdgs
   modify (const gr')
 
-ensureAcyclic :: Eq a => DepError -> DepM a () 
+ensureAcyclic :: Show a => Eq a => Show a => DepError -> DepM a () 
 ensureAcyclic err = do
   gr <- get 
-  forM_ (grVerts gr) (\v -> traverseGraph v [] [])
+  forM_ (grVerts gr) (\v -> traverseGr gr v [])
   where 
-    traverseGraph :: Eq a => Vertex a -> [Vertex a] -> [Edge a] -> DepM a ([Vertex a],[Edge a])
-    traverseGraph startV seenV seenE = do 
-      when (startV `elem` seenV) $ throwError err
-      gr <- get 
-      let outg = getEdgesStartingAt startV gr
-      let outgF = filter (`notElem` seenE) outg
+    traverseGr :: Show a => Eq a => Graph a -> Vertex a -> [Vertex a] -> DepM a [Vertex a]
+    traverseGr gr startV seenV = do
       let newSeenV = startV : seenV
-      case outgF of 
-        [] -> return (newSeenV,seenE)
-        edgs -> foldM (\(seenV',seenE') edg@(MkEdge v1 v2) -> traverseGraph v2 (v1:seenV') (edg:seenE')) (newSeenV, seenE) edgs
-    
+      let outg = getEndingVert <$> getEdgesStartingAt startV gr
+      when (any (`elem` outg) newSeenV) $ throwError err
+      forM_ outg (\v -> traverseGr gr v newSeenV)
+      return []
+
 
 runDepM :: Environment -> DepM a b -> Either DepError b
 runDepM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) emptyGraph) of 
