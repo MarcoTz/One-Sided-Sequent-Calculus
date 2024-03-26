@@ -22,7 +22,7 @@ depOrderModule prog imports = do
  getImportOrder mn
 
 addDependencies :: Program -> DepModule ()
-addDependencies (MkProgram mn _ _ _ _ imports _) = do
+addDependencies (MkProgram mn _ _ _ _ imports _ _) = do
   v1 <- addVertexM mn 
   forM_ imports (\(MkImport _ mn') -> do 
     v2 <- addVertexM mn'

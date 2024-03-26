@@ -76,7 +76,7 @@ instance Embed T.RecDecl P.RecDecl where
   embed t = (embed :: D.RecDecl -> P.RecDecl) $ (embed :: T.RecDecl -> D.RecDecl) t
 
 instance Embed T.Program D.Program where 
-  embed (T.MkProgram nm decls vars recs main) = 
-    D.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (embed <$> main)
+  embed (T.MkProgram nm decls vars recs main src) = 
+    D.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (embed <$> main) src
 instance Embed T.Program P.Program where 
   embed t = (embed :: D.Program -> P.Program) $ (embed :: T.Program -> D.Program) t 

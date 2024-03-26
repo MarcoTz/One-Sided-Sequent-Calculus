@@ -52,7 +52,7 @@ loadModule (MkModule nm) = do
 loadProgram :: Modulename -> FileLoaderM P.Program
 loadProgram mn = do
   progText <- loadModule mn
-  let progParsed = runFileParser "" parseProgram progText
+  let progParsed = runSourceParser "" (parseProgram progText) progText
   progParsed' <- liftFileError progParsed
   unless (P.progName progParsed' == mn) $ throwError (ErrModuleNotFound mn)
   return progParsed'

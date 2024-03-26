@@ -17,7 +17,7 @@ import Data.Maybe (isJust)
 type DepVar a = DepM Variable a
 
 depOrderProgram :: Program -> DepVar [Variable]
-depOrderProgram (MkProgram mn decls vars recs _ _ _) = do 
+depOrderProgram (MkProgram mn decls vars recs _ _ _ _) = do 
   let vars' = snd <$> M.toList vars
   let recs' = snd <$> M.toList recs
   vertsTerms <- forM vars' addVariable

@@ -12,6 +12,7 @@ module Syntax.Parsed.Program (
   addAnnotProgram,
   addVarProgram,
   addDeclProgram,
+  setSrcProgram,
   emptyProg,
 ) where 
 
@@ -33,7 +34,6 @@ data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !TypeName, declArgs 
 instance HasLoc DataDecl where 
   getLoc = declPos
   setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
-
 data VarDecl   = MkVar    {varPos    :: !Loc, varName    :: !Variable, varBody   :: !Term}
   deriving (Eq,Ord)
 instance HasLoc VarDecl where 
@@ -65,28 +65,32 @@ data Program = MkProgram {
   progRecs    :: !(M.Map Variable RecDecl),
   progAnnots  :: !(M.Map Variable AnnotDecl),
   progImports :: ![Import],
-  progMain    :: !(Maybe Command)} 
+  progMain    :: !(Maybe Command),
+  progSrc     :: !String}
   deriving (Eq,Ord)
 
-emptyProg :: Modulename -> Program 
-emptyProg mn = MkProgram mn M.empty M.empty M.empty M.empty [] Nothing
+emptyProg :: Modulename -> String -> Program 
+emptyProg mn = MkProgram mn M.empty M.empty M.empty M.empty [] Nothing 
 
 addDeclProgram :: DataDecl -> Program -> Program 
-addDeclProgram decl (MkProgram mn decls vars recs annots imports main) = MkProgram mn (M.insert (declName decl) decl decls) vars recs annots imports  main
+addDeclProgram decl prog = prog { progDecls = M.insert (declName decl) decl (progDecls prog) }
 
 addVarProgram :: VarDecl -> Program -> Program 
-addVarProgram var (MkProgram mn decls vars recs annots imports main) = MkProgram mn decls (M.insert (varName var) var vars) recs annots imports main
+addVarProgram var prog = prog { progVars = M.insert (varName var) var (progVars prog) }
 
 addRecProgram :: RecDecl -> Program -> Program 
-addRecProgram rec (MkProgram mn decls vars recs annots imports main) = MkProgram mn decls vars (M.insert (recName rec) rec recs) annots imports main
+addRecProgram rec prog = prog { progRecs = M.insert (recName rec) rec (progRecs prog) }
 
 addAnnotProgram :: AnnotDecl -> Program -> Program 
-addAnnotProgram annot (MkProgram mn decls vars recs annots imports main) = MkProgram mn decls vars recs (M.insert (annotName annot) annot annots) imports main
+addAnnotProgram annot prog = prog { progAnnots = M.insert (annotName annot) annot (progAnnots prog) }
 
 addImportProgram :: Import -> Program -> Program
-addImportProgram imp (MkProgram mn decls vars recs annots imports main) = MkProgram mn decls vars recs annots (imp:imports) main
+addImportProgram imp prog = prog { progImports = imp : progImports prog }
 
 setMainProgram :: Command -> Program -> Program
-setMainProgram c (MkProgram mn decls vars recs annots imports _) = MkProgram mn decls vars recs annots imports (Just c)
+setMainProgram c prog = prog { progMain = Just c }
+
+setSrcProgram :: String -> Program -> Program 
+setSrcProgram src prog = prog { progSrc = src }
 
 --newtype Codecl = MkCo DataDecl 

@@ -7,6 +7,8 @@ module Syntax.Typed.Program (
   addRecProgram,
   addVarProgram,
   addDeclProgram,
+  setMainProgram,
+  setSrcProgram,
   emptyProg,
   isEmpty
 ) where 
@@ -43,22 +45,30 @@ data Program = MkProgram {
   progDecls :: !(M.Map TypeName DataDecl), 
   progVars  :: !(M.Map Variable VarDecl),
   progRecs  :: !(M.Map Variable RecDecl),
-  progMain  :: !(Maybe Command)}
+  progMain  :: !(Maybe Command),
+  progSrc   :: !String
+}
 
 emptyProg :: Modulename -> Program
-emptyProg nm = MkProgram nm M.empty M.empty M.empty Nothing
+emptyProg nm = MkProgram nm M.empty M.empty M.empty Nothing ""
 
 isEmpty :: Program -> Bool
-isEmpty (MkProgram _ decls vars recs Nothing) =  null decls && null vars && null recs
-isEmpty (MkProgram _ _ _ _ (Just _)) = False
+isEmpty (MkProgram _ decls vars recs Nothing _) =  null decls && null vars && null recs
+isEmpty (MkProgram _ _ _ _ (Just _) _) = False
 
 addDeclProgram :: DataDecl -> Program -> Program
-addDeclProgram decl (MkProgram nm decls vars recs main) = MkProgram nm (M.insert (declName decl) decl decls) vars recs main
+addDeclProgram decl prog = prog { progDecls = M.insert (declName decl) decl (progDecls prog) }
 
 addVarProgram :: VarDecl -> Program -> Program
-addVarProgram var (MkProgram nm decls vars recs main) = MkProgram nm decls (M.insert (varName var) var vars) recs main
+addVarProgram var prog = prog { progVars = M.insert (varName var) var (progVars prog) }
 
 addRecProgram :: RecDecl -> Program -> Program
-addRecProgram rec (MkProgram nm decls vars recs main) = MkProgram nm decls vars (M.insert (recName rec) rec recs) main
+addRecProgram rec prog = prog { progRecs = M.insert (recName rec) rec (progRecs prog) }
+
+setMainProgram :: Command -> Program -> Program
+setMainProgram c prog = prog { progMain = Just c }
+
+setSrcProgram :: String -> Program -> Program
+setSrcProgram src prog = prog { progSrc = src }
 
 --newtype Codecl = MkCo DataDecl 

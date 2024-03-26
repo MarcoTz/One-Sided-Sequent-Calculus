@@ -61,13 +61,14 @@ instance Show Import where
   show (MkImport _ mn) = "import " <> show mn
 
 instance Show Program where 
-  show (MkProgram nm decls vars recs annots imports Nothing) = 
+  show (MkProgram nm decls vars recs annots imports Nothing src) = 
     "module " <> show nm  <>
     "\n\tImports: " <> intercalate "," (show <$> imports) <> 
     "\n\tDeclarations: " <> show (snd <$> M.toList decls) <> 
     "\n\tVariables: " <> show (snd <$> M.toList vars) <> 
     "\n\tRecursive Variables: " <> show (snd <$> M.toList recs) <>
-    "\n\tAnnotations: " <> show (snd <$> M.toList annots)
-  show (MkProgram nm decls vars recs annots imports (Just c)) = 
-    show (MkProgram nm decls vars recs annots imports Nothing) <> 
+    "\n\tAnnotations: " <> show (snd <$> M.toList annots) <> 
+    "\n\tSource: " <> src
+  show (MkProgram nm decls vars recs annots imports (Just c) src) = 
+    show (MkProgram nm decls vars recs annots imports Nothing src) <> 
     "\n\t Main: "<>show c

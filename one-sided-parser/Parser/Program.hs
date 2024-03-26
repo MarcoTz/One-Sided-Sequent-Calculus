@@ -24,12 +24,12 @@ parseModuleDecl = (do
   parseModulename)
   <|> return (MkModule "")
 
-parseProgram :: Parser Program 
-parseProgram = do 
+parseProgram :: String -> Parser Program 
+parseProgram src = do 
   nm <-parseModuleDecl
   sc
   decls <- manyTill (parseDecl <* sc) eof
-  foldM foldFun (emptyProg nm) decls
+  foldM foldFun (emptyProg nm src) decls
   where 
     foldFun :: Program -> ParseDecl -> Parser Program 
     foldFun prog (MkD decl) = do 

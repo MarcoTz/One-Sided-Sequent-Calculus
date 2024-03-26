@@ -1,6 +1,6 @@
 module Parser.Definition (
   Parser,
-  runFileParser,
+  runSourceParser,
   ParseDecl (..),
 ) where 
 
@@ -21,7 +21,7 @@ instance Error (ParseErrorBundle String String) where
   getLocation _ = defaultLoc
   toError = error "not implemented"
 
-runFileParser :: FilePath -> Parser b -> String -> Either (ParseErrorBundle String String) b
-runFileParser fp p = runParser (getParser p) fp 
+runSourceParser :: String -> Parser b -> String -> Either (ParseErrorBundle String String) b
+runSourceParser src p = runParser (getParser p) src
 
 data ParseDecl = MkD !DataDecl | MkV !VarDecl | MkA !AnnotDecl | MkI !Import | MkM !Command | MkR !RecDecl

@@ -44,8 +44,8 @@ instance Embed D.RecDecl P.RecDecl where
   embed (D.MkRec loc var _ body) = P.MkRec loc var (embed body)
 
 instance Embed D.Program P.Program where 
-  embed (D.MkProgram nm decls vars recs main) = 
-    P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (M.fromList . embedAnnots . M.toList $ vars) [] (embed <$> main)
+  embed (D.MkProgram nm decls vars recs main src) = 
+    P.MkProgram nm (M.map embed decls) (M.map embed vars) (M.map embed recs) (M.fromList . embedAnnots . M.toList $ vars) [] (embed <$> main) src
     where 
       embedAnnots :: [(Variable,D.VarDecl)] -> [(Variable,P.AnnotDecl)]
       embedAnnots [] = [] 

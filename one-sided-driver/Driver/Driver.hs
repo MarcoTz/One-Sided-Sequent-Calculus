@@ -4,6 +4,7 @@ module Driver.Driver (
 ) where 
 
 import Common
+import Loc
 import Environment
 import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
@@ -12,7 +13,7 @@ import Syntax.Desugared.Terms    qualified as D
 import Syntax.Typed.Program      qualified as T
 import Syntax.Typed.Terms        qualified as T
 
-import Parser.Definition (runFileParser)
+import Parser.Definition (runSourceParser)
 import Parser.Program (parseProgram)
 
 import Dependencies.Definition
@@ -46,7 +47,7 @@ import Data.Map qualified as M
 
 runStr :: String -> DriverM (Maybe T.Command) 
 runStr progText = do 
-  let progParsed = runFileParser "" parseProgram progText
+  let progParsed = runSourceParser "" (parseProgram progText) progText
   progParsed' <- liftErr progParsed
   prog <- inferProgram progParsed' []
   runProgram prog
@@ -79,7 +80,7 @@ inferProgram prog imports = do
     forM_ depsOrdered (`inferProgram` [])
     setDebug oldDebug
     debug ("desugaring program " <> show mn) 
-    D.MkProgram mn' decls vars recs main <- desugarProg prog
+    D.MkProgram mn' decls vars recs main src <- desugarProg prog
     debug ("inferring declarations in " <> show mn)
     decls' <- forM decls (inferDataDecl mn')
     debug ("ordering variables " <> show (fst <$> (M.toList . P.progVars) prog) <> " in " <> show mn) 
@@ -101,13 +102,14 @@ inferProgram prog imports = do
     let recsMap = M.fromList (recFun<$>recsInferred)
     debug "inferring main"
     main' <- forM main inferCommand
-    return (T.MkProgram mn decls' varMap recsMap main')
+    return (T.MkProgram mn decls' varMap recsMap main' src)
 
 runProgram :: T.Program -> DriverM (Maybe T.Command)
-runProgram (T.MkProgram _ _ _ _ Nothing) = return Nothing
-runProgram (T.MkProgram _ _ _ _ (Just c)) = do
+runProgram prog | isNothing (T.progMain prog) = return Nothing
+runProgram prog = do
+  let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
   env <- gets drvEnv
-  let evaled = runEvalM env (eval c)
+  let evaled = runEvalM env (eval main)
   Just <$> liftErr evaled
 
 desugarProg :: P.Program -> DriverM D.Program 
