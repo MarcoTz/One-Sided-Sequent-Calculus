@@ -10,13 +10,16 @@ module Parser.Lexer (
   parseModulename,
   parseVariable,
   parseCommaSep,
-  parseParens
+  parseParens,
+  getCurrPos,
+  getCurrLoc
 ) where 
 
 import Parser.Keywords
 import Parser.Symbols
 import Parser.Definition
 import Common
+import Loc
  
 import Text.Megaparsec 
 import Text.Megaparsec.Char
@@ -87,3 +90,12 @@ parsePolVar = do
   parseSymbol SymColon
   sc 
   MkPolVar tyv <$> parsePol
+
+
+getCurrPos :: Parser SourcePosition
+getCurrPos = do 
+  SourcePos _ line column <- getSourcePos
+  return (MkSourcePos (unPos line) (unPos column))
+
+getCurrLoc :: SourcePosition -> Parser Loc 
+getCurrLoc startPos = MkLoc startPos <$> getCurrPos 

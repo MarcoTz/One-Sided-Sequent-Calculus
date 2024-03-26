@@ -9,7 +9,6 @@ import Parser.Symbols
 import Syntax.Parsed.Program
 import Syntax.Parsed.Terms
 import Common
-import Loc
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -71,14 +70,17 @@ parseMain = do
   
 parseImport :: Parser Import
 parseImport = do
+  startPos <- getCurrPos
   parseKeyword KwImport
   space1
   mn <- parseModulename
   parseSymbol SymSemi
-  return (MkImport defaultLoc mn)
+  loc <- getCurrLoc startPos
+  return (MkImport loc mn)
 
 parseTypeAnnot :: Parser AnnotDecl 
 parseTypeAnnot = do
+  startPos <- getCurrPos
   nm <- parseVariable 
   sc
   parseSymbol SymColon
@@ -87,10 +89,12 @@ parseTypeAnnot = do
   ty <- parsePolTy
   sc
   parseSymbol SymSemi
-  return $ MkAnnot defaultLoc nm ty 
+  loc <- getCurrLoc startPos
+  return $ MkAnnot loc nm ty 
 
 parseVarDecl :: Parser VarDecl 
 parseVarDecl = do 
+  startPos <- getCurrPos 
   nm <- parseVariable 
   sc
   parseSymbol SymColon
@@ -99,7 +103,8 @@ parseVarDecl = do
   t <- parseTerm
   sc
   parseSymbol SymSemi
-  return (MkVar defaultLoc nm t)
+  loc <- getCurrLoc startPos
+  return (MkVar loc nm t)
 
 parseRecDecl :: Parser RecDecl 
 parseRecDecl = do 
@@ -110,6 +115,7 @@ parseRecDecl = do
 
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 
+  startPos <- getCurrPos
   parseKeyword KwData
   space1
   nm <- parseTypeName 
@@ -125,11 +131,14 @@ parseDataDecl = do
   xtors <- parseXtorSig `sepBy` parseCommaSep
   sc
   parseSymbol SymBrackC
-  return $ MkData defaultLoc nm args pol xtors
+  loc <- getCurrLoc startPos
+  return $ MkData loc nm args pol xtors
 
 
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
- nm <- parseXtorName 
- args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
- return $ MkXtorSig defaultLoc nm args 
+  startPos <- getCurrPos
+  nm <- parseXtorName 
+  args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
+  loc <- getCurrLoc startPos
+  return $ MkXtorSig loc nm args 

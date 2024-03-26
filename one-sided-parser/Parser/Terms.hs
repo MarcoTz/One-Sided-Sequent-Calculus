@@ -11,7 +11,6 @@ import Parser.Types
 import Syntax.Parsed.Terms
 import Syntax.Parsed.Types
 import Common
-import Loc
 
 import Text.Megaparsec
 import Data.Functor
@@ -20,20 +19,28 @@ parseTerm :: Parser Term
 parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar
 
 parseVar :: Parser Term 
-parseVar = Var defaultLoc <$> parseVariable 
+parseVar = do 
+  startPos <- getCurrPos
+  v <- parseVariable
+  loc <- getCurrLoc startPos
+  return $ Var loc v
 
 parseMu :: Parser Term
 parseMu = do
+  startPos <- getCurrPos
   parseKeyword KwMu <|> parseKeyword Kwmu 
   sc
   v <- parseVariable 
   sc
   parseSymbol SymDot
   sc
-  Mu defaultLoc v <$> parseCommand
+  c <- parseCommand
+  loc <- getCurrLoc startPos
+  return $ Mu loc v c 
 
 parseXtor :: Parser Term
 parseXtor = do
+  startPos <- getCurrPos 
   nm <- parseXtorName 
   sc
   parseSymbol SymParensO
@@ -41,7 +48,8 @@ parseXtor = do
   args <- parseTerm `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymParensC 
-  return $ Xtor defaultLoc nm args
+  loc <- getCurrLoc startPos
+  return $ Xtor loc nm args
 
 parsePattern :: Parser Pattern 
 parsePattern = do 
@@ -56,6 +64,7 @@ parsePattern = do
 
 parseXCase :: Parser Term
 parseXCase = do 
+  startPos <- getCurrPos
   parseKeyword KwCase
   sc
   parseSymbol SymBrackO
@@ -63,18 +72,21 @@ parseXCase = do
   pts <- parsePattern `sepBy` (parseSymbol SymComma >> sc)
   sc
   parseSymbol SymBrackC
-  sc
-  return (XCase defaultLoc pts)
+  loc <- getCurrLoc startPos
+  return (XCase loc pts)
 
 parseShiftPos :: Parser Term 
 parseShiftPos = do 
+  startPos <- getCurrPos
   parseSymbol SymBrackO
   t <- parseTerm
+  loc <- getCurrLoc startPos
   parseSymbol SymBrackC
-  return (ShiftPos defaultLoc t)
+  return (ShiftPos loc t)
 
 parseShiftNeg :: Parser Term
 parseShiftNeg = do 
+  startPos <- getCurrPos
   parseSymbol SymBrackO
   sc
   v <- parseVariable 
@@ -83,13 +95,16 @@ parseShiftNeg = do
   sc
   parseSymbol SymDot
   sc
-  ShiftNeg defaultLoc v <$> parseCommand
+  c <- parseCommand
+  loc <- getCurrLoc startPos
+  return $ ShiftNeg loc v c
 
 parseCommand :: Parser Command 
 parseCommand = parseCut <|> parseDone <|> parseErr
 
 parseCut :: Parser Command
 parseCut = do 
+  startPos <- getCurrPos
   parseSymbol SymAngO
   sc
   t <- parseTerm
@@ -103,9 +118,10 @@ parseCut = do
   u <- parseTerm
   sc
   parseSymbol SymAngC
+  loc <- getCurrLoc startPos 
   case mty of 
-    Nothing -> return (Cut defaultLoc t pol u)
-    Just ty -> return (CutAnnot defaultLoc t ty pol u)
+    Nothing -> return (Cut loc t pol u)
+    Just ty -> return (CutAnnot loc t ty pol u)
 
 parseCutAnnot :: Parser (Pol,Maybe PolTy)
 parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
@@ -130,14 +146,19 @@ parseTyBarPol = do
   return (pol,Just ty)
 
 parseDone :: Parser Command
-parseDone = parseKeyword KwDone  >> return (Done defaultLoc)
+parseDone = do
+  startPos <- getCurrPos
+  parseKeyword KwDone  
+  loc <- getCurrLoc startPos 
+  return (Done loc)
 
 parseErr :: Parser Command 
 parseErr = do 
+  startPos <- getCurrPos
   parseKeyword KwError
   sc 
   parseSymbol SymQuot
   msg <- takeWhileP (Just "character") (/= '"')
   parseSymbol SymQuot
-  sc
-  return (Err defaultLoc msg)
+  loc <- getCurrLoc startPos
+  return (Err loc msg)

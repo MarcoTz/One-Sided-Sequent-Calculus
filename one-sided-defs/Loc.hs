@@ -1,19 +1,19 @@
 module Loc (
   Loc (..),
-  SourcePos (..),
+  SourcePosition (..),
   defaultLoc,
   HasLoc,
   getLoc,
   setLoc
 ) where 
 
-data SourcePos = MkSourcePos !FilePath !Int !Int
+data SourcePosition = MkSourcePos {srcLine :: !Int, srcCol :: !Int}
   deriving (Eq,Ord)
 
-defaultPos :: SourcePos 
-defaultPos = MkSourcePos "" 0 0
+defaultPos :: SourcePosition
+defaultPos = MkSourcePos 0 0
 
-data Loc = MkLoc !SourcePos !SourcePos
+data Loc = MkLoc { locStart :: !SourcePosition, locEnd :: !SourcePosition}
   deriving (Eq,Ord)
 
 defaultLoc :: Loc 
