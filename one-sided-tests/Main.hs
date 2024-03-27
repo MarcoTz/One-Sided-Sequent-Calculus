@@ -7,6 +7,7 @@ import Files.Definition
 import Environment
 import Common
 import Errors
+import Syntax.Parsed.Program
 
 import Control.Monad
 
@@ -21,13 +22,13 @@ printSucc :: Modulename -> Bool -> IO ()
 printSucc mn False = putStrLn (colorSuccess <> "Example " <> show mn <> " inferred successfully " <> colorDefault)
 printSucc mn True = putStrLn (colorError <> "CounterExample " <> show mn <> " did not fail " <> colorDefault)
 
-printErr :: Error e => Modulename -> Bool -> e -> IO () 
-printErr mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> showWithLoc err <> colorDefault)
-printErr mn True _ = putStrLn (colorSuccess <> "Counterexmaples " <> show mn <> " failed successfully" <> colorDefault)
+printErr :: Error e => String -> Modulename -> Bool -> e -> IO () 
+printErr src mn False err  = putStrLn (colorError <> "Error Checking Example " <> show mn <> "\nError: " <> showInSrc err src <> colorDefault)
+printErr _ mn True _ = putStrLn (colorSuccess <> "Counterexmaples " <> show mn <> " failed successfully" <> colorDefault)
 
-printRes :: Error e => Modulename -> Bool -> Either e a -> IO () 
-printRes mn shouldFail (Left err) = printErr mn shouldFail err
-printRes mn shouldFail (Right _) = printSucc mn shouldFail 
+printRes :: Error e => String -> Modulename -> Bool -> Either e a -> IO () 
+printRes src mn shouldFail (Left err) = printErr src mn shouldFail err
+printRes _ mn shouldFail (Right _) = printSucc mn shouldFail 
 
 parseExample :: Bool -> Modulename -> IO()
 parseExample shouldFail mn = do
@@ -37,7 +38,7 @@ parseExample shouldFail mn = do
     Right (prog,imps) -> do
       let drvSt = MkDriverState False emptyEnv
       res' <- runDriverM drvSt (inferAndRun prog imps)
-      printRes mn shouldFail res'
+      printRes (progSrc prog) mn shouldFail res'
 
 
 main :: IO()

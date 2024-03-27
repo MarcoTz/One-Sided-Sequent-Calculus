@@ -2,7 +2,8 @@ module Errors (
   Error (..),
   zipWithError,
   convertError,
-  showWithLoc
+  showWithLoc,
+  showInSrc
 ) where 
 
 import Loc
@@ -24,3 +25,6 @@ convertError e = toError (getLocation e) (getMessage e)
 
 showWithLoc :: Error e => e -> String
 showWithLoc e = getMessage e <> "\n" <> show (getLocation e)
+
+showInSrc :: Error e => e -> String -> String
+showInSrc e src = showLocInSource src (getLocation e) <> "\n" <> getMessage e

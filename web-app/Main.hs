@@ -21,7 +21,7 @@ runProg val = do
   let drvSt = MkDriverState False emptyEnv
   res <- runDriverM drvSt (runStr progSource)
   case res of 
-    Left err  -> setError (showWithLoc err) 
+    Left err  -> setError (showInSrc err val) 
     Right (Nothing,_) -> setSuccess "No Function main was defined" 
     Right (Just mainRes,_) -> setSuccess (show mainRes) 
   return ()

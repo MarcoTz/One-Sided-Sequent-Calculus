@@ -7,6 +7,7 @@ import Files.Loader
 import Common
 import Errors
 import Environment
+import Syntax.Parsed.Program
 
 import System.Environment 
 import Control.Monad 
@@ -36,6 +37,6 @@ run nm = do
       let st = MkDriverState True emptyEnv 
       res <- runDriverM st (inferAndRun prog imps)
       case res of 
-        Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> showWithLoc err <> colorDefault)
+        Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> showInSrc err (progSrc prog) <> colorDefault)
         Right (Nothing,_) -> putStrLn (colorSuccess <> "Successfully inferred program " <> nm <> colorDefault)
         Right (Just c,_) -> putStrLn (colorSuccess <> "Successfully ran program " <> nm <> "\nwith result "<> show c <> colorDefault)
