@@ -12,17 +12,12 @@ body {
   height:2em;
   border-radius:2px;
 }
-#successMessage { 
-  visibility: hidden
-}
-#errorMessage {
-  visibility : hidden
-}
-#evalSucc {
+
+.evalSucc {
   color: green
 }
 
-#evalError {
+.evalError {
   color: red
 }
 
