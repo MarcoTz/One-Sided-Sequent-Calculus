@@ -47,7 +47,7 @@ import Data.Map qualified as M
 
 runStr :: String -> DriverM (Maybe T.Command) 
 runStr progText = do 
-  let progParsed = runSourceParser "" (parseProgram progText) progText
+  let progParsed = runSourceParser progText (MkModule "") (parseProgram progText) 
   progParsed' <- liftErr progParsed
   prog <- inferProgram progParsed' []
   runProgram prog

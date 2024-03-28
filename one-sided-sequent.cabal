@@ -57,6 +57,7 @@ library parser
                    monadplus,
                    definitions
   exposed-modules: Parser.Definition,
+                   Parser.Errors,
                    Parser.Keywords,
                    Parser.Symbols,
                    Parser.Lexer,
