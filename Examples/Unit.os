@@ -7,3 +7,9 @@ posU := {MkUnit};
 
 negU :: {Unit} : -;
 negU := {x}.<x|+|case {MkUnit => Done }>;
+
+cutPos :: Unit : +; 
+cutPos := Mu y. (MkUnit >> Unit:+ >> Mu x. Done);
+
+cutNeg :: Unit : +;
+cutNeg := Mu y. (MkUnit << Unit:+ << Mu x. Done); 

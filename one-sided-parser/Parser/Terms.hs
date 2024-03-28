@@ -16,7 +16,7 @@ import Text.Megaparsec
 import Data.Functor
 
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar
+parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar <|> parseParens parseTerm 
 
 parseVar :: Parser Term 
 parseVar = do 
@@ -100,7 +100,7 @@ parseShiftNeg = do
   return $ ShiftNeg loc v c
 
 parseCommand :: Parser Command 
-parseCommand = parseCut <|> parseDone <|> parseErr
+parseCommand = parseCut <|> parseDone <|> parseErr <|> try parseCutPos <|> try parseCutNeg <|> parseParens parseCommand
 
 parseCut :: Parser Command
 parseCut = do 
@@ -122,6 +122,54 @@ parseCut = do
   case mty of 
     Nothing -> return (Cut loc t pol u)
     Just ty -> return (CutAnnot loc t ty pol u)
+
+parseCutPos :: Parser Command 
+parseCutPos = do 
+  startPos <- getCurrPos 
+  t <- parseTerm
+  sc
+  parseSymbol SymAngC
+  parseSymbol SymAngC
+  sc
+  mty <- optional $ try tyAnnot
+  u <- parseTerm
+  loc <- getCurrLoc startPos 
+  case mty of 
+    Nothing -> return (Cut loc t Pos u)
+    Just ty -> return (CutAnnot loc t ty Pos u)
+  where 
+    tyAnnot :: Parser PolTy
+    tyAnnot = do 
+      ty <- parsePolTy
+      sc
+      parseSymbol SymAngC 
+      parseSymbol SymAngC
+      sc
+      return ty
+
+parseCutNeg :: Parser Command 
+parseCutNeg = do 
+  startPos <- getCurrPos 
+  t <- parseTerm 
+  sc 
+  parseSymbol SymAngO
+  parseSymbol SymAngO 
+  sc
+  mty <- optional $ try tyAnnot
+  u <- parseTerm
+  loc <- getCurrLoc startPos 
+  case mty of 
+    Nothing -> return (Cut loc t Neg u)
+    Just ty -> return (CutAnnot loc t ty Neg u)
+  where 
+    tyAnnot :: Parser PolTy 
+    tyAnnot = do 
+      ty <- parsePolTy
+      sc
+      parseSymbol SymAngO
+      parseSymbol SymAngO 
+      sc 
+      return ty
 
 parseCutAnnot :: Parser (Pol,Maybe PolTy)
 parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
