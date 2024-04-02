@@ -92,5 +92,5 @@ inferType loc (D.TyDecl tyn args) = do
         Just pol' -> return $ T.TyDecl tyn args' pol'
     Just (T.MkData _ _ _ pol _) -> return $ T.TyDecl tyn args' pol
 inferType loc (D.TyCo ty) = T.TyCo <$> inferType loc ty
-inferType loc ty@(D.TyShift _) = throwError (ErrIllegalType loc ty)
+inferType loc (D.TyShift ty) = flipPol <$> inferType loc ty 
 inferType loc ty@(D.TyForall _ _ ) = throwError (ErrIllegalType loc ty)

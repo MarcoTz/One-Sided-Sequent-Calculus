@@ -33,7 +33,7 @@ checkType loc (D.TyForall args ty) pol = do
   T.TyForall args <$> checkType loc ty pol
 
 checkPolTy :: Loc -> D.PolTy -> CheckM T.Ty
-checkPolTy _ (D.MkPolTy (D.TyVar v) pol) = return $ T.TyVar v pol
+checkPolTy loc (D.MkPolTy (D.TyVar v) pol) = checkType loc (D.TyVar v) pol 
 checkPolTy loc (D.MkPolTy (D.TyDecl tyn tyargs) pol) = do 
   T.MkData _ _ tyargs'  _ _ <- lookupDecl loc tyn
   tyArgsZipped <- zipWithError tyargs (getKind <$> tyargs') (ErrTypeArity loc tyn)

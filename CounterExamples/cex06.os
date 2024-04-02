@@ -5,5 +5,6 @@ data TwoCons : + {
   MkTwo
 }
 
+-- case does not include all xtors
 badPat :: TwoCons :-;
 badPat := case {MkOne => Done};
