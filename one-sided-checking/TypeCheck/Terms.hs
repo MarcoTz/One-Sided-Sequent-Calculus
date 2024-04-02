@@ -8,6 +8,7 @@ import TypeCheck.Types
 import Syntax.Typed.Terms         qualified as T
 import Syntax.Typed.Types         qualified as T
 import Syntax.Typed.Program       qualified as T
+import Syntax.Typed.FreeVars      qualified as T 
 import Syntax.Typed.Substitution  qualified as T
 import Syntax.Desugared.Terms     qualified as D
 import Environment
@@ -60,9 +61,11 @@ checkTerm vart@(D.Var loc v) ty = do
   where 
     checkTys :: T.Ty -> T.Ty -> CheckM T.Ty
     checkTys ty1 ty2 = do
+      let ty1' = T.generalizeTy ty1
+      let ty2' = T.generalizeTy ty2
       unless (getKind ty1 == getKind ty2) $ throwError (ErrKindNeq loc ty1 ty2 vart)
-      if T.isSubsumed ty1 ty2 || T.isSubsumed ty2 ty1 then return ty2
-      else throwError (ErrTypeNeq loc ty2 ty1 vart)
+      if T.isSubsumed ty1' ty2' || T.isSubsumed ty2' ty1' then return ty2
+      else throwError (ErrTypeNeq loc ty2' ty1' vart)
 
 checkTerm (D.Mu loc v c) ty = do
   addCheckerVar v (flipPol ty)

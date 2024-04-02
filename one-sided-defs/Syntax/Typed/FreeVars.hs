@@ -1,10 +1,12 @@
 module Syntax.Typed.FreeVars (
   freeVars,
-  freshVar
+  freshVar,
+  generalizeTy
 ) where 
 
 import Common 
 import Syntax.Typed.Terms 
+import Syntax.Typed.Types
 
 import Data.Set qualified as S 
 
@@ -33,3 +35,18 @@ instance FreeVars Command where
 
 freshVar :: Int -> S.Set Variable -> Variable 
 freshVar n vars = let newV = MkVariable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV
+
+-----------------------------------
+-- calculate free type variables --
+-----------------------------------
+
+freeTyVars :: Ty -> S.Set TypeVar
+freeTyVars (TyVar v _) = S.singleton v
+freeTyVars (TyDecl _ args _) = S.unions (freeTyVars <$> args) 
+freeTyVars (TyShift ty _) = freeTyVars ty
+freeTyVars (TyCo ty) = freeTyVars ty
+freeTyVars (TyForall args ty) = S.difference (freeTyVars ty) (S.fromList args) 
+
+generalizeTy :: Ty -> Ty 
+generalizeTy ty = let frv = freeTyVars ty in 
+  if null frv then ty else TyForall (S.toList frv) ty

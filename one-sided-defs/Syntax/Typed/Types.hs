@@ -28,6 +28,7 @@ instance FlipPol Ty where
   flipPol (TyForall args ty) = TyForall args (flipPol ty)
 
 isSubsumed :: Ty -> Ty -> Bool
+isSubsumed ty1 ty2 | ty1 == ty2 = True
 isSubsumed ty (TyForall args ty') = case ty' of 
   TyVar v _ -> v `elem` args
   TyDecl tyn tyargs knd -> isSubsumed ty (TyDecl tyn (TyForall args <$> tyargs) knd)
@@ -40,4 +41,5 @@ isSubsumed (TyShift ty _) ty' = isSubsumed ty ty'
 isSubsumed ty (TyShift ty' _) = isSubsumed ty ty'
 isSubsumed (TyCo ty) (TyCo ty') = isSubsumed ty ty'
 isSubsumed _ _ = False
+
 
