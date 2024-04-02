@@ -13,6 +13,10 @@ body {
   border-radius:2px;
 }
 
+#examples {
+  display:none
+}
+
 .evalSucc {
   color: green
 }
