@@ -145,8 +145,10 @@ checkCommand (D.Err loc err) = return $ T.Err loc err
 getTyCommand :: Loc -> D.Term -> D.Term -> CheckM T.Ty 
 getTyCommand loc (D.Var _ v) _ = do 
   vars <- getCheckerVars 
-  case M.lookup v vars of 
-    Nothing -> throwError (ErrUndefinedVar loc v)
-    Just ty -> return ty
+  mvar <- lookupMVar v
+  case (M.lookup v vars,mvar) of 
+    (Nothing,Nothing) -> throwError (ErrUndefinedVar loc v)
+    (Just ty,_) -> return ty
+    (_,Just ty) -> return (T.varTy ty)
 getTyCommand loc t1 t2@D.Var{} = flipPol <$> getTyCommand loc t2 t1
 getTyCommand loc t1 t2 = throwError (ErrUnclearTypeCut loc t1 t2)

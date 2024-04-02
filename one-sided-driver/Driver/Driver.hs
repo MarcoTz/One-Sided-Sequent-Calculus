@@ -48,7 +48,7 @@ import Data.Map qualified as M
 runStr :: String -> DriverM (Maybe T.Command) 
 runStr progText = do 
   let progParsed = runSourceParser progText (MkModule "") (parseProgram progText) 
-  progParsed' <- liftErr progParsed
+  progParsed' <- liftErr progParsed "parsing" 
   prog <- inferProgram progParsed' []
   runProgram prog
 
@@ -61,7 +61,7 @@ getInferOrder :: P.Program -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
   env <- gets drvEnv
   let order = runDepM env (depOrderModule mn progs)
-  order' <- liftErr order 
+  order' <- liftErr order "dependency order (modules)"
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
 
@@ -86,7 +86,7 @@ inferProgram prog imports = do
     debug ("ordering variables " <> show (fst <$> (M.toList . P.progVars) prog) <> " in " <> show mn) 
     env' <- gets drvEnv
     let progOrder = runDepM env' (depOrderProgram prog)
-    progOrder' <- liftErr progOrder
+    progOrder' <- liftErr progOrder "dependency order (variables)"
     debug ("inferring variables in order " <> show progOrder')
     let nameFun decl = case decl of Left var -> D.varName var; Right rec -> D.recName rec
     let indexFun v1 v2 = compare (elemIndex (nameFun v1) progOrder') (elemIndex (nameFun v2)  progOrder')
@@ -110,20 +110,20 @@ runProgram prog = do
   let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
   env <- gets drvEnv
   let evaled = runEvalM env (eval main)
-  Just <$> liftErr evaled
+  Just <$> liftErr evaled "evaluation"
 
 desugarProg :: P.Program -> DriverM D.Program 
 desugarProg prog = do
   debug ("desugaring program " <> show (P.progName prog))
   env <- gets drvEnv
   let prog' = runDesugarM env (P.progName prog) (desugarProgram prog)
-  liftErr prog'
+  liftErr prog' "desugaring"
 
 inferDataDecl :: Modulename -> D.DataDecl -> DriverM T.DataDecl
 inferDataDecl mn decl = do 
   debug ("infering declaration " <> show (D.declName decl)) 
   let decl' = runDeclM (inferDecl decl)
-  decl'' <- liftErr decl'
+  decl'' <- liftErr decl' "inferring declaration"
   addDecl mn decl''
   return decl''
 
@@ -133,7 +133,7 @@ inferVarDecl mn v@(D.MkVar _ vn (Just _) _) = do
   debug ("type checking variable " <> show vn)
   env <- gets drvEnv
   let v' = runCheckM env (checkVarDecl v)
-  v'' <- liftErr v' 
+  v'' <- liftErr v'  "type checking"
   addVarDecl mn v''
   return v''
 
@@ -143,7 +143,7 @@ inferRecDecl mn r@(D.MkRec _ vn (Just _) _) = do
   debug ("type checking recursive variable " <> show vn)
   env <- gets drvEnv 
   let r' = runCheckM env (checkRecDecl r)
-  r'' <- liftErr r'
+  r'' <- liftErr r' "type checking (recursive)"
   addRecDecl mn r''
   return r''
 
@@ -151,4 +151,4 @@ inferCommand :: D.Command -> DriverM T.Command
 inferCommand c = do 
   env <- gets drvEnv
   let c' = runCheckM env (checkCommand c)
-  liftErr c'
+  liftErr c' "type checking (command)"

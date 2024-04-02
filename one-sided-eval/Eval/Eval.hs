@@ -33,9 +33,6 @@ evalOnce :: Command -> EvalM Command
 evalOnce (Err loc err) = return $ Err loc err
 evalOnce (Done loc) = return $ Done loc
 -- substitute variables 
-evalOnce (Cut loc (Var _ v _) pol u) = do
-  t <- lookupBody loc v
-  return $ Cut loc t pol u
 evalOnce (Cut loc t pol (Var loc' v _)) = do 
   u <- lookupBody loc v 
   return $ Cut loc t pol (setLoc loc' u)

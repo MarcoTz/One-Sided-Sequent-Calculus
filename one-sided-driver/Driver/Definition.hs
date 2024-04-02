@@ -41,9 +41,9 @@ addRecDecl nm rec = modify (\s -> MkDriverState (drvDebug s) (addRecEnv nm rec (
 setDebug :: Bool -> DriverM () 
 setDebug b = modify (MkDriverState b . drvEnv)
 
-liftErr :: Error e => Either e a -> DriverM a
-liftErr (Left err) = throwError (convertError err)
-liftErr (Right a) = return a 
+liftErr :: Error e => Either e a -> String -> DriverM a
+liftErr (Left err) wh = throwError (ErrWithWhere (convertError err) wh)
+liftErr (Right a) _ = return a 
 
 debug :: String -> DriverM () 
 debug st = do  

@@ -57,9 +57,10 @@ addRecEnv nm rec (MkEnv defs) =
     Nothing -> let newProg = addRecProgram rec (emptyProg nm) in MkEnv (M.insert nm newProg defs)
     Just prog -> MkEnv (M.insert nm (addRecProgram rec prog) defs)
 
+
 type EnvReader e a m = (Error e, MonadError e m, MonadReader Environment m)
 
-getDecls :: Error e => EnvReader e a m => m (M.Map TypeName DataDecl)
+getDecls :: EnvReader e a m => m (M.Map TypeName DataDecl)
 getDecls = do
   defs <- asks envDefs
   let progs = snd <$> M.toList defs
