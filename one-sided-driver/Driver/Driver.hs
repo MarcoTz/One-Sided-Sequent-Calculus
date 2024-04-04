@@ -29,8 +29,8 @@ import TypeCheck.Terms (checkCommand)
 
 import InferDecl (runDeclM, inferDecl)
 
-import Eval.Definition (runEvalM)
-import Eval.Eval (eval)
+import Eval.Definition (runEvalM, EvalTrace, emptyTrace)
+import Eval.Eval (eval,evalWithTrace)
 
 import Pretty.Parsed ()
 import Pretty.TypeInference ()
@@ -45,17 +45,17 @@ import Data.Either (isLeft,isRight)
 import Data.Map qualified as M
 
 
-runStr :: String -> DriverM (Maybe T.Command) 
-runStr progText = do 
+runStr :: String -> Bool -> DriverM (Either T.Command EvalTrace) 
+runStr progText withTrace = do 
   let progParsed = runSourceParser progText (MkModule "") (parseProgram progText) 
   progParsed' <- liftErr progParsed "parsing" 
   prog <- inferProgram progParsed' []
-  runProgram prog
+  if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
 
-inferAndRun :: P.Program -> [P.Program] -> DriverM (Maybe T.Command)
-inferAndRun prog imports = do
+inferAndRun :: P.Program ->[P.Program] -> Bool -> DriverM (Either T.Command EvalTrace)
+inferAndRun prog imports withTrace = do
   prog' <- inferProgram prog imports
-  runProgram prog'
+  if withTrace then Right <$> runProgramTrace prog' else Left <$> runProgram prog'
 
 getInferOrder :: P.Program -> [P.Program] -> DriverM [P.Program]
 getInferOrder mn progs = do
@@ -104,13 +104,21 @@ inferProgram prog imports = do
     main' <- forM main inferCommand
     return (T.MkProgram mn decls' varMap recsMap main' src)
 
-runProgram :: T.Program -> DriverM (Maybe T.Command)
-runProgram prog | isNothing (T.progMain prog) = return Nothing
+runProgram :: T.Program -> DriverM T.Command
+runProgram prog | isNothing (T.progMain prog) = return (T.Done defaultLoc) 
 runProgram prog = do
   let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
   env <- gets drvEnv
   let evaled = runEvalM env (eval main)
-  Just <$> liftErr evaled "evaluation"
+  liftErr evaled "evaluation"
+
+runProgramTrace :: T.Program -> DriverM EvalTrace 
+runProgramTrace prog | isNothing (T.progMain prog) = return emptyTrace 
+runProgramTrace prog = do 
+  let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
+  env <- gets drvEnv 
+  let evaled = runEvalM env (evalWithTrace main) 
+  liftErr evaled "evaluation (with trace)"
 
 desugarProg :: P.Program -> DriverM D.Program 
 desugarProg prog = do

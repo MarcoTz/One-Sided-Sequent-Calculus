@@ -1,13 +1,16 @@
 module Eval.Definition (
   EvalM,
   runEvalM,
-  EvalError (..)
+  EvalError (..),
+  EvalTrace (..),
+  emptyTrace
 ) where
 
 import Environment 
 import Errors 
 import Loc
 import Common
+import Syntax.Typed.Terms
 
 import Control.Monad.Except 
 import Control.Monad.Reader
@@ -27,6 +30,12 @@ instance Error EvalError where
   getLocation (ErrOther loc _) = loc 
 
   toError = ErrOther 
+
+data EvalTrace = MkTrace !Command ![Command] 
+  deriving (Eq)
+
+emptyTrace :: EvalTrace 
+emptyTrace = MkTrace (Done defaultLoc) []
 
 newtype EvalM a = MkEvalM { getEvalM :: ReaderT Environment (Except EvalError) a }
   deriving newtype (Functor, Applicative, Monad, MonadError EvalError, MonadReader Environment)

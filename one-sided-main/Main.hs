@@ -8,6 +8,9 @@ import Common
 import Errors
 import Environment
 import Syntax.Parsed.Program
+import Syntax.Typed.Terms
+import Eval.Definition
+import Pretty.Eval () 
 
 import System.Environment 
 import Control.Monad 
@@ -25,6 +28,10 @@ main = do
   args <- getArgs
   forM_ args run
 
+showRes :: Either Command EvalTrace -> String
+showRes (Left c) = " result " <> show c 
+showRes (Right tr) = " result " <> show tr 
+
 run :: String -> IO ()
 run nm = do 
   putStrLn  "\n================================\n"
@@ -35,8 +42,8 @@ run nm = do
     Left err -> putStrLn (colorError <> " Error parsing module " <> nm <> ": " <> showWithLoc err) 
     Right (prog, imps) -> do 
       let st = MkDriverState True emptyEnv 
-      res <- runDriverM st (inferAndRun prog imps)
+      res <- runDriverM st (inferAndRun prog imps True)
       case res of 
         Left err -> putStrLn (colorError <> "Error in module "<> nm <> ": " <> showInSrc err (progSrc prog) <> colorDefault)
-        Right (Nothing,_) -> putStrLn (colorSuccess <> "Successfully inferred program " <> nm <> colorDefault)
-        Right (Just c,_) -> putStrLn (colorSuccess <> "Successfully ran program " <> nm <> "\nwith result "<> show c <> colorDefault)
+        Right (res',_) -> putStrLn (colorSuccess <> "Successfully ran program " <> nm <> showRes res' <> colorDefault)
+

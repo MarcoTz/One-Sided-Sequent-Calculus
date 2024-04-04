@@ -37,7 +37,7 @@ parseExample shouldFail mn = do
     Left err -> putStrLn (colorError <> " Error parsing " <> show mn <> " with error " <> showWithLoc err <> colorDefault)
     Right (prog,imps) -> do
       let drvSt = MkDriverState False emptyEnv
-      res' <- runDriverM drvSt (inferAndRun prog imps)
+      res' <- runDriverM drvSt (inferAndRun prog imps False)
       printRes (progSrc prog) mn shouldFail res'
 
 

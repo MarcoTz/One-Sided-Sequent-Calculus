@@ -140,6 +140,7 @@ library eval
   exposed-modules: Eval.Definition,
                    Eval.Focusing,
                    Eval.Eval,
+                   Pretty.Eval,
   hs-source-dirs:  one-sided-eval
 
 library fileload
@@ -161,6 +162,7 @@ executable main
   build-depends:    definitions, 
                     driver,
                     fileload,
+                    eval
   hs-source-dirs:   one-sided-main
 
 executable test-suite
@@ -177,6 +179,7 @@ executable web-app
   build-depends:   driver,
                    parser,
                    definitions,
+                   eval,
   hs-source-dirs:  web-app
   other-modules:   Callback,
                    JSBits

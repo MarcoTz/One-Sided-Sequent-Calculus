@@ -1,5 +1,6 @@
 module Eval.Eval (
-  eval
+  eval,
+  evalWithTrace
 ) where 
 
 import Eval.Definition
@@ -11,6 +12,7 @@ import Loc
 import Environment
 
 import Control.Monad.Except
+import Data.Bifunctor (second)
 
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
@@ -20,6 +22,19 @@ coTrans (Err loc err) = Err loc err
 
 eval :: Command -> EvalM Command 
 eval c = let c' = focus c in evalFocused c'
+
+evalWithTrace :: Command -> EvalM EvalTrace 
+evalWithTrace c = let c' = focus c in uncurry MkTrace <$> evalFocusedWithTrace c'
+
+evalFocusedWithTrace :: Command -> EvalM (Command,[Command])
+evalFocusedWithTrace c = do 
+  c' <- evalOnce c
+  let tr = [c,c']
+  case c' of 
+    (Done _) -> return (c',tr)
+    (Err _ _) -> return (c',tr) 
+    _c'' -> second (tr ++) <$> evalFocusedWithTrace c'
+
 
 evalFocused :: Command -> EvalM Command 
 evalFocused c = do
