@@ -5,15 +5,14 @@
     <link rel="stylesheet" href="main.css"/>
     <script>
       function runExample(){
-        contents = document.getElementById("progInput").value
-        console.log(contents)
-        globalCompiler(contents)
+        contents = document.getElementById("progInput").value;
+        globalCompiler(contents);
       }
 
       function setExample(exampleId) {
         exampleValue = document.getElementById(exampleId).textContent;
         // remove indendation from html
-        exampleValue = exampleValue.replaceAll(/^        /gm,'').trim()
+        exampleValue = exampleValue.replaceAll(/^        /gm,'').trim();
         document.getElementById("progInput").value = exampleValue;
       }
 

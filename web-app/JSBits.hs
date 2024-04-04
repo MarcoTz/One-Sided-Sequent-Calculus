@@ -6,7 +6,7 @@ setWithString :: (CString -> IO ()) -> String -> IO ()
 setWithString fun str = withCString str fun
 
 -- id resultStr
-foreign import javascript "((arr,offset) => document.getElementById('resultStr').innerHTML = h$decodeUtf8z(arr,offset))"
+foreign import javascript "((arr,offset) => {console.log(h$decodeUtf8z(arr,offset)); document.getElementById('resultStr').innerHTML = h$decodeUtf8z(arr,offset)})"
   setResString :: CString -> IO ()
 foreign import javascript "((arr,offset) => document.getElementById('resultStr').className = h$decodeUtf8z(arr,offset))"
   setResClass :: CString -> IO ()

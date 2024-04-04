@@ -23,7 +23,7 @@ instance Show Pattern where
 
 instance Show Command where 
   show (Cut _ t pol u) = "<" <> show t <> " | " <> show pol <> " | " <> show u <> ">"
-  show (CutAnnot _ t ty pol u) = "<" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u <> ">"
+  show (CutAnnot _ t ty pol u) = "<" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u -- <> ">" 
   show (Done _) = "Done"
   show (Err _ err) = "error " <> err
 
