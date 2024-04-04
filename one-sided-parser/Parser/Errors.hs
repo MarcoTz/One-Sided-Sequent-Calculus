@@ -5,7 +5,7 @@ module Parser.Errors (
 
 import Loc 
 import Errors 
-
+import Data.Proxy
 import Text.Megaparsec
 import Data.List (intercalate)
 import Data.List.NonEmpty qualified as NE 
@@ -42,16 +42,13 @@ posStateToLoc pos offset =
 
 getErrorMessage :: ParseError String String -> String
 getErrorMessage (TrivialError _ Nothing expSet) = "expected: " <> intercalate " or " (showItem <$> S.toList expSet)
-getErrorMessage (TrivialError ofs (Just unexp) expTok) = "unexpected " <> showItem unexp <> ", " <> getErrorMessage (TrivialError ofs Nothing expTok)
+getErrorMessage (TrivialError ofs (Just unexp) expTok) = "unexpected " <> showItem unexp <> ", "  <> getErrorMessage (TrivialError ofs Nothing expTok)
 getErrorMessage (FancyError _ errSet) = intercalate "\n" (showFancy <$> S.toList errSet)
 
 showItem :: ErrorItem (Token String) -> String
-showItem (Tokens tks) = "'" <> concatMap showToken (NE.toList tks) <> "'"
+showItem (Tokens tks) = "'" <> showTokens (Proxy::Proxy String) tks --concatMap showToken (NE.toList tks) <> "'"
 showItem (Label lb) = NE.toList lb
 showItem EndOfInput = "end of input"
-
-showToken :: Token String -> String 
-showToken tk = case show tk of [_quot1,s,_quot2] -> [s]; str -> str
 
 showFancy :: ErrorFancy String -> String
 showFancy (ErrorFail msg) = msg

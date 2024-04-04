@@ -9,7 +9,7 @@ import JSBits
 import GHC.JS.Prim
 import Pretty.Eval ()
 import Pretty.Driver ()
-
+import Data.Char(ord)
 foreign import javascript "((c => { globalCompiler = c}))"
   setCompiler :: Callback (JSVal -> IO ()) -> IO ()
 
@@ -22,8 +22,8 @@ runProg val = do
   let drvSt = MkDriverState False emptyEnv
   res <- runDriverM drvSt (runStr progSource False)
   case res of 
-    Left err  -> setError (getMessage err)
-    Right mainRes -> setSuccess "successfully ran program"
+    Left err  -> let msg = getMessage err in setError msg
+    Right mainRes -> setSuccess "successfully ran program more characters, this should not be a problem"
   return ()
 
 main :: IO () 
