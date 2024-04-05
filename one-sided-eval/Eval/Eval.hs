@@ -19,6 +19,7 @@ coTrans :: Command -> Command
 coTrans (Cut loc t pol u) = Cut loc u (flipPol pol) t
 coTrans (Done loc) = Done loc
 coTrans (Err loc err) = Err loc err
+coTrans (Print loc t) = Print loc t
 
 eval :: Command -> EvalM Command 
 eval c = let c' = focus c in evalFocused c'
@@ -33,6 +34,7 @@ evalFocusedWithTrace c = do
   case c' of 
     (Done _) -> return (c',tr)
     (Err _ _) -> return (c',tr) 
+    (Print _ _) -> return (c',tr)
     _c'' -> second (tr ++) <$> evalFocusedWithTrace c'
 
 
@@ -42,11 +44,13 @@ evalFocused c = do
   case c' of 
     (Done loc) -> return (Done loc)
     (Err loc err) -> return (Err loc err)
+    (Print loc t) -> return (Print loc t)
     _c'' -> evalFocused c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err loc err) = return $ Err loc err
 evalOnce (Done loc) = return $ Done loc
+evalOnce (Print loc t) = return $ Print loc t 
 -- substitute variables 
 evalOnce (Cut loc t pol (Var loc' v _)) = do 
   u <- lookupBody loc v 

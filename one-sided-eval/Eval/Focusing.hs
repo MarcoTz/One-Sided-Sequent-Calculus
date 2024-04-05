@@ -13,6 +13,7 @@ focus :: Command -> Command
 focus (Done loc)  = Done loc
 focus (Err loc err)   = Err loc err
 focus (Cut loc t p u) = Cut loc (focusTerm p t) p (focusTerm p u) 
+focus (Print loc t) = Print loc t 
 
 focusTerm :: Pol -> Term -> Term 
 focusTerm _ (Var loc v ty)        = Var loc v ty

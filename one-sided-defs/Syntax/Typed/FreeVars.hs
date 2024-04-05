@@ -32,6 +32,7 @@ instance FreeVars Command where
   freeVars (Cut _ t1 _ t2) = S.union (freeVars t1) (freeVars t2) 
   freeVars Done{} = S.empty
   freeVars Err{}  = S.empty
+  freeVars (Print _ t) = freeVars t
 
 freshVar :: Int -> S.Set Variable -> Variable 
 freshVar n vars = let newV = MkVariable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV

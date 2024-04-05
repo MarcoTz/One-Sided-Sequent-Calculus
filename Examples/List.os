@@ -36,4 +36,7 @@ rec len := case { Ap(ls,a) =>
   } | - | ls>
 };
 
-main := <len | Fun(List(Nat),Nat):+ | + | Ap(Cons(Z,Nil),mu x.Done)>;
+printCons :: Forall X. X:-;
+printCons := mu x. Print x;
+
+main := <len | Fun(List(Nat),Nat):+ | + | Ap(Cons(Z,Nil),printCons)>;

@@ -54,8 +54,8 @@
           Ap(a,b)
         }
 
-        ExitSuccess :: Forall X. X:-;
-        ExitSuccess := mu x.Done;
+        printCons :: forall X.X:-;
+        printCons := mu x.Print x;
       
         swap :: forall X Y. Fun(Pair(X,Y),Pair(Y,X)):+;
         swap := case { Ap(p,a) =&gt;
@@ -67,7 +67,7 @@
         pair1 :: Pair(Nat,Nat):+;
         pair1 := Tup(Z,S(Z));
       
-        main := &lt; swap | + | Ap(pair1,ExitSuccess)&gt;;
+        main := &lt; swap | + | Ap(pair1,printCons)&gt;;
       </div>
       
       <div id="list">
@@ -82,8 +82,8 @@
 
         data Unit : + { MkUnit }
 
-        ExitSuccess :: forall X. X:-;
-        ExitSuccess := mu x.Done;
+        printCons :: forall X. X:-;
+        printCons := mu x.Print x;
       
         tail :: forall X. Fun(List(X),List(X)) : +;
         tail := case { Ap(ls,a) =&gt; 
@@ -96,7 +96,7 @@
         list1 :: List(Unit):+;
         list1 := Cons(MkUnit,Cons(MkUnit,Nil));
       
-        main := &lt; tail | + | Ap(list1,ExitSuccess)&gt;;
+        main := &lt; tail | + | Ap(list1,printCons)&gt;;
       </div>
       
       <div id="nat">
@@ -107,8 +107,8 @@
         data Fun(a:+,b:-):- { 
           Ap(a,b)
         }
-        ExitSuccess :: forall X. X:-;
-        ExitSuccess := mu x.Done;
+        printCons :: Forall X.X:-;
+        printCons := mu x. Print x;
       
         pred :: Fun(Nat,Nat):+;
         pred := case { Ap(n,a) =&gt;
@@ -121,7 +121,7 @@
         nat1 :: Nat:+;
         nat1 := S(S(Z));
       
-        main := &lt; pred | + | Ap(nat1,ExitSuccess)&gt;;
+        main := &lt; pred | + | Ap(nat1,printCons)&gt;;
       </div>
       
       <div id="fun">
@@ -130,14 +130,14 @@
         }
         
         data Unit:+ {MkUnit}
-     
-        ExitSuccess :: Forall X. X:-;
-        ExitSuccess := mu x. Done;
+
+        printCons :: Forall X.X:-;
+        printCons := mu x. Print x;
 
         id :: forall X. Fun(X,X) : +;
         id := case { Ap(x,a) =&gt; &lt;x | + | a&gt; };
       
-        main := &lt; id | + | Ap(MkUnit,ExitSuccess)&gt;; 
+        main := &lt; id | + | Ap(MkUnit,printCons)&gt;; 
       </div>
     </div>
   </body>

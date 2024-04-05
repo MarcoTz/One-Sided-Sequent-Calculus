@@ -109,6 +109,7 @@ runProgram prog | isNothing (T.progMain prog) = return (T.Done defaultLoc)
 runProgram prog = do
   let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
   env <- gets drvEnv
+  debug ("evaluating " <> show main) 
   let evaled = runEvalM env (eval main)
   liftErr evaled "evaluation"
 
@@ -117,6 +118,7 @@ runProgramTrace prog | isNothing (T.progMain prog) = return emptyTrace
 runProgramTrace prog = do 
   let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
   env <- gets drvEnv 
+  debug ("evaluating " <> show main)
   let evaled = runEvalM env (evalWithTrace main) 
   liftErr evaled "evaluation (with trace)"
 

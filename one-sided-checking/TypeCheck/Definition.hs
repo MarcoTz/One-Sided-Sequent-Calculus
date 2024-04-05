@@ -62,7 +62,9 @@ getMTypeVar :: Variable -> CheckM (Maybe T.Ty)
 getMTypeVar v = do
   vars <- getCheckerVars 
   mvar <- lookupMVar v
-  case (M.lookup v vars,mvar) of 
-    (Nothing,Nothing) -> return Nothing 
-    (Just ty,_) -> return (Just ty)
-    (_,Just ty) -> return (Just $ T.varTy ty)
+  mrec <- lookupMRec v
+  case (M.lookup v vars,mvar,mrec) of 
+    (Nothing,Nothing,Nothing) -> return Nothing 
+    (Just ty,_,_) -> return (Just ty)
+    (_,Just vdecl,_) -> return (Just $ T.varTy vdecl)
+    (_,_,Just rdecl) -> return (Just $ T.recTy rdecl) 

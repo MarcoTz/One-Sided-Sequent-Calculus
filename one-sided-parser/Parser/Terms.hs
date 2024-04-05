@@ -100,7 +100,15 @@ parseShiftNeg = do
   return $ ShiftNeg loc v c
 
 parseCommand :: Parser Command 
-parseCommand = parseCut <|> parseDone <|> parseErr <|> try parseCutPos <|> try parseCutNeg <|> parseParens parseCommand
+parseCommand = 
+  parseCut <|> 
+  parseDone <|> 
+  parseErr <|> 
+  parsePrint <|>
+  parsePrintAnnot <|>
+  try parseCutPos <|> 
+  try parseCutNeg <|> 
+  parseParens parseCommand
 
 parseCut :: Parser Command
 parseCut = do 
@@ -210,3 +218,30 @@ parseErr = do
   parseSymbol SymQuot
   loc <- getCurrLoc startPos
   return (Err loc msg)
+
+parsePrint :: Parser Command 
+parsePrint = do 
+  startPos <- getCurrPos 
+  sc 
+  parseKeyword KwPrint <|> parseKeyword Kwprint
+  sc 
+  t <- parseTerm
+  sc 
+  loc <- getCurrLoc startPos
+  return (Print loc t)
+
+parsePrintAnnot :: Parser Command 
+parsePrintAnnot = do
+  startPos <- getCurrPos
+  sc 
+  parseKeyword KwPrint <|> parseKeyword Kwprint 
+  sc 
+  t <- parseTerm 
+  sc 
+  parseSymbol SymColon
+  parseSymbol SymColon
+  sc 
+  ty <- parsePolTy
+  loc <- getCurrLoc startPos
+  return (PrintAnnot loc t ty)
+

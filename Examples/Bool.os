@@ -34,3 +34,8 @@ or := case { Ap(b1,a) =>
     } | - | b1> 
   } | + | a> 
 };
+
+printCons :: Forall X. X:-;
+printCons := mu x.Print x;
+
+main := <or | + | Ap(True, mu x. <x| +|Ap(True,printCons)>)>;

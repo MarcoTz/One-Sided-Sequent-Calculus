@@ -77,6 +77,7 @@ instance SubstTyVars Command where
   substTyVars varmap (Cut loc t pol u) = Cut loc (substTyVars varmap t) pol (substTyVars varmap u) 
   substTyVars _ (Done loc) = Done loc
   substTyVars _ (Err loc err) = Err loc err
+  substTyVars varmap (Print loc t) = Print loc (substTyVars varmap t)
 
 --------------------------------
 -- Term Variable Substitution --
@@ -126,3 +127,4 @@ instance Subst Command where
   substVar (Cut loc t1 pol t2) t3 v = Cut loc (substVar t1 t3 v) pol (substVar t2 t3 v)
   substVar (Done loc) _ _ = Done loc
   substVar (Err loc err) _ _ = Err loc err
+  substVar (Print loc t) t2 v = Print loc (substVar t t2 v)
