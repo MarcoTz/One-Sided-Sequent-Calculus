@@ -1,15 +1,28 @@
 body {
-  font-family: "Noto", sans-serif
+  font-family: "Noto Sans", sans-serif;
+  background-color: #505060;
+  color: #dddddd;
+}
+textarea { 
+  width: 100%;
+  height: 8em;
+  resize:none;
+  font-family: "DejaVu Sans Mono", sans-serif;
+  background-color:#505050;
+  color: #eeeeff;
+  border-radius:10px;
+  line-height: 1.3;
 }
 
 #progInput {
   width:100%;
-  height:90%
+  height:90%;
+  background-color: #505050;
+  color: #eeeeee;
 }
 
 #runButton {
   width:5%;
-  height:2em;
   border-radius:2px;
 }
 
@@ -17,14 +30,21 @@ body {
   display:none
 }
 
+#typesStr { 
+  width: 100%;
+  height: 5em;
+}
+
 .evalSucc {
-  color: green
+  color: #00ff55; 
 }
 
 .evalError {
-  color: red
+  color: #ff0033; 
 }
 
 .prog {
   height:40em
 }
+
+

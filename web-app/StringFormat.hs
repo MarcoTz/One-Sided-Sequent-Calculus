@@ -11,10 +11,10 @@ envToStr :: Environment -> String
 envToStr env = do 
   let tys = getTypes (MkModule "") env
   let tyStrs = (\(nm,ty) -> replStr (show nm) <> "::" <> replStr (show ty)) <$> tys
-  intercalate "<br/>" tyStrs
+  intercalate "\n" tyStrs
 
 traceToStr :: [Command] -> String
-traceToStr cmds = intercalate "<br />" (replStr . show  <$> cmds)
+traceToStr cmds = intercalate "\n" (replStr . show  <$> cmds)
 
 repl :: Char -> String
 repl '<' = "&lt;"
