@@ -28,7 +28,7 @@ data CheckerError where
   ErrBadPattern     :: Loc -> [XtorName] -> [XtorName] -> D.Term-> CheckerError 
   ErrCutKind        :: Loc -> Ty -> Ty -> D.Command-> CheckerError 
   ErrBadType        :: Loc -> D.Term -> Ty-> CheckerError 
-  ErrUnclearTypeCut :: Loc -> D.Term -> D.Term-> CheckerError 
+  ErrUnclearType    :: Loc -> D.Command -> CheckerError 
   ErrOther          :: Loc -> String -> CheckerError 
 
 
@@ -43,7 +43,7 @@ instance Error CheckerError where
   getMessage (ErrUndefinedTyVar _ tyv t) = "Type Variable " <> show tyv <> " was not defined " <> whileTerm t
   getMessage (ErrFreeTyVar _ tyv) = "Type Variable " <> show tyv <> " cannot appear free"
   getMessage (ErrTyCoForShift _ t ty) = "Cannot use co-type of " <> show ty <> " for shift term " <> show t
-  getMessage (ErrKindNeq _ ty1 ty2 t) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal"  <> whileTerm t
+  getMessage (ErrKindNeq _ ty1 ty2 t) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal "  <> whileTerm t
   getMessage (ErrTypeNeq _ ty1 ty2 t) = "Types " <> show ty1 <> " and " <> show ty2 <> " should be equal " <> whileTerm t
   getMessage (ErrNotTyDecl _ tyn ty t) = "Type " <> show ty <> " should be " <> show tyn <> " " <> whileTerm t
   getMessage (ErrTypeArity _ tyn) = "Wrong number of arguments for type " <> show tyn
@@ -51,7 +51,7 @@ instance Error CheckerError where
   getMessage (ErrBadPattern _ exPts shouldPts t) = "Malformed case: found patterns for " <> intercalate ", " (show <$> exPts) <> ", expected " <> intercalate ", " (show <$> shouldPts) <> " " <> whileTerm t
   getMessage (ErrCutKind _ ty1 ty2 c) = "Kind of types " <> show ty1 <> " and " <> show ty2 <> " in cut are not equal " <> whileCmd c
   getMessage (ErrBadType _ t ty) = "Cannot typecheck " <> show t <> " with type " <> show ty
-  getMessage (ErrUnclearTypeCut _ t1 t2) = "Types of terms " <> show t1 <> " and " <> show t2 <> " in cut unclear"
+  getMessage (ErrUnclearType _ c) = "Type of term " <> show c <> " is unclear" 
   getMessage (ErrOther _ str)  = str
 
   getLocation (ErrNoAnnot loc _) = loc
@@ -67,7 +67,7 @@ instance Error CheckerError where
   getLocation (ErrBadPattern loc _ _ _) = loc
   getLocation (ErrCutKind loc _ _ _) = loc 
   getLocation (ErrBadType loc _ _) = loc 
-  getLocation (ErrUnclearTypeCut loc _ _) = loc 
+  getLocation (ErrUnclearType loc _) = loc 
   getLocation (ErrOther loc _) = loc
 
   toError = ErrOther 

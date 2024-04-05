@@ -33,6 +33,8 @@ instance Embed D.Command P.Command where
   embed (D.CutAnnot loc t ty pol u) = P.CutAnnot loc (embed t) (embed ty) pol (embed u)
   embed (D.Done loc) = P.Done loc
   embed (D.Err loc err) = P.Err loc err
+  embed (D.Print loc t) = P.Print loc (embed t)
+  embed (D.PrintAnnot loc t ty) = P.PrintAnnot loc (embed t) (embed ty)
 
 instance Embed D.DataDecl P.DataDecl where 
   embed (D.MkData loc nm vars pol sigs) = P.MkData loc nm vars pol (embed <$> sigs) 

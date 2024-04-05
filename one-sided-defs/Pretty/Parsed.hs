@@ -26,6 +26,8 @@ instance Show Command where
   show (CutAnnot _ t ty pol u) = "<" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u -- <> ">" 
   show (Done _) = "Done"
   show (Err _ err) = "error " <> err
+  show (Print _ t) = "Print " <> show t
+  show (PrintAnnot _ t ty) = " Print " <> show t <> " :: " <> show ty
 
 instance Show PolTy where 
   show (MkPolTy ty pol) = show ty<> " : " <> show pol

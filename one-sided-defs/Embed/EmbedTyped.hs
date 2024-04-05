@@ -34,6 +34,7 @@ instance Embed T.Command D.Command where
   embed (T.Cut loc t pol s) = D.CutAnnot loc (embed t) (embed $ T.getType t) pol (embed s)
   embed (T.Done loc) = D.Done loc
   embed (T.Err loc err) = D.Err loc err
+  embed (T.Print loc t) = D.PrintAnnot loc (embed t) (embed . T.getType $ t)
 instance Embed T.Command P.Command where 
   embed t = (embed :: D.Command -> P.Command) $ (embed :: T.Command -> D.Command) t
 

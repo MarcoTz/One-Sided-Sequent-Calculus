@@ -50,3 +50,8 @@ desugarCommand (P.CutAnnot loc t ty pol u) = do
   return $ D.CutAnnot loc t' ty' pol u'
 desugarCommand (P.Done loc) = return (D.Done loc)
 desugarCommand (P.Err loc str) = return $ D.Err loc str
+desugarCommand (P.Print loc t) = D.Print loc <$> desugarTerm t
+desugarCommand (P.PrintAnnot loc t ty) = do 
+  t' <- desugarTerm t
+  ty' <- desugarPolTy ty
+  return $ D.PrintAnnot loc t' ty' 

@@ -6,13 +6,15 @@ module TypeCheck.Definition (
   addCheckerVar,
   addCheckerTyVar,
   withCheckerVars,
+  getMTypeVar,
   CheckerError (..)
 ) where 
 
 import Environment
 import Common
 import TypeCheck.Errors
-import Syntax.Typed.Types qualified as T 
+import Syntax.Typed.Types   qualified as T 
+import Syntax.Typed.Program qualified as T
 import Pretty.Typed () 
 import Pretty.Desugared ()
 
@@ -55,3 +57,12 @@ withCheckerVars newVars fun = do
   res <- fun  
   modify (MkCheckState currVars . checkTyVars)
   return res
+
+getMTypeVar :: Variable -> CheckM (Maybe T.Ty)
+getMTypeVar v = do
+  vars <- getCheckerVars 
+  mvar <- lookupMVar v
+  case (M.lookup v vars,mvar) of 
+    (Nothing,Nothing) -> return Nothing 
+    (Just ty,_) -> return (Just ty)
+    (_,Just ty) -> return (Just $ T.varTy ty)

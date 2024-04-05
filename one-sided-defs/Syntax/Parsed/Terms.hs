@@ -11,21 +11,28 @@ import Syntax.Parsed.Types
 
 type MTypedVar = (Variable,Maybe PolTy)
 data Command where 
-  Cut      :: Loc -> Term -> Pol -> Term -> Command
-  CutAnnot :: Loc -> Term -> PolTy -> Pol -> Term -> Command
-  Err      :: Loc -> String -> Command
-  Done     :: Loc -> Command
+  Cut        :: Loc -> Term -> Pol -> Term -> Command
+  CutAnnot   :: Loc -> Term -> PolTy -> Pol -> Term -> Command
+  Err        :: Loc -> String -> Command
+  Print      :: Loc -> Term -> Command
+  PrintAnnot :: Loc -> Term -> PolTy -> Command
+  Done       :: Loc -> Command
   deriving (Eq,Ord)
+
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _ ) = loc 
   getLoc (CutAnnot loc _ _ _ _) = loc 
   getLoc (Err loc _) = loc 
   getLoc (Done loc) = loc
+  getLoc (Print loc _) = loc
+  getLoc (PrintAnnot loc _ _) = loc
 
   setLoc loc (Cut _ t pol u) = Cut loc t pol u
   setLoc loc (CutAnnot _ t ty pol u) = CutAnnot loc t ty pol u
   setLoc loc (Err _ str) = Err loc str 
   setLoc loc (Done _) = Done loc
+  setLoc loc (Print _ t) = Print loc t 
+  setLoc loc (PrintAnnot _ t ty) = PrintAnnot loc t ty
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
   deriving (Eq,Ord)

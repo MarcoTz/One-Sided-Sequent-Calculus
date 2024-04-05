@@ -8,6 +8,7 @@ import Syntax.Desugared.Terms qualified as D
 import Syntax.Typed.Terms qualified as T
 import Syntax.Typed.Substitution qualified as T
 import GenerateConstraints.Definition
+import GenerateConstraints.Types
 import Constraints
 import Common
 import Loc
@@ -34,10 +35,28 @@ genConstraintsCmd (D.Cut loc t pol u) = do
   if pol1 == pol2 then throwError (ErrKindNeq loc (T.getType t') (T.getType u')) else do 
     addConstraint (MkTyEq (T.getType t') (T.getType u'))
     return (T.Cut loc t' pol u')
-genConstraintsCmd (D.CutAnnot loc t _ pol u) = genConstraintsCmd (D.Cut loc t pol u)
+genConstraintsCmd (D.CutAnnot loc t ty pol u) = do
+  t' <- genConstraintsTerm t
+  let ty1' = T.getType t'
+  u' <- genConstraintsTerm u 
+  ty' <- genConstraintsPolTy loc ty 
+  let pol1 = getKind t' 
+  let pol2 = getKind u' 
+  let pol3 = getKind ty'
+  if pol1 /= pol3 || pol1 == pol2 then throwError (ErrKindNeq loc ty1' (T.getType u')) else do
+    addConstraint (MkTyEq ty1' (T.getType u'))
+    addConstraint (MkTyEq ty1' ty')
+    return $ T.Cut loc t' pol u'
 genConstraintsCmd (D.Done loc) = return $ T.Done loc
 genConstraintsCmd (D.Err loc err) = return $ T.Err loc err
-  
+genConstraintsCmd (D.Print loc t) = do 
+  t' <- genConstraintsTerm t
+  return $ T.Print loc t'  
+genConstraintsCmd (D.PrintAnnot loc t ty) = do
+  t' <- genConstraintsTerm t
+  ty' <- genConstraintsPolTy loc ty
+  addConstraint (MkTyEq (T.getType t') ty')
+  return $ T.Print loc t'
 genConstraintsTerm :: D.Term -> GenM T.Term 
 genConstraintsTerm (D.Var loc v) = do 
    vars <- getGenVars 

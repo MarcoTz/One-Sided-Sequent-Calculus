@@ -66,6 +66,9 @@ addEdgesVariableC vert ignore (CutAnnot _ t _ _ u) = do
   addEdgesVariableT vert ignore u 
 addEdgesVariableC _ _ (Done _) = return ()
 addEdgesVariableC _ _ (Err _ _) = return ()
+addEdgesVariableC vert ignore (Print _ t) = addEdgesVariableT vert ignore t  
+addEdgesVariableC vert ignore (PrintAnnot _ t _) = addEdgesVariableT vert ignore t
+
 
 getVarOrder :: DepVar [Vertex Variable] 
 getVarOrder = do 

@@ -14,18 +14,21 @@ import Loc
 type TypedVar = (Variable,Ty)
 
 data Command where 
-  Cut  :: Loc -> Term -> Pol -> Term -> Command 
-  Done :: Loc -> Command 
-  Err  :: Loc -> String -> Command 
+  Cut   :: Loc -> Term -> Pol -> Term -> Command 
+  Done  :: Loc -> Command 
+  Err   :: Loc -> String -> Command 
+  Print :: Loc -> Term -> Command
   deriving (Eq)
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _) = loc 
   getLoc (Done loc) = loc 
   getLoc (Err loc _) = loc
+  getLoc (Print loc _) = loc
 
   setLoc loc (Cut _ t pol u) = Cut loc t pol u
   setLoc loc (Done _) = Done loc 
   setLoc loc (Err _ str) = Err loc str
+  setLoc loc (Print _ t) = Print loc t 
 
 data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
   deriving (Eq)

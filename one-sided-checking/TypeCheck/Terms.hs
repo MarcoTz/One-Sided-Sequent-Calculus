@@ -22,6 +22,7 @@ import Control.Monad
 import Control.Monad.Except
 import Data.Map qualified as M
 
+
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 checkTerm t (T.TyForall args ty) = do 
   forM_ args addCheckerTyVar 
@@ -125,14 +126,29 @@ checkTerm shiftt@(D.ShiftNeg loc v c) shiftty@(T.TyShift ty Neg) = do
 checkTerm t ty = throwError (ErrBadType (getLoc t) t ty)
 
 checkCommand :: D.Command -> CheckM T.Command
-checkCommand c@(D.Cut loc t pol u) = do 
-  ty <- getTyCommand loc t u
-  t' <- checkTerm t ty
-  u' <- checkTerm u (flipPol ty)
-  let pol1 = getKind t' 
-  let pol2 = getKind u'
-  when (pol1 == pol2) $ throwError (ErrCutKind loc (T.getType t') (T.getType u') c)
-  return $ T.Cut loc t' pol u'
+checkCommand c@(D.Cut loc (D.Var loc1 v1) pol (D.Var loc2 v2)) = do
+  mty1 <- getMTypeVar v1 
+  mty2 <- getMTypeVar v2 
+  case (mty1,mty2) of
+    (Nothing,Nothing) -> throwError (ErrUnclearType loc c)
+    (Just ty1,Nothing) -> return $ T.Cut loc (T.Var loc1 v1 ty1) pol (T.Var loc2 v2 (flipPol ty1))
+    (Nothing,Just ty2) -> return $ T.Cut loc (T.Var loc1 v1 (flipPol ty2)) pol (T.Var loc2 v2 ty2)
+    (Just ty1,Just ty2) -> if flipPol ty1 == ty2 then return $ T.Cut loc (T.Var loc1 v1 ty1) pol (T.Var loc2 v2 ty2) else throwError (ErrUnclearType loc c)
+checkCommand c@(D.Cut loc (D.Var loc1 v1) pol u) = do
+  mty <- getMTypeVar v1 
+  case mty of 
+    Nothing -> throwError (ErrUnclearType loc c)
+    Just ty -> do 
+      u' <- checkTerm u (flipPol ty)
+      return $ T.Cut loc (T.Var loc1 v1 ty) pol u'
+checkCommand c@(D.Cut loc t pol (D.Var loc2 v2)) = do
+  mty <- getMTypeVar v2 
+  case mty of 
+    Nothing -> throwError (ErrUnclearType loc c)
+    Just ty -> do 
+      t' <- checkTerm t (flipPol ty)
+      return $ T.Cut loc t' pol (T.Var loc2 v2 ty)
+checkCommand c@D.Cut{} = throwError (ErrUnclearType (getLoc c) c)
 checkCommand c@(D.CutAnnot loc t ty pol u) = do
   ty' <- checkPolTy loc ty 
   ty'' <- checkPolTy loc (flipPol ty)
@@ -144,14 +160,13 @@ checkCommand c@(D.CutAnnot loc t ty pol u) = do
   return $ T.Cut loc t' pol u'
 checkCommand (D.Done loc) = return (T.Done loc)
 checkCommand (D.Err loc err) = return $ T.Err loc err
-
-getTyCommand :: Loc -> D.Term -> D.Term -> CheckM T.Ty 
-getTyCommand loc (D.Var _ v) _ = do 
-  vars <- getCheckerVars 
-  mvar <- lookupMVar v
-  case (M.lookup v vars,mvar) of 
-    (Nothing,Nothing) -> throwError (ErrUndefinedVar loc v)
-    (Just ty,_) -> return ty
-    (_,Just ty) -> return (T.varTy ty)
-getTyCommand loc t1 t2@D.Var{} = flipPol <$> getTyCommand loc t2 t1
-getTyCommand loc t1 t2 = throwError (ErrUnclearTypeCut loc t1 t2)
+checkCommand c@(D.Print loc (D.Var loc1 v)) = do
+  mty <- getMTypeVar v 
+  case mty of 
+    Nothing -> throwError (ErrUnclearType loc c) 
+    Just ty -> return $ T.Print loc (T.Var loc1 v ty) 
+checkCommand c@D.Print{} = throwError (ErrUnclearType (getLoc c) c)
+checkCommand (D.PrintAnnot loc t ty) = do
+  ty' <- checkPolTy loc ty
+  t' <- checkTerm t ty'
+  return $ T.Print loc t' 

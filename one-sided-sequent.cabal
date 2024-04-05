@@ -95,6 +95,7 @@ library inference
                    desugar,
   exposed-modules: GenerateConstraints.Definition,
                    GenerateConstraints.Terms,
+                   GenerateConstraints.Types,
                    GenerateConstraints.Errors,
                    SolveConstraints.Definition,
                    SolveConstraints.Solver,
