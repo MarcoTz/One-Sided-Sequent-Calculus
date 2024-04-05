@@ -9,6 +9,7 @@ module Environment (
   lookupMRec,
   getTypeNames,
   getXtorNames,
+  getTypes,
   emptyEnv,
   addDeclEnv,
   addVarEnv,
@@ -17,6 +18,7 @@ module Environment (
 
 import Syntax.Typed.Program 
 import Syntax.Typed.Terms
+import Syntax.Typed.Types
 import Errors 
 import Common
 import Loc
@@ -38,6 +40,16 @@ xtorErr loc xtn = toError loc ("Xtor " <> show xtn <> " not found in environment
 
 emptyEnv :: Environment
 emptyEnv = MkEnv M.empty 
+
+getTypes :: Modulename -> Environment -> [(Variable,Ty)]
+getTypes mn (MkEnv defs) = case M.lookup mn defs of 
+  Nothing -> [] 
+  Just prog -> do
+    let varDecls = snd <$> M.toList (progVars prog)
+    let vars = (\decl -> (varName decl,varTy decl)) <$> varDecls
+    let recDecls = snd <$> M.toList (progRecs prog)
+    let recs = (\decl -> (recName decl,recTy decl)) <$> recDecls 
+    vars ++ recs
 
 addDeclEnv :: Modulename -> DataDecl -> Environment -> Environment 
 addDeclEnv nm decl (MkEnv defs) = 

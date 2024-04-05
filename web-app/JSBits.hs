@@ -13,12 +13,16 @@ foreign import javascript "((arr,offset) => document.getElementById('resultStr')
 -- id traceStr
 foreign import javascript "((arr,offset) => document.getElementById('traceStr').innerHTML = h$decodeUtf8z(arr,offset))"
   setTraceString :: CString -> IO () 
+-- id typesStr
+foreign import javascript "((arr,offset) => document.getElementById('typesStr').innerHTML = h$decodeUtf8z(arr,offset))"
+  setTypesString :: CString -> IO ()
 
-setSuccess :: String -> String -> IO () 
-setSuccess res tr = do 
+setSuccess :: String -> String -> String -> IO () 
+setSuccess res tr tys = do 
   setWithString setResClass "evalSucc"
   setWithString setResString res
   setWithString setTraceString tr
+  setWithString setTypesString tys
 
 
 setError :: String -> IO () 
@@ -26,4 +30,5 @@ setError str = do
   setWithString setResClass "evalError"
   setWithString setResString str
   setWithString setTraceString ""
+  setWithString setTypesString ""
 

@@ -183,4 +183,5 @@ executable web-app
                    eval,
   hs-source-dirs:  web-app
   other-modules:   Callback,
-                   JSBits
+                   JSBits,
+                   StringFormat

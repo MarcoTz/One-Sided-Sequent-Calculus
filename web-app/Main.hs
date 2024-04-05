@@ -5,7 +5,8 @@ import Driver.Driver
 import Environment
 import Eval.Definition
 import Errors
-import Syntax.Typed.Terms
+import StringFormat
+
 import Callback
 import JSBits
 import GHC.JS.Prim
@@ -24,22 +25,10 @@ runProg val = do
   case res of 
     Left err  -> let msg = getMessage err in setError msg
     --(Either T.Command EvalTrace)
-    Right (Left c,_) -> setSuccess (show c) ""
-    Right (Right (MkTrace c tr),_) -> setSuccess (show c) (traceToStr tr) 
+    Right (Left c,st) -> setSuccess (replStr $ show c) "" (envToStr $ drvEnv st)
+    Right (Right (MkTrace c tr),st) -> setSuccess (replStr $ show c) (traceToStr tr) (envToStr $ drvEnv st)
   return ()
 
-traceToStr :: [Command] -> String
-traceToStr [] = ""
-traceToStr (c:cs) = replStr (show c) <> "<br/>" <> traceToStr cs
-
-repl :: Char -> String
-repl '<' = "&lt;"
-repl '+' = "&plus;"
-repl '|' = "&vert;"
-repl c =  [c]
-
-replStr :: String -> String 
-replStr = concatMap repl
 
 main :: IO () 
 main = do 
