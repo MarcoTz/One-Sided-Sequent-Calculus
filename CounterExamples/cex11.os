@@ -1,13 +1,13 @@
 module cex11
 
-data X :+{
+data X{
   MkX
 }
 
-data Y:+ {
+data Y{
   MkY
 }
 
 -- type annotation for x is present, but type within cut is unclear
-x :: X:-;
-x := case { MkX => < MkY| + | case { MkY => Done }>}; 
+x :: X:CBN;
+x := case { MkX => < MkY| CBV | case { MkY => Done }>}; 

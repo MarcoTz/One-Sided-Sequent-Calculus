@@ -2,11 +2,10 @@ module Stream
 
 import Bool;
 
-data Stream(a:-):-{
+codata Stream(a:-){
   Head(a),
   Tail(Stream(a))
 }
 
--- recursive
---constTrue :: Stream(Bool):+;
---constTrue := mu a. <case { Head(a) => <True | + | a>, Tail(str) => < constTrue | + | a >  } | + | a>;
+constTrue :: Stream(Bool):CBV;
+constTrue := mu a. <case { Head(a) => <True | CBV | a>, Tail(str) => < constTrue | CBV | a >  } | CBV | a>;

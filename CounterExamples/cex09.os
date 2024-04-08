@@ -1,6 +1,6 @@
 module cex09
 
 -- Y was not defined
-data X:+ {
+data X {
   MkX(Y)
 }

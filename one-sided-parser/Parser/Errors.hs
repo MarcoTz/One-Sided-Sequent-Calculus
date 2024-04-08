@@ -46,7 +46,7 @@ getErrorMessage (TrivialError ofs (Just unexp) expTok) = "unexpected " <> showIt
 getErrorMessage (FancyError _ errSet) = intercalate "\n" (showFancy <$> S.toList errSet)
 
 showItem :: ErrorItem (Token String) -> String
-showItem (Tokens tks) = "'" <> showTokens (Proxy::Proxy String) tks --concatMap showToken (NE.toList tks) <> "'"
+showItem (Tokens tks) = "'" <> showTokens (Proxy::Proxy String) tks 
 showItem (Label lb) = NE.toList lb
 showItem EndOfInput = "end of input"
 

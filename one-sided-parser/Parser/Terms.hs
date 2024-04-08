@@ -131,6 +131,29 @@ parseCut = do
     Nothing -> return (Cut loc t pol u)
     Just ty -> return (CutAnnot loc t ty pol u)
 
+parseCutAnnot :: Parser (EvaluationOrder,Maybe KindedTy)
+parseCutAnnot = try parseEoBarTy <|> try parseTyBarEo <|> (,Nothing) <$> parseEvaluationOrder 
+
+parseEoBarTy :: Parser (EvaluationOrder, Maybe KindedTy)
+parseEoBarTy = do
+  pol <- parseEvaluationOrder
+  sc 
+  parseSymbol SymBar
+  sc 
+  ty <- parseKindedTy 
+  notFollowedBy (sc >> parseSymbol SymAngC)
+  return (pol,Just ty)
+
+parseTyBarEo :: Parser (EvaluationOrder,Maybe KindedTy)
+parseTyBarEo = do 
+  ty <- parseKindedTy
+  sc 
+  parseSymbol SymBar 
+  sc 
+  pol <- parseEvaluationOrder 
+  return (pol,Just ty)
+
+
 parseCutPos :: Parser Command 
 parseCutPos = do 
   startPos <- getCurrPos 
@@ -178,28 +201,6 @@ parseCutNeg = do
       parseSymbol SymAngO 
       sc 
       return ty
-
-parseCutAnnot :: Parser (EvaluationOrder,Maybe KindedTy)
-parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parseEvaluationOrder 
-
-parsePolBarTy :: Parser (EvaluationOrder, Maybe KindedTy)
-parsePolBarTy = do
-  pol <- parseEvaluationOrder
-  sc 
-  parseSymbol SymBar
-  sc 
-  ty <- parseKindedTy 
-  notFollowedBy (sc >> parseSymbol SymAngC)
-  return (pol,Just ty)
-
-parseTyBarPol :: Parser (EvaluationOrder,Maybe KindedTy)
-parseTyBarPol = do 
-  ty <- parseKindedTy
-  sc 
-  parseSymbol SymBar 
-  sc 
-  pol <- parseEvaluationOrder 
-  return (pol,Just ty)
 
 parseDone :: Parser Command
 parseDone = do

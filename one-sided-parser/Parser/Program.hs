@@ -122,8 +122,6 @@ parseDataDecl = do
   sc
   args <- parseTyArgs
   sc
-  parseSymbol SymColon
-  sc
   parseSymbol SymBrackO 
   sc 
   xtors <- parseXtorSig `sepBy` parseCommaSep
