@@ -23,13 +23,13 @@ import Syntax.Parsed.Types
 
 import Data.Map qualified as M
 
-data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !XtorName, sigArgs :: ![Ty]} 
+data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !Xtorname, sigArgs :: ![Ty]} 
   deriving (Eq,Ord)
 instance HasLoc XtorSig where 
   getLoc = sigPos
   setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args
 
-data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !TypeName, declArgs  :: ![PolVar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !Typename, declArgs  :: ![Polvar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
   deriving (Eq,Ord)
 instance HasLoc DataDecl where 
   getLoc = declPos
@@ -60,7 +60,7 @@ instance HasLoc Import where
 
 data Program = MkProgram { 
   progName    :: !Modulename, 
-  progDecls   :: !(M.Map TypeName DataDecl), 
+  progDecls   :: !(M.Map Typename DataDecl), 
   progVars    :: !(M.Map Variable VarDecl), 
   progRecs    :: !(M.Map Variable RecDecl),
   progAnnots  :: !(M.Map Variable AnnotDecl),

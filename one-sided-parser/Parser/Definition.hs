@@ -18,7 +18,7 @@ newtype Parser a = Parser { getParser :: Parsec String String  a }
 
 
 runSourceParser :: String -> Modulename -> Parser b -> Either ParserErr b
-runSourceParser src (MkModule srcName) p = case runParser (getParser p) srcName src of 
+runSourceParser src (Modulename srcName) p = case runParser (getParser p) srcName src of 
   Left bundle -> Left $ bundleToErr bundle
   Right b -> Right b
 

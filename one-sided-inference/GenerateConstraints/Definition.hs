@@ -52,15 +52,15 @@ runGenM env m = case runExcept (runStateT (runReaderT (getGenM m) env) initialGe
 freshTyVar :: Pol-> GenM Ty
 freshTyVar pol = do 
   cnt <- gets tyVarCnt
-  let newVar = MkTypeVar ("X" <> show cnt)
+  let newVar = Typevar ("X" <> show cnt)
   modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (constrSet s))
   return (TyVar newVar pol)
 
-freshTyVarsDecl :: [PolVar] -> GenM ([Ty],M.Map PolVar Ty) 
+freshTyVarsDecl :: [Polvar] -> GenM ([Ty],M.Map Polvar Ty) 
 freshTyVarsDecl vars = do
-  varL <- forM vars (\(MkPolVar v p) -> do
+  varL <- forM vars (\(Polvar v p) -> do
     v' <- freshTyVar p
-    let varpair = (MkPolVar v p,v')
+    let varpair = (Polvar v p,v')
     return (v',varpair))
   let newVars = fst <$> varL
   let newMap = M.fromList (snd <$> varL)
@@ -79,7 +79,7 @@ addGenVar v ty = do
   modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (constrSet s))
 
 
-addConstraintsXtor :: Loc -> XtorName -> [Ty] -> [Ty] -> GenM () 
+addConstraintsXtor :: Loc -> Xtorname -> [Ty] -> [Ty] -> GenM () 
 addConstraintsXtor _ _ [] [] = return ()
 addConstraintsXtor loc xt _ [] = throwError (ErrXtorArity loc xt)
 addConstraintsXtor loc xt [] _ = throwError (ErrXtorArity loc xt)

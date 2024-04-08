@@ -22,8 +22,6 @@ import Control.Monad
 import Control.Monad.Except
 import Data.Map qualified as M
 
-import Debug.Trace
-
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 checkTerm t (T.TyForall args ty) = do 
   forM_ args addCheckerTyVar 
@@ -76,7 +74,7 @@ checkTerm (D.Mu loc v c) ty = do
 
 checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData _ tyn' argVars pol' _ <- lookupXtorDecl loc xtn 
-  let kindErr = ErrKindNeq loc ty (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol') xtt
+  let kindErr = ErrKindNeq loc ty (T.TyDecl tyn ((\(Polvar v p) -> T.TyVar v p) <$> argVars) pol') xtt
   unless (pol' == pol) $ throwError kindErr 
   unless (tyn == tyn') $ throwError (ErrNotTyDecl loc tyn' (T.TyDecl tyn [] pol') xtt)
   tyargsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTypeArity loc tyn)
@@ -90,7 +88,7 @@ checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs pol) = do
 
 checkTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do 
   T.MkData _ tyn' argVars pol' xtors <- lookupXtorDecl loc (D.ptxt pt1)
-  let kindErr = ErrKindNeq loc (flipPol ty) (T.TyDecl tyn ((\(MkPolVar v p) -> T.TyVar v p) <$> argVars) pol')  xct
+  let kindErr = ErrKindNeq loc (flipPol ty) (T.TyDecl tyn ((\(Polvar v p) -> T.TyVar v p) <$> argVars) pol')  xct
   unless (pol' /= pol) $ throwError kindErr
   unless (tyn == tyn') $ throwError (ErrNotTyDecl loc tyn' (T.TyDecl tyn [] pol') xct)
   tyArgsZipped <- zipWithError (getKind <$> tyargs) (getKind <$> argVars) (ErrTypeArity loc tyn)
@@ -103,7 +101,7 @@ checkTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs pol) = do
   pts' <- forM pts (`checkPattern` varmap)
   return $ T.XCase loc pts' ty 
   where 
-    checkPattern :: D.Pattern -> M.Map PolVar T.Ty -> CheckM T.Pattern 
+    checkPattern :: D.Pattern -> M.Map Polvar T.Ty -> CheckM T.Pattern 
     checkPattern (D.MkPattern xtn vars c) varmap = do
       T.MkXtorSig _ _ xtargs <- lookupXtor loc xtn
       let xtargs' = T.substTyVars varmap <$> xtargs
@@ -131,28 +129,28 @@ checkCommand c@(D.Cut loc (D.Var loc1 v1) pol (D.Var loc2 v2)) = do
   mty1 <- getMTypeVar v1 
   mty2 <- getMTypeVar v2 
   case (mty1,mty2) of
-    (Nothing,Nothing) -> trace (show v1 <> " and " <> show v2 <> " not found " )$  throwError (ErrUnclearType loc c)
+    (Nothing,Nothing) -> throwError (ErrUnclearType loc c)
     (Just ty1,Nothing) -> return $ T.Cut loc (T.Var loc1 v1 ty1) pol (T.Var loc2 v2 (flipPol ty1))
     (Nothing,Just ty2) -> return $ T.Cut loc (T.Var loc1 v1 (flipPol ty2)) pol (T.Var loc2 v2 ty2)
     (Just ty1,Just ty2) ->  
       if flipPol ty1 == ty2 then 
         return $ T.Cut loc (T.Var loc1 v1 ty1) pol (T.Var loc2 v2 ty2) else 
-        trace ("types " <> show ty1 <> " and " <> show ty2 <> " don't match") $ throwError (ErrUnclearType loc c)
+        throwError (ErrUnclearType loc c)
 checkCommand c@(D.Cut loc (D.Var loc1 v1) pol u) = do
   mty <- getMTypeVar v1 
   case mty of 
-    Nothing -> trace ("cant find " <> show v1) $ throwError (ErrUnclearType loc c)
+    Nothing -> throwError (ErrUnclearType loc c)
     Just ty -> do 
       u' <- checkTerm u (flipPol ty)
       return $ T.Cut loc (T.Var loc1 v1 ty) pol u'
 checkCommand c@(D.Cut loc t pol (D.Var loc2 v2)) = do
   mty <- getMTypeVar v2 
   case mty of 
-    Nothing -> trace ("cant find " <> show v2) $ throwError (ErrUnclearType loc c)
+    Nothing -> throwError (ErrUnclearType loc c)
     Just ty -> do 
       t' <- checkTerm t (flipPol ty)
       return $ T.Cut loc t' pol (T.Var loc2 v2 ty)
-checkCommand c@D.Cut{} = trace ("neither is var" <> show c ) $ throwError (ErrUnclearType (getLoc c) c)
+checkCommand c@D.Cut{} = throwError (ErrUnclearType (getLoc c) c)
 checkCommand c@(D.CutAnnot loc t ty pol u) = do
   ty' <- checkPolTy loc ty 
   ty'' <- checkPolTy loc (flipPol ty)
@@ -167,9 +165,9 @@ checkCommand (D.Err loc err) = return $ T.Err loc err
 checkCommand c@(D.Print loc (D.Var loc1 v)) = do
   mty <- getMTypeVar v 
   case mty of 
-    Nothing -> trace (show v <> " not found (print)")$ throwError (ErrUnclearType loc c) 
+    Nothing -> throwError (ErrUnclearType loc c) 
     Just ty -> return $ T.Print loc (T.Var loc1 v ty) 
-checkCommand c@D.Print{} = trace ("no var " <> show c) $ throwError (ErrUnclearType (getLoc c) c)
+checkCommand c@D.Print{} = throwError (ErrUnclearType (getLoc c) c)
 checkCommand (D.PrintAnnot loc t ty) = do
   ty' <- checkPolTy loc ty
   t' <- checkTerm t ty'

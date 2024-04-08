@@ -16,8 +16,8 @@ import Control.Monad.Except
 import Control.Monad.Reader
 
 data EvalError where 
-  ErrXtorArity :: Loc -> XtorName -> EvalError
-  ErrMissingPt :: Loc -> XtorName -> EvalError
+  ErrXtorArity :: Loc -> Xtorname -> EvalError
+  ErrMissingPt :: Loc -> Xtorname -> EvalError
   ErrOther     :: Loc -> String   -> EvalError
 
 instance Error EvalError where 

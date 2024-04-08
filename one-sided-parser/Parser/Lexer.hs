@@ -3,10 +3,10 @@ module Parser.Lexer (
   parseSymbol,
   parseKeyword,
   parsePol,
-  parseTypeVar,
-  parsePolVar,
-  parseTypeName,
-  parseXtorName,
+  parseTypevar,
+  parsePolvar,
+  parseTypename,
+  parseXtorname,
   parseModulename,
   parseVariable,
   parseCommaSep,
@@ -69,27 +69,27 @@ parseIdentifier = do
   return ident
 
 parseModulename :: Parser Modulename
-parseModulename = MkModule <$> parseIdentifier
+parseModulename = Modulename <$> parseIdentifier
 
 parseVariable :: Parser Variable
-parseVariable = MkVariable <$>  parseIdentifier
+parseVariable = Variable <$>  parseIdentifier
 
-parseXtorName :: Parser XtorName 
-parseXtorName = MkXtorName <$> parseIdentifier 
+parseXtorname :: Parser Xtorname 
+parseXtorname = Xtorname <$> parseIdentifier 
 
-parseTypeName :: Parser TypeName
-parseTypeName = MkTypeName <$> parseIdentifier 
+parseTypename :: Parser Typename
+parseTypename = Typename <$> parseIdentifier 
 
-parseTypeVar :: Parser TypeVar
-parseTypeVar = MkTypeVar <$> parseIdentifier 
+parseTypevar :: Parser Typevar
+parseTypevar = Typevar <$> parseIdentifier 
 
-parsePolVar :: Parser PolVar 
-parsePolVar = do
-  tyv <- parseTypeVar 
+parsePolvar :: Parser Polvar 
+parsePolvar = do
+  tyv <- parseTypevar 
   sc 
   parseSymbol SymColon
   sc 
-  MkPolVar tyv <$> parsePol
+  Polvar tyv <$> parsePol
 
 
 getCurrPos :: Parser SourcePosition

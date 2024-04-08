@@ -7,25 +7,25 @@ instance Show Pol where
   show Neg = "-"
 
 instance Show Modulename where 
-  show (MkModule nm) = nm 
+  show (Modulename nm) = nm 
 
-instance Show KindVar where 
-  show (MkKVar kv) = kv
+instance Show Kindvar where 
+  show (Kindvar kv) = kv
 
 instance Show Variable where 
-  show (MkVariable v) = v
+  show (Variable v) = v
 
-instance Show XtorName where 
-  show (MkXtorName xtn) = xtn 
+instance Show Xtorname where 
+  show (Xtorname xtn) = xtn 
 
-instance Show TypeVar where 
-  show (MkTypeVar tyv) = tyv
+instance Show Typevar where 
+  show (Typevar tyv) = tyv
 
-instance Show TypeName where 
-  show (MkTypeName tyn) = tyn
+instance Show Typename where 
+  show (Typename tyn) = tyn
 
-instance Show PolVar where 
-  show (MkPolVar tyv pol) = show tyv <> ":" <> show pol
+instance Show Polvar where 
+  show (Polvar tyv pol) = show tyv <> ":" <> show pol
 
 instance Show Kind where 
   show (MkKind p) = show p

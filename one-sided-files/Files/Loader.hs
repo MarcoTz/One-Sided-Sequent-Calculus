@@ -26,25 +26,25 @@ listRecursive path = do
   paths <- forM files (\fl -> do
     isDirectory <- doesDirectoryExist fl
     if isDirectory then listRecursive fl
-    else if takeExtension fl == ".os" then return [MkModule . takeBaseName $ fl] else return [])
+    else if takeExtension fl == ".os" then return [Modulename . takeBaseName $ fl] else return [])
   let paths' = concat paths
   return paths' 
 
 findModuleFile :: Modulename -> FileLoaderM String
-findModuleFile (MkModule mn) = do 
+findModuleFile (Modulename mn) = do 
   let filePaths =  (\x -> joinPath [x, mn <> ".os"]) <$> allowedDirs
   existing <- forM filePaths (\fp -> do
     ex <- liftIO $ doesFileExist fp
     if ex then return (Right fp) else return (Left ()))
   let found = find isRight existing
   case found of 
-    Nothing -> throwError (ErrModuleNotFound (MkModule mn))
-    Just (Left _) -> throwError (ErrModuleNotFound (MkModule mn)) 
+    Nothing -> throwError (ErrModuleNotFound (Modulename mn))
+    Just (Left _) -> throwError (ErrModuleNotFound (Modulename mn)) 
     Just (Right fp) -> return fp
 
 loadModule :: Modulename -> FileLoaderM String 
-loadModule (MkModule nm) = do 
-  filePath <- findModuleFile (MkModule nm)
+loadModule (Modulename nm) = do 
+  filePath <- findModuleFile (Modulename nm)
   progText <- liftIO $ T.readFile filePath
   return (T.unpack progText)
 

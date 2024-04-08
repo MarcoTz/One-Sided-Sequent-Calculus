@@ -27,8 +27,8 @@ import Control.Monad.State
 -- 
 data SolverState = MkSolverState 
   { 
-  slvTyVars :: !(M.Map PolVar Ty), 
-  slvKndVars :: !(M.Map KindVar Pol),
+  slvTyVars :: !(M.Map Polvar Ty), 
+  slvKndVars :: !(M.Map Kindvar Pol),
   remConstrs :: !ConstraintSet 
 }
 
@@ -40,7 +40,7 @@ initialSolverState = MkSolverState M.empty M.empty
 newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except SolverError) a }
   deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError SolverError)
 
-runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map PolVar Ty,M.Map KindVar Pol)
+runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map Polvar Ty,M.Map Kindvar Pol)
 runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
   Left err -> Left err 
   Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
@@ -54,18 +54,18 @@ getNextConstr = do
       modify (\s  -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet ctrs))
       return (Just c1)
 
-getSlvTyVars :: SolverM (M.Map PolVar Ty)
+getSlvTyVars :: SolverM (M.Map Polvar Ty)
 getSlvTyVars = gets slvTyVars 
 
-addSlvTyVar :: PolVar -> Ty -> SolverM ()
+addSlvTyVar :: Polvar -> Ty -> SolverM ()
 addSlvTyVar v ty = do 
   vars <- gets slvTyVars
   modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))
 
-getSlvKndVars :: SolverM (M.Map KindVar Pol)
+getSlvKndVars :: SolverM (M.Map Kindvar Pol)
 getSlvKndVars = gets slvKndVars
 
-addSlvKndVar :: KindVar -> Pol -> SolverM () 
+addSlvKndVar :: Kindvar -> Pol -> SolverM () 
 addSlvKndVar kv pol = do
   kndVars <- gets slvKndVars 
   modify (\s -> MkSolverState (slvTyVars s) (M.insert kv pol kndVars) (remConstrs s))
@@ -75,7 +75,7 @@ addConstraint constr = do
   (MkConstraintSet constrs) <- gets remConstrs
   modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (constr:constrs)))
 
-addConstraintsArgs :: TypeName -> [Ty] -> [Ty] -> SolverM () 
+addConstraintsArgs :: Typename -> [Ty] -> [Ty] -> SolverM () 
 addConstraintsArgs _ [] [] = return () 
 addConstraintsArgs tyn [] _ = throwError (ErrTyArity tyn)
 addConstraintsArgs tyn _ [] = throwError (ErrTyArity tyn)

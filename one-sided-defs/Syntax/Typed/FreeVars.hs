@@ -35,13 +35,13 @@ instance FreeVars Command where
   freeVars (Print _ t) = freeVars t
 
 freshVar :: Int -> S.Set Variable -> Variable 
-freshVar n vars = let newV = MkVariable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV
+freshVar n vars = let newV = Variable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV
 
 -----------------------------------
 -- calculate free type variables --
 -----------------------------------
 
-freeTyVars :: Ty -> S.Set TypeVar
+freeTyVars :: Ty -> S.Set Typevar
 freeTyVars (TyVar v _) = S.singleton v
 freeTyVars (TyDecl _ args _) = S.unions (freeTyVars <$> args) 
 freeTyVars (TyShift ty _) = freeTyVars ty

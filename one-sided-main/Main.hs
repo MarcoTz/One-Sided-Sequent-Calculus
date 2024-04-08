@@ -37,7 +37,7 @@ run nm = do
   putStrLn  "\n================================\n"
   putStrLn ("=====checking Module " <> nm <> "=====")
   putStrLn  "'\n================================\n"
-  loaded <- runFileLoaderM (loadProgramWithImports (MkModule nm))
+  loaded <- runFileLoaderM (loadProgramWithImports (Modulename nm))
   case loaded of 
     Left err -> putStrLn (colorError <> " Error parsing module " <> nm <> ": " <> showWithLoc err) 
     Right (prog, imps) -> do 

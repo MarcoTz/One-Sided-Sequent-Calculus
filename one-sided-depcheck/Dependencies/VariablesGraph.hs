@@ -22,7 +22,7 @@ depOrderProgram (MkProgram mn decls vars recs _ _ _ _) = do
   let recs' = snd <$> M.toList recs
   vertsTerms <- forM vars' addVariable
   recsTerms <- forM recs' addRec
-  let ignore = (\(MkXtorName nm) -> MkVariable nm) . sigName <$> concatMap declXtors decls
+  let ignore = (\(Xtorname nm) -> Variable nm) . sigName <$> concatMap declXtors decls
   forM_ (vertsTerms++recsTerms) (\(v,t) -> addEdgesVariableT v ignore t)
   removeSelfLoops
   ensureAcyclic (ErrMutualRec mn)
@@ -42,20 +42,20 @@ addRec (MkRec _ v t) = do
 addEdgesVariableT :: Vertex Variable -> [Variable] -> Term -> DepVar ()
 addEdgesVariableT vert ignore (Var loc v) = do 
   mdef <- lookupMVar v
-  mxtor <- lookupMXtor ((\(MkVariable v') -> MkXtorName v') v)
+  mxtor <- lookupMXtor ((\(Variable v') -> Xtorname v') v)
   if isJust mdef || isJust mxtor || v `elem` ignore then return ()
   else do
     vert' <- getVertexError v (ErrUndefinedVar loc v)
     addEdgeM (vert,vert')
 addEdgesVariableT vert ignore (Mu _ v c) = addEdgesVariableC vert (v:ignore) c 
-addEdgesVariableT vert ignore (Xtor _ (MkXtorName nm) args) = forM_ args (addEdgesVariableT vert (MkVariable nm : ignore))
+addEdgesVariableT vert ignore (Xtor _ (Xtorname nm) args) = forM_ args (addEdgesVariableT vert (Variable nm : ignore))
 addEdgesVariableT vert ignore (XCase _ pts) = forM_ pts (addEdgesVariablePt vert ignore)
 addEdgesVariableT vert ignore (ShiftPos _ t) = addEdgesVariableT vert ignore t
 addEdgesVariableT vert ignore (ShiftNeg _ v c) = addEdgesVariableC vert (v:ignore) c 
 
 addEdgesVariablePt :: Vertex Variable -> [Variable] -> Pattern -> DepVar ()
-addEdgesVariablePt vert ignore (MkPattern (MkXtorName nm) vars c) = do 
-  addEdgesVariableC vert (vars ++ (MkVariable nm : ignore)) c
+addEdgesVariablePt vert ignore (MkPattern (Xtorname nm) vars c) = do 
+  addEdgesVariableC vert (vars ++ (Variable nm : ignore)) c
 
 addEdgesVariableC :: Vertex Variable -> [Variable] -> Command -> DepVar ()
 addEdgesVariableC vert ignore (Cut _ t _ u) = do

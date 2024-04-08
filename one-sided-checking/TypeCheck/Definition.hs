@@ -24,7 +24,7 @@ import Control.Monad.State
 import Data.Map qualified as M
 
 
-data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: ![TypeVar]}
+data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: ![Typevar]}
 
 initialCheckerState :: CheckerState 
 initialCheckerState = MkCheckState M.empty []
@@ -41,13 +41,13 @@ runCheckM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) initi
 addCheckerVar :: Variable -> T.Ty -> CheckM () 
 addCheckerVar v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
 
-addCheckerTyVar :: TypeVar -> CheckM ()
+addCheckerTyVar :: Typevar -> CheckM ()
 addCheckerTyVar tyv = modify (\s -> MkCheckState (checkVars s) (tyv:checkTyVars s))
 
 getCheckerVars :: CheckM (M.Map Variable T.Ty)
 getCheckerVars = gets checkVars
 
-getCheckerTyVars :: CheckM [TypeVar] 
+getCheckerTyVars :: CheckM [Typevar] 
 getCheckerTyVars = gets checkTyVars
 
 withCheckerVars :: M.Map Variable T.Ty -> CheckM a -> CheckM  a

@@ -3,30 +3,30 @@ module Common (
   flipPol,
   GetKind, 
   getKind,
-  TypeVar (..),
+  Typevar (..),
   Pol (..),
-  TypeName (..),
+  Typename (..),
   Variable (..),
-  XtorName (..),
+  Xtorname (..),
   Modulename (..),
-  PolVar (..),
-  KindVar (..),
+  Polvar (..),
+  Kindvar (..),
   Kind (..)
 ) where 
 
-newtype Modulename = MkModule String
+newtype Modulename = Modulename {unModulename :: String}
   deriving (Eq,Ord)
-newtype XtorName = MkXtorName String
+newtype Xtorname = Xtorname {unXtorname :: String}
   deriving (Eq,Ord)
-newtype TypeVar  = MkTypeVar String
+newtype Typevar  = Typevar {unTypevar :: String}
   deriving (Eq,Ord)
-newtype TypeName = MkTypeName String 
+newtype Typename = Typename {unTypename :: String}
   deriving (Eq,Ord)
-newtype Variable = MkVariable String
+newtype Variable = Variable {unVariable :: String} 
   deriving (Eq,Ord)
-newtype KindVar  = MkKVar String
+newtype Kindvar  = Kindvar {unKindvar :: String} 
   deriving (Eq,Ord)
-data PolVar = MkPolVar !TypeVar !Pol
+data Polvar = Polvar { polvarVar :: !Typevar, polvarPol :: !Pol}
   deriving (Eq,Ord)
 data Pol = Pos | Neg 
   deriving (Eq,Ord)
@@ -44,11 +44,11 @@ multPol Neg Pos = Neg
 multPol Pos Pos = Pos 
 multPol Neg Neg = Pos
 
-data Kind = MkKind !Pol | MkKindVar !KindVar 
+data Kind = MkKind !Pol | MkKindVar !Kindvar 
   deriving (Eq)
 
 class GetKind a where 
   getKind :: a -> Pol
 
-instance GetKind PolVar where 
-  getKind (MkPolVar _ pol) = pol
+instance GetKind Polvar where 
+  getKind (Polvar _ pol) = pol

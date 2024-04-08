@@ -9,7 +9,7 @@ import Data.List (intercalate)
 
 envToStr :: Environment -> String 
 envToStr env = do 
-  let tys = getTypes (MkModule "") env
+  let tys = getTypes (Modulename "") env
   let tyStrs = (\(nm,ty) -> replStr (show nm) <> "::" <> replStr (show ty)) <$> tys
   intercalate "\n" tyStrs
 

@@ -15,7 +15,7 @@ genConstraintsTy :: Loc -> D.Ty -> Pol -> GenM T.Ty
 genConstraintsTy _ (D.TyVar v) pol = return $ T.TyVar v pol
 genConstraintsTy loc (D.TyDecl tyn args) pol = do 
   decl <- lookupDecl loc tyn 
-  let argPols = (\(MkPolVar _ pol') -> pol') <$> T.declArgs decl
+  let argPols = polvarPol <$> T.declArgs decl
   let argPols' = if pol/=T.declPol decl then flipPol <$> argPols else argPols
   argsZipped <- zipWithError args argPols' (ErrTyArity loc tyn)
   args' <- forM argsZipped (uncurry (genConstraintsTy loc))

@@ -47,7 +47,7 @@ import Data.Map qualified as M
 
 runStr :: String -> Bool -> DriverM (Either T.Command EvalTrace) 
 runStr progText withTrace = do 
-  let progParsed = runSourceParser progText (MkModule "") (parseProgram progText) 
+  let progParsed = runSourceParser progText (Modulename "") (parseProgram progText) 
   progParsed' <- liftErr progParsed "parsing" 
   prog <- inferProgram progParsed' []
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
@@ -90,7 +90,7 @@ inferProgram prog imports = do
     debug ("inferring variables in order " <> show progOrder')
     let nameFun decl = case decl of Left var -> D.varName var; Right rec -> D.recName rec
     let indexFun v1 v2 = compare (elemIndex (nameFun v1) progOrder') (elemIndex (nameFun v2)  progOrder')
-    let varsRecs = (Left <$> (snd <$> M.toList vars)) ++ (Right <$> (snd <$> M.toList recs))
+    let varsRecs = (Left . snd <$> M.toList vars) ++ (Right . snd <$> M.toList recs)
     let varsRecsSorted = sortBy indexFun varsRecs
     let inferFun decl = case decl of Left var -> Left <$> inferVarDecl mn var; Right rec -> Right <$> inferRecDecl mn rec
     varRecsInferred <- forM varsRecsSorted inferFun

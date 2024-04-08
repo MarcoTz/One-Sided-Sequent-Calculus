@@ -9,8 +9,8 @@ import Pretty.Desugared ()
 
 data DesugarError where 
   ErrVariable      :: Loc -> Variable -> DesugarError
-  ErrMultipleNames :: Loc -> TypeName -> DesugarError
-  ErrMultipleXtor  :: Loc -> XtorName -> DesugarError
+  ErrMultipleNames :: Loc -> Typename -> DesugarError
+  ErrMultipleXtor  :: Loc -> Xtorname -> DesugarError
   ErrMultipleAnnot :: Loc -> Variable -> PolTy -> PolTy -> DesugarError
   ErrOther         :: Loc -> String -> DesugarError
 

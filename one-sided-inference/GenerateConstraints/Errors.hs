@@ -12,10 +12,10 @@ import Pretty.Typed ()
 import Data.List (intercalate)
 
 data GenerateError where 
-  ErrXtorArity  :: Loc -> XtorName -> GenerateError
-  ErrTyArity    :: Loc -> TypeName -> GenerateError
+  ErrXtorArity  :: Loc -> Xtorname -> GenerateError
+  ErrTyArity    :: Loc -> Typename -> GenerateError
   ErrKindNeq    :: Loc -> Ty -> Ty -> GenerateError
-  ErrBadPattern :: Loc -> [XtorName] -> GenerateError
+  ErrBadPattern :: Loc -> [Xtorname] -> GenerateError
   ErrOther      :: Loc -> String -> GenerateError
 
 instance Error GenerateError where 

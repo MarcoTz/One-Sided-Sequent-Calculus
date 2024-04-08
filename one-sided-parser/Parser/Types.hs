@@ -15,7 +15,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 parseTy :: Parser Ty 
-parseTy = parseTyParens <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyVar
+parseTy = parseTyParens <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyvar
 
 parseTyParens :: Parser Ty
 parseTyParens = do 
@@ -30,7 +30,7 @@ parseTyForall :: Parser Ty
 parseTyForall = do
   parseKeyword KwForall <|> parseKeyword Kwforall 
   sc 
-  args <- parseTypeVar `sepBy` space1 
+  args <- parseTypevar `sepBy` space1 
   sc 
   parseSymbol SymDot
   sc 
@@ -38,23 +38,23 @@ parseTyForall = do
 
 parseTyDecl :: Parser Ty
 parseTyDecl = do
-  tyn <- parseTypeName 
+  tyn <- parseTypename 
   parseSymbol SymParensO 
   args <- parseTy `sepBy` (parseSymbol SymComma >> space)
   parseSymbol SymParensC
   return (TyDecl tyn args)
 
-parseTyArgs :: Parser [PolVar]
+parseTyArgs :: Parser [Polvar]
 parseTyArgs = (do 
   parseSymbol SymParensO
-  vars <- parsePolVar `sepBy` (parseSymbol SymComma >> space)
+  vars <- parsePolvar `sepBy` (parseSymbol SymComma >> space)
   parseSymbol SymParensC
   return vars)
   <|>
   return []
 
-parseTyVar :: Parser Ty
-parseTyVar = TyVar <$> parseTypeVar
+parseTyvar :: Parser Ty
+parseTyvar = TyVar <$> parseTypevar
 
 parseTyShift :: Parser Ty 
 parseTyShift = do 

@@ -6,11 +6,11 @@ module Syntax.Typed.Types (
 import Common 
 
 data Ty where 
-  TyVar :: TypeVar -> Pol -> Ty 
-  TyDecl :: TypeName -> [Ty] -> Pol -> Ty 
+  TyVar :: Typevar -> Pol -> Ty 
+  TyDecl :: Typename -> [Ty] -> Pol -> Ty 
   TyShift :: Ty -> Pol -> Ty
   TyCo :: Ty -> Ty 
-  TyForall :: [TypeVar] -> Ty -> Ty
+  TyForall :: [Typevar] -> Ty -> Ty
   deriving (Eq)
 
 instance GetKind Ty where 

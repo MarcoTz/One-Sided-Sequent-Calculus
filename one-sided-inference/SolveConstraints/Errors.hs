@@ -10,7 +10,7 @@ import Pretty.Common ()
 import Pretty.Typed ()
 
 data SolverError = 
-  ErrTyArity !TypeName 
+  ErrTyArity !Typename 
   | ErrTyNeq !Ty !Ty
   | ErrKindNeq !Kind !Kind
   | ErrTypeKindNeq !Ty !Ty

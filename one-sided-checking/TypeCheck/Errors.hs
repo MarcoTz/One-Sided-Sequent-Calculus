@@ -17,15 +17,15 @@ import Data.List (intercalate)
 data CheckerError where 
   ErrNoAnnot        :: Loc -> Variable -> CheckerError 
   ErrUndefinedVar   :: Loc -> Variable -> CheckerError 
-  ErrUndefinedTyVar :: Loc -> TypeVar -> D.Term-> CheckerError 
-  ErrFreeTyVar      :: Loc -> TypeVar-> CheckerError 
+  ErrUndefinedTyVar :: Loc -> Typevar -> D.Term-> CheckerError 
+  ErrFreeTyVar      :: Loc -> Typevar-> CheckerError 
   ErrTyCoForShift   :: Loc -> T.Term ->Ty-> CheckerError 
   ErrKindNeq        :: Loc -> Ty ->Ty ->D.Term-> CheckerError 
   ErrTypeNeq        :: Loc -> Ty ->Ty -> D.Term-> CheckerError 
-  ErrNotTyDecl      :: Loc -> TypeName -> Ty -> D.Term-> CheckerError 
-  ErrTypeArity      :: Loc -> TypeName-> CheckerError 
-  ErrXtorArity      :: Loc -> XtorName-> CheckerError 
-  ErrBadPattern     :: Loc -> [XtorName] -> [XtorName] -> D.Term-> CheckerError 
+  ErrNotTyDecl      :: Loc -> Typename -> Ty -> D.Term-> CheckerError 
+  ErrTypeArity      :: Loc -> Typename-> CheckerError 
+  ErrXtorArity      :: Loc -> Xtorname-> CheckerError 
+  ErrBadPattern     :: Loc -> [Xtorname] -> [Xtorname] -> D.Term-> CheckerError 
   ErrCutKind        :: Loc -> Ty -> Ty -> D.Command-> CheckerError 
   ErrBadType        :: Loc -> D.Term -> Ty-> CheckerError 
   ErrUnclearType    :: Loc -> D.Command -> CheckerError 

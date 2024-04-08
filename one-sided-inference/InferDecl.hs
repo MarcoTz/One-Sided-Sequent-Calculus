@@ -20,8 +20,8 @@ import Control.Monad.Except
 import Data.Map qualified as M
 
 data DeclState = MkDeclState{
-  declsDone :: !(M.Map TypeName T.DataDecl),
-  currVars :: !(M.Map TypeVar Pol),
+  declsDone :: !(M.Map Typename T.DataDecl),
+  currVars :: !(M.Map Typevar Pol),
   currPol :: !(Maybe Pol)
 }
 
@@ -29,8 +29,8 @@ initialDeclState :: DeclState
 initialDeclState = MkDeclState M.empty M.empty Nothing
 
 data InferDeclError where 
-  ErrUndefinedTyVar :: Loc -> TypeVar -> InferDeclError
-  ErrUndefinedType :: Loc -> TypeName -> InferDeclError
+  ErrUndefinedTyVar :: Loc -> Typevar -> InferDeclError
+  ErrUndefinedType :: Loc -> Typename -> InferDeclError
   ErrIllegalType :: Loc -> D.Ty -> InferDeclError 
   ErrOther :: Loc -> String -> InferDeclError
 
@@ -55,9 +55,9 @@ runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
   Left err -> Left err 
   Right (x, _) ->  Right x
 
-setCurrVars :: [PolVar] -> DeclM () 
+setCurrVars :: [Polvar] -> DeclM () 
 setCurrVars vars = do
-  let newM = M.fromList ((\(MkPolVar tyv pol) -> (tyv,pol)) <$> vars)
+  let newM = M.fromList ((\(Polvar tyv pol) -> (tyv,pol)) <$> vars)
   modify (\s -> MkDeclState (declsDone s) newM (currPol s))
 
 setCurrPol :: Pol -> DeclM () 

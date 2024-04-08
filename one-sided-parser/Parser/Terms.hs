@@ -41,7 +41,7 @@ parseMu = do
 parseXtor :: Parser Term
 parseXtor = do
   startPos <- getCurrPos 
-  nm <- parseXtorName 
+  nm <- parseXtorname 
   sc
   parseSymbol SymParensO
   sc
@@ -53,7 +53,7 @@ parseXtor = do
 
 parsePattern :: Parser Pattern 
 parsePattern = do 
-  nm <- parseXtorName 
+  nm <- parseXtorname 
   sc
   args <- parseParens (parseVariable `sepBy` parseCommaSep) <|> sc $> []
   sc

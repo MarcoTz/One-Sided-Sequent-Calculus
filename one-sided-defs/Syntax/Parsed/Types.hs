@@ -6,11 +6,11 @@ module Syntax.Parsed.Types (
 import Common
 
 data Ty where 
-  TyVar    :: TypeVar -> Ty
-  TyDecl   :: TypeName -> [Ty] -> Ty
+  TyVar    :: Typevar -> Ty
+  TyDecl   :: Typename -> [Ty] -> Ty
   TyCo     :: Ty -> Ty
   TyShift  :: Ty -> Ty 
-  TyForall :: [TypeVar] -> Ty -> Ty
+  TyForall :: [Typevar] -> Ty -> Ty
   deriving (Eq,Ord)
 
 data PolTy = MkPolTy !Ty !Pol

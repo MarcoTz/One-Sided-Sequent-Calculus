@@ -18,13 +18,13 @@ import Control.Monad
 import Data.Map qualified as M
 
 
-checkTypeNames :: [TypeName] -> [P.DataDecl] -> DesugarM ()
+checkTypeNames :: [Typename] -> [P.DataDecl] -> DesugarM ()
 checkTypeNames _ [] = return ()
 checkTypeNames tyns (decl1:decls) = let tyn = P.declName decl1 in 
   if tyn `elem` (P.declName <$> decls) || tyn `elem` tyns then 
     throwError (ErrMultipleNames (getLoc decl1) (P.declName decl1)) else  checkTypeNames tyns decls
 
-checkXtorNames :: [XtorName] -> [P.XtorSig] -> DesugarM () 
+checkXtorNames :: [Xtorname] -> [P.XtorSig] -> DesugarM () 
 checkXtorNames _ [] = return () 
 checkXtorNames xtns (xt1:xts) = let xtn = P.sigName xt1 in 
   if xtn `elem` (P.sigName <$> xts) || xtn `elem` xtns then throwError (ErrMultipleXtor (getLoc xt1) xtn) else checkXtorNames xtns xts

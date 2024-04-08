@@ -30,13 +30,13 @@ instance HasLoc Command where
   setLoc loc (Err _ str) = Err loc str
   setLoc loc (Print _ t) = Print loc t 
 
-data Pattern = MkPattern{ptxt :: !XtorName, ptv :: ![Variable], ptcmd :: !Command}
+data Pattern = MkPattern{ptxt :: !Xtorname, ptv :: ![Variable], ptcmd :: !Command}
   deriving (Eq)
 
 data Term where 
   Var      :: Loc -> Variable -> Ty -> Term 
   Mu       :: Loc -> Variable -> Command -> Ty -> Term
-  Xtor     :: Loc -> XtorName -> [Term] -> Ty -> Term
+  Xtor     :: Loc -> Xtorname -> [Term] -> Ty -> Term
   XCase    :: Loc -> [Pattern] -> Ty -> Term 
   ShiftPos :: Loc -> Term -> Ty -> Term
   ShiftNeg :: Loc -> Variable -> Command -> Ty -> Term

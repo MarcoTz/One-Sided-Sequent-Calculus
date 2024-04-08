@@ -20,12 +20,12 @@ import Syntax.Typed.Terms
 
 import Data.Map qualified as M
 
-data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !XtorName, sigArgs :: ![Ty]} 
+data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !Xtorname, sigArgs :: ![Ty]} 
 instance HasLoc XtorSig where 
   getLoc = sigPos
   setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args 
 
-data DataDecl  = MkData {declPos :: !Loc, declName :: !TypeName, declArgs :: ![PolVar], declPol :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl  = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![Polvar], declPol :: !Pol, declXtors :: ![XtorSig]} 
 instance HasLoc DataDecl where 
   getLoc = declPos
   setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
@@ -42,7 +42,7 @@ instance HasLoc RecDecl where
 
 data Program = MkProgram {
   progName  :: !Modulename, 
-  progDecls :: !(M.Map TypeName DataDecl), 
+  progDecls :: !(M.Map Typename DataDecl), 
   progVars  :: !(M.Map Variable VarDecl),
   progRecs  :: !(M.Map Variable RecDecl),
   progMain  :: !(Maybe Command),

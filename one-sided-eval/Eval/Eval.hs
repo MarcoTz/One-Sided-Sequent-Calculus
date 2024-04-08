@@ -74,6 +74,6 @@ substCase loc MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) =
 substCase loc (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity loc xt) 
 substCase loc (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity loc xt) 
 
-findXtor :: Loc -> XtorName -> [Pattern] -> EvalM Pattern
+findXtor :: Loc -> Xtorname -> [Pattern] -> EvalM Pattern
 findXtor loc xt [] = throwError (ErrMissingPt loc xt) 
 findXtor loc xt (pt:pts) = if ptxt pt == xt then return pt else findXtor loc xt pts

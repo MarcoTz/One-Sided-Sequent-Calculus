@@ -50,17 +50,17 @@ import Data.Maybe (fromMaybe)
 -- Type Variable Substitution --
 --------------------------------
 class SubstTyVars a where 
-  substTyVars :: M.Map PolVar Ty -> a -> a 
+  substTyVars :: M.Map Polvar Ty -> a -> a 
 
 instance SubstTyVars XtorSig where 
   substTyVars varmap (MkXtorSig loc nm args) = MkXtorSig loc nm (substTyVars varmap <$> args)
 
 instance SubstTyVars Ty where 
-  substTyVars varmap ty@(TyVar v pol) = fromMaybe ty (M.lookup (MkPolVar v pol) varmap) 
+  substTyVars varmap ty@(TyVar v pol) = fromMaybe ty (M.lookup (Polvar v pol) varmap) 
   substTyVars varmap (TyDecl tyn args knd) = TyDecl tyn (substTyVars varmap <$> args) knd
   substTyVars varmap (TyShift ty knd) = TyShift (substTyVars varmap ty) knd
   substTyVars varmap (TyCo ty) = TyCo (substTyVars varmap ty) 
-  substTyVars varmap (TyForall vars ty) = let newmap = foldr (\v m -> M.delete (MkPolVar v Neg) (M.delete (MkPolVar v Pos) m)) varmap vars in TyForall vars (substTyVars newmap ty)
+  substTyVars varmap (TyForall vars ty) = let newmap = foldr (\v m -> M.delete (Polvar v Neg) (M.delete (Polvar v Pos) m)) varmap vars in TyForall vars (substTyVars newmap ty)
 
 instance SubstTyVars Term where 
   substTyVars varmap (Var loc v ty) = Var loc v (substTyVars varmap ty)

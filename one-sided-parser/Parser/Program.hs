@@ -22,7 +22,7 @@ parseModuleDecl = (do
   space1 
   sc 
   parseModulename)
-  <|> return (MkModule "")
+  <|> return (Modulename "")
 
 parseProgram :: String -> Parser Program 
 parseProgram src = do 
@@ -118,7 +118,7 @@ parseDataDecl = do
   startPos <- getCurrPos
   parseKeyword KwData
   space1
-  nm <- parseTypeName 
+  nm <- parseTypename 
   sc
   args <- parseTyArgs
   sc
@@ -138,7 +138,7 @@ parseDataDecl = do
 parseXtorSig :: Parser XtorSig
 parseXtorSig = do 
   startPos <- getCurrPos
-  nm <- parseXtorName 
+  nm <- parseXtorname 
   args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
   loc <- getCurrLoc startPos
   return $ MkXtorSig loc nm args 

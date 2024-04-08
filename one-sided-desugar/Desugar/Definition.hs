@@ -47,16 +47,16 @@ runDesugarM env nm m = case runExcept (runStateT (runReaderT (getDesugarM m) env
   Left err -> Left err 
   Right (x,_) ->  Right x 
 
-varToXtor :: Variable -> XtorName
-varToXtor (MkVariable v) = MkXtorName v
+varToXtor :: Variable -> Xtorname
+varToXtor (Variable v) = Xtorname v
 
-tyvarToTyName :: TypeVar -> TypeName
-tyvarToTyName (MkTypeVar v) = MkTypeName v
+tyvarToTyName :: Typevar -> Typename
+tyvarToTyName (Typevar v) = Typename v
 
 getDesDoneProg :: DesugarM D.Program
 getDesDoneProg = gets desDone
 
-getDesDefNames :: DesugarM [TypeName]
+getDesDefNames :: DesugarM [Typename]
 getDesDefNames = do
   doneNames <-  gets (map fst .  M.toList . D.progDecls . desDone)
   curr <- gets desCurrDecl
@@ -67,7 +67,7 @@ getDesDefNames = do
 setDesCurrDecl :: P.DataDecl -> DesugarM () 
 setDesCurrDecl decl = modify (MkDesugarState (Just decl) . desDone )
 
-getDesMXtor :: XtorName -> DesugarM (Maybe D.XtorSig)
+getDesMXtor :: Xtorname -> DesugarM (Maybe D.XtorSig)
 getDesMXtor xtn = do
   msig <- lookupMXtor xtn
   doneDecls <- gets (D.progDecls . desDone)
