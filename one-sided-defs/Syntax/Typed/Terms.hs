@@ -14,7 +14,7 @@ import Loc
 type TypedVar = (Variable,Ty)
 
 data Command where 
-  Cut   :: Loc -> Term -> Pol -> Term -> Command 
+  Cut   :: Loc -> Term -> EvaluationOrder -> Term -> Command 
   Done  :: Loc -> Command 
   Err   :: Loc -> String -> Command 
   Print :: Loc -> Term -> Command
@@ -67,10 +67,10 @@ getType (ShiftNeg _ _ _ ty)  = ty
 instance GetKind Term where 
   getKind t = getKind (getType t)
 
-isValue :: Pol -> Term -> Bool
-isValue Pos Var{} = True 
-isValue Pos (Xtor _ _ args _) = all (isValue Pos) args
-isValue Pos XCase{} = True
-isValue Pos ShiftPos{} = True
-isValue Pos _ = False 
-isValue Neg _ = True
+isValue :: EvaluationOrder -> Term -> Bool
+isValue CBV Var{} = True 
+isValue CBV (Xtor _ _ args _) = all (isValue CBV) args
+isValue CBV XCase{} = True
+isValue CBV ShiftPos{} = True
+isValue CBV _ = False 
+isValue CBN _ = True

@@ -1,5 +1,5 @@
 module Syntax.Parsed.Types (
-  PolTy (..),
+  KindedTy (..),
   Ty (..)
 ) where 
 
@@ -13,5 +13,5 @@ data Ty where
   TyForall :: [Typevar] -> Ty -> Ty
   deriving (Eq,Ord)
 
-data PolTy = MkPolTy !Ty !Pol
+data KindedTy = KindedTy { kindedTy :: !Ty, kindedKind :: !Kind }
   deriving (Eq,Ord)

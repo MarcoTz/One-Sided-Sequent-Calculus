@@ -21,8 +21,8 @@ instance Show D.RecDecl where
 instance Show D.Program where 
   show = show . (embed::D.Program->P.Program)
 
-instance Show D.PolTy where 
-  show = show . (embed :: D.PolTy -> P.PolTy)
+instance Show D.KindedTy where 
+  show = show . (embed :: D.KindedTy-> P.KindedTy)
 instance Show D.Ty where 
   show = show . (embed :: D.Ty -> P.Ty)
 

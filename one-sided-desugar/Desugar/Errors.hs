@@ -11,7 +11,7 @@ data DesugarError where
   ErrVariable      :: Loc -> Variable -> DesugarError
   ErrMultipleNames :: Loc -> Typename -> DesugarError
   ErrMultipleXtor  :: Loc -> Xtorname -> DesugarError
-  ErrMultipleAnnot :: Loc -> Variable -> PolTy -> PolTy -> DesugarError
+  ErrMultipleAnnot :: Loc -> Variable -> KindedTy -> KindedTy -> DesugarError
   ErrOther         :: Loc -> String -> DesugarError
 
 instance Error DesugarError where 

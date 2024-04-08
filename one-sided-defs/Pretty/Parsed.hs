@@ -29,8 +29,8 @@ instance Show Command where
   show (Print _ t) = "Print " <> show t
   show (PrintAnnot _ t ty) = " Print " <> show t <> " :: " <> show ty
 
-instance Show PolTy where 
-  show (MkPolTy ty pol) = show ty<> " : " <> show pol
+instance Show KindedTy where 
+  show (KindedTy ty pol) = show ty<> " : " <> show pol
 
 instance Show Ty where 
   show (TyVar v) = show v 

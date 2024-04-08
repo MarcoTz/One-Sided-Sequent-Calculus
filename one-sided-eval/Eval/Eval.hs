@@ -16,7 +16,7 @@ import Data.Bifunctor (second)
 
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
-coTrans (Cut loc t pol u) = Cut loc u (flipPol pol) t
+coTrans (Cut loc t eo u) = Cut loc u (shiftEvalOrder eo) t
 coTrans (Done loc) = Done loc
 coTrans (Err loc err) = Err loc err
 coTrans (Print loc t) = Print loc t
@@ -58,7 +58,7 @@ evalOnce (Cut loc t pol (Var loc' v _)) = do
 -- beta mu
 evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = return $ substVar c t v
 -- beta shift 
-evalOnce (Cut _ (ShiftPos _ t _) Pos (ShiftNeg _ v c _)) = return $ substVar c t v
+evalOnce (Cut _ (ShiftPos _ t _) CBV (ShiftNeg _ v c _)) = return $ substVar c t v
 -- beta K
 
 evalOnce (Cut loc (Xtor _ nm args _) pol (XCase _ pats _)) | all (isValue pol) args = do 

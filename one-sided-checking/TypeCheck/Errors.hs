@@ -5,9 +5,10 @@ module TypeCheck.Errors (
 import Common 
 import Errors
 import Loc
-import Syntax.Typed.Types
+import Syntax.Typed.Types     qualified as T
 import Syntax.Typed.Terms     qualified as T
 import Syntax.Desugared.Terms qualified as D
+import Syntax.Desugared.Types qualified as D
 import Pretty.Common ()
 import Pretty.Typed ()
 import Pretty.Desugared()
@@ -16,18 +17,21 @@ import Data.List (intercalate)
 
 data CheckerError where 
   ErrNoAnnot        :: Loc -> Variable -> CheckerError 
+  ErrKindVar        :: Loc -> D.Ty -> CheckerError
   ErrUndefinedVar   :: Loc -> Variable -> CheckerError 
   ErrUndefinedTyVar :: Loc -> Typevar -> D.Term-> CheckerError 
   ErrFreeTyVar      :: Loc -> Typevar-> CheckerError 
-  ErrTyCoForShift   :: Loc -> T.Term ->Ty-> CheckerError 
-  ErrKindNeq        :: Loc -> Ty ->Ty ->D.Term-> CheckerError 
-  ErrTypeNeq        :: Loc -> Ty ->Ty -> D.Term-> CheckerError 
-  ErrNotTyDecl      :: Loc -> Typename -> Ty -> D.Term-> CheckerError 
+  ErrTyCoForShift   :: Loc -> T.Term ->T.Ty-> CheckerError 
+  ErrArgumentKind   :: Loc -> Typename -> [T.Ty] -> CheckerError
+  ErrKindNeq        :: Loc -> T.Ty -> T.Ty ->D.Term-> CheckerError 
+  ErrWrongEo        :: Loc -> T.Ty -> DeclTy -> CheckerError
+  ErrTypeNeq        :: Loc -> T.Ty -> T.Ty -> D.Term-> CheckerError 
+  ErrNotTyDecl      :: Loc -> Typename -> T.Ty -> D.Term-> CheckerError 
   ErrTypeArity      :: Loc -> Typename-> CheckerError 
   ErrXtorArity      :: Loc -> Xtorname-> CheckerError 
   ErrBadPattern     :: Loc -> [Xtorname] -> [Xtorname] -> D.Term-> CheckerError 
-  ErrCutKind        :: Loc -> Ty -> Ty -> D.Command-> CheckerError 
-  ErrBadType        :: Loc -> D.Term -> Ty-> CheckerError 
+  ErrCutKind        :: Loc -> T.Ty -> T.Ty -> D.Command-> CheckerError 
+  ErrBadType        :: Loc -> D.Term -> T.Ty -> CheckerError 
   ErrUnclearType    :: Loc -> D.Command -> CheckerError 
   ErrOther          :: Loc -> String -> CheckerError 
 
@@ -38,7 +42,10 @@ whileCmd :: D.Command -> String
 whileCmd c = "while type checking " <> show c
 
 instance Error CheckerError where 
+  getMessage (ErrWrongEo _ ty isco) = show isco <> " should have evaluation order " <> show (defaultEo isco) <> " but found " <> show (getKind ty)
   getMessage (ErrNoAnnot _ var) = "No annotation for " <> show var <> ", cannot type check."
+  getMessage (ErrKindVar _ ty) = "Kind variables cannot be used in type annotation " <> show ty
+  getMessage (ErrArgumentKind _ tyn args) = "wrong kinds for arguments " <> show args <> " of " <> show tyn 
   getMessage (ErrUndefinedVar _ var) = "Variable " <> show var <> " was not defined "
   getMessage (ErrUndefinedTyVar _ tyv t) = "Type Variable " <> show tyv <> " was not defined " <> whileTerm t
   getMessage (ErrFreeTyVar _ tyv) = "Type Variable " <> show tyv <> " cannot appear free"
@@ -54,7 +61,10 @@ instance Error CheckerError where
   getMessage (ErrUnclearType _ c) = "Type of term " <> show c <> " is unclear" 
   getMessage (ErrOther _ str)  = str
 
+  getLocation (ErrWrongEo loc _ _) = loc
+  getLocation (ErrArgumentKind loc _ _) = loc
   getLocation (ErrNoAnnot loc _) = loc
+  getLocation (ErrKindVar loc _) = loc
   getLocation (ErrUndefinedVar loc _) = loc 
   getLocation (ErrUndefinedTyVar loc _ _) = loc
   getLocation (ErrFreeTyVar loc _) = loc 

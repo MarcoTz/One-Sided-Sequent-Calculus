@@ -25,17 +25,17 @@ instance HasLoc XtorSig where
   getLoc = sigPos
   setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args
 
-data DataDecl = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![Polvar],      declPol :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![VariantVar], declType :: !DeclTy, declXtors :: ![XtorSig]} 
 instance HasLoc DataDecl where 
   getLoc = declPos 
   setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
 
-data VarDecl  = MkVar  {varPos  :: !Loc, varName  :: !Variable, varTy    :: !(Maybe PolTy), varBody :: !Term}
+data VarDecl  = MkVar  {varPos  :: !Loc, varName  :: !Variable, varTy    :: !(Maybe KindedTy), varBody :: !Term}
 instance HasLoc VarDecl where 
   getLoc = varPos 
   setLoc loc (MkVar _ nm ty bd) = MkVar loc nm ty bd
 
-data RecDecl  = MkRec  {recPos  :: !Loc, recName  :: !Variable, recTy    :: !(Maybe PolTy), recBody :: !Term}
+data RecDecl  = MkRec  {recPos  :: !Loc, recName  :: !Variable, recTy    :: !(Maybe KindedTy), recBody :: !Term}
 instance HasLoc RecDecl where 
   getLoc = recPos
   setLoc loc (MkRec _ nm ty bd) = MkRec loc nm ty bd

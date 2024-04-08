@@ -19,11 +19,8 @@ instance Embed D.Term P.Term where
   embed (D.ShiftPos loc t) = P.ShiftPos loc (embed t)
   embed (D.ShiftNeg loc v c) = P.ShiftNeg loc v (embed c)
 
-instance Embed D.TypedVar P.MTypedVar where 
-  embed (v,ty) = (v,Just . embed $ ty)
-instance Embed D.MTypedVar P.MTypedVar where 
-  embed (v,Just ty)= (v,Just . embed $ ty)
-  embed (v,Nothing) = (v,Nothing)
+instance Embed D.TypedVar P.TypedVar where 
+  embed (v,ty) = (v, embed ty)
 
 instance Embed D.Pattern P.Pattern where 
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)
@@ -57,10 +54,10 @@ instance Embed D.Program P.Program where
 instance Embed D.XtorSig P.XtorSig where 
   embed (D.MkXtorSig loc nm args) = P.MkXtorSig loc nm (embed <$> args)
 
-instance Embed D.PolTy P.PolTy  where 
-  embed (D.MkPolTy ty pol) = P.MkPolTy (embed ty) pol 
-instance Embed D.PolTy P.Ty where 
-  embed (D.MkPolTy ty _) = embed ty
+instance Embed D.KindedTy P.KindedTy  where 
+  embed (D.KindedTy ty pol) = P.KindedTy (embed ty) pol 
+instance Embed D.KindedTy P.Ty where 
+  embed (D.KindedTy ty _) = embed ty
 instance Embed D.Ty P.Ty where 
   embed (D.TyVar v) = P.TyVar v 
   embed (D.TyDecl nm args) = P.TyDecl nm (embed <$> args)

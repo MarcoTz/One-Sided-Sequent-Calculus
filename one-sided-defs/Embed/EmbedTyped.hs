@@ -57,14 +57,12 @@ instance Embed T.Ty D.Ty where
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
 
-instance Embed T.Ty D.PolTy where 
-  embed ty = D.MkPolTy (embed ty) (getKind ty)
-instance Embed T.Ty P.PolTy where 
-  embed = (embed :: D.PolTy -> P.PolTy) . (embed  :: T.Ty -> D.PolTy)
+instance Embed T.Ty D.KindedTy where 
+  embed ty = D.KindedTy (embed ty) (getKind ty)
+instance Embed T.Ty P.KindedTy where 
+  embed = (embed :: D.KindedTy -> P.KindedTy) . (embed  :: T.Ty -> D.KindedTy)
 instance Embed T.TypedVar D.TypedVar where
   embed (v,ty) = (v,embed ty)
-instance Embed T.TypedVar D.MTypedVar where 
-  embed (v,ty) = (v,Just . embed $ ty)
 
 instance Embed T.VarDecl D.VarDecl where 
   embed (T.MkVar loc var ty body) = D.MkVar loc var (Just (embed ty)) (embed body)

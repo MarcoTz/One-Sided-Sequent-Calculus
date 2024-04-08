@@ -66,7 +66,7 @@ desugarRec (P.MkRec loc v t) = do
 desugarAnnot :: P.AnnotDecl -> DesugarM () 
 desugarAnnot (P.MkAnnot loc v ty) = do 
   decl <- getDesDoneVar loc v
-  ty' <- desugarPolTy ty
+  ty' <- desugarKindedTy ty
   case decl of 
     Left (D.MkVar loc' _ Nothing t) -> addDesVar (D.MkVar loc' v (Just ty') t)
     Left (D.MkVar _ _ (Just ty'') _) -> if ty' == ty'' then return () else throwError (ErrMultipleAnnot loc v ty' ty'')

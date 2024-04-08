@@ -2,9 +2,17 @@ module Pretty.Common () where
 
 import Common 
 
-instance Show Pol where 
-  show Pos = "+"
-  show Neg = "-"
+instance Show EvaluationOrder where 
+  show CBV = "CBV"
+  show CBN = "CBN"
+
+instance Show DeclTy where 
+  show Data = "data"
+  show Codata = "codata"
+
+instance Show Variance where 
+  show Covariant = "+"
+  show Contravariant = "-"
 
 instance Show Modulename where 
   show (Modulename nm) = nm 
@@ -24,8 +32,8 @@ instance Show Typevar where
 instance Show Typename where 
   show (Typename tyn) = tyn
 
-instance Show Polvar where 
-  show (Polvar tyv pol) = show tyv <> ":" <> show pol
+instance Show VariantVar where 
+  show (VariantVar tyv var) = show tyv <> ":" <> show var
 
 instance Show Kind where 
   show (MkKind p) = show p

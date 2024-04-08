@@ -12,7 +12,6 @@ import Loc
 
 import Data.Map qualified as M
 import Data.Set qualified as S
-import Data.Maybe (fromMaybe)
 
 
 --------------------------------
@@ -50,17 +49,19 @@ import Data.Maybe (fromMaybe)
 -- Type Variable Substitution --
 --------------------------------
 class SubstTyVars a where 
-  substTyVars :: M.Map Polvar Ty -> a -> a 
+  substTyVars :: M.Map Typevar Ty -> a -> a 
 
 instance SubstTyVars XtorSig where 
   substTyVars varmap (MkXtorSig loc nm args) = MkXtorSig loc nm (substTyVars varmap <$> args)
 
 instance SubstTyVars Ty where 
-  substTyVars varmap ty@(TyVar v pol) = fromMaybe ty (M.lookup (Polvar v pol) varmap) 
+  substTyVars varmap ty@(TyVar v knd) = case M.lookup v varmap of 
+    Nothing -> ty 
+    Just ty' -> if knd == getKind ty' then ty' else ty
   substTyVars varmap (TyDecl tyn args knd) = TyDecl tyn (substTyVars varmap <$> args) knd
   substTyVars varmap (TyShift ty knd) = TyShift (substTyVars varmap ty) knd
   substTyVars varmap (TyCo ty) = TyCo (substTyVars varmap ty) 
-  substTyVars varmap (TyForall vars ty) = let newmap = foldr (\v m -> M.delete (Polvar v Neg) (M.delete (Polvar v Pos) m)) varmap vars in TyForall vars (substTyVars newmap ty)
+  substTyVars varmap (TyForall vars ty) = let newmap = foldr M.delete varmap vars in TyForall vars (substTyVars newmap ty)
 
 instance SubstTyVars Term where 
   substTyVars varmap (Var loc v ty) = Var loc v (substTyVars varmap ty)

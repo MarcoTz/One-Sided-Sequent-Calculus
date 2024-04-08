@@ -21,8 +21,8 @@ import Data.Map qualified as M
 
 data DeclState = MkDeclState{
   declsDone :: !(M.Map Typename T.DataDecl),
-  currVars :: !(M.Map Typevar Pol),
-  currPol :: !(Maybe Pol)
+  currVars :: !(M.Map Typevar EvaluationOrder),
+  currEo :: !(Maybe EvaluationOrder)
 }
 
 initialDeclState :: DeclState 
@@ -55,20 +55,21 @@ runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
   Left err -> Left err 
   Right (x, _) ->  Right x
 
-setCurrVars :: [Polvar] -> DeclM () 
-setCurrVars vars = do
-  let newM = M.fromList ((\(Polvar tyv pol) -> (tyv,pol)) <$> vars)
-  modify (\s -> MkDeclState (declsDone s) newM (currPol s))
+setCurrVars :: [VariantVar] -> DeclTy -> DeclM () 
+setCurrVars vars isco = do
+  let eo = defaultEo isco
+  let newM = M.fromList ((\(VariantVar tyv var) -> (tyv,varianceEvalOrder var eo)) <$> vars)
+  modify (\s -> MkDeclState (declsDone s) newM (currEo s))
 
-setCurrPol :: Pol -> DeclM () 
-setCurrPol pol = modify (\s -> MkDeclState (declsDone s) (currVars s) (Just pol))
+setCurrPol :: EvaluationOrder -> DeclM () 
+setCurrPol eo = modify (\s -> MkDeclState (declsDone s) (currVars s) (Just eo))
 
 inferDecl :: D.DataDecl -> DeclM T.DataDecl
-inferDecl (D.MkData loc tyn args pol xtors) = do 
-  setCurrVars args
-  setCurrPol pol
+inferDecl (D.MkData loc tyn args isco xtors) = do 
+  setCurrVars args isco
+  setCurrPol (defaultEo isco) 
   xtors' <- forM xtors inferXtorSig 
-  return $ T.MkData loc tyn args pol xtors'
+  return $ T.MkData loc tyn args isco xtors'
 
 inferXtorSig :: D.XtorSig -> DeclM T.XtorSig
 inferXtorSig (D.MkXtorSig loc nm args) = do 
@@ -80,17 +81,18 @@ inferType loc (D.TyVar v) = do
   vars <- gets currVars 
   case M.lookup v vars of 
     Nothing -> throwError (ErrUndefinedTyVar loc v)
-    Just pol -> return $ T.TyVar v pol
+    Just eo -> return $ T.TyVar v (MkKind eo)
 inferType loc (D.TyDecl tyn args) = do
+
   args' <- forM args (inferType loc)
   decls <- gets declsDone 
   case M.lookup tyn decls of 
     Nothing -> do 
-      pol <- gets currPol 
-      case pol of 
+      eo <- gets currEo 
+      case eo of 
         Nothing -> throwError (ErrUndefinedType loc tyn)
-        Just pol' -> return $ T.TyDecl tyn args' pol'
-    Just (T.MkData _ _ _ pol _) -> return $ T.TyDecl tyn args' pol
+        Just eo' -> return $ T.TyDecl tyn args' (MkKind eo')
+    Just (T.MkData _ _ _ isco _) -> return $ T.TyDecl tyn args' (MkKind . defaultEo $ isco)
 inferType loc (D.TyCo ty) = T.TyCo <$> inferType loc ty
-inferType loc (D.TyShift ty) = flipPol <$> inferType loc ty 
+inferType loc (D.TyShift ty) = shiftEvalOrder <$> inferType loc ty 
 inferType loc ty@(D.TyForall _ _ ) = throwError (ErrIllegalType loc ty)

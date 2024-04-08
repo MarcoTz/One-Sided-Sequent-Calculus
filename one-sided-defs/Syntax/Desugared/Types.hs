@@ -1,5 +1,5 @@
 module Syntax.Desugared.Types (
-  PolTy (..),
+  KindedTy (..),
   Ty (..)
 ) where 
 
@@ -13,8 +13,8 @@ data Ty where
   TyForall :: [Typevar] -> Ty -> Ty
   deriving (Eq)
 
-data PolTy = MkPolTy !Ty !Pol
+data KindedTy = KindedTy {kindedTy :: !Ty, kindedKind :: !Kind}
   deriving (Eq)
 
-instance FlipPol PolTy where 
-  flipPol (MkPolTy ty pol) = MkPolTy ty (flipPol pol) 
+instance ShiftEvalOrder KindedTy where 
+  shiftEvalOrder (KindedTy ty knd) = KindedTy ty (shiftEvalOrder knd)

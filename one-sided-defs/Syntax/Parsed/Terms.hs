@@ -2,20 +2,20 @@ module Syntax.Parsed.Terms (
   Term (..),
   Command (..),
   Pattern (..),
-  MTypedVar
+  TypedVar
 ) where 
 
 import Common 
 import Loc
 import Syntax.Parsed.Types
 
-type MTypedVar = (Variable,Maybe PolTy)
+type TypedVar = (Variable,KindedTy)
 data Command where 
-  Cut        :: Loc -> Term -> Pol -> Term -> Command
-  CutAnnot   :: Loc -> Term -> PolTy -> Pol -> Term -> Command
+  Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command
+  CutAnnot   :: Loc -> Term -> KindedTy -> EvaluationOrder -> Term -> Command
   Err        :: Loc -> String -> Command
   Print      :: Loc -> Term -> Command
-  PrintAnnot :: Loc -> Term -> PolTy -> Command
+  PrintAnnot :: Loc -> Term -> KindedTy -> Command
   Done       :: Loc -> Command
   deriving (Eq,Ord)
 

@@ -4,8 +4,11 @@ module Parser.Keywords (
 ) where 
 
 data Keyword = 
-  KwModule
+ KwModule
   | KwData
+  | KwCodata
+  | KwCBV
+  | KwCBN
   | Kwmu
   | KwMu
   | KwCase
@@ -25,6 +28,9 @@ data Keyword =
 instance Show Keyword where 
   show KwModule = "module"
   show KwData   = "data" 
+  show KwCodata = "codata"
+  show KwCBV    = "CBV"
+  show KwCBN    = "CBN"
   show KwMu     = "Mu"
   show Kwmu     = "mu"
   show KwCase   = "case"
@@ -42,4 +48,4 @@ instance Show Keyword where
   show Kwprint  = "print"
 
 allKws :: [Keyword]
-allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwMain,KwMain,KwError,KwRec]
+allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwMain,KwMain,KwError,KwRec, KwCBV, KwCBN, KwCodata]

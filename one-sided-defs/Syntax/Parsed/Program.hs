@@ -29,7 +29,7 @@ instance HasLoc XtorSig where
   getLoc = sigPos
   setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args
 
-data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !Typename, declArgs  :: ![Polvar], dataPol   :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl  = MkData   {declPos   :: !Loc, declName   :: !Typename, declArgs  :: ![VariantVar], declType  :: !DeclTy, declXtors :: ![XtorSig]} 
   deriving (Eq,Ord)
 instance HasLoc DataDecl where 
   getLoc = declPos
@@ -46,7 +46,7 @@ instance HasLoc RecDecl where
   getLoc = recPos 
   setLoc loc (MkRec _ nm bd) = MkRec loc nm bd
 
-data AnnotDecl = MkAnnot  {annotPos  :: !Loc, annotName  :: !Variable, annotType :: !PolTy} 
+data AnnotDecl = MkAnnot  {annotPos  :: !Loc, annotName  :: !Variable, annotType :: !KindedTy} 
   deriving (Eq,Ord)
 instance HasLoc AnnotDecl where 
   getLoc = annotPos 

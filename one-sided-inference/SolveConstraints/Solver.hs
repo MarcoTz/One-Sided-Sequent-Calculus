@@ -27,19 +27,19 @@ solve = do
 unifyTypeConstraint :: Ty -> Ty -> SolverM ()
 unifyTypeConstraint (TyVar v1 knd1) (TyVar v2 knd2) = do 
   vars <- getSlvTyVars 
-  let pv1 = Polvar v1 knd1
-  let pv2 = Polvar v2 knd2
-  case (M.lookup pv1 vars, M.lookup pv2 vars) of 
+  case (M.lookup v1 vars, M.lookup v2 vars) of 
     (Just ty1, Just ty2) -> do
       addConstraint (MkTyEq ty1 ty2) 
-    (Nothing, Just ty) -> addSlvTyVar pv1 ty
-    (Just ty, Nothing) -> addSlvTyVar pv2 ty
+      addConstraint (MkKindEq knd1 (getKind ty1))
+      addConstraint (MkKindEq knd2 (getKind ty2))
+    (Nothing, Just ty) -> addSlvTyVar v1 ty
+    (Just ty, Nothing) -> addSlvTyVar v2 ty
     (Nothing,Nothing) -> return ()
 unifyTypeConstraint (TyVar v knd) ty = do
+  addConstraint (MkKindEq knd (getKind ty))
   vars <- getSlvTyVars 
-  let pv = Polvar v knd
-  case M.lookup pv vars of 
-    Nothing -> addSlvTyVar pv ty 
+  case M.lookup v vars of 
+    Nothing -> addSlvTyVar v ty 
     Just ty' -> addConstraint (MkTyEq ty' ty) 
 unifyTypeConstraint ty1 ty2@TyVar{} = unifyTypeConstraint ty2 ty1
 unifyTypeConstraint ty1@(TyDecl n1 args1 _) ty2@(TyDecl n2 args2 _) 
@@ -56,27 +56,27 @@ unifyKindConstraint :: ConstrTy -> Kind -> Kind -> SolverM ()
 unifyKindConstraint Eq (MkKind p1) (MkKind p2)  = when (p1 /= p2) $ throwError (ErrKindNeq (MkKind p1) (MkKind p2))
 unifyKindConstraint Neq (MkKind p1) (MkKind p2) = when (p1==p2)   $ throwError (ErrKindNeq (MkKind p1) (MkKind p2))
 
-unifyKindConstraint Eq (MkKindVar v1) (MkKind pol) = do
+unifyKindConstraint Eq (MkKindVar v1) (MkKind eo) = do
   kndEnv <- getSlvKndVars 
   case M.lookup v1 kndEnv of 
-    Nothing -> addSlvKndVar v1 pol
-    Just pol' -> if pol == pol' then return () else throwError (ErrKindNeq (MkKind pol) (MkKind pol'))
+    Nothing -> addSlvKndVar v1 eo
+    Just eo' -> if eo == eo' then return () else throwError (ErrKindNeq (MkKind eo) (MkKind eo'))
 unifyKindConstraint Eq p@MkKind{} v@MkKindVar{} = unifyKindConstraint Eq v p
 unifyKindConstraint Eq (MkKindVar v1) (MkKindVar v2) = do
   kndEnv <- getSlvKndVars 
   case (M.lookup v1 kndEnv,M.lookup v2 kndEnv) of 
     (Nothing, Nothing) -> return ()
-    (Just pol,Nothing) -> addSlvKndVar v2 pol
-    (Nothing, Just pol) -> addSlvKndVar v1 pol
-    (Just pol1, Just pol2) -> when (pol1 /= pol2) $ throwError (ErrKindNeq (MkKind pol1) (MkKind pol2))
+    (Just eo,Nothing) -> addSlvKndVar v2 eo
+    (Nothing, Just eo) -> addSlvKndVar v1 eo
+    (Just eo1, Just eo2) -> when (eo1 /= eo2) $ throwError (ErrKindNeq (MkKind eo1) (MkKind eo2))
 
 
-unifyKindConstraint Neq v@MkKindVar{} (MkKind p) = unifyKindConstraint Eq v (MkKind $ flipPol p)
-unifyKindConstraint Neq (MkKind p) v@MkKindVar{} = unifyKindConstraint Eq v (MkKind $ flipPol p)
+unifyKindConstraint Neq v@MkKindVar{} (MkKind p) = unifyKindConstraint Eq v (MkKind $ shiftEvalOrder p)
+unifyKindConstraint Neq (MkKind p) v@MkKindVar{} = unifyKindConstraint Eq v (MkKind $ shiftEvalOrder p)
 unifyKindConstraint Neq (MkKindVar v1) (MkKindVar v2) = do
   kndEnv <- getSlvKndVars 
   case (M.lookup v1 kndEnv,M.lookup v2 kndEnv) of 
     (Nothing, Nothing) -> return ()
-    (Just pol,Nothing) -> addSlvKndVar v2 (flipPol pol)
-    (Nothing, Just pol) -> addSlvKndVar v1 (flipPol pol)
+    (Just pol,Nothing) -> addSlvKndVar v2 (shiftEvalOrder pol)
+    (Nothing, Just pol) -> addSlvKndVar v1 (shiftEvalOrder pol)
     (Just pol1, Just pol2) -> when (pol1 == pol2) $ throwError (ErrKindNeq (MkKind pol1) (MkKind pol2))

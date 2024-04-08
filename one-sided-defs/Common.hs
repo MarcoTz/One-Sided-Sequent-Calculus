@@ -1,54 +1,93 @@
 module Common (
-  FlipPol, 
-  flipPol,
-  GetKind, 
-  getKind,
+  GetKind (..), 
+  ShiftEvalOrder (..),
+  ContainsKindvar (..),
   Typevar (..),
-  Pol (..),
   Typename (..),
   Variable (..),
   Xtorname (..),
+  Variance (..),
+  PrdCns (..),
+  EvaluationOrder (..),
+  defaultEo,
+  DeclTy (..),
+  VariantVar (..),
+  varianceEvalOrder,
   Modulename (..),
-  Polvar (..),
   Kindvar (..),
   Kind (..)
 ) where 
 
+-----------
+-- Names --
+-----------
 newtype Modulename = Modulename {unModulename :: String}
   deriving (Eq,Ord)
 newtype Xtorname = Xtorname {unXtorname :: String}
   deriving (Eq,Ord)
-newtype Typevar  = Typevar {unTypevar :: String}
-  deriving (Eq,Ord)
 newtype Typename = Typename {unTypename :: String}
+  deriving (Eq,Ord)
+
+---------------
+-- Variables --
+---------------
+newtype Typevar  = Typevar {unTypevar :: String}
   deriving (Eq,Ord)
 newtype Variable = Variable {unVariable :: String} 
   deriving (Eq,Ord)
+data PrdCns = Prd | Cns 
+  deriving (Eq,Ord)
 newtype Kindvar  = Kindvar {unKindvar :: String} 
   deriving (Eq,Ord)
-data Polvar = Polvar { polvarVar :: !Typevar, polvarPol :: !Pol}
+
+--------------
+-- Variance --
+--------------
+data Variance = Covariant | Contravariant
   deriving (Eq,Ord)
-data Pol = Pos | Neg 
+data VariantVar = VariantVar { variantVar :: !Typevar, variantVariance :: !Variance}
   deriving (Eq,Ord)
 
-class FlipPol a where 
-  flipPol :: a -> a 
+-----------
+-- Kinds --
+-----------
+data EvaluationOrder = CBV | CBN
+  deriving (Eq,Ord)
+data Kind = MkKind !EvaluationOrder | MkKindVar !Kindvar 
+  deriving (Eq,Ord)
 
-instance FlipPol Pol where
-  flipPol Pos = Neg 
-  flipPol Neg = Pos 
+class ShiftEvalOrder a where
+ shiftEvalOrder :: a -> a  
 
-multPol :: Pol -> Pol -> Pol
-multPol Pos Neg = Neg 
-multPol Neg Pos = Neg 
-multPol Pos Pos = Pos 
-multPol Neg Neg = Pos
+instance ShiftEvalOrder EvaluationOrder where 
+  shiftEvalOrder CBV = CBN
+  shiftEvalOrder CBN = CBV
 
-data Kind = MkKind !Pol | MkKindVar !Kindvar 
-  deriving (Eq)
+instance ShiftEvalOrder Kind where 
+  shiftEvalOrder (MkKind eo) = MkKind $ shiftEvalOrder eo
+  shiftEvalOrder v@MkKindVar{} = v
+
+class ContainsKindvar a where 
+  containsKindvar :: a -> Bool
+
+instance ContainsKindvar Kind where 
+  containsKindvar (MkKind _) = False
+  containsKindvar (MkKindVar _) = True
 
 class GetKind a where 
-  getKind :: a -> Pol
+  getKind :: a -> Kind
 
-instance GetKind Polvar where 
-  getKind (Polvar _ pol) = pol
+varianceEvalOrder :: Variance -> EvaluationOrder -> EvaluationOrder 
+varianceEvalOrder Covariant = id
+varianceEvalOrder Contravariant = shiftEvalOrder
+
+-----------------
+-- Data/Codata --
+-----------------
+data DeclTy = Data | Codata
+  deriving (Eq,Ord)
+
+defaultEo :: DeclTy -> EvaluationOrder 
+defaultEo Data = CBV
+defaultEo Codata = CBN
+

@@ -143,12 +143,12 @@ parseCutPos = do
   u <- parseTerm
   loc <- getCurrLoc startPos 
   case mty of 
-    Nothing -> return (Cut loc t Pos u)
-    Just ty -> return (CutAnnot loc t ty Pos u)
+    Nothing -> return (Cut loc t CBV u)
+    Just ty -> return (CutAnnot loc t ty CBV u)
   where 
-    tyAnnot :: Parser PolTy
+    tyAnnot :: Parser KindedTy
     tyAnnot = do 
-      ty <- parsePolTy
+      ty <- parseKindedTy
       sc
       parseSymbol SymAngC 
       parseSymbol SymAngC
@@ -167,38 +167,38 @@ parseCutNeg = do
   u <- parseTerm
   loc <- getCurrLoc startPos 
   case mty of 
-    Nothing -> return (Cut loc t Neg u)
-    Just ty -> return (CutAnnot loc t ty Neg u)
+    Nothing -> return (Cut loc t CBN u)
+    Just ty -> return (CutAnnot loc t ty CBN u)
   where 
-    tyAnnot :: Parser PolTy 
+    tyAnnot :: Parser KindedTy
     tyAnnot = do 
-      ty <- parsePolTy
+      ty <- parseKindedTy
       sc
       parseSymbol SymAngO
       parseSymbol SymAngO 
       sc 
       return ty
 
-parseCutAnnot :: Parser (Pol,Maybe PolTy)
-parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parsePol 
+parseCutAnnot :: Parser (EvaluationOrder,Maybe KindedTy)
+parseCutAnnot = try parsePolBarTy <|> parseTyBarPol <|> (,Nothing) <$> parseEvaluationOrder 
 
-parsePolBarTy :: Parser (Pol, Maybe PolTy)
+parsePolBarTy :: Parser (EvaluationOrder, Maybe KindedTy)
 parsePolBarTy = do
-  pol <- parsePol 
+  pol <- parseEvaluationOrder
   sc 
   parseSymbol SymBar
   sc 
-  ty <- parsePolTy 
+  ty <- parseKindedTy 
   notFollowedBy (sc >> parseSymbol SymAngC)
   return (pol,Just ty)
 
-parseTyBarPol :: Parser (Pol,Maybe PolTy)
+parseTyBarPol :: Parser (EvaluationOrder,Maybe KindedTy)
 parseTyBarPol = do 
-  ty <- parsePolTy
+  ty <- parseKindedTy
   sc 
   parseSymbol SymBar 
   sc 
-  pol <- parsePol 
+  pol <- parseEvaluationOrder 
   return (pol,Just ty)
 
 parseDone :: Parser Command
@@ -241,7 +241,7 @@ parsePrintAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc 
-  ty <- parsePolTy
+  ty <- parseKindedTy
   loc <- getCurrLoc startPos
   return (PrintAnnot loc t ty)
 

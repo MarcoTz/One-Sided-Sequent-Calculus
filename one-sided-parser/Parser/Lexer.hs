@@ -2,9 +2,12 @@ module Parser.Lexer (
   sc,
   parseSymbol,
   parseKeyword,
-  parsePol,
+  parseDataCodata,
+  parseVariance,
+  parseEvaluationOrder,
+  parseKind,
   parseTypevar,
-  parsePolvar,
+  parseVariantVar,
   parseTypename,
   parseXtorname,
   parseModulename,
@@ -56,8 +59,23 @@ parseComment = try $ do
 sc :: Parser () 
 sc = L.space space1 parseComment empty 
 
-parsePol :: Parser Pol 
-parsePol = (parseSymbol SymPlus >> return Pos) <|> (parseSymbol SymMinus >> return Neg)
+parseEvaluationOrder :: Parser EvaluationOrder 
+parseEvaluationOrder = (parseKeyword KwCBV >> return CBV) <|> (parseKeyword KwCBN >> return CBN)
+
+parseDataCodata :: Parser DeclTy
+parseDataCodata = 
+  (parseKeyword KwData >> return Data) <|> 
+  (parseKeyword KwCodata >> return Codata)
+
+parseVariance :: Parser Variance 
+parseVariance = 
+ (parseSymbol SymPlus >> return Covariant) <|>
+ (parseSymbol SymMinus >> return Contravariant)
+
+parseKind :: Parser Kind 
+parseKind = 
+  (MkKind <$> parseEvaluationOrder) <|> 
+  (MkKindVar  . Kindvar <$> parseIdentifier)
 
 parseCommaSep :: Parser ()
 parseCommaSep = parseSymbol SymComma>>sc
@@ -83,14 +101,13 @@ parseTypename = Typename <$> parseIdentifier
 parseTypevar :: Parser Typevar
 parseTypevar = Typevar <$> parseIdentifier 
 
-parsePolvar :: Parser Polvar 
-parsePolvar = do
+parseVariantVar :: Parser VariantVar 
+parseVariantVar = do 
   tyv <- parseTypevar 
   sc 
   parseSymbol SymColon
   sc 
-  Polvar tyv <$> parsePol
-
+  VariantVar tyv <$> parseVariance
 
 getCurrPos :: Parser SourcePosition
 getCurrPos = do 

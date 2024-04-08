@@ -1,5 +1,5 @@
 module Desugar.Types (
-  desugarPolTy,
+  desugarKindedTy,
   desugarTy
 ) where
 
@@ -23,7 +23,7 @@ desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
 desugarTy (P.TyShift ty) = D.TyShift <$> desugarTy ty
 desugarTy (P.TyForall args ty) = D.TyForall args <$> desugarTy ty
 
-desugarPolTy :: P.PolTy -> DesugarM D.PolTy
-desugarPolTy (P.MkPolTy ty pol) = do
+desugarKindedTy :: P.KindedTy -> DesugarM D.KindedTy
+desugarKindedTy (P.KindedTy ty knd) = do
   ty' <- desugarTy ty 
-  return (D.MkPolTy ty' pol)
+  return (D.KindedTy ty' knd)

@@ -25,7 +25,7 @@ instance HasLoc XtorSig where
   getLoc = sigPos
   setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args 
 
-data DataDecl  = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![Polvar], declPol :: !Pol, declXtors :: ![XtorSig]} 
+data DataDecl  = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![VariantVar], declType :: !DeclTy, declXtors :: ![XtorSig]} 
 instance HasLoc DataDecl where 
   getLoc = declPos
   setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors

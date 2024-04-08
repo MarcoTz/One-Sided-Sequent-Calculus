@@ -1,5 +1,5 @@
 module Parser.Types (
-  parsePolTy,
+  parseKindedTy,
   parseTy,
   parseTyArgs,
 ) where 
@@ -44,10 +44,10 @@ parseTyDecl = do
   parseSymbol SymParensC
   return (TyDecl tyn args)
 
-parseTyArgs :: Parser [Polvar]
+parseTyArgs :: Parser [VariantVar]
 parseTyArgs = (do 
   parseSymbol SymParensO
-  vars <- parsePolvar `sepBy` (parseSymbol SymComma >> space)
+  vars <- parseVariantVar `sepBy` (parseSymbol SymComma >> space)
   parseSymbol SymParensC
   return vars)
   <|>
@@ -71,10 +71,10 @@ parseTyCo = do
   sc
   TyCo <$> parseTy
 
-parsePolTy :: Parser PolTy
-parsePolTy = do 
+parseKindedTy :: Parser KindedTy 
+parseKindedTy = do 
   ty <- parseTy
   sc 
   parseSymbol SymColon
   sc 
-  MkPolTy ty <$> parsePol
+  KindedTy ty <$> parseKind

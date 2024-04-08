@@ -86,7 +86,7 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  ty <- parsePolTy
+  ty <- parseKindedTy
   sc
   parseSymbol SymSemi
   loc <- getCurrLoc startPos
@@ -116,7 +116,7 @@ parseRecDecl = do
 parseDataDecl :: Parser DataDecl 
 parseDataDecl = do 
   startPos <- getCurrPos
-  parseKeyword KwData
+  isco <- parseDataCodata
   space1
   nm <- parseTypename 
   sc
@@ -124,15 +124,13 @@ parseDataDecl = do
   sc
   parseSymbol SymColon
   sc
-  pol <- parsePol
-  sc
   parseSymbol SymBrackO 
   sc 
   xtors <- parseXtorSig `sepBy` parseCommaSep
   sc
   parseSymbol SymBrackC
   loc <- getCurrLoc startPos
-  return $ MkData loc nm args pol xtors
+  return $ MkData loc nm args isco xtors
 
 
 parseXtorSig :: Parser XtorSig
