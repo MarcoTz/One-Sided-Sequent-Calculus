@@ -20,8 +20,8 @@ instance Embed T.Term D.Term where
   embed (T.Mu loc v c _) = D.Mu loc v (embed c)
   embed (T.Xtor loc nm args _) = D.Xtor loc nm (embed <$> args)
   embed (T.XCase loc pts _) = D.XCase loc (embed <$> pts)
-  embed (T.ShiftPos loc t _) = D.ShiftPos loc (embed t)
-  embed (T.ShiftNeg loc v c _) = D.ShiftNeg loc v (embed c)
+  embed (T.ShiftCBV loc t _) = D.ShiftCBV loc (embed t)
+  embed (T.ShiftCBN loc t _) = D.ShiftCBN loc (embed t)
 instance Embed T.Term P.Term where 
   embed t = (embed :: D.Term -> P.Term) $  (embed :: T.Term -> D.Term) t 
 
@@ -61,8 +61,6 @@ instance Embed T.Ty D.KindedTy where
   embed ty = D.KindedTy (embed ty) (getKind ty)
 instance Embed T.Ty P.KindedTy where 
   embed = (embed :: D.KindedTy -> P.KindedTy) . (embed  :: T.Ty -> D.KindedTy)
-instance Embed T.TypedVar D.TypedVar where
-  embed (v,ty) = (v,embed ty)
 
 instance Embed T.VarDecl D.VarDecl where 
   embed (T.MkVar loc var ty body) = D.MkVar loc var (Just (embed ty)) (embed body)

@@ -121,21 +121,17 @@ tryCheckTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs (MkKind eo)) 
       let leftFun = T.MkPattern xtn vars
       return $ first leftFun c' 
 
-tryCheckTerm shiftt@(D.ShiftPos loc _) shiftty@(T.TyShift ty (MkKind CBV)) | getKind ty /= MkKind CBN = 
-  return $ Right (ErrKindNeq loc ty shiftty shiftt)
-tryCheckTerm (D.ShiftPos loc t) (T.TyShift ty (MkKind CBV)) = do 
+tryCheckTerm (D.ShiftCBV loc t) (T.TyShift ty (MkKind CBV)) = do 
   t' <- tryCheckTerm t ty 
-  case t' of 
-    Left t'' -> return $ Left (T.ShiftPos loc t'' (T.TyShift (T.getType t'') (MkKind CBV)))
-    Right err -> return $ Right err
+  let leftFun ter = T.ShiftCBV loc ter (T.TyShift (T.getType ter) (MkKind CBV))
+  return $ first leftFun t'
 
-tryCheckTerm shiftt@(D.ShiftNeg loc _ _) shiftty@(T.TyShift ty (MkKind CBN)) | getKind ty /= MkKind CBV = 
+tryCheckTerm shiftt@(D.ShiftCBN loc _) shiftty@(T.TyShift ty (MkKind CBN)) | getKind ty /= MkKind CBV = 
   return (Right (ErrKindNeq loc ty shiftty shiftt))
-tryCheckTerm (D.ShiftNeg loc v c) (T.TyShift ty (MkKind CBN)) = do 
-  addCheckerVar v ty
-  c' <- tryCheckCommand c
-  let leftFun cmd = T.ShiftNeg loc v cmd ty
-  return $ first leftFun c' 
+tryCheckTerm (D.ShiftCBN loc t) (T.TyShift ty (MkKind CBN)) = do 
+  t' <- tryCheckTerm t ty 
+  let leftFun ter = T.ShiftCBN loc ter (T.TyShift (T.getType ter) (MkKind CBN))
+  return $ first leftFun t'
   
 tryCheckTerm t ty = return (Right (ErrBadType (getLoc t) t ty))
 

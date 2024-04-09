@@ -57,8 +57,8 @@ evalOnce (Cut loc t pol (Var loc' v _)) = do
   return $ Cut loc t pol (setLoc loc' u)
 -- beta mu
 evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = return $ substVar c t v
--- beta shift 
-evalOnce (Cut _ (ShiftPos _ t _) CBV (ShiftNeg _ v c _)) = return $ substVar c t v
+evalOnce (Cut loc (ShiftCBV _ t _) eo u) = return $ Cut loc t eo u
+evalOnce (Cut loc (ShiftCBN _ t _) eo u) = return $ Cut loc t eo u
 -- beta K
 
 evalOnce (Cut loc (Xtor _ nm args _) pol (XCase _ pats _)) | all (isValue pol) args = do 

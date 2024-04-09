@@ -2,14 +2,11 @@ module Syntax.Desugared.Terms (
   Command (..),
   Term (..),
   Pattern (..),
-  TypedVar,
 ) where 
 
 import Common 
 import Loc
 import Syntax.Desugared.Types
-
-type TypedVar = (Variable,KindedTy)
 
 data Command where 
   Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command 
@@ -41,20 +38,20 @@ data Term where
   Mu       :: Loc -> Variable -> Command -> Term 
   Xtor     :: Loc -> Xtorname -> [Term] -> Term
   XCase    :: Loc -> [Pattern] -> Term
-  ShiftPos :: Loc -> Term -> Term
-  ShiftNeg :: Loc -> Variable -> Command -> Term
+  ShiftCBV :: Loc -> Term -> Term
+  ShiftCBN :: Loc -> Term -> Term
 
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
   getLoc (Mu loc _ _) = loc
   getLoc (Xtor loc _ _) = loc
   getLoc (XCase loc _) = loc
-  getLoc (ShiftPos loc _) = loc
-  getLoc (ShiftNeg loc _ _) = loc
+  getLoc (ShiftCBV loc _) = loc
+  getLoc (ShiftCBN loc _) = loc
 
   setLoc loc (Var _ v) = Var loc v 
   setLoc loc (Mu _ v c) = Mu loc v c
   setLoc loc (Xtor _ nm args) = Xtor loc nm args
   setLoc loc (XCase _ pts) = XCase loc pts
-  setLoc loc (ShiftPos _ t) = ShiftPos loc t 
-  setLoc loc (ShiftNeg _ v c) = ShiftNeg loc v c
+  setLoc loc (ShiftCBV _ t) = ShiftCBV loc t 
+  setLoc loc (ShiftCBN _ t) = ShiftCBN loc t

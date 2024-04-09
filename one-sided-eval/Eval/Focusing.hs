@@ -32,8 +32,8 @@ focusTerm pol t@(Xtor loc nm args ty) = do
       let outer = Cut loc tof' CBV (Mu loc newV inner ty)
       Mu loc newV2 outer ty
 focusTerm _ (XCase loc pts ty)    = XCase loc (focusPattern <$> pts) ty
-focusTerm pol (ShiftPos loc t ty)   = ShiftPos loc (focusTerm pol t) ty
-focusTerm _ (ShiftNeg loc x c ty) = ShiftNeg loc x (focus c) ty
+focusTerm pol (ShiftCBV loc t ty) = ShiftCBV loc (focusTerm pol t) ty
+focusTerm pol (ShiftCBN loc t ty) = ShiftCBN loc (focusTerm pol t) ty 
 
 focusPattern :: Pattern -> Pattern
 focusPattern (MkPattern xtn vars c) = MkPattern xtn vars (focus c)

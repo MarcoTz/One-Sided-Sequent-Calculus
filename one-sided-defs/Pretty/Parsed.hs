@@ -14,8 +14,8 @@ instance Show Term where
   show (Xtor _ xt []) = show xt
   show (Xtor _ xt args) = show xt <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (XCase _ pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
-  show (ShiftPos _ t) = "{" <> show t <> "}"
-  show (ShiftNeg _ v cmd) = "{" <> show v <> "}." <> show cmd
+  show (ShiftCBV _ t) = "{" <> show t <> ":CBV}"
+  show (ShiftCBN _ t) = "{" <> show t <> ":CBN}" 
 
 instance Show Pattern where 
   show (MkPattern xt [] cmd) = show xt <> " => " <> show cmd

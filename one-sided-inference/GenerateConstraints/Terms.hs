@@ -98,15 +98,13 @@ genConstraintsTerm (D.XCase loc pts)  = do
       let pts'' = T.substTyVars varmap <$> pts'
       let newT = TyDecl tyn newVars (MkKind CBV)
       return (T.XCase loc pts'' newT)
-genConstraintsTerm (D.ShiftPos loc t) = do 
+genConstraintsTerm (D.ShiftCBV loc t) = do 
   t' <- genConstraintsTerm t 
-  let eo = getKind t' 
-  if eo /= MkKind CBV then throwError (ErrKindNeq loc (T.getType t') (TyShift (T.getType t') (MkKind CBV))) else do 
-    let newT = TyShift (T.getType t') (MkKind CBV)
-    return (T.ShiftPos loc t' newT)
-genConstraintsTerm (D.ShiftNeg loc v cmd) = do  
-  tyV <- freshTyVar CBV 
-  addGenVar v tyV
-  cmd' <- genConstraintsCmd cmd
-  let newT = TyShift tyV (MkKind CBN)
-  return (T.ShiftNeg loc v cmd' newT)
+  addConstraint (MkKindEq (getKind t') (MkKind CBV))
+  let newT = TyShift (T.getType t') (MkKind CBV)
+  return (T.ShiftCBV loc t' newT)
+genConstraintsTerm (D.ShiftCBN loc t) = do  
+  t' <- genConstraintsTerm t 
+  addConstraint (MkKindEq (getKind t') (MkKind CBV))
+  let newT = TyShift (T.getType t') (MkKind CBN)
+  return (T.ShiftCBN loc t' newT)

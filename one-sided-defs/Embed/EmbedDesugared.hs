@@ -16,11 +16,8 @@ instance Embed D.Term P.Term where
   embed (D.Mu loc v c) = P.Mu loc v (embed c)
   embed (D.Xtor loc nm args) = P.Xtor loc nm (embed <$> args)
   embed (D.XCase loc pts) = P.XCase loc (embed <$> pts)
-  embed (D.ShiftPos loc t) = P.ShiftPos loc (embed t)
-  embed (D.ShiftNeg loc v c) = P.ShiftNeg loc v (embed c)
-
-instance Embed D.TypedVar P.TypedVar where 
-  embed (v,ty) = (v, embed ty)
+  embed (D.ShiftCBV loc t) = P.ShiftCBV loc (embed t)
+  embed (D.ShiftCBN loc t) = P.ShiftCBN loc (embed t)
 
 instance Embed D.Pattern P.Pattern where 
   embed (D.MkPattern xt v cmd) = P.MkPattern xt v (embed cmd)

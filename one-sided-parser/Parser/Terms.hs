@@ -16,7 +16,7 @@ import Text.Megaparsec
 import Data.Functor
 
 parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> try parseShiftNeg <|> parseShiftPos <|> try parseXtor <|> parseVar <|> parseParens parseTerm 
+parseTerm = parseMu <|> parseXCase <|> try parseShift <|> try parseXtor <|> parseVar <|> parseParens parseTerm 
 
 parseVar :: Parser Term 
 parseVar = do 
@@ -75,29 +75,21 @@ parseXCase = do
   loc <- getCurrLoc startPos
   return (XCase loc pts)
 
-parseShiftPos :: Parser Term 
-parseShiftPos = do 
+parseShift :: Parser Term 
+parseShift = do 
   startPos <- getCurrPos
   parseSymbol SymBrackO
+  sc
   t <- parseTerm
-  loc <- getCurrLoc startPos
+  sc
+  parseSymbol SymColon
+  sc
+  eo <- parseEvaluationOrder
   parseSymbol SymBrackC
-  return (ShiftPos loc t)
-
-parseShiftNeg :: Parser Term
-parseShiftNeg = do 
-  startPos <- getCurrPos
-  parseSymbol SymBrackO
-  sc
-  v <- parseVariable 
-  sc
-  parseSymbol SymBrackC
-  sc
-  parseSymbol SymDot
-  sc
-  c <- parseCommand
   loc <- getCurrLoc startPos
-  return $ ShiftNeg loc v c
+  case eo of 
+    CBV -> return (ShiftCBV loc t)
+    CBN -> return (ShiftCBN loc t)
 
 parseCommand :: Parser Command 
 parseCommand = 

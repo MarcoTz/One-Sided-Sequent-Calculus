@@ -50,8 +50,8 @@ addEdgesVariableT vert ignore (Var loc v) = do
 addEdgesVariableT vert ignore (Mu _ v c) = addEdgesVariableC vert (v:ignore) c 
 addEdgesVariableT vert ignore (Xtor _ (Xtorname nm) args) = forM_ args (addEdgesVariableT vert (Variable nm : ignore))
 addEdgesVariableT vert ignore (XCase _ pts) = forM_ pts (addEdgesVariablePt vert ignore)
-addEdgesVariableT vert ignore (ShiftPos _ t) = addEdgesVariableT vert ignore t
-addEdgesVariableT vert ignore (ShiftNeg _ v c) = addEdgesVariableC vert (v:ignore) c 
+addEdgesVariableT vert ignore (ShiftCBV _ t) = addEdgesVariableT vert ignore t
+addEdgesVariableT vert ignore (ShiftCBN _ t) = addEdgesVariableT vert ignore t 
 
 addEdgesVariablePt :: Vertex Variable -> [Variable] -> Pattern -> DepVar ()
 addEdgesVariablePt vert ignore (MkPattern (Xtorname nm) vars c) = do 

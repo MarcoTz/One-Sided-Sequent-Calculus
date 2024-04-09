@@ -22,8 +22,8 @@ instance FreeVars Term where
   freeVars (Mu _ v c _)         = S.delete v (freeVars c)
   freeVars (Xtor _ _ args _)    = S.unions (freeVars <$> args)
   freeVars (XCase _ pts _)      = S.unions (freeVars <$> pts)
-  freeVars (ShiftPos _ t _)     = freeVars t 
-  freeVars (ShiftNeg _ v cmd _) = S.delete v (freeVars cmd)
+  freeVars (ShiftCBV _ t _)     = freeVars t 
+  freeVars (ShiftCBN _ t _)     = freeVars t 
 
 instance FreeVars Pattern where 
   freeVars MkPattern{ptxt=_, ptv=vars, ptcmd=st} = foldr S.delete (freeVars st) vars
