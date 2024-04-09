@@ -8,6 +8,7 @@ import Parser.Definition
 import Parser.Symbols
 import Parser.Keywords
 import Parser.Lexer
+import Parser.Common
 import Syntax.Parsed.Types
 import Common
 

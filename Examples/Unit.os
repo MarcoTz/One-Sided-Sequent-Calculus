@@ -2,14 +2,14 @@ module Unit
 
 data Unit { MkUnit }
 
-posU :: {Unit};
-posU := {MkUnit};
+cbvU :: {Unit};
+cbvU := {MkUnit:CBV};
 
-negU :: {Unit};
-negU := {x}.<x|CBV|case {MkUnit => Done }>;
+cbnU :: {Unit};
+cbnU := {MkUnit:CBN}; 
 
-cutPos :: Unit; 
-cutPos := Mu y. (MkUnit >> Unit >> Mu x. Done);
+cutCBV :: Unit; 
+cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done);
 
-cutNeg :: Unit;
-cutNeg := Mu y. (MkUnit << Unit << Mu x. Done); 
+cutCBN :: Unit;
+cutCBN := Mu y. (MkUnit << Unit << Mu x. Done); 

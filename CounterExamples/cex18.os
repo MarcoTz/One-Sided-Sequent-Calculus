@@ -4,6 +4,6 @@ data X{MkX}
 data Y{MkY}
 
 -- multiple annotations for x
-x :: X:CBV;
-x :: Y:CBV;
+x :: X;
+x :: Y;
 x := MkX;

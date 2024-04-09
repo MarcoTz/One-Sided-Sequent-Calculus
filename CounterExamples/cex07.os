@@ -1,5 +1,5 @@
 module cex07
 
 -- free type variable
-x :: X:CBV;
+x :: X;
 x := Mu y.Done;

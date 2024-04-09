@@ -6,5 +6,5 @@ data TwoCons{
 }
 
 -- case does not include all xtors
-badPat :: TwoCons :CBN;
+badPat :: TwoCons;
 badPat := case {MkOne => Done};

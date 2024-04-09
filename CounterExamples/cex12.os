@@ -3,5 +3,5 @@ module cex12
 import Unit;
 
 -- cannot use co type for shift term
-x :: co(Unit) :CBV;
-x := {MkUnit};
+x :: co(Unit);
+x := {MkUnit:CBV};

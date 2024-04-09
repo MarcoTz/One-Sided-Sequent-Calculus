@@ -58,6 +58,7 @@ library parser
                    definitions
   exposed-modules: Parser.Definition,
                    Parser.Errors,
+                   Parser.Common,
                    Parser.Keywords,
                    Parser.Symbols,
                    Parser.Lexer,

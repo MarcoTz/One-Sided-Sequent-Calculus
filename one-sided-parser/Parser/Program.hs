@@ -1,6 +1,7 @@
 module Parser.Program (parseProgram) where 
 
 import Parser.Definition
+import Parser.Common
 import Parser.Types
 import Parser.Terms
 import Parser.Lexer

@@ -9,5 +9,5 @@ data Y{
 }
 
 -- type annotation for x is present, but type within cut is unclear
-x :: X:CBN;
+x :: X;
 x := case { MkX => < MkY| CBV | case { MkY => Done }>}; 

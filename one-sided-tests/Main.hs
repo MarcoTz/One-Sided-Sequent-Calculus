@@ -10,6 +10,7 @@ import Errors
 import Syntax.Parsed.Program
 
 import Control.Monad
+import Data.List (sort)
 
 colorError :: String
 colorError = "\ESC[31m"
@@ -44,13 +45,13 @@ parseExample shouldFail mn = do
 main :: IO()
 main = do 
   exPaths <- listRecursive "Examples"
-  cExPaths <- listRecursive "CounterExamples"
+  cExPaths <- sort <$> listRecursive "CounterExamples"
   putStrLn "========================================================="
   putStrLn "================ Testing CounterExamples ================"
   putStrLn "=========================================================" 
   forM_ cExPaths (parseExample True)
   putStrLn ""
-  putStrLn "Finished Parsing Counterexamples"
+  putStrLn "Finished testing Counterexamples"
   putStrLn "" 
   putStrLn "========================================================"
   putStrLn "=================== Testing Examples ==================="

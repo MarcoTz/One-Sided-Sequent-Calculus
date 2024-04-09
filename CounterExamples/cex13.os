@@ -4,5 +4,5 @@ data X {MkX}
 data Y{MkY}
 
 -- mismatching annotation
-x :: X :CBV;
+x :: X;
 x := MkY;

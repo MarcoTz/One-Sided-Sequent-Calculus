@@ -10,7 +10,7 @@ data List(a:+){
   Nil
 }
 
-tail :: forall X. Fun(List(X),List(X)) : CBV;
+tail :: forall X. Fun(List(X),List(X));
 tail := case { Ap(ls,a) => 
   < case { 
     Nil         => <Nil | CBV | a>,
@@ -18,7 +18,7 @@ tail := case { Ap(ls,a) =>
   } | CBV | ls> 
 };
 
-head :: forall X. Fun(List(X),X) : CBV;
+head :: forall X. Fun(List(X),X);
 head := case { Ap(ls,a) => 
   < case { 
     Nil         => error "cannot take head of empty list",
@@ -27,7 +27,7 @@ head := case { Ap(ls,a) =>
 };
 
 
-len :: forall X. Fun(List(X),Nat):CBV;
+len :: forall X. Fun(List(X),Nat);
 rec len := case { Ap(ls,a) => 
   < case {
     Nil => <Z|CBV|a>,
@@ -36,7 +36,7 @@ rec len := case { Ap(ls,a) =>
   } | CBV | ls>
 };
 
-printCons :: Forall X. X:CBN;
+printCons :: Forall X. X;
 printCons := mu x. Print x;
 
-main := <len | Fun(List(Nat),Nat):CBV | CBV | Ap(Cons(Z,Nil),printCons)>;
+main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>;

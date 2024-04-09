@@ -5,6 +5,7 @@ module Parser.Terms (
 
 import Parser.Definition
 import Parser.Lexer
+import Parser.Common
 import Parser.Symbols
 import Parser.Keywords
 import Parser.Types
@@ -124,27 +125,14 @@ parseCut = do
     Just ty -> return (CutAnnot loc t ty pol u)
 
 parseCutAnnot :: Parser (EvaluationOrder,Maybe Ty)
-parseCutAnnot = try parseEoBarTy <|> try parseTyBarEo <|> (,Nothing) <$> parseEvaluationOrder 
-
-parseEoBarTy :: Parser (EvaluationOrder, Maybe Ty)
-parseEoBarTy = do
-  pol <- parseEvaluationOrder
-  sc 
-  parseSymbol SymBar
-  sc 
+parseCutAnnot = try (do 
   ty <- parseTy 
-  notFollowedBy (sc >> parseSymbol SymAngC)
-  return (pol,Just ty)
-
-parseTyBarEo :: Parser (EvaluationOrder,Maybe Ty)
-parseTyBarEo = do 
-  ty <- parseTy
   sc 
-  parseSymbol SymBar 
+  parseSymbol SymColon
   sc 
-  pol <- parseEvaluationOrder 
-  return (pol,Just ty)
-
+  eo <- parseEvaluationOrder 
+  return (eo,Just ty)) <|>
+  (,Nothing) <$> parseEvaluationOrder
 
 parseCutPos :: Parser Command 
 parseCutPos = do 
