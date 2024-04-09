@@ -86,7 +86,7 @@ parseTypeAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc
-  ty <- parseKindedTy
+  ty <- parseTy
   sc
   parseSymbol SymSemi
   loc <- getCurrLoc startPos

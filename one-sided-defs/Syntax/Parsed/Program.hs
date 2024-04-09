@@ -46,7 +46,7 @@ instance HasLoc RecDecl where
   getLoc = recPos 
   setLoc loc (MkRec _ nm bd) = MkRec loc nm bd
 
-data AnnotDecl = MkAnnot  {annotPos  :: !Loc, annotName  :: !Variable, annotType :: !KindedTy} 
+data AnnotDecl = MkAnnot  {annotPos  :: !Loc, annotName  :: !Variable, annotType :: !Ty} 
   deriving (Eq,Ord)
 instance HasLoc AnnotDecl where 
   getLoc = annotPos 

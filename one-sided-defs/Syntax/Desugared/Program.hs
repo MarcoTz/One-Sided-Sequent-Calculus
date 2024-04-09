@@ -30,12 +30,12 @@ instance HasLoc DataDecl where
   getLoc = declPos 
   setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
 
-data VarDecl  = MkVar  {varPos  :: !Loc, varName  :: !Variable, varTy    :: !(Maybe KindedTy), varBody :: !Term}
+data VarDecl  = MkVar  {varPos  :: !Loc, varName  :: !Variable, varTy    :: !(Maybe Ty), varBody :: !Term}
 instance HasLoc VarDecl where 
   getLoc = varPos 
   setLoc loc (MkVar _ nm ty bd) = MkVar loc nm ty bd
 
-data RecDecl  = MkRec  {recPos  :: !Loc, recName  :: !Variable, recTy    :: !(Maybe KindedTy), recBody :: !Term}
+data RecDecl  = MkRec  {recPos  :: !Loc, recName  :: !Variable, recTy    :: !(Maybe Ty), recBody :: !Term}
 instance HasLoc RecDecl where 
   getLoc = recPos
   setLoc loc (MkRec _ nm ty bd) = MkRec loc nm ty bd
