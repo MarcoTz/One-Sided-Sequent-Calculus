@@ -6,5 +6,5 @@ data Pair(a:+,b:+) {
   Tup(a,b)
 }
 
-diag :: forall X. Fun(X,Pair(X,X)):CBV;
+diag :: forall X. Fun(X,Pair(X,X));
 diag := case { Ap(x,a) => <Tup(x,x) | CBV | a> };

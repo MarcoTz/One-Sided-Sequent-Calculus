@@ -8,10 +8,10 @@ data Nat{
 }
 
 
-succ :: Fun(Nat,Nat) : CBV;
+succ :: Fun(Nat,Nat);
 succ := case { Ap(n,a) => <S(n) | CBV | a> };
 
-pred :: Fun(Nat,Nat) : CBV ;
+pred :: Fun(Nat,Nat);
 rec pred := case { Ap(n,a) => 
   <  case {
     Z => <Z|CBV|a>,

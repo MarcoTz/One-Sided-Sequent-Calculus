@@ -7,7 +7,7 @@ data Bool{
   False
 }
 
-not :: Fun(Bool,Bool) : CBV ;
+not :: Fun(Bool,Bool);
 not := case { Ap(b,a) => 
   <case {
     True  => <False | CBV | a>,
@@ -15,7 +15,7 @@ not := case { Ap(b,a) =>
   } | CBV | b>
 };
 
-and :: Fun(Bool,Fun(Bool,Bool)) : CBV;
+and :: Fun(Bool,Fun(Bool,Bool));
 and := case { Ap(b1,a) =>
   < case { Ap(b2,b) => 
     < case {
@@ -25,7 +25,7 @@ and := case { Ap(b1,a) =>
   } | CBV | a>
 };
  
-or :: Fun(Bool,Fun(Bool,Bool)) : CBV;
+or :: Fun(Bool,Fun(Bool,Bool));
 or := case { Ap(b1,a) => 
   < case { Ap(b2, b) => 
     < case { 
@@ -35,7 +35,7 @@ or := case { Ap(b1,a) =>
   } | CBV | a> 
 };
 
-printCons :: Forall X. X:CBN;
+printCons :: Forall X. X;
 printCons := mu x.Print x;
 
 main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>;

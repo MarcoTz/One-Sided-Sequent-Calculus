@@ -1,4 +1,5 @@
 module TypeCheck.Terms (
+  tryCheckTerm,
   checkTerm,
   checkCommand
 ) where 
