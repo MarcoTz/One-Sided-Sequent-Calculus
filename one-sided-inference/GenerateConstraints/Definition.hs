@@ -3,6 +3,7 @@ module GenerateConstraints.Definition (
   runGenM,
   addGenVar,
   getGenVars,
+  freshKVar,
   freshTyVar,
   freshTyVarsDecl,
   addConstraint,
@@ -65,6 +66,13 @@ freshTyVarsDecl vars eo = do
   let newVars = fst <$> varL
   let newMap = M.fromList (snd <$> varL)
   return (newVars, newMap)
+
+freshKVar :: GenM Kind
+freshKVar = do 
+  cnt <- gets kVarCnt 
+  let newVar = Kindvar ("k" <> show cnt)
+  modify (\s -> MkGenState (varEnv s) (cnt+1) (tyVarCnt s) (constrSet s))
+  return (MkKindVar newVar)
 
 -- modify environment
 addConstraint :: Constraint -> GenM () 

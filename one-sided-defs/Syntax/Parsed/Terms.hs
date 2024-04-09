@@ -12,10 +12,10 @@ import Syntax.Parsed.Types
 type TypedVar = (Variable,KindedTy)
 data Command where 
   Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command
-  CutAnnot   :: Loc -> Term -> KindedTy -> EvaluationOrder -> Term -> Command
+  CutAnnot   :: Loc -> Term -> Ty -> EvaluationOrder -> Term -> Command
   Err        :: Loc -> String -> Command
   Print      :: Loc -> Term -> Command
-  PrintAnnot :: Loc -> Term -> KindedTy -> Command
+  PrintAnnot :: Loc -> Term -> Ty -> Command
   Done       :: Loc -> Command
   deriving (Eq,Ord)
 

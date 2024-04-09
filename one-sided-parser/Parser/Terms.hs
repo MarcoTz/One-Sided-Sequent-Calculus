@@ -131,22 +131,22 @@ parseCut = do
     Nothing -> return (Cut loc t pol u)
     Just ty -> return (CutAnnot loc t ty pol u)
 
-parseCutAnnot :: Parser (EvaluationOrder,Maybe KindedTy)
+parseCutAnnot :: Parser (EvaluationOrder,Maybe Ty)
 parseCutAnnot = try parseEoBarTy <|> try parseTyBarEo <|> (,Nothing) <$> parseEvaluationOrder 
 
-parseEoBarTy :: Parser (EvaluationOrder, Maybe KindedTy)
+parseEoBarTy :: Parser (EvaluationOrder, Maybe Ty)
 parseEoBarTy = do
   pol <- parseEvaluationOrder
   sc 
   parseSymbol SymBar
   sc 
-  ty <- parseKindedTy 
+  ty <- parseTy 
   notFollowedBy (sc >> parseSymbol SymAngC)
   return (pol,Just ty)
 
-parseTyBarEo :: Parser (EvaluationOrder,Maybe KindedTy)
+parseTyBarEo :: Parser (EvaluationOrder,Maybe Ty)
 parseTyBarEo = do 
-  ty <- parseKindedTy
+  ty <- parseTy
   sc 
   parseSymbol SymBar 
   sc 
@@ -169,9 +169,9 @@ parseCutPos = do
     Nothing -> return (Cut loc t CBV u)
     Just ty -> return (CutAnnot loc t ty CBV u)
   where 
-    tyAnnot :: Parser KindedTy
+    tyAnnot :: Parser Ty
     tyAnnot = do 
-      ty <- parseKindedTy
+      ty <- parseTy
       sc
       parseSymbol SymAngC 
       parseSymbol SymAngC
@@ -193,9 +193,9 @@ parseCutNeg = do
     Nothing -> return (Cut loc t CBN u)
     Just ty -> return (CutAnnot loc t ty CBN u)
   where 
-    tyAnnot :: Parser KindedTy
+    tyAnnot :: Parser Ty
     tyAnnot = do 
-      ty <- parseKindedTy
+      ty <- parseTy
       sc
       parseSymbol SymAngO
       parseSymbol SymAngO 
@@ -242,7 +242,7 @@ parsePrintAnnot = do
   parseSymbol SymColon
   parseSymbol SymColon
   sc 
-  ty <- parseKindedTy
+  ty <- parseTy
   loc <- getCurrLoc startPos
   return (PrintAnnot loc t ty)
 

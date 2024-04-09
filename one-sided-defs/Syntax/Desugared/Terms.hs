@@ -13,11 +13,11 @@ type TypedVar = (Variable,KindedTy)
 
 data Command where 
   Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command 
-  CutAnnot   :: Loc -> Term -> KindedTy -> EvaluationOrder -> Term -> Command 
+  CutAnnot   :: Loc -> Term -> Ty -> EvaluationOrder -> Term -> Command 
   Done       :: Loc -> Command 
   Err        :: Loc -> String -> Command 
   Print      :: Loc -> Term -> Command
-  PrintAnnot :: Loc -> Term -> KindedTy -> Command
+  PrintAnnot :: Loc -> Term -> Ty -> Command
 
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _) = loc 

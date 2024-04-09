@@ -33,6 +33,7 @@ data CheckerError where
   ErrCutKind        :: Loc -> T.Ty -> T.Ty -> D.Command-> CheckerError 
   ErrBadType        :: Loc -> D.Term -> T.Ty -> CheckerError 
   ErrUnclearType    :: Loc -> D.Command -> CheckerError 
+  ErrList           :: Loc -> [CheckerError] -> CheckerError
   ErrOther          :: Loc -> String -> CheckerError 
 
 
@@ -59,6 +60,7 @@ instance Error CheckerError where
   getMessage (ErrCutKind _ ty1 ty2 c) = "Kind of types " <> show ty1 <> " and " <> show ty2 <> " in cut are not equal " <> whileCmd c
   getMessage (ErrBadType _ t ty) = "Cannot typecheck " <> show t <> " with type " <> show ty
   getMessage (ErrUnclearType _ c) = "Type of term " <> show c <> " is unclear" 
+  getMessage (ErrList _ errs) = intercalate "\n " (getMessage <$> errs)
   getMessage (ErrOther _ str)  = str
 
   getLocation (ErrWrongEo loc _ _) = loc
@@ -78,6 +80,7 @@ instance Error CheckerError where
   getLocation (ErrCutKind loc _ _ _) = loc 
   getLocation (ErrBadType loc _ _) = loc 
   getLocation (ErrUnclearType loc _) = loc 
+  getLocation (ErrList loc _) = loc
   getLocation (ErrOther loc _) = loc
 
   toError = ErrOther 

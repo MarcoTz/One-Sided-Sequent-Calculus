@@ -39,7 +39,8 @@ genConstraintsCmd (D.CutAnnot loc t ty eo u) = do
   t' <- genConstraintsTerm t
   let ty1' = T.getType t'
   u' <- genConstraintsTerm u 
-  ty' <- genConstraintsPolTy loc ty 
+  kndv <- freshKVar
+  ty' <- genConstraintsTy loc ty kndv
   let eo1 = getKind t' 
   let eo2 = getKind u' 
   let eo3 = getKind ty'
@@ -54,7 +55,8 @@ genConstraintsCmd (D.Print loc t) = do
   return $ T.Print loc t'  
 genConstraintsCmd (D.PrintAnnot loc t ty) = do
   t' <- genConstraintsTerm t
-  ty' <- genConstraintsPolTy loc ty
+  kndv <- freshKVar 
+  ty' <- genConstraintsTy loc ty kndv
   addConstraint (MkTyEq (T.getType t') ty')
   return $ T.Print loc t'
 genConstraintsTerm :: D.Term -> GenM T.Term 

@@ -4,6 +4,7 @@ module Syntax.Typed.Terms (
   Pattern (..),
   TypedVar,
   getType,
+  setType,
   isValue
 ) where 
 
@@ -66,6 +67,14 @@ getType (ShiftNeg _ _ _ ty)  = ty
 
 instance GetKind Term where 
   getKind t = getKind (getType t)
+
+setType :: Term -> Ty -> Term
+setType (Var loc v _) ty = Var loc v ty 
+setType (Mu loc v c _) ty = Mu loc v c ty
+setType (Xtor loc nm args _) ty = Xtor loc nm args ty
+setType (XCase loc pts _) ty = XCase loc pts ty
+setType (ShiftPos loc t _) ty = ShiftPos loc t ty
+setType (ShiftNeg loc v c _) ty = ShiftNeg loc v c ty
 
 isValue :: EvaluationOrder -> Term -> Bool
 isValue CBV Var{} = True 
