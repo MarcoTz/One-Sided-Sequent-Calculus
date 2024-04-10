@@ -12,24 +12,24 @@ import Syntax.Typed.Program   qualified as T
 import Control.Monad
 import Control.Monad.Except
 
-genConstraintsTy :: Loc -> D.Ty -> Kind -> GenM T.Ty
-genConstraintsTy _ (D.TyVar v) knd = return $ T.TyVar v knd
-genConstraintsTy loc (D.TyDecl tyn args) knd = do 
+genConstraintsTy :: Loc -> D.Ty -> GenM T.Ty
+genConstraintsTy _ (D.TyVar v) = return $ T.TyVar v
+genConstraintsTy loc (D.TyDecl tyn args) = do 
   decl <- lookupDecl loc tyn 
   let argPols = MkKind . (`varianceEvalOrder` (defaultEo $ T.declType decl)) . variantVariance <$> T.declArgs decl
   let argsZipped = zipWithError args argPols (ErrTyArity loc tyn)
   case argsZipped of 
     Right err -> throwError err
-    Left argsZipped' -> do 
-      args' <- forM argsZipped' (uncurry (genConstraintsTy loc))
-      return $ T.TyDecl tyn args' knd 
-genConstraintsTy loc (D.TyCo ty) knd = do 
-  ty' <- genConstraintsTy loc ty (shiftEvalOrder knd)
+    Left _ -> do 
+      args' <- forM args (genConstraintsTy loc)
+      return $ T.TyDecl tyn args' 
+genConstraintsTy loc (D.TyCo ty) = do 
+  ty' <- genConstraintsTy loc ty 
   return $ T.TyCo ty'
-genConstraintsTy loc (D.TyShift ty) knd = do
-  ty' <- genConstraintsTy loc ty (shiftEvalOrder knd)
-  return $ T.TyShift ty' knd
-genConstraintsTy loc (D.TyForall args ty) knd = T.TyForall args <$> genConstraintsTy loc ty knd
+genConstraintsTy loc (D.TyShift ty) = do
+  ty' <- genConstraintsTy loc ty 
+  return $ T.TyShift ty' 
+genConstraintsTy loc (D.TyForall args ty) = T.TyForall args <$> genConstraintsTy loc ty
 
-genConstraintsPolTy :: Loc -> D.KindedTy -> GenM T.Ty
-genConstraintsPolTy loc (D.KindedTy ty knd) = genConstraintsTy loc ty knd
+genConstraintsKindedTy :: Loc -> D.KindedTy -> GenM T.Ty
+genConstraintsKindedTy loc (D.KindedTy ty _) = genConstraintsTy loc ty

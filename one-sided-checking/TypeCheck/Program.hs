@@ -15,14 +15,15 @@ import Control.Monad.Except
 
 checkVarDecl :: D.VarDecl -> CheckM T.VarDecl
 checkVarDecl (D.MkVar loc nm (Just ty) t) =  do
-  tys <- inferType loc ty
-  t' <- checkTermMultiple t tys
+  tys <- checkType loc ty
+  t' <- checkTerm t tys
   return $ T.MkVar loc nm (T.getType t') t'
 checkVarDecl (D.MkVar loc nm Nothing _) = throwError (ErrNoAnnot loc nm)
 
 checkRecDecl :: D.RecDecl -> CheckM T.RecDecl 
 checkRecDecl (D.MkRec loc nm (Just ty) t) = do 
-  tys <- inferType loc ty 
-  t' <- checkTermMultipleRec t nm tys
+  ty' <- checkType loc ty 
+  addCheckerVar nm ty'
+  t' <- checkTerm t ty'
   return $ T.MkRec loc nm (T.getType t') t'
 checkRecDecl (D.MkRec loc nm Nothing _) = throwError (ErrNoAnnot loc nm)

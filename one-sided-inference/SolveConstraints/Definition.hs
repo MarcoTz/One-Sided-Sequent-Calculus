@@ -2,8 +2,6 @@ module SolveConstraints.Definition (
   SolverM,
   runSolveM,
   ConstrTy (..),
-  addSlvKndVar,
-  getSlvKndVars,
   addSlvTyVar,
   getSlvTyVars,
   getNextConstr,
@@ -28,22 +26,21 @@ import Control.Monad.State
 data SolverState = MkSolverState 
   { 
   slvTyVars :: !(M.Map Typevar Ty), 
-  slvKndVars :: !(M.Map Kindvar EvaluationOrder),
   remConstrs :: !ConstraintSet 
 }
 
 data ConstrTy = Eq | Neq
 
 initialSolverState :: ConstraintSet -> SolverState
-initialSolverState = MkSolverState M.empty M.empty
+initialSolverState = MkSolverState M.empty 
 
 newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except SolverError) a }
   deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError SolverError)
 
-runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map Typevar Ty,M.Map Kindvar EvaluationOrder)
+runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map Typevar Ty)
 runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
   Left err -> Left err 
-  Right (x,st) -> Right (x,slvTyVars st,slvKndVars st)
+  Right (x,st) -> Right (x,slvTyVars st)
 
 getNextConstr :: SolverM (Maybe Constraint)
 getNextConstr = do 
@@ -51,7 +48,7 @@ getNextConstr = do
   case constrs of 
     [] -> return Nothing 
     (c1:ctrs) -> do 
-      modify (\s  -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet ctrs))
+      modify (\s  -> MkSolverState (slvTyVars s) (MkConstraintSet ctrs))
       return (Just c1)
 
 getSlvTyVars :: SolverM (M.Map Typevar Ty)
@@ -60,20 +57,12 @@ getSlvTyVars = gets slvTyVars
 addSlvTyVar :: Typevar -> Ty -> SolverM ()
 addSlvTyVar v ty = do 
   vars <- gets slvTyVars
-  modify (\s -> MkSolverState (M.insert v ty vars) (slvKndVars s) (remConstrs s))
-
-getSlvKndVars :: SolverM (M.Map Kindvar EvaluationOrder)
-getSlvKndVars = gets slvKndVars
-
-addSlvKndVar :: Kindvar -> EvaluationOrder -> SolverM () 
-addSlvKndVar kv pol = do
-  kndVars <- gets slvKndVars 
-  modify (\s -> MkSolverState (slvTyVars s) (M.insert kv pol kndVars) (remConstrs s))
+  modify $ MkSolverState (M.insert v ty vars) . remConstrs
 
 addConstraint :: Constraint -> SolverM ()
 addConstraint constr = do
   (MkConstraintSet constrs) <- gets remConstrs
-  modify (\s -> MkSolverState (slvTyVars s) (slvKndVars s) (MkConstraintSet (constr:constrs)))
+  modify (\s -> MkSolverState (slvTyVars s) (MkConstraintSet (constr:constrs)))
 
 addConstraintsArgs :: Typename -> [Ty] -> [Ty] -> SolverM () 
 addConstraintsArgs _ [] [] = return () 

@@ -1,9 +1,7 @@
 module Errors (
   Error (..),
   zipWithError,
-  liftEitherErrorList,
-  liftMaybe,
-  maybeToErr,
+  zipWithErrorM,
   convertError,
   showWithLoc,
   showInSrc
@@ -27,18 +25,11 @@ zipWithError (a1:as) (b1:bs) err = do
   let leftFun ls = (a1,b1):ls
   first leftFun rsZipped
 
-liftEitherErrorList :: Error e => [Either a e] -> ([a],[e])
-liftEitherErrorList [] = ([],[])
-liftEitherErrorList (Left a:eits) = let (as,es) = liftEitherErrorList eits in (a:as,es)
-liftEitherErrorList (Right e:eits) = let (as,es) = liftEitherErrorList eits in (as,e:es)
+zipWithErrorM :: Error e => MonadError e m => [a] -> [b] -> e -> m [(a,b)]
+zipWithErrorM as bs err = case zipWithError as bs err of 
+  Left zipped -> return zipped 
+  Right _ -> throwError err
 
-liftMaybe :: Error e => MonadError e m => Maybe a -> e -> m a
-liftMaybe Nothing err = throwError err 
-liftMaybe (Just a) _ = return a
-
-maybeToErr :: Error e => Maybe a -> e -> Either a e
-maybeToErr Nothing err = Right err 
-maybeToErr (Just a) _ = Left a 
 
 convertError :: Error e => Error e' => e -> e'
 convertError e = toError (getLocation e) (getMessage e) 

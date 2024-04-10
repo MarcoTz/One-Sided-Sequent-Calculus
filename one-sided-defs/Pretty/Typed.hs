@@ -12,6 +12,8 @@ import Embed.EmbedTyped ()
 import Pretty.Common ()
 import Pretty.Parsed ()
 
+instance Show T.KindedTy where 
+  show = show . (embed :: T.KindedTy -> P.KindedTy)
 instance Show T.Ty where 
   show = show . (embed :: T.Ty->P.Ty)
 instance Show T.XtorSig where
