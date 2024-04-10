@@ -42,9 +42,9 @@ freshVar n vars = let newV = Variable ("x"<> show n) in if newV `elem` vars then
 -----------------------------------
 
 freeTyVars :: Ty -> S.Set Typevar
-freeTyVars (TyVar v _) = S.singleton v
-freeTyVars (TyDecl _ args _) = S.unions (freeTyVars <$> args) 
-freeTyVars (TyShift ty _) = freeTyVars ty
+freeTyVars (TyVar v) = S.singleton v
+freeTyVars (TyDecl _ args) = S.unions (freeTyVars <$> args) 
+freeTyVars (TyShift ty) = freeTyVars ty
 freeTyVars (TyCo ty) = freeTyVars ty
 freeTyVars (TyForall args ty) = S.difference (freeTyVars ty) (S.fromList args) 
 

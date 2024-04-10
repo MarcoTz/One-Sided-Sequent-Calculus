@@ -1,4 +1,4 @@
-module Syntax.Typed.Terms (
+module Syntax.Kinded.Terms (
   Command (..),
   Term (..),
   Pattern (..),
@@ -8,7 +8,7 @@ module Syntax.Typed.Terms (
   isValue
 ) where 
 
-import Syntax.Typed.Types 
+import Syntax.Kinded.Types 
 import Common
 import Loc
 
@@ -64,6 +64,9 @@ getType (Xtor _ _ _ ty) = ty
 getType (XCase _ _ ty)  = ty 
 getType (ShiftCBV _ _ ty)  = ty 
 getType (ShiftCBN _ _ ty)  = ty 
+
+instance GetKind Term where 
+  getKind t = getKind (getType t)
 
 setType :: Term -> Ty -> Term
 setType (Var loc v _) ty = Var loc v ty 

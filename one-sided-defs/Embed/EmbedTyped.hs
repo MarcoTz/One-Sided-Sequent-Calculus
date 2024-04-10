@@ -2,7 +2,6 @@ module Embed.EmbedTyped () where
 
 import Embed.Definition
 import Embed.EmbedDesugared () 
-import Common
 import Syntax.Typed.Terms        qualified as T 
 import Syntax.Typed.Program      qualified as T 
 import Syntax.Typed.Types        qualified as T
@@ -48,19 +47,19 @@ instance Embed T.XtorSig D.XtorSig where
 instance Embed T.XtorSig P.XtorSig where 
   embed t = (embed :: D.XtorSig -> P.XtorSig) $ (embed :: T.XtorSig -> D.XtorSig) t
 
+instance Embed T.KindedTy D.KindedTy where 
+  embed (T.KindedTy ty knd) = D.KindedTy (embed ty) knd
+instance Embed T.KindedTy P.KindedTy where 
+  embed t = (embed :: D.KindedTy -> P.KindedTy) $ (embed :: T.KindedTy -> D.KindedTy) t
+
 instance Embed T.Ty D.Ty where 
-  embed (T.TyVar v _) = D.TyVar v
-  embed (T.TyDecl nm args _) = D.TyDecl nm (embed <$> args)
-  embed (T.TyShift ty _)  = embed ty
+  embed (T.TyVar v) = D.TyVar v
+  embed (T.TyDecl nm args) = D.TyDecl nm (embed <$> args)
+  embed (T.TyShift ty)  = embed ty
   embed (T.TyCo ty) = D.TyCo (embed ty)
   embed (T.TyForall args ty) = D.TyForall args (embed ty)
 instance Embed T.Ty P.Ty where 
   embed t = (embed :: D.Ty -> P.Ty) $ (embed :: T.Ty -> D.Ty) t 
-
-instance Embed T.Ty D.KindedTy where 
-  embed ty = D.KindedTy (embed ty) (getKind ty)
-instance Embed T.Ty P.KindedTy where 
-  embed = (embed :: D.KindedTy -> P.KindedTy) . (embed  :: T.Ty -> D.KindedTy)
 
 instance Embed T.VarDecl D.VarDecl where 
   embed (T.MkVar loc var ty body) = D.MkVar loc var (Just (embed ty)) (embed body)

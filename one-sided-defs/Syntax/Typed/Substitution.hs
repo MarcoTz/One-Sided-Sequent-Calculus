@@ -12,38 +12,8 @@ import Loc
 
 import Data.Map qualified as M
 import Data.Set qualified as S
+import Data.Maybe (fromMaybe)
 
-
---------------------------------
--- Kind Variable Substitution --
---------------------------------
---class SubstKndVars a where 
---  substKndVars :: M.Map KindVar Pol -> a -> a 
---
---instance SubstKndVars Kind where 
---  substKndVars _ p@MkKind{} = p
---  substKndVars varmap k@(MkKindVar v) = maybe k MkKind (M.lookup v varmap)
---
---instance SubstKndVars Ty where 
---  substKndVars varmap (TyVar v knd) = TyVar v (substKndVars varmap knd) 
---  substKndVars varmap (TyDecl tyn args knd) = TyDecl tyn (substKndVars varmap <$> args) (substKndVars varmap knd)
---  substKndVars varmap (TyShift ty knd) = TyShift (substKndVars varmap ty) (substKndVars varmap knd)
---  substKndVars varmap (TyCo ty knd) = TyCo (substKndVars varmap ty) (substKndVars varmap knd)
---
---instance SubstKndVars Command where 
---  substKndVars varmap (Cut t pol u) = Cut (substKndVars varmap t) pol (substKndVars varmap u)
---  substKndVars _ Done = Done
---
---instance SubstKndVars Term where 
---  substKndVars varmap (Var v ty) = Var v (substKndVars varmap ty)
---  substKndVars varmap (Mu v c ty) = Mu v (substKndVars varmap c) (substKndVars varmap ty)
---  substKndVars varmap (Xtor nm args ty) = Xtor nm (substKndVars varmap <$> args) (substKndVars varmap ty)
---  substKndVars varmap (XCase pts ty) = XCase (substKndVars varmap <$> pts) (substKndVars varmap ty)
---  substKndVars varmap (Shift t ty) = Shift (substKndVars varmap t) (substKndVars varmap ty)
---  substKndVars varmap (Lam v t ty) = Lam v (substKndVars varmap t) (substKndVars varmap ty)
---
---instance SubstKndVars Pattern where 
---  substKndVars varmap (MkPattern xt vars c) = MkPattern xt vars (substKndVars varmap c)
 
 --------------------------------
 -- Type Variable Substitution --
@@ -55,11 +25,9 @@ instance SubstTyVars XtorSig where
   substTyVars varmap (MkXtorSig loc nm args) = MkXtorSig loc nm (substTyVars varmap <$> args)
 
 instance SubstTyVars Ty where 
-  substTyVars varmap ty@(TyVar v knd) = case M.lookup v varmap of 
-    Nothing -> ty 
-    Just ty' -> if knd == getKind ty' then ty' else ty
-  substTyVars varmap (TyDecl tyn args knd) = TyDecl tyn (substTyVars varmap <$> args) knd
-  substTyVars varmap (TyShift ty knd) = TyShift (substTyVars varmap ty) knd
+  substTyVars varmap ty@(TyVar v) = fromMaybe ty (M.lookup v varmap)
+  substTyVars varmap (TyDecl tyn args) = TyDecl tyn (substTyVars varmap <$> args)
+  substTyVars varmap (TyShift ty) = TyShift (substTyVars varmap ty)
   substTyVars varmap (TyCo ty) = TyCo (substTyVars varmap ty) 
   substTyVars varmap (TyForall vars ty) = let newmap = foldr M.delete varmap vars in TyForall vars (substTyVars newmap ty)
 

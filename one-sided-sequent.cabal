@@ -36,12 +36,20 @@ library definitions
                    Syntax.Desugared.Types,
                    Pretty.Desugared,
 
+                   Syntax.Kinded.Program,
+                   Syntax.Kinded.Terms,
+                   Syntax.Kinded.Types,
+                   Syntax.Kinded.FreeVars,
+                   Syntax.Kinded.Substitution,
+                   Pretty.Kinded,
+
                    Environment,
                    Pretty.Environment,
 
                    Embed.Definition,
                    Embed.EmbedDesugared,
                    Embed.EmbedTyped,
+                   Embed.EmbedKinded,
 
                    Common,
                    Pretty.Common,

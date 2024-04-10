@@ -13,7 +13,7 @@ import Pretty.Common ()
 import Pretty.Parsed ()
 
 instance Show T.Ty where 
-  show = show . (embed :: T.Ty->P.KindedTy)
+  show = show . (embed :: T.Ty->P.Ty)
 instance Show T.XtorSig where
   show = show . (embed :: T.XtorSig -> P.XtorSig)
 instance Show T.DataDecl where 
