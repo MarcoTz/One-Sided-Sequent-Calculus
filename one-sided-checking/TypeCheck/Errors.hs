@@ -24,6 +24,9 @@ data CheckerError where
   ErrTyCoForShift   :: Loc -> T.Term ->T.Ty-> CheckerError 
   ErrArgumentKind   :: Loc -> Typename -> [T.Ty] -> CheckerError
   ErrKindNeq        :: Loc -> T.Ty -> T.Ty ->D.Term-> CheckerError 
+  ErrWrongKind      :: Loc -> T.Ty -> Kind -> D.Term -> CheckerError
+  ErrKindUnclear    :: Loc -> D.Ty -> CheckerError
+  ErrKindTerm       :: Loc -> D.Term -> D.Ty -> CheckerError
   ErrWrongEo        :: Loc -> T.Ty -> DeclTy -> CheckerError
   ErrTypeNeq        :: Loc -> T.Ty -> T.Ty -> D.Term-> CheckerError 
   ErrNotTyDecl      :: Loc -> Typename -> T.Ty -> D.Term-> CheckerError 
@@ -52,6 +55,9 @@ instance Error CheckerError where
   getMessage (ErrFreeTyVar _ tyv) = "Type Variable " <> show tyv <> " cannot appear free"
   getMessage (ErrTyCoForShift _ t ty) = "Cannot use co-type of " <> show ty <> " for shift term " <> show t
   getMessage (ErrKindNeq _ ty1 ty2 t) = "Kinds of types " <> show ty1 <> " and " <> show ty2 <> " are not equal "  <> whileTerm t
+  getMessage (ErrKindUnclear _ ty) = "Kind of type " <> show ty <> " is unclear" 
+  getMessage (ErrWrongKind _ ty knd t) = "Type " <> show ty <> " cannot be checked to have kind " <> show knd <> " " <> whileTerm t 
+  getMessage (ErrKindTerm _ t ty) = "Term " <> show t <> " cannot be type checked with type " <> show ty <> ", no kind is possible"
   getMessage (ErrTypeNeq _ ty1 ty2 t) = "Types " <> show ty1 <> " and " <> show ty2 <> " should be equal " <> whileTerm t
   getMessage (ErrNotTyDecl _ tyn ty t) = "Type " <> show ty <> " should be " <> show tyn <> " " <> whileTerm t
   getMessage (ErrTypeArity _ tyn) = "Wrong number of arguments for type " <> show tyn
@@ -67,11 +73,14 @@ instance Error CheckerError where
   getLocation (ErrArgumentKind loc _ _) = loc
   getLocation (ErrNoAnnot loc _) = loc
   getLocation (ErrKindVar loc _) = loc
+  getLocation (ErrWrongKind loc _ _ _ ) = loc
   getLocation (ErrUndefinedVar loc _) = loc 
   getLocation (ErrUndefinedTyVar loc _ _) = loc
   getLocation (ErrFreeTyVar loc _) = loc 
   getLocation (ErrTyCoForShift loc _ _) = loc 
   getLocation (ErrKindNeq loc _ _ _) = loc
+  getLocation (ErrKindUnclear loc _) = loc
+  getLocation (ErrKindTerm loc _ _) = loc
   getLocation (ErrTypeNeq loc _ _ _) = loc
   getLocation (ErrNotTyDecl loc _ _ _) = loc
   getLocation (ErrTypeArity loc _) = loc 

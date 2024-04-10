@@ -1,6 +1,8 @@
 module TypeCheck.Terms (
   tryCheckTerm,
   checkTerm,
+  checkTermMultiple,
+  checkTermMultipleRec,
   checkCommand
 ) where 
 
@@ -9,7 +11,6 @@ import TypeCheck.Types
 import Syntax.Typed.Terms         qualified as T
 import Syntax.Typed.Types         qualified as T
 import Syntax.Typed.Program       qualified as T
-import Syntax.Typed.FreeVars      qualified as T 
 import Syntax.Typed.Substitution  qualified as T
 import Syntax.Desugared.Terms     qualified as D
 import Environment
@@ -24,16 +25,33 @@ import Control.Monad
 import Control.Monad.Except
 import Data.Map qualified as M
 import Data.Bifunctor (first)
+import Data.Either (partitionEithers)
+import Data.Maybe (listToMaybe)
 
 -----------------------------------------------------------------------------
 ----------------------------------- Terms -----------------------------------
 -----------------------------------------------------------------------------
+
 checkTerm :: D.Term -> T.Ty -> CheckM T.Term
 checkTerm t ty = do 
   mt <- tryCheckTerm t ty 
   case mt of 
     Left t' -> return t'
     Right err -> throwError err
+
+checkTermMultiple :: D.Term -> [T.Ty] -> CheckM T.Term 
+checkTermMultiple t tys = do 
+  triedTys <- forM tys (tryCheckTerm t)
+  let (possible, errs) = partitionEithers triedTys
+  liftMaybe (listToMaybe possible) (ErrList (getLoc t) errs) 
+
+checkTermMultipleRec :: D.Term -> Variable -> [T.Ty] -> CheckM T.Term
+checkTermMultipleRec t nm tys = do
+  currVars <- getCheckerVars 
+  let tysWithMaps = (\ty' -> (M.insert nm ty' currVars,ty')) <$> tys
+  triedTys <- forM tysWithMaps (\(varmap,ty) -> withCheckerVars varmap (tryCheckTerm t ty))
+  let (possible,errs) = partitionEithers triedTys
+  liftMaybe (listToMaybe possible) (ErrList (getLoc t) errs)
 
 tryCheckTerm :: D.Term -> T.Ty -> CheckM (Either T.Term CheckerError)
 tryCheckTerm t ty | containsKindvar ty = return $ Right (ErrKindVar (getLoc t) (embed ty))
@@ -49,30 +67,13 @@ tryCheckTerm t (T.TyCo ty) = do
   return $ first leftFun t'
 
 tryCheckTerm vart@(D.Var loc v) ty = do
-  vars <- getCheckerVars 
-  mdecl <- lookupMVar v
-  mrec <- lookupMRec v
-  case (M.lookup v vars,mdecl,mrec) of 
-    (Nothing,Nothing,Nothing) -> return $ Right (ErrUndefinedVar loc v)
-    (Just (T.TyVar tyv knd),_,_) | knd /= getKind ty -> return $ Right (ErrKindNeq loc (T.TyVar tyv knd) ty vart)
-    (Just (T.TyVar tyv _),_,_) -> do 
-      tyVars <- getCheckerTyVars 
-      if tyv `elem` tyVars then return $ Left (T.Var loc v ty)
-      else return $ Right (ErrUndefinedTyVar loc tyv vart)
-    (Just ty',_,_) -> do 
-      ty'' <- checkTys ty ty'
-      case ty'' of Left ty''' -> return $ Left (T.Var loc v ty'''); Right err -> return $ Right err
-    (_,Just (T.MkVar _ _ ty' _),_) ->  do
-      ty'' <- checkTys ty ty'
-      case ty'' of Left ty''' -> return $ Left (T.Var loc v ty'''); Right err -> return $ Right err
-    (_,_,Just (T.MkRec _ _ ty' _)) ->  do 
-      ty'' <- checkTys ty ty'
-      case ty'' of Left ty''' -> return $ Left (T.Var loc v ty'''); Right err -> return $ Right err
-  where 
-    checkTys :: T.Ty -> T.Ty -> CheckM (Either T.Ty CheckerError)
-    checkTys ty1 ty2 | getKind ty1 /= getKind ty2 = return $ Right (ErrKindNeq loc ty1 ty2 vart) 
-    checkTys ty1 ty2 | T.isSubsumed (T.generalizeTy ty1) (T.generalizeTy ty2) = return (Left ty2)
-    checkTys ty1 ty2 = return $ Right (ErrTypeNeq loc (T.generalizeTy ty2) (T.generalizeTy ty1) vart)
+  checkerTy <- M.lookup v <$> getCheckerVars 
+  vardecl <- lookupMVar v
+  recdecl <- lookupMRec v
+  let mty = firstJust [checkerTy,T.varTy <$> vardecl,T.recTy <$> recdecl]
+  case mty of 
+    Nothing -> return $ Right (ErrUndefinedVar loc v)
+    Just ty' -> if getKind ty == getKind ty' then return $ Right (ErrKindNeq loc ty ty' vart) else return $ Left (T.Var loc v ty)
 
 tryCheckTerm (D.Mu loc v c) ty = do
   addCheckerVar v (shiftEvalOrder ty)
@@ -82,44 +83,68 @@ tryCheckTerm (D.Mu loc v c) ty = do
 
 tryCheckTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs (MkKind eo)) = do 
   T.MkData _ tyn' argVars _ _ <- lookupXtorDecl loc xtn 
+  T.MkXtorSig _ _ xtargs'  <- lookupXtor loc xtn
   if tyn /= tyn' then return $ Right (ErrNotTyDecl loc tyn' ty xtt) else do
-    let argEos = MkKind . (`varianceEvalOrder` eo) . variantVariance <$> argVars
-    tyargsZipped <- zipWithError (getKind <$> tyargs)  argEos (ErrTypeArity loc tyn)
-    unless (all (uncurry (==)) tyargsZipped) $ throwError (ErrArgumentKind loc tyn tyargs)
-    T.MkXtorSig _ _ xtargs'  <- lookupXtor loc xtn
-    varmap <- M.fromList <$> zipWithError (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
-    let xtargs'' = T.substTyVars varmap <$> xtargs'
-    xtArgsZipped <- zipWithError xtargs xtargs'' (ErrXtorArity loc xtn)
-    xtargs''' <- forM xtArgsZipped (uncurry tryCheckTerm)
-    let (xtargs'''', errs) = liftEitherErrorList xtargs'''
-    if null errs then return $ Left (T.Xtor loc xtn xtargs'''' ty) else return $ Right (ErrList loc errs)
+  -- check type argument kinds
+    let declArgKinds = MkKind . (`varianceEvalOrder` eo) . variantVariance <$> argVars
+    let checkArgKinds= getKind <$> tyargs
+    let argKinds = zipWithError declArgKinds checkArgKinds (ErrTypeArity loc tyn)
+    case argKinds of 
+      Right err -> return $ Right err
+      Left argKinds' | not (all (uncurry (==)) argKinds') -> return $ Right (ErrArgumentKind loc tyn tyargs) 
+      Left _ -> do 
+        -- substitute type variables in xtor signature
+        let varSubsts = zipWithError (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
+        let substMap = first M.fromList varSubsts
+        let substFun vmap = T.substTyVars vmap <$> xtargs'
+        let xtArgTys = first substFun substMap 
+        case xtArgTys of 
+          Right err -> return $ Right err
+          Left xtArgTys' -> do 
+            -- check xtor arguments
+            let argsToCheck = zipWithError xtargs xtArgTys' (ErrXtorArity loc xtn) 
+            case argsToCheck of 
+              Right err -> return $ Right err
+              Left argsToCheck' -> do
+                argsChecked <- forM argsToCheck' (uncurry tryCheckTerm)
+                let (xtArgs, errs) = partitionEithers argsChecked
+                if null errs then return $ Left (T.Xtor loc xtn xtArgs ty) else return $ Right (ErrList loc errs)
+
 
 tryCheckTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs (MkKind eo)) = do 
   T.MkData _ tyn' argVars _ xtors <- lookupXtorDecl loc (D.ptxt pt1)
   if tyn /= tyn' then return $ Right (ErrNotTyDecl loc tyn' ty xct) else do
     let argEos = MkKind . (`varianceEvalOrder` eo) . variantVariance <$> argVars
-    tyArgsZipped <- zipWithError (getKind <$> tyargs) argEos (ErrTypeArity loc tyn)
-    if not (all (uncurry (==)) tyArgsZipped) then return $ Right (ErrArgumentKind loc tyn tyargs) else do 
-      let ptxtns = D.ptxt <$> pts
-      let declxtns = T.sigName <$> xtors
-      if not (all (`elem` ptxtns) declxtns) then return $ Right (ErrBadPattern loc ptxtns declxtns xct) else do 
-        if not (all (`elem` declxtns) ptxtns) then return $ Right (ErrBadPattern loc ptxtns declxtns xct) else do
-          varmap <- M.fromList <$> zipWithError (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
-          pts' <- forM pts (`checkPattern` varmap)
-          let (pts'', errs) = liftEitherErrorList pts'
-          if null errs then 
-            return $ Left (T.XCase loc pts'' ty) else return $ Right (ErrList loc errs)
+    let tyArgsZipped = zipWithError (getKind <$> tyargs) argEos (ErrTypeArity loc tyn)
+    case tyArgsZipped of 
+      Right err ->  return $ Right err 
+      Left tyArgsZipped' -> do 
+        if not (all (uncurry (==)) tyArgsZipped') then return $ Right (ErrArgumentKind loc tyn tyargs) else do 
+          let ptxtns = D.ptxt <$> pts
+          let declxtns = T.sigName <$> xtors
+          if not (all (`elem` ptxtns) declxtns) then return $ Right (ErrBadPattern loc ptxtns declxtns xct) else do 
+            if not (all (`elem` declxtns) ptxtns) then return $ Right (ErrBadPattern loc ptxtns declxtns xct) else do
+              let varmap = zipWithError (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
+              case varmap of 
+                Right err -> return $ Right err 
+                Left varmap' -> do 
+                  pts' <- forM pts (`checkPattern` M.fromList varmap')
+                  let (pts'', errs) = liftEitherErrorList pts'
+                  if null errs then  return $ Left (T.XCase loc pts'' ty) else return $ Right (ErrList loc errs)
   where 
     checkPattern :: D.Pattern -> M.Map Typevar T.Ty -> CheckM (Either T.Pattern  CheckerError)
     checkPattern (D.MkPattern xtn vars c) varmap = do
       T.MkXtorSig _ _ xtargs <- lookupXtor loc xtn
       let xtargs' = T.substTyVars varmap <$> xtargs
-      argsZipped <- zipWithError vars xtargs' (ErrXtorArity loc xtn)
-      currVars <- getCheckerVars 
-      let newVars = foldr (\(v,ty') m -> M.insert v ty' m)  currVars argsZipped 
-      c' <- withCheckerVars newVars (tryCheckCommand c)
-      let leftFun = T.MkPattern xtn vars
-      return $ first leftFun c' 
+      let argsZipped = zipWithError vars xtargs' (ErrXtorArity loc xtn)
+      case argsZipped of 
+        Right err -> return $ Right err 
+        Left argsZipped' -> do
+          currVars <- getCheckerVars 
+          let newVars = foldr (\(v,ty') m -> M.insert v ty' m)  currVars argsZipped'
+          c' <- withCheckerVars newVars (tryCheckCommand c)
+          let leftFun = T.MkPattern xtn vars
+          return $ first leftFun c' 
 
 tryCheckTerm (D.ShiftCBV loc t) (T.TyShift ty (MkKind CBV)) = do 
   t' <- tryCheckTerm t ty 

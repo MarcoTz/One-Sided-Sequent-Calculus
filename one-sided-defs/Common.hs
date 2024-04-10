@@ -1,4 +1,5 @@
 module Common (
+  firstJust,
   GetKind (..), 
   ShiftEvalOrder (..),
   ContainsKindvar (..),
@@ -18,6 +19,14 @@ module Common (
   Kind (..)
 ) where 
 
+----------------------
+-- Helper Functions --
+----------------------
+
+firstJust :: [Maybe a] -> Maybe a 
+firstJust [] = Nothing
+firstJust (Nothing:as) = firstJust as 
+firstJust (Just a: _) = Just a
 -----------
 -- Names --
 -----------

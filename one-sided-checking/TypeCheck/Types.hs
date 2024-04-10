@@ -1,6 +1,7 @@
 module TypeCheck.Types (
   checkKindedTy,
   checkType,
+  inferType,
   tryCheckType
 ) 
 where 
@@ -16,6 +17,15 @@ import Environment
 
 import Control.Monad
 import Control.Monad.Except
+import Data.Either (partitionEithers)
+
+inferType :: Loc -> D.Ty -> CheckM [T.Ty]
+inferType loc ty = do
+  let knds = [MkKind CBV,MkKind CBN]
+  triedTys <- forM knds (tryCheckType loc ty)
+  let (tys,errs) = partitionEithers triedTys
+  if null tys then throwError (ErrList loc errs) else return tys
+
 
 checkType :: Loc -> D.Ty -> Kind -> CheckM T.Ty
 checkType loc ty knd = do
@@ -32,10 +42,13 @@ tryCheckType loc (D.TyVar v) knd = do
 
 tryCheckType loc (D.TyDecl tyn args) (MkKind eo) = do 
    T.MkData _ _ argVars _  _ <- lookupDecl loc tyn
-   polPairs <- zipWithError args (MkKind . (`varianceEvalOrder` eo) . variantVariance <$> argVars) (ErrTypeArity loc tyn) 
-   args' <- forM polPairs (uncurry (tryCheckType loc))
-   let (args'',es) = liftEitherErrorList args'
-   if null es then return (Left (T.TyDecl tyn args'' (MkKind eo))) else return (Right (ErrList loc es))
+   let polPairs = zipWithError args (MkKind . (`varianceEvalOrder` eo) . variantVariance <$> argVars) (ErrTypeArity loc tyn) 
+   case polPairs of 
+     Right err -> return $ Right err 
+     Left polPairs' -> do 
+       args' <- forM polPairs' (uncurry (tryCheckType loc))
+       let (args'',es) = liftEitherErrorList args'
+       if null es then return (Left (T.TyDecl tyn args'' (MkKind eo))) else return (Right (ErrList loc es))
 
 tryCheckType loc (D.TyCo ty) knd = do
   mty <- tryCheckType loc ty (shiftEvalOrder knd) 
