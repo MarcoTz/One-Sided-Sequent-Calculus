@@ -59,7 +59,7 @@ parsePattern = do
   args <- parseParens (parseVariable `sepBy` parseCommaSep) <|> sc $> []
   sc
   parseSymbol SymEq 
-  parseSymbol SymAngC
+  parseAngC
   sc
   MkPattern nm args <$> parseCommand
 
@@ -106,7 +106,7 @@ parseCommand =
 parseCut :: Parser Command
 parseCut = do 
   startPos <- getCurrPos
-  parseSymbol SymAngO
+  parseAngO
   sc
   t <- parseTerm
   sc
@@ -118,7 +118,7 @@ parseCut = do
   sc
   u <- parseTerm
   sc
-  parseSymbol SymAngC
+  parseAngC
   loc <- getCurrLoc startPos 
   case mty of 
     Nothing -> return (Cut loc t pol u)
@@ -139,8 +139,8 @@ parseCutPos = do
   startPos <- getCurrPos 
   t <- parseTerm
   sc
-  parseSymbol SymAngC
-  parseSymbol SymAngC
+  parseAngC
+  parseAngC
   sc
   mty <- optional $ try tyAnnot
   u <- parseTerm
@@ -153,8 +153,8 @@ parseCutPos = do
     tyAnnot = do 
       ty <- parseTy
       sc
-      parseSymbol SymAngC 
-      parseSymbol SymAngC
+      parseAngC
+      parseAngC
       sc
       return ty
 
@@ -163,8 +163,8 @@ parseCutNeg = do
   startPos <- getCurrPos 
   t <- parseTerm 
   sc 
-  parseSymbol SymAngO
-  parseSymbol SymAngO 
+  parseAngO
+  parseAngO
   sc
   mty <- optional $ try tyAnnot
   u <- parseTerm
@@ -177,8 +177,8 @@ parseCutNeg = do
     tyAnnot = do 
       ty <- parseTy
       sc
-      parseSymbol SymAngO
-      parseSymbol SymAngO 
+      parseAngO
+      parseAngO
       sc 
       return ty
 

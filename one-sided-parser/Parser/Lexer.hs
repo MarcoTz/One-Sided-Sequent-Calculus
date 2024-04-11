@@ -5,6 +5,8 @@ module Parser.Lexer (
   parseCommaSep,
   parseIdentifier,
   parseParens,
+  parseAngO,
+  parseAngC,
   getCurrPos,
   getCurrLoc
 ) where 
@@ -28,6 +30,12 @@ parseParens p = do
   sc
   parseSymbol SymParensC 
   return a
+
+parseAngO :: Parser () 
+parseAngO = parseSymbol SymAngO <|> parseSymbol SymAngOUnicode 
+
+parseAngC :: Parser () 
+parseAngC = parseSymbol SymAngC <|> parseSymbol SymAngCUnicode
 
 parseKeyword :: Keyword -> Parser () 
 parseKeyword kw = do

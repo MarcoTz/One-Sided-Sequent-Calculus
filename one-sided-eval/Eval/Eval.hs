@@ -12,7 +12,6 @@ import Loc
 import Environment
 
 import Control.Monad.Except
-import Data.Bifunctor (second)
 
 --Co Equivalence <t | + | u> = < u | - | t >
 coTrans :: Command -> Command
@@ -25,46 +24,40 @@ eval :: Command -> EvalM Command
 eval c = let c' = focus c in evalFocused c'
 
 evalWithTrace :: Command -> EvalM EvalTrace 
-evalWithTrace c = let c' = focus c in uncurry MkTrace <$> evalFocusedWithTrace c'
+evalWithTrace c = let c' = focus c in evalFocusedWithTrace c' (emptyTrace c')
 
-evalFocusedWithTrace :: Command -> EvalM (Command,[Command])
-evalFocusedWithTrace c = do 
-  c' <- evalOnce c
-  let tr = [c,c']
+evalFocusedWithTrace :: Command -> EvalTrace -> EvalM EvalTrace 
+evalFocusedWithTrace c (MkTrace _ tr) | c `elem` tr = throwError (ErrLoop (getLoc c) c)
+evalFocusedWithTrace c tr = do 
+  c' <- evalOnce c 
+  let newTr = appendTrace tr c'
   case c' of 
-    (Done _) -> return (c',tr)
-    (Err _ _) -> return (c',tr) 
-    (Print _ _) -> return (c',tr)
-    _c'' -> second (tr ++) <$> evalFocusedWithTrace c'
+    Done{} -> return newTr
+    Err{} -> return newTr
+    Print{} -> return newTr
+    Cut{} | inTrace tr c' -> throwError (ErrLoop (getLoc c') c)
+    Cut{} -> evalFocusedWithTrace c' newTr
 
 
 evalFocused :: Command -> EvalM Command 
 evalFocused c = do
-  c' <- evalOnce c
-  case c' of 
-    (Done loc) -> return (Done loc)
-    (Err loc err) -> return (Err loc err)
-    (Print loc t) -> return (Print loc t)
-    _c'' -> evalFocused c'
+  MkTrace c' _ <- evalFocusedWithTrace c (emptyTrace c)
+  return c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err loc err) = return $ Err loc err
 evalOnce (Done loc) = return $ Done loc
 evalOnce (Print loc t) = return $ Print loc t 
--- substitute variables 
 evalOnce (Cut loc t pol (Var loc' v _)) = do 
   u <- lookupBody loc v 
   return $ Cut loc t pol (setLoc loc' u)
--- beta mu
 evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = return $ substituteVariable v t c 
 evalOnce (Cut loc (ShiftCBV _ t _) eo u) = return $ Cut loc t eo u
 evalOnce (Cut loc (ShiftCBN _ t _) eo u) = return $ Cut loc t eo u
--- beta K
-
 evalOnce (Cut loc (Xtor _ nm args _) pol (XCase _ pats _)) | all (isValue pol) args = do 
   pt <- findXtor loc nm pats
   substCase loc pt args 
-evalOnce cmd = evalOnce (coTrans cmd) 
+evalOnce cmd = return $ coTrans cmd
 
 substCase :: Loc -> Pattern -> [Term] -> EvalM Command
 substCase _ MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd

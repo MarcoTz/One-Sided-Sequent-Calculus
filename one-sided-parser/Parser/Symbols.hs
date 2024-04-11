@@ -12,7 +12,9 @@ data Sym =
   | SymEq
   | SymSemi 
   | SymAngO
+  | SymAngOUnicode
   | SymAngC
+  | SymAngCUnicode
   | SymBar
   | SymDot
   | SymQuot
@@ -29,6 +31,8 @@ instance Show Sym where
   show SymEq      = "="
   show SymSemi    = ";"
   show SymAngO    = "<"
+  show SymAngOUnicode = "〈"
+  show SymAngCUnicode = "〉"
   show SymAngC    = ">"
   show SymBar     = "|"
   show SymDot     = "."

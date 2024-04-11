@@ -118,7 +118,7 @@ runProgram prog = do
   liftErr evaled "evaluation"
 
 runProgramTrace :: K.Program -> DriverM EvalTrace 
-runProgramTrace prog | isNothing (K.progMain prog) = return emptyTrace 
+runProgramTrace prog | isNothing (K.progMain prog) = return $ emptyTrace (K.Done defaultLoc)
 runProgramTrace prog = do 
   let main = fromMaybe (K.Done defaultLoc) (K.progMain prog)
   env <- gets drvEnv 
