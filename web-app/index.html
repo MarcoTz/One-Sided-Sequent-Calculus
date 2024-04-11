@@ -49,101 +49,101 @@
     </div>
     <div id="examples">
       <div id="tuple">
-        data Pair(a:+,b:+):+{
+        data Pair(a:+,b:+){
           Tup(a,b)
         }
-        data Nat :+ {
+        data Nat {
           Z,
           S(Nat)
         }
-        data Fun(a:+,b:-):- { 
+        data Fun(a:+,b:-) { 
           Ap(a,b)
         }
 
-        printCons :: forall X.X:-;
+        printCons :: forall X.X;
         printCons := mu x.Print x;
       
-        swap :: forall X Y. Fun(Pair(X,Y),Pair(Y,X)):+;
+        swap :: forall X Y. Fun(Pair(X,Y),Pair(Y,X));
         swap := case { Ap(p,a) =&gt;
           &lt; case { 
-            Tup(b,c) =&gt; &lt; Tup(c,b) | Pair(Y,X):+ | + | a&gt;
-            } | + | p&gt;
+            Tup(b,c) =&gt; &lt; Tup(c,b) | Pair(Y,X): CBV | a&gt;
+            } | CBV | p&gt;
         };
       
-        pair1 :: Pair(Nat,Nat):+;
+        pair1 :: Pair(Nat,Nat);
         pair1 := Tup(Z,S(Z));
       
-        main := &lt; swap | + | Ap(pair1,printCons)&gt;;
+        main := &lt; swap | CBV | Ap(pair1,printCons)&gt;;
       </div>
       
       <div id="list">
-        data List(a:+):+{
+        data List(a:+){
           Nil,
           Cons(a,List(a))
         } 
         
-        data Fun(a:+,b:-):- { 
+        data Fun(a:+,b:-) { 
           Ap(a,b)
         }
 
-        data Unit : + { MkUnit }
+        data Unit { MkUnit }
 
-        printCons :: forall X. X:-;
+        printCons :: forall X. X;
         printCons := mu x.Print x;
       
-        tail :: forall X. Fun(List(X),List(X)) : +;
+        tail :: forall X. Fun(List(X),List(X));
         tail := case { Ap(ls,a) =&gt; 
           &lt; case { 
-            Nil         =&gt; &lt;Nil | + | a&gt;,
-            Cons(hd,rs) =&gt; &lt;rs  | + | a&gt;
-          } | + | ls&gt;
+            Nil         =&gt; &lt;Nil | CBV | a&gt;,
+            Cons(hd,rs) =&gt; &lt;rs  | CBV | a&gt;
+          } | CBV | ls&gt;
         };
       
-        list1 :: List(Unit):+;
+        list1 :: List(Unit);
         list1 := Cons(MkUnit,Cons(MkUnit,Nil));
       
-        main := &lt; tail | + | Ap(list1,printCons)&gt;;
+        main := &lt; tail | CBV | Ap(list1,printCons)&gt;;
       </div>
       
       <div id="nat">
-        data Nat : + {
+        data Nat {
           Z,
           S(Nat)
         }
-        data Fun(a:+,b:-):- { 
+        data Fun(a:+,b:-) { 
           Ap(a,b)
         }
-        printCons :: Forall X.X:-;
+        printCons :: Forall X.X;
         printCons := mu x. Print x;
       
-        pred :: Fun(Nat,Nat):+;
+        pred :: Fun(Nat,Nat);
         pred := case { Ap(n,a) =&gt;
           &lt; case { 
-            Z =&gt; &lt; Z | + | a&gt;,
-            S(m) =&gt; &lt; m | + | a &gt;
-          } | + | n&gt;
+            Z =&gt; &lt; Z | CBV | a&gt;,
+            S(m) =&gt; &lt; m | CBV | a &gt;
+          } | CBV | n&gt;
         };
 
-        nat1 :: Nat:+;
+        nat1 :: Nat;
         nat1 := S(S(Z));
       
-        main := &lt; pred | + | Ap(nat1,printCons)&gt;;
+        main := &lt; pred | CBV | Ap(nat1,printCons)&gt;;
       </div>
       
       <div id="fun">
-        data Fun(a:+,b:-):- { 
+        data Fun(a:+,b:-){ 
           Ap(a,b)
         }
         
-        data Unit:+ {MkUnit}
+        data Unit {MkUnit}
 
-        printCons :: Forall X.X:-;
+        printCons :: Forall X.X;
         printCons := mu x. Print x;
 
-        id :: forall X. Fun(X,X) : +;
-        id := case { Ap(x,a) =&gt; &lt;x | + | a&gt; };
+        id :: forall X. Fun(X,X);
+        id := case { Ap(x,a) =&gt; &lt;x | CBV | a&gt; };
       
-        main := &lt; id | + | Ap(MkUnit,printCons)&gt;; 
+        main := &lt; id | CBV | Ap(MkUnit,printCons)&gt;; 
       </div>
     </div>
   </body>

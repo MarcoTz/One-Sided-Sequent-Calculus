@@ -2,8 +2,8 @@ module StringFormat where
 
 import Environment 
 import Common
-import Syntax.Typed.Terms
-import Pretty.Typed () 
+import Syntax.Kinded.Terms
+import Pretty.Kinded () 
 
 import Data.List (intercalate)
 
