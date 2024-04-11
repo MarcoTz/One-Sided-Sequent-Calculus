@@ -8,7 +8,7 @@ import Common
 import Errors
 import Environment
 import Syntax.Parsed.Program
-import Syntax.Typed.Terms
+import Syntax.Kinded.Terms
 import Eval.Definition
 import Pretty.Eval () 
 

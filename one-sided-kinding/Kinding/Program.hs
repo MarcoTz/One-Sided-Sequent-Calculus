@@ -1,4 +1,9 @@
-module Kinding.Program where 
+module Kinding.Program (
+ kindProgram,
+ kindVariable,
+ kindRecDecl,
+ kindDeclaration,
+)where 
 
 import Kinding.Definition
 import Kinding.Terms

@@ -10,8 +10,8 @@ import Driver.Definition
 import Syntax.Parsed.Program     qualified as P
 import Syntax.Desugared.Program  qualified as D
 import Syntax.Desugared.Terms    qualified as D
-import Syntax.Typed.Program      qualified as T
-import Syntax.Typed.Terms        qualified as T
+import Syntax.Kinded.Program     qualified as K
+import Syntax.Kinded.Terms       qualified as K
 
 import Parser.Definition (runSourceParser)
 import Parser.Program (parseProgram)
@@ -29,6 +29,10 @@ import TypeCheck.Terms (checkCommand)
 
 import InferDecl (runDeclM, inferDecl)
 
+import Kinding.Definition (runKindM)
+import Kinding.Program (kindVariable, kindRecDecl)
+import Kinding.Terms (kindCommand)
+
 import Eval.Definition (runEvalM, EvalTrace, emptyTrace)
 import Eval.Eval (eval,evalWithTrace)
 
@@ -45,14 +49,14 @@ import Data.Either (isLeft,isRight)
 import Data.Map qualified as M
 
 
-runStr :: String -> Bool -> DriverM (Either T.Command EvalTrace) 
+runStr :: String -> Bool -> DriverM (Either K.Command EvalTrace) 
 runStr progText withTrace = do 
   let progParsed = runSourceParser progText (Modulename "") (parseProgram progText) 
   progParsed' <- liftErr progParsed "parsing" 
   prog <- inferProgram progParsed' []
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
 
-inferAndRun :: P.Program ->[P.Program] -> Bool -> DriverM (Either T.Command EvalTrace)
+inferAndRun :: P.Program ->[P.Program] -> Bool -> DriverM (Either K.Command EvalTrace)
 inferAndRun prog imports withTrace = do
   prog' <- inferProgram prog imports
   if withTrace then Right <$> runProgramTrace prog' else Left <$> runProgram prog'
@@ -65,12 +69,12 @@ getInferOrder mn progs = do
   let indexFun p1 p2 = compare (elemIndex (P.progName p1) order') (elemIndex (P.progName p2) order')
   return $ sortBy indexFun progs
 
-inferProgram :: P.Program -> [P.Program] -> DriverM T.Program
+inferProgram :: P.Program -> [P.Program] -> DriverM K.Program
 inferProgram prog imports = do
   env <- gets drvEnv
   let mn = P.progName prog
-  let currProg = fromMaybe (T.emptyProg mn) (M.lookup (P.progName prog) (envDefs env))
-  if not $ T.isEmpty currProg  then return currProg else do 
+  let currProg = fromMaybe (K.emptyProg mn) (M.lookup (P.progName prog) (envDefs env))
+  if not $ K.isEmpty currProg  then return currProg else do 
     let imports' = filter (\prog' -> isNothing $ M.lookup (P.progName prog') (envDefs env)) imports 
     debug "ordering imports"
     depsOrdered <- getInferOrder prog imports'
@@ -96,27 +100,27 @@ inferProgram prog imports = do
     varRecsInferred <- forM varsRecsSorted inferFun
     let varsInferred = filter isLeft varRecsInferred
     let recsInferred = filter isRight varRecsInferred
-    let varFun d = case d of Left v -> (T.varName v, v); Right _ -> error "cannot happen"
-    let recFun d = case d of Right r -> (T.recName r,r); Left _ -> error "cannot happen"
+    let varFun d = case d of Left v -> (K.varName v, v); Right _ -> error "cannot happen"
+    let recFun d = case d of Right r -> (K.recName r,r); Left _ -> error "cannot happen"
     let varMap = M.fromList (varFun<$>varsInferred)
     let recsMap = M.fromList (recFun<$>recsInferred)
     debug "inferring main"
     main' <- forM main inferCommand
-    return (T.MkProgram mn decls' varMap recsMap main' src)
+    return (K.MkProgram mn decls' varMap recsMap main' src)
 
-runProgram :: T.Program -> DriverM T.Command
-runProgram prog | isNothing (T.progMain prog) = return (T.Done defaultLoc) 
+runProgram :: K.Program -> DriverM K.Command
+runProgram prog | isNothing (K.progMain prog) = return (K.Done defaultLoc) 
 runProgram prog = do
-  let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
+  let main = fromMaybe (K.Done defaultLoc) (K.progMain prog)
   env <- gets drvEnv
   debug ("evaluating " <> show main) 
   let evaled = runEvalM env (eval main)
   liftErr evaled "evaluation"
 
-runProgramTrace :: T.Program -> DriverM EvalTrace 
-runProgramTrace prog | isNothing (T.progMain prog) = return emptyTrace 
+runProgramTrace :: K.Program -> DriverM EvalTrace 
+runProgramTrace prog | isNothing (K.progMain prog) = return emptyTrace 
 runProgramTrace prog = do 
-  let main = fromMaybe (T.Done defaultLoc) (T.progMain prog)
+  let main = fromMaybe (K.Done defaultLoc) (K.progMain prog)
   env <- gets drvEnv 
   debug ("evaluating " <> show main)
   let evaled = runEvalM env (evalWithTrace main) 
@@ -129,7 +133,7 @@ desugarProg prog = do
   let prog' = runDesugarM env (P.progName prog) (desugarProgram prog)
   liftErr prog' "desugaring"
 
-inferDataDecl :: Modulename -> D.DataDecl -> DriverM T.DataDecl
+inferDataDecl :: Modulename -> D.DataDecl -> DriverM K.DataDecl
 inferDataDecl mn decl = do 
   debug ("infering declaration " <> show (D.declName decl)) 
   let decl' = runDeclM (inferDecl decl)
@@ -137,28 +141,34 @@ inferDataDecl mn decl = do
   addDecl mn decl''
   return decl''
 
-inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
+inferVarDecl :: Modulename -> D.VarDecl -> DriverM K.VarDecl
 inferVarDecl _ (D.MkVar loc _ Nothing _) = throwError (ErrTypeInference loc)
 inferVarDecl mn v@(D.MkVar _ vn (Just _) _) = do 
   debug ("type checking variable " <> show vn)
   env <- gets drvEnv
   let v' = runCheckM env (checkVarDecl v)
   v'' <- liftErr v'  "type checking"
-  addVarDecl mn v''
-  return v''
+  let vk = runKindM env (kindVariable v'')
+  vk' <- liftErr vk "kind vardecl"
+  addVarDecl mn vk'
+  return vk'
 
-inferRecDecl :: Modulename -> D.RecDecl -> DriverM T.RecDecl 
+inferRecDecl :: Modulename -> D.RecDecl -> DriverM K.RecDecl 
 inferRecDecl _ (D.MkRec loc _ Nothing _) = throwError (ErrTypeInference loc)
 inferRecDecl mn r@(D.MkRec _ vn (Just _) _) = do
   debug ("type checking recursive variable " <> show vn)
   env <- gets drvEnv 
   let r' = runCheckM env (checkRecDecl r)
   r'' <- liftErr r' "type checking (recursive)"
-  addRecDecl mn r''
-  return r''
+  let rk = runKindM env (kindRecDecl r'')
+  rk' <- liftErr rk "kind recdecl"
+  addRecDecl mn rk'
+  return rk'
 
-inferCommand :: D.Command -> DriverM T.Command
+inferCommand :: D.Command -> DriverM K.Command
 inferCommand c = do 
   env <- gets drvEnv
   let c' = runCheckM env (checkCommand c)
-  liftErr c' "type checking (command)"
+  c'' <- liftErr c' "type checking (command)"
+  let ck = runKindM env (kindCommand c'')
+  liftErr ck "kinding command"

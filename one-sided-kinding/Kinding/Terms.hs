@@ -1,4 +1,7 @@
-module Kinding.Terms where 
+module Kinding.Terms (
+  kindTerm,
+  kindCommand
+)where 
 
 import Kinding.Definition
 import Kinding.Types

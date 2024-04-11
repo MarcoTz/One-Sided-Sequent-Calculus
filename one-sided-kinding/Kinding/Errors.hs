@@ -1,4 +1,6 @@
-module Kinding.Errors where 
+module Kinding.Errors (
+  KindError (..)
+)where 
 
 import Errors 
 import Loc

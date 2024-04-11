@@ -1,4 +1,6 @@
-module Kinding.Types where 
+module Kinding.Types ( 
+  kindType
+)where 
 
 import Kinding.Definition
 import Common
