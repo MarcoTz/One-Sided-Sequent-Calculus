@@ -14,9 +14,11 @@ module TypeCheck.Definition (
 import Environment
 import Common
 import Loc
+import Embed.Definition
+import Embed.EmbedKinded ()
 import TypeCheck.Errors
-import Syntax.Typed.Types   qualified as T 
-import Syntax.Typed.Program qualified as T
+import Syntax.Typed.Types    qualified as T 
+import Syntax.Kinded.Program qualified as K
 import Pretty.Typed () 
 import Pretty.Desugared ()
 
@@ -68,8 +70,8 @@ getMTypeVar v = do
   case (M.lookup v vars,mvar,mrec) of 
     (Nothing,Nothing,Nothing) -> return Nothing 
     (Just ty,_,_) -> return (Just ty)
-    (_,Just vdecl,_) -> return (Just $ T.varTy vdecl)
-    (_,_,Just rdecl) -> return (Just $ T.recTy rdecl) 
+    (_,Just vdecl,_) -> return (Just . embed . K.varTy $ vdecl)
+    (_,_,Just rdecl) -> return (Just . embed . K.recTy $ rdecl) 
 
 getTypeVar :: Loc -> Variable -> CheckM T.Ty 
 getTypeVar loc v = do 

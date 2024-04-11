@@ -1,5 +1,6 @@
 module Syntax.Kinded.FreeVars (
-  FreeKindvars (..)
+  FreeKindvars (..),
+  freshVar,
 ) where 
 
 import Common 
@@ -8,13 +9,9 @@ import Syntax.Kinded.Types
 
 import Data.Set qualified as S 
 
-
-class FreeKindvars a where 
-  freeKindvars :: a -> S.Set Kindvar
-
-instance FreeKindvars Kind where 
-  freeKindvars (MkKind _) = S.empty 
-  freeKindvars (MkKindVar v) = S.singleton v 
+------------------------------------------------------------
+---------------------- Kind variables ----------------------
+------------------------------------------------------------
 
 instance FreeKindvars Ty where
   freeKindvars (TyVar _ knd) = freeKindvars knd
@@ -39,3 +36,25 @@ instance FreeKindvars Command where
   freeKindvars Done{} = S.empty
   freeKindvars Err{}  = S.empty
   freeKindvars (Print _ t) = freeKindvars t
+
+
+---------------------------------------------------
+-------------- free Term Variabnles ---------------
+---------------------------------------------------
+
+instance FreeVariables Term where 
+  freeVars (Var _ v _)          = S.singleton v
+  freeVars (Mu _ v c _)         = S.delete v (freeVars c)
+  freeVars (Xtor _ _ args _)    = S.unions (freeVars <$> args)
+  freeVars (XCase _ pts _)      = S.unions (freeVars <$> pts)
+  freeVars (ShiftCBV _ t _)     = freeVars t 
+  freeVars (ShiftCBN _ t _)     = freeVars t 
+
+instance FreeVariables Pattern where 
+  freeVars MkPattern{ptxt=_, ptv=vars, ptcmd=st} = foldr S.delete (freeVars st) vars
+
+instance FreeVariables Command where 
+  freeVars (Cut _ t1 _ t2) = S.union (freeVars t1) (freeVars t2) 
+  freeVars Done{} = S.empty
+  freeVars Err{}  = S.empty
+  freeVars (Print _ t) = freeVars t

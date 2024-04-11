@@ -3,12 +3,14 @@ module GenerateConstraints.Terms (
 ) where 
 
 import Syntax.Typed.Types 
-import Syntax.Typed.Program
 import Syntax.Desugared.Terms qualified as D
 import Syntax.Typed.Terms qualified as T
 import Syntax.Typed.Substitution qualified as T
+import Syntax.Kinded.Program qualified as K
 import GenerateConstraints.Definition
 import GenerateConstraints.Types
+import Embed.Definition
+import Embed.EmbedKinded ()
 import Constraints
 import Loc
 import Environment
@@ -19,11 +21,11 @@ import Control.Monad
 import Data.Map qualified as M
 
 
-checkPts :: Loc -> [D.Pattern] -> GenM (Maybe DataDecl)
+checkPts :: Loc -> [D.Pattern] -> GenM (Maybe K.DataDecl)
 checkPts _ [] = return Nothing 
 checkPts loc (pt:pts) = do 
-  d@(MkData _ _ _ _ xtors) <- lookupXtorDecl loc (D.ptxt pt)
-  if all ((`elem` (sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
+  d@(K.MkData _ _ _ _ xtors) <- lookupXtorDecl loc (D.ptxt pt)
+  if all ((`elem` (K.sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut loc t eo u) = do 
@@ -66,12 +68,12 @@ genConstraintsTerm (D.Mu loc v  c) = do
   return $ T.Mu loc v c' tyV 
 
 genConstraintsTerm (D.Xtor loc nm args) = do 
-  (MkData _ tyn tyargs _ _) <- lookupXtorDecl loc nm
+  (K.MkData _ tyn tyargs _ _) <- lookupXtorDecl loc nm
   xtSig <- lookupXtor loc nm
   (newVars,varmap) <- freshTyVarsDecl tyargs 
   args' <- forM args genConstraintsTerm
   let argTys = T.getType <$> args'
-  let varsSubst = T.substTyVars varmap <$>  sigArgs xtSig
+  let varsSubst = T.substTyvars varmap . embed <$>  K.sigArgs xtSig
   addConstraintsXtor loc nm argTys varsSubst
   let newT = TyDecl tyn newVars 
   return (T.Xtor loc nm args' newT)
@@ -79,13 +81,13 @@ genConstraintsTerm (D.XCase loc pts)  = do
   decl <- checkPts loc pts
   case decl of 
     Nothing -> throwError (ErrBadPattern loc (D.ptxt <$> pts))
-    Just (MkData _ tyn tyArgs _ _) -> do
+    Just (K.MkData _ tyn tyArgs _ _) -> do
       (newVars, varmap) <- freshTyVarsDecl tyArgs 
       pts' <- forM pts (\pt -> do 
         forM_ (zip (D.ptv pt) newVars) (uncurry addGenVar) 
         c' <- genConstraintsCmd (D.ptcmd pt)
         return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
-      let pts'' = T.substTyVars varmap <$> pts'
+      let pts'' = T.substTyvars varmap <$> pts'
       let newT = TyDecl tyn newVars 
       return (T.XCase loc pts'' newT)
 genConstraintsTerm (D.ShiftCBV loc t) = do 

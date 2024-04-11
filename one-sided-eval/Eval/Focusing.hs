@@ -2,12 +2,10 @@ module Eval.Focusing (
   focus
 ) where 
 
-import Syntax.Typed.Terms
-import Syntax.Typed.FreeVars
+import Syntax.Kinded.Terms
+import Syntax.Kinded.FreeVars
 import Common
 import Loc
-
-import Data.Set qualified as S
 
 focus :: Command -> Command 
 focus (Done loc)  = Done loc
@@ -23,11 +21,11 @@ focusTerm pol t@(Xtor loc nm args ty) = do
   case toFocus of 
     Nothing -> Xtor loc nm (focusTerm pol <$> args) ty
     Just tof -> do 
-      let freeV = freeVars t 
-      let newV = freshVar 0 freeV 
-      let newV2 = freshVar 0 (S.insert newV freeV)
+      let newV = freshVar t
+      let newVT = Var (getLoc tof) newV (getType tof)
+      let newV2 = freshVar [t,newVT]
       let tof' = focusTerm pol tof
-      let newXtor = focusTerm pol (Xtor loc nm (vals ++ [Var (getLoc tof) newV (getType tof)] ++ nonVals) ty)
+      let newXtor = focusTerm pol (Xtor loc nm (vals ++ [newVT] ++ nonVals) ty)
       let inner = Cut loc newXtor CBV (Var loc newV2 (getType tof))
       let outer = Cut loc tof' CBV (Mu loc newV inner ty)
       Mu loc newV2 outer ty

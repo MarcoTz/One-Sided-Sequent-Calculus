@@ -7,9 +7,11 @@ import TypeCheck.Definition
 import TypeCheck.Types
 import Syntax.Typed.Terms         qualified as T
 import Syntax.Typed.Types         qualified as T
-import Syntax.Typed.Program       qualified as T
+import Syntax.Kinded.Program      qualified as K
 import Syntax.Typed.Substitution  qualified as T
 import Syntax.Desugared.Terms     qualified as D
+import Embed.Definition
+import Embed.EmbedKinded ()
 import Environment
 import Errors
 import Common
@@ -41,7 +43,7 @@ checkTerm (D.Var loc v) ty = do
   checkerTy <- M.lookup v <$> getCheckerVars 
   vardecl <- lookupMVar v
   recdecl <- lookupMRec v
-  let mty = firstJust [checkerTy,T.varTy <$> vardecl,T.recTy <$> recdecl]
+  let mty = firstJust [checkerTy,embed . K.varTy <$> vardecl,embed . K.recTy <$> recdecl]
   case mty of 
     Nothing -> throwError (ErrUndefinedVar loc v)
     Just ty' -> if T.isSubsumed ty ty' then return $ T.Var loc v ty else throwError (ErrNotSubsumed loc ty ty')
@@ -52,12 +54,12 @@ checkTerm (D.Mu loc v c) ty = do
   return $ T.Mu loc v c' ty
 
 checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs) = do 
-  T.MkData _ tyn' argVars _ _ <- lookupXtorDecl loc xtn 
-  T.MkXtorSig _ _ xtargs'  <- lookupXtor loc xtn
+  K.MkData _ tyn' argVars _ _ <- lookupXtorDecl loc xtn 
+  K.MkXtorSig _ _ xtargs'  <- lookupXtor loc xtn
   unless (tyn == tyn') $  throwError (ErrNotTyDecl loc tyn' ty xtt) 
   -- substitute type variables in xtor signature
   varSubsts <- zipWithErrorM (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
-  let xtArgTys = T.substTyVars (M.fromList varSubsts)  <$> xtargs'
+  let xtArgTys = T.substTyvars (M.fromList varSubsts) . embed <$> xtargs'
   -- check xtor arguments
   argsToCheck <- zipWithErrorM xtargs xtArgTys (ErrXtorArity loc xtn) 
   argsChecked <- forM argsToCheck (uncurry checkTerm)
@@ -65,11 +67,11 @@ checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs) = do
 
 
 checkTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs ) = do 
-  T.MkData _ tyn' argVars _ xtors <- lookupXtorDecl loc (D.ptxt pt1)
+  K.MkData _ tyn' argVars _ xtors <- lookupXtorDecl loc (D.ptxt pt1)
   unless (tyn == tyn') $ throwError (ErrNotTyDecl loc tyn' ty xct) 
   -- make sure the correct xtors are present in patterns
   let ptxtns = D.ptxt <$> pts
-  let declxtns = T.sigName <$> xtors
+  let declxtns = K.sigName <$> xtors
   unless (all (`elem` ptxtns) declxtns) $ throwError (ErrBadPattern loc ptxtns declxtns xct)
   unless (all (`elem` declxtns) ptxtns) $ throwError (ErrBadPattern loc ptxtns declxtns xct)
   varmap <- zipWithErrorM (variantVar <$> argVars) tyargs (ErrTypeArity loc tyn)
@@ -78,8 +80,8 @@ checkTerm xct@(D.XCase loc pts@(pt1:_)) ty@(T.TyDecl tyn tyargs ) = do
   where 
     checkPattern :: D.Pattern -> M.Map Typevar T.Ty -> CheckM T.Pattern
     checkPattern (D.MkPattern xtn vars c) varmap = do
-      T.MkXtorSig _ _ xtargs <- lookupXtor loc xtn
-      let xtargs' = T.substTyVars varmap <$> xtargs
+      K.MkXtorSig _ _ xtargs <- lookupXtor loc xtn
+      let xtargs' = T.substTyvars varmap . embed <$> xtargs
       argsZipped <- zipWithErrorM vars xtargs' (ErrXtorArity loc xtn)
       currVars <- getCheckerVars 
       let newVars = foldr (\(v,ty') m -> M.insert v ty' m)  currVars argsZipped

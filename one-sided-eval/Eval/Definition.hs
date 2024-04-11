@@ -10,7 +10,7 @@ import Environment
 import Errors 
 import Loc
 import Common
-import Syntax.Typed.Terms
+import Syntax.Kinded.Terms
 
 import Control.Monad.Except 
 import Control.Monad.Reader

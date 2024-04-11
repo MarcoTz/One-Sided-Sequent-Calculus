@@ -1,7 +1,6 @@
 module Syntax.Typed.FreeVars (
   freeVars,
   freshVar,
-  generalizeTy
 ) where 
 
 import Common 
@@ -10,44 +9,30 @@ import Syntax.Typed.Types
 
 import Data.Set qualified as S 
 
-------------------------------
--- Calculate Free Variables --
-------------------------------
+-------------------------------------
+-------- Free Type Variables --------
+-------------------------------------
+--
+instance FreeTypevars Ty where 
+  freeTypevars (TyVar v) = S.singleton v 
+  freeTypevars (TyDecl _ args) =  S.unions (freeTypevars <$> args)
+  freeTypevars (TyShift ty) = freeTypevars ty
+  freeTypevars (TyCo ty) = freeTypevars ty
+  freeTypevars (TyForall args ty) = S.difference (freeTypevars ty) (S.fromList args)
 
-class FreeVars a where 
-  freeVars :: a -> S.Set Variable
+instance FreeTypevars Term where 
+  freeTypevars (Var _ _ ty) = freeTypevars ty
+  freeTypevars (Mu _ _ c ty) = S.union (freeTypevars c) (freeTypevars ty)
+  freeTypevars (Xtor _ _ args ty) = S.unions (freeTypevars ty :(freeTypevars <$> args))
+  freeTypevars (XCase _ pts ty) = S.unions (freeTypevars ty : (freeTypevars <$> pts))
+  freeTypevars (ShiftCBV _ t ty) = S.union (freeTypevars t) (freeTypevars ty)
+  freeTypevars (ShiftCBN _ t ty) = S.union (freeTypevars t) (freeTypevars ty)
 
-instance FreeVars Term where 
-  freeVars (Var _ v _)          = S.singleton v
-  freeVars (Mu _ v c _)         = S.delete v (freeVars c)
-  freeVars (Xtor _ _ args _)    = S.unions (freeVars <$> args)
-  freeVars (XCase _ pts _)      = S.unions (freeVars <$> pts)
-  freeVars (ShiftCBV _ t _)     = freeVars t 
-  freeVars (ShiftCBN _ t _)     = freeVars t 
+instance FreeTypevars Pattern where 
+  freeTypevars (MkPattern _ _ c) = freeTypevars c
 
-instance FreeVars Pattern where 
-  freeVars MkPattern{ptxt=_, ptv=vars, ptcmd=st} = foldr S.delete (freeVars st) vars
-
-instance FreeVars Command where 
-  freeVars (Cut _ t1 _ t2) = S.union (freeVars t1) (freeVars t2) 
-  freeVars Done{} = S.empty
-  freeVars Err{}  = S.empty
-  freeVars (Print _ t) = freeVars t
-
-freshVar :: Int -> S.Set Variable -> Variable 
-freshVar n vars = let newV = Variable ("x"<> show n) in if newV `elem` vars then freshVar (n+1) vars else newV
-
------------------------------------
--- calculate free type variables --
------------------------------------
-
-freeTyVars :: Ty -> S.Set Typevar
-freeTyVars (TyVar v) = S.singleton v
-freeTyVars (TyDecl _ args) = S.unions (freeTyVars <$> args) 
-freeTyVars (TyShift ty) = freeTyVars ty
-freeTyVars (TyCo ty) = freeTyVars ty
-freeTyVars (TyForall args ty) = S.difference (freeTyVars ty) (S.fromList args) 
-
-generalizeTy :: Ty -> Ty 
-generalizeTy ty = let frv = freeTyVars ty in 
-  if null frv then ty else TyForall (S.toList frv) ty
+instance FreeTypevars Command where 
+  freeTypevars (Cut _ t _ u) = S.union (freeTypevars t) (freeTypevars u)
+  freeTypevars Done{} = S.empty
+  freeTypevars Err{} = S.empty
+  freeTypevars (Print _ t) = freeTypevars t

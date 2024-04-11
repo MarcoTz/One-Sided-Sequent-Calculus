@@ -7,7 +7,7 @@ import Environment
 import GenerateConstraints.Definition
 import Syntax.Desugared.Types qualified as D
 import Syntax.Typed.Types     qualified as T
-import Syntax.Typed.Program   qualified as T 
+import Syntax.Kinded.Program  qualified as K
 
 import Control.Monad
 import Control.Monad.Except
@@ -16,7 +16,7 @@ genConstraintsTy :: Loc -> D.Ty -> GenM T.Ty
 genConstraintsTy _ (D.TyVar v) = return $ T.TyVar v
 genConstraintsTy loc (D.TyDecl tyn args) = do 
   decl <- lookupDecl loc tyn 
-  let argPols = MkKind . (`varianceEvalOrder` (defaultEo $ T.declType decl)) . variantVariance <$> T.declArgs decl
+  let argPols = MkKind . (`varianceEvalOrder` (defaultEo $ K.declType decl)) . variantVariance <$> K.declArgs decl
   let argsZipped = zipWithError args argPols (ErrTyArity loc tyn)
   case argsZipped of 
     Right err -> throwError err

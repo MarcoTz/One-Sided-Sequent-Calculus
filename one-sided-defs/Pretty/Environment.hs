@@ -1,7 +1,7 @@
 module Pretty.Environment () where 
 
 import Environment 
-import Pretty.Typed ()
+import Pretty.Kinded ()
 
 instance Show Environment where 
   show (MkEnv defs) = show defs 

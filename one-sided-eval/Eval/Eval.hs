@@ -5,8 +5,8 @@ module Eval.Eval (
 
 import Eval.Definition
 import Eval.Focusing
-import Syntax.Typed.Terms
-import Syntax.Typed.Substitution 
+import Syntax.Kinded.Terms
+import Syntax.Kinded.Substitution 
 import Common
 import Loc
 import Environment
@@ -56,7 +56,7 @@ evalOnce (Cut loc t pol (Var loc' v _)) = do
   u <- lookupBody loc v 
   return $ Cut loc t pol (setLoc loc' u)
 -- beta mu
-evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = return $ substVar c t v
+evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = return $ substituteVariable v t c 
 evalOnce (Cut loc (ShiftCBV _ t _) eo u) = return $ Cut loc t eo u
 evalOnce (Cut loc (ShiftCBN _ t _) eo u) = return $ Cut loc t eo u
 -- beta K
@@ -69,7 +69,7 @@ evalOnce cmd = evalOnce (coTrans cmd)
 substCase :: Loc -> Pattern -> [Term] -> EvalM Command
 substCase _ MkPattern{ptxt=_, ptv=[], ptcmd=cmd} []  = return cmd
 substCase loc MkPattern{ptxt=xt, ptv=(v:vs), ptcmd=cmd} (t:ts) = 
-  let newcmd = substVar cmd t v 
+  let newcmd = substituteVariable v t cmd
   in substCase loc MkPattern{ptxt=xt,ptv=vs,ptcmd=newcmd} ts
 substCase loc (MkPattern xt [] _) (_:_) = throwError (ErrXtorArity loc xt) 
 substCase loc (MkPattern xt (_:_) _) [] = throwError (ErrXtorArity loc xt) 

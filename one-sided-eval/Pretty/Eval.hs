@@ -3,7 +3,7 @@ module Pretty.Eval where
 import Eval.Definition
 
 import Data.List (intercalate) 
-import Pretty.Typed () 
+import Pretty.Kinded () 
 
 instance Show EvalTrace where 
   show (MkTrace c []) = "Result " <> show c

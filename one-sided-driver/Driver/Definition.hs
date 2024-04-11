@@ -12,7 +12,7 @@ module Driver.Definition (
 ) where 
 
 import Driver.Errors
-import Syntax.Typed.Program
+import Syntax.Kinded.Program
 import Errors
 import Common
 import Environment

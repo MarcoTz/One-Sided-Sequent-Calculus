@@ -20,8 +20,8 @@ import Common
 import Loc
 import Environment
 import Embed.Definition
-import Embed.EmbedTyped ()
-import Syntax.Typed.Program     qualified as T
+import Embed.EmbedKinded()
+import Syntax.Kinded.Program     qualified as T
 import Syntax.Desugared.Program qualified as D
 import Syntax.Desugared.Terms   qualified as D
 import Syntax.Parsed.Program    qualified as P

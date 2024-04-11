@@ -16,9 +16,9 @@ module Environment (
   addRecEnv,
 ) where 
 
-import Syntax.Typed.Program 
-import Syntax.Typed.Terms
-import Syntax.Typed.Types
+import Syntax.Kinded.Program 
+import Syntax.Kinded.Terms
+import Syntax.Kinded.Types
 import Errors 
 import Common
 import Loc
