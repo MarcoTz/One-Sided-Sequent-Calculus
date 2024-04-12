@@ -1,2 +1,6 @@
 dist-newstyle/*
 web-app/all.js
+
+spago.lock
+output/*
+.spago/*
