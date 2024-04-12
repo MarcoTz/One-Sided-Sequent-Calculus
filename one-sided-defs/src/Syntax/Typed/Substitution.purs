@@ -1,13 +1,16 @@
 module Syntax.Typed.Substitution ( 
+  class SubstituteTypevars,
   substTyvars
 ) where 
 
-import Syntax.Typed.Types 
-import Syntax.Typed.Program
-import Syntax.Typed.Terms
-import Common
+import Syntax.Typed.Types  (Ty(..))
+import Syntax.Typed.Program (XtorSig (..))
+import Syntax.Typed.Terms (Term (..), Pattern(..), Command(..))
+import Common (Typevar)
 
-import Data.Map qualified as M
+import Prelude ((<$>))
+import Data.Map (Map, lookup, delete)
+import Data.List (foldr)
 import Data.Maybe (fromMaybe)
 
 
@@ -15,17 +18,17 @@ import Data.Maybe (fromMaybe)
 -- Type Variable Substitution --
 --------------------------------
 class SubstituteTypevars a where 
-  substTyvars :: M.Map Typevar Ty -> a -> a 
+  substTyvars :: Map Typevar Ty -> a -> a 
 
 instance SubstituteTypevars XtorSig where 
-  substTyvars varmap (MkXtorSig loc nm args) = MkXtorSig loc nm (substTyvars varmap <$> args)
+  substTyvars varmap (XtorSig sig) = XtorSig (sig {sigArgs=(substTyvars varmap <$> sig.sigArgs)})
 
 instance SubstituteTypevars Ty where 
-  substTyvars varmap ty@(TyVar v) = fromMaybe ty (M.lookup v varmap)
+  substTyvars varmap ty@(TyVar v) = fromMaybe ty (lookup v varmap)
   substTyvars varmap (TyDecl tyn args) = TyDecl tyn (substTyvars varmap <$> args)
   substTyvars varmap (TyShift ty) = TyShift (substTyvars varmap ty)
   substTyvars varmap (TyCo ty) = TyCo (substTyvars varmap ty) 
-  substTyvars varmap (TyForall vars ty) = let newmap = foldr M.delete varmap vars in TyForall vars (substTyvars newmap ty)
+  substTyvars varmap (TyForall vars ty) = let newmap = foldr delete varmap vars in TyForall vars (substTyvars newmap ty)
 
 instance SubstituteTypevars Term where 
   substTyvars varmap (Var loc v ty) = Var loc v (substTyvars varmap ty)
@@ -36,7 +39,7 @@ instance SubstituteTypevars Term where
   substTyvars varmap (ShiftCBN loc t ty) = ShiftCBN loc (substTyvars varmap t) (substTyvars varmap ty)
 
 instance SubstituteTypevars Pattern where 
-  substTyvars varmap (MkPattern xt vars c) = MkPattern xt vars (substTyvars varmap c)
+  substTyvars varmap (Pattern pt) = Pattern (pt {ptcmd=(substTyvars varmap pt.ptcmd)})
 
 instance SubstituteTypevars Command where 
   substTyvars varmap (Cut loc t pol u) = Cut loc (substTyvars varmap t) pol (substTyvars varmap u) 

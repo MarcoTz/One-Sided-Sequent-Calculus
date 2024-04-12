@@ -12,57 +12,87 @@ module Syntax.Desugared.Program (
   emptyProg
 ) where 
 
-import Common
-import Loc
-import Syntax.Desugared.Terms
-import Syntax.Desugared.Types
+import Loc (Loc, class HasLoc)
+import Common (Xtorname,Variable,Typename,VariantVar,DeclTy, Modulename)
+import Syntax.Desugared.Types (Ty)
+import Syntax.Desugared.Terms (Term,Command)
 
-import Data.Map qualified as M
+import Prelude (class Show,show,(<>), (<$>), (==))
+import Data.List (List, null, intercalate)
+import Data.Maybe (Maybe(..))
+import Data.Map (Map,insert,empty)
 
-
-data XtorSig = MkXtorSig{sigPos :: !Loc, sigName :: !Xtorname, sigArgs :: ![Ty]} 
+data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
 instance HasLoc XtorSig where 
-  getLoc = sigPos
-  setLoc loc (MkXtorSig _ nm args) = MkXtorSig loc nm args
+  getLoc (XtorSig sig) = sig.sigPos
+  setLoc loc (XtorSig sig) = XtorSig (sig {sigPos=loc})
+instance Show XtorSig where 
+  show (XtorSig sig) | null sig.sigArgs = show sig.sigName 
+  show (XtorSig sig) = show sig.sigName <> "(" <> intercalate "," (show <$> sig.sigArgs)
 
-data DataDecl = MkData {declPos :: !Loc, declName :: !Typename, declArgs :: ![VariantVar], declType :: !DeclTy, declXtors :: ![XtorSig]} 
+data DataDecl = DataDecl {declPos :: Loc, declName :: Typename, declArgs :: List VariantVar, declType :: DeclTy, declXtors :: List XtorSig} 
 instance HasLoc DataDecl where 
-  getLoc = declPos 
-  setLoc loc (MkData _ nm args pol xtors) = MkData loc nm args pol xtors
+  getLoc (DataDecl decl) = decl.declPos 
+  setLoc loc (DataDecl decl) = DataDecl (decl {declPos=loc})
+instance Show DataDecl where 
+  show (DataDecl decl) | null decl.declArgs = 
+    show decl.declType <> " " <> show decl.declName <> "{" <> intercalate ", " (show <$> decl.declXtors) <> "}"
+  show (DataDecl decl) = 
+    show decl.declType <> " " <> show decl.declName <> "(" <> intercalate ", " (show <$> decl.declArgs) <> ") { " <> intercalate ", " (show <$> decl.declXtors) <> "}"
 
-data VarDecl  = MkVar  {varPos  :: !Loc, varName  :: !Variable, varTy    :: !(Maybe Ty), varBody :: !Term}
+data VarDecl  = VarDecl {varPos::Loc, varName::Variable, varTy:: (Maybe Ty), varBody :: Term}
 instance HasLoc VarDecl where 
-  getLoc = varPos 
-  setLoc loc (MkVar _ nm ty bd) = MkVar loc nm ty bd
+  getLoc (VarDecl decl) = decl.varPos 
+  setLoc loc (VarDecl decl) = VarDecl (decl {varPos=loc})
+instance Show VarDecl where 
+  show (VarDecl decl) | Nothing == decl.varTy = 
+     show decl.varName <> ":= " <> show decl.varBody
+  show (VarDecl decl) = show decl.varName <> ":" <> show decl.varTy <> ":=" <> show decl.varBody
 
-data RecDecl  = MkRec  {recPos  :: !Loc, recName  :: !Variable, recTy    :: !(Maybe Ty), recBody :: !Term}
+data RecDecl  = RecDecl {recPos::Loc, recName::Variable, recTy::(Maybe Ty), recBody::Term}
 instance HasLoc RecDecl where 
-  getLoc = recPos
-  setLoc loc (MkRec _ nm ty bd) = MkRec loc nm ty bd
+  getLoc (RecDecl decl) = decl.recPos
+  setLoc loc (RecDecl decl) = RecDecl (decl {recPos=loc}) 
+instance Show RecDecl where 
+  show (RecDecl decl) | Nothing == decl.recTy = 
+    "rec " <> show decl.recName <> ":= " <> show decl.recBody
+  show (RecDecl decl) = " rec " <> show decl.recName <> ":" <> show decl.recTy <> " := " <> show decl.recBody
 
-data Program = MkProgram { 
-  progName  :: !Modulename, 
-  progDecls :: !(M.Map Typename DataDecl), 
-  progVars  :: !(M.Map Variable VarDecl),
-  progRecs  :: !(M.Map Variable RecDecl),
-  progMain  :: !(Maybe Command),
-  progSrc   :: !String
+data Program = Program { 
+  progName  :: Modulename, 
+  progDecls :: (Map Typename DataDecl), 
+  progVars  :: (Map Variable VarDecl),
+  progRecs  :: (Map Variable RecDecl),
+  progMain  :: (Maybe Command),
+  progSrc   :: String
 }  
+instance Show Program where 
+  show (Program prog) | Nothing == prog.progMain = 
+    "Module " <> show prog.progName <> "\n" <>
+    "Decalations: " <> show prog.progDecls <> "\n" <> 
+    "Variables: " <> show  prog.progVars <> "\n" <> 
+    "Recursive Definitions" <> show prog.progRecs <> "\n"
+  show (Program prog) = 
+    "Module " <> show prog.progName <> "\n" <>
+    "Decalations: " <> show prog.progDecls <> "\n" <> 
+    "Variables: " <> show  prog.progVars <> "\n" <> 
+    "Recursive Definitions" <> show prog.progRecs <> "\n" <> 
+    "Main : " <> show prog.progMain
 
-emptyProg :: Modulename -> Program 
-emptyProg nm = MkProgram nm M.empty M.empty M.empty Nothing ""
+emptyProg :: Modulename -> String -> Program 
+emptyProg nm src = Program {progName:nm,progDecls:empty,progVars:empty,progRecs:empty,progMain:Nothing,progSrc:src}
 
 addDeclProgram :: DataDecl -> Program -> Program 
-addDeclProgram decl prog = prog { progDecls = M.insert (declName decl) decl (progDecls prog) }
+addDeclProgram (DataDecl decl) (Program prog) = Program (prog { progDecls = insert decl.declName (DataDecl decl) prog.progDecls })
 
 addVarProgram :: VarDecl -> Program -> Program
-addVarProgram var prog = prog { progVars = M.insert (varName var) var (progVars prog) }
+addVarProgram (VarDecl var) (Program prog) = Program (prog { progVars = insert var.varName (VarDecl var) prog.progVars})
 
 addRecProgram :: RecDecl -> Program -> Program
-addRecProgram rec prog = prog { progRecs = M.insert (recName rec) rec (progRecs prog) }
+addRecProgram (RecDecl rec) (Program prog) = Program (prog { progRecs = insert rec.recName (RecDecl rec) prog.progRecs })
 
 setMainProgram :: Command -> Program -> Program 
-setMainProgram c prog = prog { progMain = Just c }
+setMainProgram c (Program prog) = Program (prog { progMain = Just c })
 
 setSrcProgram :: String -> Program -> Program 
-setSrcProgram src prog = prog { progSrc = src }
+setSrcProgram src (Program prog) = Program (prog { progSrc = src })

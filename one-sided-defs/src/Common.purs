@@ -1,17 +1,14 @@
 module Common (
   firstJust,
-  GetKind (..), 
-  ShiftEvalOrder (..),
-  ContainsKindvar (..),
+  class GetKind, 
+  getKind,
+  class ShiftEvalOrder,
+  shiftEvalOrder,
+  class ContainsKindvar,
+  containsKindvar,
   Typevar (..),
   Typename (..),
   Variable (..),
-  FreeVariables (..),
-  freshVar,
-  FreeKindvars (..),
-  freshKindvar,
-  FreeTypevars (..),
-  freshTypevar,
   Xtorname (..),
   Variance (..),
   PrdCns (..),
@@ -22,86 +19,108 @@ module Common (
   varianceEvalOrder,
   Modulename (..),
   Kindvar (..),
-  Kind (..)
+  Kind (..),
+  freshVarN
 ) where 
 
-import Data.Set qualified as S
+import Prelude (class Eq, class Ord, class Show, (<>), show, (+), ($), identity)
+import Data.List (List(..))
+import Data.Maybe (Maybe(..))
+import Data.Set (Set, member) 
 
 ----------------------
 -- Helper Functions --
 ----------------------
 
-firstJust :: [Maybe a] -> Maybe a 
-firstJust [] = Nothing
-firstJust (Nothing:as) = firstJust as 
-firstJust (Just a: _) = Just a
+firstJust :: forall a.List (Maybe a) -> Maybe a 
+firstJust Nil = Nothing
+firstJust (Cons Nothing as) = firstJust as 
+firstJust (Cons (Just a) _) = Just a
 
 -----------
 -- Names --
 -----------
 newtype Modulename = Modulename {unModulename :: String}
-  deriving (Eq,Ord)
-newtype Xtorname = Xtorname {unXtorname :: String}
-  deriving (Eq,Ord)
-newtype Typename = Typename {unTypename :: String}
-  deriving (Eq,Ord)
+derive instance eqModulename :: Eq Modulename
+derive instance ordModulename :: Ord Modulename
+instance Show Modulename where 
+  show (Modulename nm) = nm.unModulename
 
+newtype Xtorname = Xtorname {unXtorname :: String}
+derive instance eqXtorname :: Eq Xtorname
+derive instance ordXtorname :: Ord Xtorname
+instance Show Xtorname where 
+  show (Xtorname xtn) = xtn.unXtorname
+
+newtype Typename = Typename {unTypename :: String}
+derive instance eqTypename :: Eq Typename
+derive instance ordTypename :: Ord Typename
+instance Show Typename where 
+  show (Typename tyn) = tyn.unTypename
 ---------------
 -- Variables --
 ---------------
 newtype Typevar  = Typevar {unTypevar :: String}
-  deriving (Eq,Ord)
+derive instance eqTypevar :: Eq Typevar 
+derive instance ordTypevar :: Ord Typevar
+instance Show Typevar where 
+  show (Typevar tyv) = tyv.unTypevar
+
 newtype Variable = Variable {unVariable :: String} 
-  deriving (Eq,Ord)
+derive instance eqVariable :: Eq Variable 
+derive instance ordVariable :: Ord Variable
+instance Show Variable where 
+  show (Variable v) = v.unVariable
+
 data PrdCns = Prd | Cns 
-  deriving (Eq,Ord)
-newtype Kindvar  = Kindvar {unKindvar :: String} 
-  deriving (Eq,Ord)
+derive instance eqPrdCns :: Eq PrdCns
+derive instance ordPrdCns :: Ord PrdCns
+
+data Kindvar  = Kindvar {unKindvar :: String} 
+derive instance eqKindvar :: Eq Kindvar
+derive instance ordKindvar :: Ord Kindvar
+instance Show Kindvar where 
+  show (Kindvar kv) = kv.unKindvar
 
 --------------------------------------------------------
 -------------- Classes for Free Variables --------------
 --------------------------------------------------------
 
-class FreeVariables a where 
-  freeVars :: a -> S.Set Variable 
-
-instance FreeVariables a => FreeVariables [a] where 
-  freeVars ls = S.unions (freeVars <$> ls)
-
-freshVar :: FreeVariables a => a -> Variable
-freshVar a = let frV = freeVars a in freshVarN 0 "x" Variable frV
-
-class FreeKindvars a where 
-  freeKindvars :: a -> S.Set Kindvar 
-
-freshKindvar :: FreeKindvars a => a -> Kindvar 
-freshKindvar a = let frV = freeKindvars a in freshVarN 0 "k" Kindvar frV
-
-class FreeTypevars a where 
-  freeTypevars :: a -> S.Set Typevar
-
-freshTypevar :: FreeTypevars a => a -> Typevar 
-freshTypevar a = let frV = freeTypevars a in freshVarN 0 "X" Typevar frV
-
-freshVarN :: Eq a => Int -> String -> (String -> a) -> S.Set a -> a 
-freshVarN n prefix ctor vars = let newV = ctor (prefix <> show n) in if newV `elem` vars then freshVarN (n+1) prefix ctor vars else newV
+freshVarN :: forall a.Eq a => Ord a => Int -> String -> (String -> a) -> Set a -> a 
+freshVarN n prefix ctor vars = let newV = ctor (prefix <> show n) in if newV `member` vars then freshVarN (n+1) prefix ctor vars else newV
 
 --------------
 -- Variance --
 --------------
 data Variance = Covariant | Contravariant
-  deriving (Eq,Ord)
-data VariantVar = VariantVar { variantVar :: !Typevar, variantVariance :: !Variance}
-  deriving (Eq,Ord)
+derive instance eqVariance :: Eq Variance
+derive instance ordVariance :: Ord Variance
+instance Show Variance where 
+  show Covariant = "+"
+  show Contravariant = "-"
+
+data VariantVar = VariantVar { variantVar :: Typevar, variantVariance :: Variance}
+derive instance eqVariantVar :: Eq VariantVar
+derive instance ordVariantVar :: Ord VariantVar
+instance Show VariantVar where 
+  show (VariantVar var) = show var.variantVariance <> ":" <> show var.variantVar
 
 -----------
 -- Kinds --
 -----------
 data EvaluationOrder = CBV | CBN
-  deriving (Eq,Ord)
-data Kind = MkKind !EvaluationOrder | MkKindVar !Kindvar 
-  deriving (Eq,Ord)
+derive instance eqEvaluationOrder :: Eq EvaluationOrder
+derive instance ordEvaluationOrder :: Ord EvaluationOrder 
+instance Show EvaluationOrder where 
+  show CBV = "CBV"
+  show CBN = "CBN"
 
+data Kind = MkKind EvaluationOrder | MkKindVar Kindvar 
+derive instance eqKind :: Eq Kind 
+derive instance ordKind :: Ord Kind
+instance Show Kind where 
+  show (MkKind p) = show p
+  show (MkKindVar kv) = show kv
 class ShiftEvalOrder a where
  shiftEvalOrder :: a -> a  
 
@@ -111,31 +130,32 @@ instance ShiftEvalOrder EvaluationOrder where
 
 instance ShiftEvalOrder Kind where 
   shiftEvalOrder (MkKind eo) = MkKind $ shiftEvalOrder eo
-  shiftEvalOrder v@MkKindVar{} = v
+  shiftEvalOrder v@(MkKindVar _)  = v
 
 class ContainsKindvar a where 
-  containsKindvar :: a -> Bool
+  containsKindvar :: a -> Boolean
 
 instance ContainsKindvar Kind where 
-  containsKindvar (MkKind _) = False
-  containsKindvar (MkKindVar _) = True
+  containsKindvar (MkKind _) = false
+  containsKindvar (MkKindVar _) = true
 
-instance FreeKindvars Kind where
-  freeKindvars (MkKind _) = S.empty 
-  freeKindvars (MkKindVar v) = S.singleton v
 
 class GetKind a where 
   getKind :: a -> Kind
 
 varianceEvalOrder :: Variance -> EvaluationOrder -> EvaluationOrder 
-varianceEvalOrder Covariant = id
+varianceEvalOrder Covariant = identity
 varianceEvalOrder Contravariant = shiftEvalOrder
 
 -----------------
 -- Data/Codata --
 -----------------
 data DeclTy = Data | Codata
-  deriving (Eq,Ord)
+derive instance eqDeclTy :: Eq DeclTy 
+derive instance ordDeclTy :: Ord DeclTy
+instance Show DeclTy where 
+  show Data = "data"
+  show Codata = "codata"
 
 defaultEo :: DeclTy -> EvaluationOrder 
 defaultEo Data = CBV

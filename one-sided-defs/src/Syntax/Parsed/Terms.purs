@@ -1,22 +1,32 @@
 module Syntax.Parsed.Terms (
   Term (..),
   Command (..),
-  Pattern (..),
+  Pattern (..)
 ) where 
 
-import Common 
-import Loc
-import Syntax.Parsed.Types
+import Common (EvaluationOrder, Xtorname, Variable)
+import Loc (Loc, class HasLoc)
+import Syntax.Parsed.Types (Ty)
 
-data Command where 
-  Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command
-  CutAnnot   :: Loc -> Term -> Ty -> EvaluationOrder -> Term -> Command
-  Err        :: Loc -> String -> Command
-  Print      :: Loc -> Term -> Command
-  PrintAnnot :: Loc -> Term -> Ty -> Command
-  Done       :: Loc -> Command
-  deriving (Eq,Ord)
+import Prelude (class Eq, class Ord, class Show, show, (<>), (<$>))
+import Data.List (List, intercalate, null)
 
+data Command = 
+  Cut          Loc Term EvaluationOrder Term 
+  | CutAnnot   Loc Term Ty EvaluationOrder Term 
+  | Err        Loc String
+  | Print      Loc Term 
+  | PrintAnnot Loc Term Ty 
+  | Done       Loc 
+derive instance eqCommand :: Eq Command 
+derive instance ordCOmmand :: Ord Command
+instance Show Command where 
+  show (Cut _ t pol u) = "〈" <> show t <> " | " <> show pol <> " | " <> show u <> "〉"
+  show (CutAnnot _ t ty pol u) = "〈" <> show t <> " | " <> show ty <> " | " <> show pol <> " | " <> show u <> "〉" 
+  show (Done _) = "Done"
+  show (Err _ err) = "error " <> err
+  show (Print _ t) = "Print " <> show t
+  show (PrintAnnot _ t ty) = " Print " <> show t <> " :: " <> show ty
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _ ) = loc 
   getLoc (CutAnnot loc _ _ _ _) = loc 
@@ -32,17 +42,31 @@ instance HasLoc Command where
   setLoc loc (Print _ t) = Print loc t 
   setLoc loc (PrintAnnot _ t ty) = PrintAnnot loc t ty
 
-data Pattern = MkPattern{ptxt :: !Xtorname, ptv :: ![Variable], ptcmd :: !Command}
-  deriving (Eq,Ord)
+data Pattern = Pattern{ptxt :: Xtorname, ptv :: List Variable, ptcmd :: Command}
+derive instance eqPattern :: Eq Pattern
+derive instance ordPattern :: Ord Pattern
+instance Show Pattern where 
+  show (Pattern pt) | null pt.ptv = show pt.ptxt <> " => " <> show pt.ptcmd
+  show (Pattern pt) = show pt.ptxt <> "(" <> intercalate ", " (show <$> pt.ptv) <> ") => " <> show pt.ptcmd
 
-data Term where 
-  Var       :: Loc -> Variable -> Term
-  Mu        :: Loc -> Variable -> Command -> Term
-  Xtor      :: Loc -> Xtorname -> [Term] -> Term
-  XCase     :: Loc -> [Pattern] -> Term
-  ShiftCBV  :: Loc -> Term -> Term
-  ShiftCBN  :: Loc -> Term -> Term
-  deriving (Eq,Ord)
+data Term =
+  Var         Loc Variable 
+  | Mu        Loc Variable Command 
+  | Xtor      Loc Xtorname (List Term)
+  | XCase     Loc (List Pattern) 
+  | ShiftCBV  Loc Term 
+  | ShiftCBN  Loc Term 
+derive instance eqTerm :: Eq Term
+derive instance ordTerm :: Ord Term
+instance Show Term where 
+  show (Var _ v) = show v
+  show (Mu _ v cmd) = "mu " <> show v <> ". " <> show cmd
+  show (Xtor _ xt args) | null args = show xt
+  show (Xtor _ xt args) = show xt <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (XCase _ pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
+  show (ShiftCBV _ t) = "{" <> show t <> ":CBV}"
+  show (ShiftCBN _ t) = "{" <> show t <> ":CBN}" 
+
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
   getLoc (Mu loc _ _) = loc 

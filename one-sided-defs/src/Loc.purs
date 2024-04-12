@@ -2,62 +2,55 @@ module Loc (
   Loc (..),
   SourcePosition (..),
   defaultLoc,
-  HasLoc,
+  class HasLoc,
   getLoc,
   setLoc,
   showLocInSource
 ) where 
 
+import Prelude (class Eq, class Ord, class Show, show, (<>))
+import Data.List (List(..), take, drop)
+import Data.String as S
+import Data.Array (toUnfoldable)
 
-data SourcePosition = MkSourcePos {srcLine :: !Int, srcCol :: !Int}
-  deriving (Eq,Ord)
-
+data SourcePosition = SourcePosition {srcLine :: Int, srcCol :: Int}
+derive instance eqSourcePosition :: Eq SourcePosition
+derive instance ordSOurcePosition :: Ord SourcePosition
 instance Show SourcePosition where 
-  show (MkSourcePos line col) = "Line : " <> show line <> ", Column: " <> show col
-
-showLocInSource :: String -> Loc -> String
-showLocInSource src loc = do
-  let endPos = locEnd loc
-  let untilLine = unt (srcLine endPos) (lines src)
-  let untilColFun = unt (srcCol endPos) 
-  let untilCol = updateLast untilLine untilColFun
-  let startPos = locStart loc
-  let fromLine = frm (srcLine startPos) untilCol
-  let fromColFun = frm (srcCol startPos)
-  let fromCol = updateFirst fromLine fromColFun
-  concat fromCol
-  where 
-    unt :: Int -> [a] -> [a]
-    unt _ [] = [] 
-    unt i _ | i < 0 = []
-    unt i (a:as) = a:unt (i-1) as
-
-    updateLast :: [a] -> (a->a) -> [a]
-    updateLast [] _ = [] 
-    updateLast [a] fun = [fun a]
-    updateLast (a:as) fun = a:updateLast as fun
-
-    frm :: Int -> [a] ->[a]
-    frm 1 ls = ls
-    frm i _ | i<=0 = [] 
-    frm _ [] = []
-    frm i (_:as) = frm (i-1) as
-
-    updateFirst :: [a] -> (a->a) -> [a]
-    updateFirst [] _ = []
-    updateFirst (a:as) fun = fun a : as 
-
+  show (SourcePosition {srcLine:line,srcCol:col}) = "Line : " <> show line <> ", Column: " <> show col
+getLine :: SourcePosition -> Int 
+getLine (SourcePosition {srcLine:line,srcCol:_}) = line
+getCol :: SourcePosition -> Int 
+getCol (SourcePosition {srcLine:_,srcCol:col}) = col
 
 defaultPos :: SourcePosition
-defaultPos = MkSourcePos 0 0
+defaultPos = SourcePosition{srcLine:0, srcCol:0}
 
-data Loc = MkLoc { locStart :: !SourcePosition, locEnd :: !SourcePosition}
-  deriving (Eq,Ord)
 
+data Loc = Loc { locStart :: SourcePosition, locEnd :: SourcePosition}
+derive instance eqLoc :: Eq Loc 
+derive instance ordLoc :: Ord Loc
 instance Show Loc where 
-  show (MkLoc startPos endPos) = "Between " <> show startPos <> " and " <> show endPos
+  show (Loc {locStart:startPos,locEnd:endPos}) = "Between " <> show startPos <> " and " <> show endPos
 defaultLoc :: Loc 
-defaultLoc = MkLoc defaultPos defaultPos
+defaultLoc = Loc{locStart:defaultPos,locEnd:defaultPos}
+
+
+showLocInSource :: String -> Loc -> String
+showLocInSource src (Loc loc) = do
+  let srcLines = toUnfoldable (S.split (S.Pattern "\n") src)
+  let posLines = betweenList (getLine loc.locStart) (getCol loc.locEnd) srcLines 
+  case posLines of 
+    Nil -> ""
+    (Cons l1 _) -> betweenString (getCol loc.locStart) (getCol loc.locEnd) l1
+  where 
+
+    betweenList :: forall a. Int -> Int -> List a -> List a 
+    betweenList start end ls = take end (drop start ls) 
+
+
+    betweenString :: Int -> Int -> String -> String
+    betweenString start end str = S.take end (S.drop start str)
 
 class HasLoc a where 
   getLoc :: a -> Loc

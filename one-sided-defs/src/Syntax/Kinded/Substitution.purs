@@ -1,25 +1,30 @@
 module Syntax.Kinded.Substitution (
-  SubstituteKindvars (..),
-  SubstituteVariables (..),
+  class SubstituteKindvars,
+  substKindvars,
+  class SubstituteVariables,
+  substVars,
   substituteVariable
 ) where 
 
-import Syntax.Kinded.Types 
-import Syntax.Kinded.Terms
-import Common
+import Syntax.Kinded.Types (Ty(..))
+import Syntax.Kinded.Terms (Term(..),Command(..),Pattern(..))
+import Common (Kindvar, EvaluationOrder, Kind(..), Variable)
 
-import Data.Map qualified as M
-import Data.Maybe (fromMaybe)
+import Prelude ((<$>))
+import Data.Map (Map, lookup, delete, fromFoldable)
+import Data.Tuple (Tuple(..))
+import Data.List (foldr)
+import Data.Maybe (fromMaybe, maybe)
 
 --------------------------------
 -- Kind Variable Substitution --
 --------------------------------
 class SubstituteKindvars a where 
-  substKindvars :: M.Map Kindvar EvaluationOrder -> a -> a 
+  substKindvars :: Map Kindvar EvaluationOrder -> a -> a 
 
 instance SubstituteKindvars Kind where 
-  substKindvars _ p@MkKind{} = p
-  substKindvars varmap k@(MkKindVar v) = maybe k MkKind (M.lookup v varmap)
+  substKindvars _ p@(MkKind _) = p
+  substKindvars varmap k@(MkKindVar v) = maybe k MkKind (lookup v varmap)
 
 instance SubstituteKindvars Ty where 
   substKindvars varmap (TyVar v knd) = TyVar v (substKindvars varmap knd) 
@@ -43,31 +48,31 @@ instance SubstituteKindvars Term where
   substKindvars varmap (ShiftCBN loc t ty) = ShiftCBN loc (substKindvars varmap t) (substKindvars varmap ty)
 
 instance SubstituteKindvars Pattern where 
-  substKindvars varmap (MkPattern xt vars c) = MkPattern xt vars (substKindvars varmap c)
+  substKindvars varmap (Pattern pt) = Pattern (pt {ptcmd=(substKindvars varmap pt.ptcmd)})
 
 --------------------------------------------------------------
 ----------------- Term Variable Substitution -----------------
 --------------------------------------------------------------
 
 class SubstituteVariables a where 
-  substVars :: M.Map Variable Term -> a -> a 
+  substVars :: Map Variable Term -> a -> a 
 
 instance SubstituteVariables Term where 
-  substVars varmap vt@(Var _ v _) = fromMaybe vt (M.lookup v varmap)
-  substVars varmap (Mu loc v c ty) = Mu loc v (substVars (M.delete v varmap) c) ty
+  substVars varmap vt@(Var _ v _) = fromMaybe vt (lookup v varmap)
+  substVars varmap (Mu loc v c ty) = Mu loc v (substVars (delete v varmap) c) ty
   substVars varmap (Xtor loc nm args ty) = Xtor loc nm (substVars varmap <$> args ) ty
   substVars varmap (XCase loc pts ty) = XCase loc (substVars varmap <$> pts) ty
   substVars varmap (ShiftCBV loc t ty) = ShiftCBV loc (substVars varmap t) ty 
   substVars varmap (ShiftCBN loc t ty) = ShiftCBN loc (substVars varmap t) ty 
 
 instance SubstituteVariables Pattern where 
-  substVars varmap (MkPattern xt vars c) = let newMap = foldr M.delete varmap  vars in MkPattern xt vars (substVars newMap c)
+  substVars varmap (Pattern pt) = let newMap = foldr delete varmap  pt.ptv in Pattern (pt {ptcmd=(substVars newMap pt.ptcmd)})
 
 instance SubstituteVariables Command where 
   substVars varmap (Cut loc t eo u) = Cut loc (substVars varmap t) eo (substVars varmap u)
-  substVars _ d@Done{} = d
-  substVars _ e@Err{} = e
+  substVars _ d@(Done _) = d
+  substVars _ e@(Err _ _) = e
   substVars varmap (Print loc t) = Print loc (substVars varmap t)
 
-substituteVariable :: SubstituteVariables a => Variable -> Term -> a -> a
-substituteVariable substVar substT a = let varmap = M.fromList [(substVar,substT)] in substVars varmap a 
+substituteVariable :: forall a.SubstituteVariables a => Variable -> Term -> a -> a
+substituteVariable substVar substT a = let varmap = fromFoldable [Tuple substVar substT] in substVars varmap a 

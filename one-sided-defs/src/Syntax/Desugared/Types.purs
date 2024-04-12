@@ -3,18 +3,31 @@ module Syntax.Desugared.Types (
   Ty (..)
 ) where 
 
-import Common 
+import Common (Typevar,Typename, Kind, class ShiftEvalOrder, shiftEvalOrder)
 
-data Ty where 
-  TyVar :: Typevar -> Ty 
-  TyDecl :: Typename -> [Ty] -> Ty
-  TyCo :: Ty -> Ty
-  TyShift :: Ty -> Ty 
-  TyForall :: [Typevar] -> Ty -> Ty
-  deriving (Eq)
+import Prelude (class Eq, class Show, show, (<>), (<$>))
+import Data.List (List, intercalate, null)
 
-data KindedTy = KindedTy {kindedTy :: !Ty, kindedKind :: !Kind}
-  deriving (Eq)
+data Ty = 
+  TyVar      Typevar
+  | TyDecl   Typename (List Ty)
+  | TyCo     Ty
+  | TyShift  Ty 
+  | TyForall (List Typevar) Ty 
+derive instance eqTy :: Eq Ty 
+
+instance Show Ty where 
+  show (TyVar v) = show v
+  show (TyDecl tyn args) | null args = show tyn
+  show (TyDecl tyn args) = show tyn <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (TyCo ty) = "co " <> show ty
+  show (TyShift ty) = "{ " <> show ty <> " }"
+  show (TyForall args ty) = "forall " <> intercalate " " (show <$> args) <> ". " <> show ty
+
+data KindedTy = KindedTy {kindedTy :: Ty, kindedKind :: Kind}
+derive instance eqKindedTy :: Eq KindedTy
+instance Show KindedTy where 
+  show (KindedTy kty) = show kty.kindedTy <> " : " <> show kty.kindedKind
 
 instance ShiftEvalOrder KindedTy where 
-  shiftEvalOrder (KindedTy ty knd) = KindedTy ty (shiftEvalOrder knd)
+  shiftEvalOrder (KindedTy kty) = KindedTy (kty {kindedKind=shiftEvalOrder kty.kindedKind})

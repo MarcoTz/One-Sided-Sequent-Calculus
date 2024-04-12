@@ -1,16 +1,28 @@
 module Syntax.Kinded.Types (
-  Ty (..),
+  Ty (..)
 ) where 
 
-import Common 
+import Common (Typevar,Kind, Typename, class GetKind, getKind, shiftEvalOrder, class ContainsKindvar, containsKindvar, class ShiftEvalOrder)
 
-data Ty where 
-  TyVar    :: Typevar -> Kind -> Ty 
-  TyDecl   :: Typename -> [Ty] -> Kind -> Ty 
-  TyShift  :: Ty -> Kind -> Ty
-  TyCo     :: Ty -> Ty 
-  TyForall :: [Typevar] -> Ty -> Ty
-  deriving (Eq)
+import Prelude (class Eq, (<$>), ($), class Show, show, (<>))
+import Data.List (List,null,intercalate)
+
+data Ty =
+  TyVar      Typevar Kind 
+  | TyDecl   Typename (List Ty) Kind 
+  | TyShift  Ty Kind 
+  | TyCo     Ty 
+  | TyForall (List Typevar)  Ty
+derive instance eqTy :: Eq Ty
+instance Show Ty where 
+  show (TyVar v knd) = show v <> " : " <> show knd 
+  show (TyDecl tyn args knd) | null args = show tyn <> ": " <> show knd
+  show (TyDecl tyn args knd) = show tyn <> "(" <> intercalate ", " (show <$> args) <> ") :" <> show knd
+  show (TyShift ty knd) = "{" <> show ty <> "}" <> ":" <> show knd
+  show (TyCo ty) = "co " <> show ty
+  show (TyForall args ty) | null args = show ty
+  show (TyForall args ty) = "forall " <> intercalate ", " (show <$> args) <> ", " <> show ty
+
 
 instance GetKind Ty where 
   getKind (TyVar _ knd)     = knd
@@ -20,7 +32,7 @@ instance GetKind Ty where
   getKind (TyForall _ ty)   = getKind ty
 
 instance ContainsKindvar Ty where 
-  containsKindvar = containsKindvar . getKind
+  containsKindvar ty = containsKindvar (getKind  $ ty)
 
 instance ShiftEvalOrder Ty where 
   shiftEvalOrder (TyVar v knd) = TyVar v (shiftEvalOrder knd)

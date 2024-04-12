@@ -1,20 +1,31 @@
 module Syntax.Desugared.Terms (
   Command (..),
   Term (..),
-  Pattern (..),
+  Pattern (..)
 ) where 
 
-import Common 
-import Loc
-import Syntax.Desugared.Types
+import Loc (Loc, class HasLoc) 
+import Common (EvaluationOrder, Xtorname, Variable) 
+import Syntax.Desugared.Types (Ty)
 
-data Command where 
-  Cut        :: Loc -> Term -> EvaluationOrder -> Term -> Command 
-  CutAnnot   :: Loc -> Term -> Ty -> EvaluationOrder -> Term -> Command 
-  Done       :: Loc -> Command 
-  Err        :: Loc -> String -> Command 
-  Print      :: Loc -> Term -> Command
-  PrintAnnot :: Loc -> Term -> Ty -> Command
+import Prelude (class Show, show, (<>), (<$>), class Eq)
+import Data.List (List, intercalate, null) 
+
+data Command =
+  Cut          Loc Term  EvaluationOrder  Term 
+  | CutAnnot   Loc Term Ty EvaluationOrder Term 
+  | Done       Loc 
+  | Err        Loc String 
+  | Print      Loc Term 
+  | PrintAnnot Loc Term Ty 
+derive instance eqCommand :: Eq Command
+instance Show Command where 
+  show (Cut _ t eo u) = "<" <> show t <> " | " <> show eo <> " | " <> show u <> " >"
+  show (CutAnnot _ t ty eo u) = "<" <> show t <> " | " <>  show ty <> " : " <> show eo <> " | " <> show u
+  show (Done _) = "Done"
+  show (Err _ msg) = "errror " <> show msg
+  show (Print _ t) = "Print " <> show t
+  show (PrintAnnot _ t ty) = "Print " <> show t <> " : " <> show ty
 
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _) = loc 
@@ -31,15 +42,29 @@ instance HasLoc Command where
   setLoc loc (Print _ t) = Print loc t
   setLoc loc (PrintAnnot _ t ty) = PrintAnnot loc t ty
 
-data Pattern = MkPattern{ptxt :: !Xtorname, ptv :: ![Variable], ptcmd :: !Command}
+data Pattern = Pattern{ptxt :: Xtorname, ptv :: List(Variable), ptcmd :: Command}
+derive instance eqPattern :: Eq Pattern
+instance Show Pattern where
+  show (Pattern pt) | null pt.ptv = show pt.ptxt <> "=>" <>  show pt.ptcmd
+  show (Pattern pt) = show pt.ptxt <> "(" <> intercalate ", " (show <$> pt.ptv) <> ") => " <> show pt.ptcmd
 
-data Term where 
-  Var      :: Loc -> Variable -> Term 
-  Mu       :: Loc -> Variable -> Command -> Term 
-  Xtor     :: Loc -> Xtorname -> [Term] -> Term
-  XCase    :: Loc -> [Pattern] -> Term
-  ShiftCBV :: Loc -> Term -> Term
-  ShiftCBN :: Loc -> Term -> Term
+data Term = 
+  Var      Loc Variable 
+  | Mu       Loc Variable Command 
+  | Xtor     Loc Xtorname (List Term)
+  | XCase    Loc (List Pattern)
+  | ShiftCBV Loc Term
+  | ShiftCBN Loc Term
+derive instance eqTerm :: Eq Term
+instance Show Term where 
+  show (Var _ v) = show v 
+  show (Mu _ v c) = "mu " <> show v <> ". " <> show c 
+  show (Xtor _ nm args) | null args = show nm
+  show (Xtor _ nm args) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (XCase _ pts) = "case " <> intercalate ", " (show <$> pts)
+  show (ShiftCBV _ t) = "{" <> show t <> ":CBV}"
+  show (ShiftCBN _ t) = "{" <> show t <> ":CBN}"
+
 
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
