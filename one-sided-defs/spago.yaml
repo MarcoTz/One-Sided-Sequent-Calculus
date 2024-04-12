@@ -1,0 +1,4 @@
+package:
+  name: one-sided-defs
+  dependencies: 
+    - prelude

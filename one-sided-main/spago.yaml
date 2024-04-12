@@ -1,0 +1,8 @@
+package:
+  name: one-sided-main
+  dependencies:
+    - prelude
+    - one-sided-defs
+    - one-sided-driver
+    - one-sided-files
+    - one-sided-eval
