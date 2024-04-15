@@ -1,4 +1,6 @@
 package:
   name: one-sided-depcheck
   dependencies: 
+    - one-sided-defs
+    - transformers
     - prelude
