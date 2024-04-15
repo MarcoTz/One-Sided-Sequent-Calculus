@@ -9,23 +9,25 @@ module Eval.Definition (
   emptyTrace
 ) where
 
-import Environment 
-import Errors 
-import Loc
-import Common
-import Syntax.Kinded.Terms
-import Pretty.Kinded()
+import Loc (Loc)
+import Common (Xtorname)
+import Errors (class Error)
+import Environment (Environment)
+import Syntax.Kinded.Terms (Command)
 
-import Control.Monad.Except 
-import Control.Monad.Reader
+import Prelude ((<>), class Show, show, class Eq, (<$>), (==), (||))
+import Data.List (List(..),intercalate, elem)
+import Data.Either (Either)
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Except (Except, runExcept)
 
-data EvalError where 
-  ErrXtorArity :: Loc -> Xtorname -> EvalError
-  ErrMissingPt :: Loc -> Xtorname -> EvalError
-  ErrLoop      :: Loc -> Command  -> EvalError
-  ErrOther     :: Loc -> String   -> EvalError
+data EvalError = 
+  ErrXtorArity    Loc Xtorname 
+  | ErrMissingPt  Loc Xtorname
+  | ErrLoop       Loc Command
+  | ErrOther      Loc String
 
-instance Error EvalError where 
+instance Error EvalError where
   getMessage (ErrXtorArity _ xtn) = "Wrong number of arguments for xtor " <> show xtn
   getMessage (ErrMissingPt _ xtn) = "No pattern for xtor " <> show xtn 
   getMessage (ErrLoop _ c) = "Cannot evaluate " <> show c <> ", evaluation results in loop"
@@ -38,23 +40,24 @@ instance Error EvalError where
 
   toError = ErrOther 
 
-data EvalTrace = MkTrace !Command ![Command] 
-  deriving (Eq)
-
+data EvalTrace = MkTrace Command (List Command)
+derive instance eqTrace :: Eq EvalTrace
+instance Show EvalTrace where 
+  show (MkTrace c Nil) = "Result " <> show c
+  show (MkTrace c tr) = "Result " <> show c <> "\nTrace:\n" <> intercalate "\n" (show <$> tr)
 appendTrace :: EvalTrace -> Command -> EvalTrace 
-appendTrace (MkTrace c tr) c' = MkTrace c' (tr ++ [c])
+appendTrace (MkTrace c tr) c' = MkTrace c' (tr <> (Cons c Nil))
 
 prependTrace :: EvalTrace -> Command -> EvalTrace 
-prependTrace (MkTrace c tr) c' = MkTrace c (c':tr)
+prependTrace (MkTrace c tr) c' = MkTrace c (Cons c' tr)
 
 emptyTrace :: Command -> EvalTrace 
-emptyTrace c = MkTrace c []
+emptyTrace c = MkTrace c Nil
 
-inTrace :: EvalTrace -> Command -> Bool
+inTrace :: EvalTrace -> Command -> Boolean
 inTrace (MkTrace c tr) c' = c==c' || c `elem` tr
 
-newtype EvalM a = MkEvalM { getEvalM :: ReaderT Environment (Except EvalError) a }
-  deriving newtype (Functor, Applicative, Monad, MonadError EvalError, MonadReader Environment)
+type EvalM a = ReaderT Environment (Except EvalError) a
 
-runEvalM :: Environment -> EvalM a -> Either EvalError a
-runEvalM env m = runExcept (runReaderT (getEvalM m) env)
+runEvalM :: forall a.Environment -> EvalM a -> Either EvalError a
+runEvalM env m = runExcept (runReaderT m env)

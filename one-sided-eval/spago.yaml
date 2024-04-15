@@ -1,4 +1,5 @@
 package:
   name: one-sided-eval
   dependencies: 
+    - one-sided-defs
     - prelude
