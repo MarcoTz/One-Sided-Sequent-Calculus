@@ -1,54 +1,62 @@
 module Parser.Program (parseProgram) where 
 
-import Parser.Definition
-import Parser.Common
-import Parser.Types
-import Parser.Terms
-import Parser.Lexer
-import Parser.Keywords
-import Parser.Symbols
-import Syntax.Parsed.Program
-import Syntax.Parsed.Terms
-import Common
+import Parser.Definition (SrcParser, ParseDecl(..)) 
+import Parser.Lexer (sc, parseKeyword, parseSymbol, getCurrPos, getCurrLoc, parseParens, parseCommaSep)
+import Parser.Common (parseModulename, parseVariable, parseDataCodata, parseXtorname, parseTypename)
+import Parser.Keywords (Keyword(..))
+import Parser.Symbols (Sym(..))
+import Parser.Terms (parseCommand,parseTerm)
+import Parser.Types (parseTy, parseTyArgs)
+import Common (Modulename(..))
+import Syntax.Parsed.Program (
+  Program(..), DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), RecDecl(..), XtorSig(..),
+  addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, addRecProgram, setMainProgram, emptyProg)
+import Syntax.Parsed.Terms (Command)
 
-import Text.Megaparsec
-import Text.Megaparsec.Char
-import Control.Monad
-import Data.Map qualified as M
-import Data.Maybe (isNothing)
+import Prelude (bind,pure, (<>), ($), (<$>), show)
+import Data.Map (member)
+import Data.List (List(..))
+import Data.Maybe (Maybe(..),isJust)
+import Data.Foldable (foldM)
+import Parsing (fail)
+import Parsing.Combinators (manyTill, try, sepBy, optionMaybe)
+import Parsing.String (eof)
+import Parsing.String.Basic (space)
+import Control.Alt ((<|>))
 
-parseModuleDecl :: Parser Modulename
+parseModuleDecl :: SrcParser Modulename
 parseModuleDecl = (do 
-  parseKeyword KwModule 
-  space1 
-  sc 
+  _ <- parseKeyword KwModule 
+  _ <- space
+  _ <- sc 
   parseModulename)
-  <|> return (Modulename "")
+  <|> pure (Modulename {unModulename:""})
 
-parseProgram :: String -> Parser Program 
+parseProgram :: String -> SrcParser Program 
 parseProgram src = do 
   nm <-parseModuleDecl
-  sc
-  decls <- manyTill (parseDecl <* sc) eof
+  _ <- sc
+  decls <- manyTill 
+    (do
+     decl <- parseDecl 
+     _ <- sc
+     pure decl) eof
   foldM foldFun (emptyProg nm src) decls
   where 
-    foldFun :: Program -> ParseDecl -> Parser Program 
-    foldFun prog (MkD decl) = do 
-      let tyn = declName decl 
-      guard (not (M.member tyn (progDecls prog)))
-      return $ addDeclProgram decl prog 
-    foldFun prog (MkV var)  = do
-      let v = varName var 
-      guard (not (M.member v (progVars prog)))
-      return $ addVarProgram var prog 
-    foldFun prog (MkA annot)= return $ addAnnotProgram annot prog
-    foldFun prog (MkI imp) = return $ addImportProgram imp prog
-    foldFun prog (MkM mn) = do 
-      guard (isNothing (progMain prog)) 
-      return $ setMainProgram mn prog
-    foldFun prog (MkR rec) = return $ addRecProgram rec prog
+    foldFun :: Program -> ParseDecl -> SrcParser Program 
+    foldFun p@(Program prog) (MkD d@(DataDecl decl)) = do 
+      let tyn = decl.declName 
+      if member tyn (prog.progDecls) then fail ("multiple declarations for type " <> show tyn) else pure $ addDeclProgram d p
+    foldFun p@(Program prog) (MkV v@(VarDecl var))  = do
+      let nm = var.varName
+      if member nm (prog.progVars) then fail ("multiple declarations for variable " <> show v) else pure $ addVarProgram v p
+    foldFun prog (MkA annot) = pure $ addAnnotProgram annot prog
+    foldFun prog (MkI imp) = pure $ addImportProgram imp prog
+    foldFun p@(Program prog) (MkM mn) = do 
+      if isJust (prog.progMain) then fail "multiple definitions of main" else pure $ setMainProgram mn p
+    foldFun prog (MkR rec) = pure $ addRecProgram rec prog
 
-parseDecl :: Parser ParseDecl 
+parseDecl :: SrcParser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
@@ -57,85 +65,90 @@ parseDecl =
  (MkV <$> try parseVarDecl)  <|> 
  (MkA <$> try parseTypeAnnot)
 
-parseMain :: Parser Command 
+parseMain :: SrcParser Command 
 parseMain = do 
-  parseKeyword KwMain <|> parseKeyword Kwmain 
-  sc 
-  parseSymbol SymColon
-  parseSymbol SymEq 
-  sc 
+  _ <- parseKeyword KwMain <|> parseKeyword Kwmain 
+  _ <- sc 
+  _ <- parseSymbol SymColon
+  _ <- parseSymbol SymEq 
+  _ <- sc 
   c <- parseCommand
-  sc 
-  parseSymbol SymSemi
-  return c
+  _ <- sc 
+  _ <- parseSymbol SymSemi
+  pure c
   
-parseImport :: Parser Import
+parseImport :: SrcParser Import
 parseImport = do
   startPos <- getCurrPos
-  parseKeyword KwImport
-  space1
+  _ <- parseKeyword KwImport
+  _ <- space
+  _ <- sc
   mn <- parseModulename
-  parseSymbol SymSemi
+  _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
-  return (MkImport loc mn)
+  pure $ Import {importPos:loc, importName:mn}
 
-parseTypeAnnot :: Parser AnnotDecl 
+parseTypeAnnot :: SrcParser AnnotDecl 
 parseTypeAnnot = do
   startPos <- getCurrPos
   nm <- parseVariable 
-  sc
-  parseSymbol SymColon
-  parseSymbol SymColon
-  sc
+  _ <- sc
+  _ <- parseSymbol SymColon
+  _ <- parseSymbol SymColon
+  _ <- sc
   ty <- parseTy
-  sc
-  parseSymbol SymSemi
+  _ <- sc
+  _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
-  return $ MkAnnot loc nm ty 
+  pure $ AnnotDecl {annotPos:loc, annotName:nm, annotType:ty}
 
-parseVarDecl :: Parser VarDecl 
+parseVarDecl :: SrcParser VarDecl 
 parseVarDecl = do 
   startPos <- getCurrPos 
   nm <- parseVariable 
-  sc
-  parseSymbol SymColon
-  parseSymbol SymEq
-  sc
+  _ <- sc
+  _ <- parseSymbol SymColon
+  _ <- parseSymbol SymEq
+  _ <- sc
   t <- parseTerm
-  sc
-  parseSymbol SymSemi
+  _ <- sc
+  _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
-  return (MkVar loc nm t)
+  pure $ VarDecl {varPos:loc, varName:nm, varBody:t}
 
-parseRecDecl :: Parser RecDecl 
+parseRecDecl :: SrcParser RecDecl 
 parseRecDecl = do 
-  parseKeyword KwRec
-  sc
-  (MkVar loc nm t) <- parseVarDecl
-  return (MkRec loc nm t)
+  _ <- parseKeyword KwRec
+  _ <- sc
+  (VarDecl var) <- parseVarDecl
+  pure $ RecDecl {recPos:var.varPos, recName:var.varName, recBody:var.varBody}
 
-parseDataDecl :: Parser DataDecl 
+parseDataDecl :: SrcParser DataDecl 
 parseDataDecl = do 
   startPos <- getCurrPos
   isco <- parseDataCodata
-  space1
+  _ <- space
+  _ <- sc
   nm <- parseTypename 
-  sc
+  _ <- sc
   args <- parseTyArgs
-  sc
-  parseSymbol SymBrackO 
-  sc 
+  _ <- sc
+  _ <- parseSymbol SymBrackO 
+  _ <- sc 
   xtors <- parseXtorSig `sepBy` parseCommaSep
-  sc
-  parseSymbol SymBrackC
+  _ <- sc
+  _ <- parseSymbol SymBrackC
   loc <- getCurrLoc startPos
-  return $ MkData loc nm args isco xtors
+  pure $ DataDecl {declPos:loc, declName:nm, declArgs:args, declType:isco, declXtors:xtors}
 
 
-parseXtorSig :: Parser XtorSig
+parseXtorSig :: SrcParser XtorSig
 parseXtorSig = do 
   startPos <- getCurrPos
   nm <- parseXtorname 
-  args <- parseParens (parseTy `sepBy` parseCommaSep) <|> return [] 
+  args <- optionMaybe (parseParens (parseTy `sepBy` parseCommaSep))
   loc <- getCurrLoc startPos
-  return $ MkXtorSig loc nm args 
+  case args of 
+    Nothing -> pure $ XtorSig {sigPos:loc, sigName:nm, sigArgs:Nil}
+    Just args' -> pure $ XtorSig {sigPos:loc, sigName:nm, sigArgs:args'}
+

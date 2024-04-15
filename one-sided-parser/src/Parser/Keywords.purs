@@ -3,6 +3,9 @@ module Parser.Keywords (
   allKws
 ) where 
 
+import Prelude (class Show)
+import Data.List (List(..))
+
 data Keyword = 
  KwModule
   | KwData
@@ -47,5 +50,22 @@ instance Show Keyword where
   show KwPrint  = "Print"
   show Kwprint  = "print"
 
-allKws :: [Keyword]
-allKws = [KwModule,KwData,Kwmu,KwMu,KwCase,KwDone,KwForall,Kwforall,KwCo,Kwco,KwImport,KwMain,KwMain,KwError,KwRec, KwCBV, KwCBN, KwCodata]
+allKws :: List Keyword
+allKws = Cons KwModule 
+  (Cons KwData 
+  (Cons Kwmu
+  (Cons KwMu 
+  (Cons KwCase 
+  (Cons KwDone
+  (Cons KwForall
+  (Cons Kwforall
+  (Cons KwCo
+  (Cons Kwco
+  (Cons KwImport
+  (Cons KwMain
+  (Cons KwMain
+  (Cons KwError
+  (Cons KwRec
+  (Cons KwCBV
+  (Cons KwCBN
+  (Cons KwCodata Nil)))))))))))))))))

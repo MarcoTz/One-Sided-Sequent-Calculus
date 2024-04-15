@@ -1,81 +1,88 @@
 module Parser.Types (
   parseKindedTy,
   parseTy,
-  parseTyArgs,
+  parseTyArgs
 ) where 
 
-import Parser.Definition
-import Parser.Symbols
-import Parser.Keywords
-import Parser.Lexer
-import Parser.Common
-import Syntax.Parsed.Types
-import Common
+import Common (VariantVar)
+import Syntax.Parsed.Types (Ty(..), KindedTy(..))
+import Parser.Definition (SrcParser)
+import Parser.Lexer (parseSymbol, parseKeyword, sc, parseCommaSep)
+import Parser.Symbols (Sym(..))
+import Parser.Keywords (Keyword(..))
+import Parser.Common (parseTypevar, parseTypename, parseVariantVar, parseKind)
 
-import Text.Megaparsec
-import Text.Megaparsec.Char
+import Prelude (bind, pure, ($))
+import Data.List (List(..))
+import Parsing.String.Basic (space)
+import Parsing.Combinators (try, sepBy, many1)
+import Control.Alt ((<|>))
 
-parseTy :: Parser Ty 
-parseTy = parseTyParens <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyvar
-
-parseTyParens :: Parser Ty
-parseTyParens = do 
-  parseSymbol SymParensO
-  sc
+parseTy :: SrcParser Ty 
+parseTy = --(do parseTyParens) <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyvar
+  -- parens
+  (do 
+  _ <- parseSymbol SymParensO
+  _ <- sc
   ty <- parseTy
-  sc
-  parseSymbol SymParensC
-  return ty
-
-parseTyForall :: Parser Ty 
-parseTyForall = do
-  parseKeyword KwForall <|> parseKeyword Kwforall 
-  sc 
-  args <- parseTypevar `sepBy` space1 
-  sc 
-  parseSymbol SymDot
-  sc 
-  TyForall args <$> parseTy 
-
-parseTyDecl :: Parser Ty
-parseTyDecl = do
-  tyn <- parseTypename 
-  parseSymbol SymParensO 
-  args <- parseTy `sepBy` (parseSymbol SymComma >> space)
-  parseSymbol SymParensC
-  return (TyDecl tyn args)
-
-parseTyArgs :: Parser [VariantVar]
-parseTyArgs = (do 
-  parseSymbol SymParensO
-  vars <- parseVariantVar `sepBy` (parseSymbol SymComma >> space)
-  parseSymbol SymParensC
-  return vars)
+  _ <- sc
+  _ <- parseSymbol SymParensC
+  pure ty)
   <|>
-  return []
-
-parseTyvar :: Parser Ty
-parseTyvar = TyVar <$> parseTypevar
-
-parseTyShift :: Parser Ty 
-parseTyShift = do 
-  parseSymbol SymBrackO
-  sc
+  -- forall
+  (do 
+  _ <- parseKeyword KwForall <|> parseKeyword Kwforall 
+  _ <- sc
+  args <- parseTypevar `sepBy` (many1 space)
+  _ <- sc
+  _ <- parseSymbol SymDot
+  _ <- sc
+  ty <- parseTy 
+  pure $ TyForall args ty)
+  <|>
+  -- declared type
+  try ( do 
+  tyn <- parseTypename 
+  _ <- parseSymbol SymParensO 
+  args <- parseTy `sepBy` parseCommaSep 
+  _ <- parseSymbol SymParensC
+  pure (TyDecl tyn args))
+  <|>
+  -- type var
+  (do 
+    var <- parseTypevar
+    pure $ TyVar var )
+  <|>
+  -- shift
+  (do
+  _ <- parseSymbol SymBrackO
+  _ <- sc
   ty <- parseTy
-  sc
-  parseSymbol SymBrackC 
-  return (TyShift ty)
+  _ <- sc
+  _ <- parseSymbol SymBrackC 
+  pure (TyShift ty))
+  <|>
+  -- co type
+  (do 
+  _ <- parseKeyword KwCo <|> parseKeyword Kwco
+  _ <- sc
+  ty <- parseTy 
+  pure $ TyCo ty )
+  
+parseTyArgs :: SrcParser (List VariantVar)
+parseTyArgs = (do 
+  _ <- parseSymbol SymParensO
+  vars <- parseVariantVar `sepBy` parseCommaSep 
+  _ <- parseSymbol SymParensC
+  pure vars)
+  <|>
+  pure Nil
 
-parseTyCo :: Parser Ty 
-parseTyCo = do 
-  parseKeyword KwCo <|> parseKeyword Kwco
-  sc
-  TyCo <$> parseTy
-
-parseKindedTy :: Parser KindedTy 
+parseKindedTy :: SrcParser KindedTy 
 parseKindedTy = do 
   ty <- parseTy
-  sc 
-  parseSymbol SymColon
-  sc 
-  KindedTy ty <$> parseKind
+  _ <- sc
+  _ <- parseSymbol SymColon
+  _ <- sc
+  knd <- parseKind
+  pure $ KindedTy {kindedTy:ty,kindedKind:knd}

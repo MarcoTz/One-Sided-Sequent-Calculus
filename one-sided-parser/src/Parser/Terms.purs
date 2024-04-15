@@ -3,226 +3,229 @@ module Parser.Terms (
   parseCommand
 ) where
 
-import Parser.Definition
-import Parser.Lexer
-import Parser.Common
-import Parser.Symbols
-import Parser.Keywords
-import Parser.Types
-import Syntax.Parsed.Terms
-import Syntax.Parsed.Types
-import Common
+import Parser.Definition (SrcParser)
+import Parser.Lexer (sc, getCurrPos,getCurrLoc, parseParens,parseKeyword, parseSymbol, parseCommaSep, parseAngC, parseAngO)
+import Parser.Common (parseVariable, parseXtorname, parseEvaluationOrder)
+import Parser.Keywords (Keyword(..))
+import Parser.Symbols (Sym(..))
+import Parser.Types (parseTy)
+import Common (EvaluationOrder(..))
+import Syntax.Parsed.Terms (Term(..),Command(..),Pattern(..))
+import Syntax.Parsed.Types (Ty)
 
-import Text.Megaparsec
-import Data.Functor
+import Prelude (bind, ($), pure, (<>))
+import Data.List (List(..))
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
+import Data.String.CodeUnits (singleton)
+import Parsing.Combinators (try, sepBy, manyTill, optionMaybe)
+import Parsing.String (anyChar, char)
+import Control.Alt ((<|>))
 
-parseTerm :: Parser Term
-parseTerm = parseMu <|> parseXCase <|> try parseShift <|> try parseXtor <|> parseVar <|> parseParens parseTerm 
-
-parseVar :: Parser Term 
-parseVar = do 
+parseTerm :: SrcParser Term
+parseTerm = 
+  -- mu
+  (do 
+  startPos <- getCurrPos
+  _ <- parseKeyword KwMu <|> parseKeyword Kwmu 
+  _ <- sc
+  v <- parseVariable 
+  _ <- sc
+  _ <- parseSymbol SymDot
+  _ <- sc
+  c <- parseCommand
+  loc <- getCurrLoc startPos
+  pure $ Mu loc v c)
+  <|>
+  -- xcase 
+  (do
+  startPos <- getCurrPos
+  _ <- parseKeyword KwCase
+  _ <- sc
+  _ <- parseSymbol SymBrackO
+  _ <- sc
+  pts <- parsePattern `sepBy` parseCommaSep 
+  _ <- sc
+  _ <- parseSymbol SymBrackC
+  loc <- getCurrLoc startPos
+  pure (XCase loc pts))
+  <|>
+  -- shift
+  (do
+  startPos <- getCurrPos
+  _ <- parseSymbol SymBrackO
+  _ <- sc
+  t <- parseTerm
+  _ <- sc
+  _ <- parseSymbol SymColon
+  _ <- sc
+  eo <- parseEvaluationOrder
+  _ <- parseSymbol SymBrackC
+  loc <- getCurrLoc startPos
+  case eo of 
+    CBV -> pure (ShiftCBV loc t)
+    CBN -> pure (ShiftCBN loc t))
+  <|>
+  -- xtor
+  (do
+  startPos <- getCurrPos 
+  nm <- parseXtorname 
+  _ <- sc
+  _ <- parseSymbol SymParensO
+  _ <- sc
+  args <- parseTerm `sepBy` parseCommaSep 
+  _ <- sc
+  _ <- parseSymbol SymParensC 
+  loc <- getCurrLoc startPos
+  pure $ Xtor loc nm args)
+  <|>
+  -- variable
+  (do
   startPos <- getCurrPos
   v <- parseVariable
   loc <- getCurrLoc startPos
-  return $ Var loc v
+  pure $ Var loc v)
+--  <|>
+--  parseParens parseTerm
 
-parseMu :: Parser Term
-parseMu = do
-  startPos <- getCurrPos
-  parseKeyword KwMu <|> parseKeyword Kwmu 
-  sc
-  v <- parseVariable 
-  sc
-  parseSymbol SymDot
-  sc
-  c <- parseCommand
-  loc <- getCurrLoc startPos
-  return $ Mu loc v c 
 
-parseXtor :: Parser Term
-parseXtor = do
-  startPos <- getCurrPos 
-  nm <- parseXtorname 
-  sc
-  parseSymbol SymParensO
-  sc
-  args <- parseTerm `sepBy` (parseSymbol SymComma >> sc)
-  sc
-  parseSymbol SymParensC 
-  loc <- getCurrLoc startPos
-  return $ Xtor loc nm args
-
-parsePattern :: Parser Pattern 
+parsePattern :: SrcParser Pattern 
 parsePattern = do 
   nm <- parseXtorname 
-  sc
-  args <- parseParens (parseVariable `sepBy` parseCommaSep) <|> sc $> []
-  sc
-  parseSymbol SymEq 
-  parseAngC
-  sc
-  MkPattern nm args <$> parseCommand
+  _ <- sc
+  args <- optionMaybe (parseParens (parseVariable `sepBy` parseCommaSep)) 
+  _ <- sc
+  _ <- parseSymbol SymEq 
+  _ <- parseAngC
+  _ <- sc
+  c <- parseCommand
+  case args of 
+    Nothing -> pure $ Pattern {ptxt:nm,ptv:Nil,ptcmd:c}
+    Just args' -> pure $ Pattern {ptxt:nm,ptv:args',ptcmd:c}
 
-parseXCase :: Parser Term
-parseXCase = do 
-  startPos <- getCurrPos
-  parseKeyword KwCase
-  sc
-  parseSymbol SymBrackO
-  sc
-  pts <- parsePattern `sepBy` (parseSymbol SymComma >> sc)
-  sc
-  parseSymbol SymBrackC
-  loc <- getCurrLoc startPos
-  return (XCase loc pts)
 
-parseShift :: Parser Term 
-parseShift = do 
-  startPos <- getCurrPos
-  parseSymbol SymBrackO
-  sc
-  t <- parseTerm
-  sc
-  parseSymbol SymColon
-  sc
-  eo <- parseEvaluationOrder
-  parseSymbol SymBrackC
-  loc <- getCurrLoc startPos
-  case eo of 
-    CBV -> return (ShiftCBV loc t)
-    CBN -> return (ShiftCBN loc t)
 
-parseCommand :: Parser Command 
+parseCommand :: SrcParser Command 
 parseCommand = 
-  parseCut <|> 
-  parseDone <|> 
-  parseErr <|> 
-  parsePrint <|>
-  parsePrintAnnot <|>
-  try parseCutPos <|> 
-  try parseCutNeg <|> 
-  parseParens parseCommand
-
-parseCut :: Parser Command
-parseCut = do 
+  -- cut
+  (do
   startPos <- getCurrPos
-  parseAngO
-  sc
+  _ <- parseAngO
+  _ <- sc
   t <- parseTerm
-  sc
-  parseSymbol SymBar
-  sc
-  (pol,mty) <- parseCutAnnot 
-  sc
-  parseSymbol SymBar
-  sc
+  _ <- sc
+  _ <- parseSymbol SymBar
+  _ <- sc
+  Tuple pol mty <- parseCutAnnot 
+  _ <- sc
+  _ <- parseSymbol SymBar
+  _ <- sc
   u <- parseTerm
-  sc
-  parseAngC
+  _ <- sc
+  _ <- parseAngC
   loc <- getCurrLoc startPos 
   case mty of 
-    Nothing -> return (Cut loc t pol u)
-    Just ty -> return (CutAnnot loc t ty pol u)
-
-parseCutAnnot :: Parser (EvaluationOrder,Maybe Ty)
-parseCutAnnot = try (do 
-  ty <- parseTy 
-  sc 
-  parseSymbol SymColon
-  sc 
-  eo <- parseEvaluationOrder 
-  return (eo,Just ty)) <|>
-  (,Nothing) <$> parseEvaluationOrder
-
-parseCutPos :: Parser Command 
-parseCutPos = do 
-  startPos <- getCurrPos 
-  t <- parseTerm
-  sc
-  parseAngC
-  parseAngC
-  sc
-  mty <- optional $ try tyAnnot
-  u <- parseTerm
-  loc <- getCurrLoc startPos 
-  case mty of 
-    Nothing -> return (Cut loc t CBV u)
-    Just ty -> return (CutAnnot loc t ty CBV u)
-  where 
-    tyAnnot :: Parser Ty
-    tyAnnot = do 
-      ty <- parseTy
-      sc
-      parseAngC
-      parseAngC
-      sc
-      return ty
-
-parseCutNeg :: Parser Command 
-parseCutNeg = do 
-  startPos <- getCurrPos 
-  t <- parseTerm 
-  sc 
-  parseAngO
-  parseAngO
-  sc
-  mty <- optional $ try tyAnnot
-  u <- parseTerm
-  loc <- getCurrLoc startPos 
-  case mty of 
-    Nothing -> return (Cut loc t CBN u)
-    Just ty -> return (CutAnnot loc t ty CBN u)
-  where 
-    tyAnnot :: Parser Ty
-    tyAnnot = do 
-      ty <- parseTy
-      sc
-      parseAngO
-      parseAngO
-      sc 
-      return ty
-
-parseDone :: Parser Command
-parseDone = do
+    Nothing -> pure (Cut loc t pol u)
+    Just ty -> pure (CutAnnot loc t ty pol u))
+  <|>
+  --done
+  (do
   startPos <- getCurrPos
-  parseKeyword KwDone  
+  _ <- parseKeyword KwDone  
   loc <- getCurrLoc startPos 
-  return (Done loc)
-
-parseErr :: Parser Command 
-parseErr = do 
+  pure (Done loc))
+  <|>
+  -- err
+  (do
   startPos <- getCurrPos
-  parseKeyword KwError
-  sc 
-  parseSymbol SymQuot
-  msg <- takeWhileP (Just "character") (/= '"')
-  parseSymbol SymQuot
+  _ <- parseKeyword KwError
+  _ <- sc 
+  _ <- parseSymbol SymQuot
+  msg <- manyTill anyChar (char '\n') 
+  _ <- parseSymbol SymQuot
   loc <- getCurrLoc startPos
-  return (Err loc msg)
-
-parsePrint :: Parser Command 
-parsePrint = do 
+  pure (Err loc (charlsToStr msg)))
+  -- print
+  <|>
+  (do
   startPos <- getCurrPos 
-  sc 
-  parseKeyword KwPrint <|> parseKeyword Kwprint
-  sc 
+  _ <- sc 
+  _ <- parseKeyword KwPrint <|> parseKeyword Kwprint
+  _ <- sc 
   t <- parseTerm
-  sc 
+  _ <- sc 
   loc <- getCurrLoc startPos
-  return (Print loc t)
-
-parsePrintAnnot :: Parser Command 
-parsePrintAnnot = do
+  pure (Print loc t))
+  <|>
+  -- print with annot
+  (do 
   startPos <- getCurrPos
-  sc 
-  parseKeyword KwPrint <|> parseKeyword Kwprint 
-  sc 
+  _ <- sc 
+  _ <- parseKeyword KwPrint <|> parseKeyword Kwprint 
+  _ <- sc 
   t <- parseTerm 
-  sc 
-  parseSymbol SymColon
-  parseSymbol SymColon
-  sc 
+  _ <- sc 
+  _ <- parseSymbol SymColon
+  _ <- parseSymbol SymColon
+  _ <- sc 
   ty <- parseTy
   loc <- getCurrLoc startPos
-  return (PrintAnnot loc t ty)
+  pure (PrintAnnot loc t ty))
+  <|>
+  -- cut with >> 
+  try (do
+  startPos <- getCurrPos 
+  t <- parseTerm
+  _ <- sc
+  _ <- parseAngC
+  _ <- parseAngC
+  _ <- sc
+  mty <- optionMaybe $ try (tyAnnot parseAngC)
+  u <- parseTerm
+  loc <- getCurrLoc startPos 
+  case mty of 
+    Nothing -> pure (Cut loc t CBV u)
+    Just ty -> pure (CutAnnot loc t ty CBV u))
+  <|>
+  -- cut with <<
+  try (do
+  startPos <- getCurrPos 
+  t <- parseTerm 
+  _ <- sc 
+  _ <- parseAngO
+  _ <- parseAngO
+  _ <- sc
+  mty <- optionMaybe $ try (tyAnnot parseAngO)
+  u <- parseTerm
+  loc <- getCurrLoc startPos 
+  case mty of 
+    Nothing -> pure (Cut loc t CBN u)
+    Just ty -> pure (CutAnnot loc t ty CBN u))
+--  <|>
+--  parseParens parseCommand
+  where 
+    tyAnnot :: forall a. SrcParser a -> SrcParser Ty
+    tyAnnot ps = do 
+      ty <- parseTy
+      _ <- sc
+      _ <- ps
+      _ <- ps
+      _ <- sc 
+      pure ty
 
+    charlsToStr :: List Char -> String
+    charlsToStr Nil = "" 
+    charlsToStr (Cons c1 cs) = (singleton c1) <> charlsToStr cs
+
+parseCutAnnot :: SrcParser (Tuple EvaluationOrder (Maybe Ty))
+parseCutAnnot = try (do 
+  ty <- parseTy 
+  _ <- sc 
+  _ <- parseSymbol SymColon
+  _ <- sc 
+  eo <- parseEvaluationOrder 
+  pure (Tuple eo (Just ty))) 
+  <|>
+  (do
+  eo <- parseEvaluationOrder 
+  pure $ Tuple eo Nothing)

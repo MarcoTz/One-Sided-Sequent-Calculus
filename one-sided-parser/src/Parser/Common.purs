@@ -10,51 +10,83 @@ module Parser.Common (
   parseDataCodata
 ) where 
 
-import Parser.Definition
-import Parser.Symbols
-import Parser.Keywords
-import Parser.Lexer
-import Common
+import Common (EvaluationOrder(..),Variance(..),Kind(..),Modulename(..),Variable(..),Typename(..),Typevar(..), DeclTy(..), Kindvar(..), Xtorname(..), VariantVar(..))
+import Parser.Definition (SrcParser)
+import Parser.Lexer (sc, parseKeyword, parseSymbol, parseIdentifier)
+import Parser.Keywords (Keyword(..))
+import Parser.Symbols (Sym(..))
 
-import Text.Megaparsec
+import Prelude (bind,pure,(<$>), ($))
+import Control.Alt ((<|>))
 
-parseEvaluationOrder :: Parser EvaluationOrder 
-parseEvaluationOrder = (parseKeyword KwCBV >> return CBV) <|> (parseKeyword KwCBN >> return CBN)
+parseEvaluationOrder :: SrcParser EvaluationOrder 
+parseEvaluationOrder = 
+  (do
+  _ <- parseKeyword KwCBV
+  pure CBV) 
+  <|> 
+  (do
+  _ <- parseKeyword KwCBN 
+  pure CBN)
 
-parseDataCodata :: Parser DeclTy
+parseDataCodata :: SrcParser DeclTy
 parseDataCodata = 
-  (parseKeyword KwData >> return Data) <|> 
-  (parseKeyword KwCodata >> return Codata)
+  (do
+  _ <- parseKeyword KwData
+  pure Data) 
+  <|> 
+  (do
+  _ <- parseKeyword KwCodata
+  pure Codata)
 
-parseVariance :: Parser Variance 
+parseVariance :: SrcParser Variance 
 parseVariance = 
- (parseSymbol SymPlus >> return Covariant) <|>
- (parseSymbol SymMinus >> return Contravariant)
+ (do
+ _ <- parseSymbol SymPlus
+ pure Covariant) 
+ <|>
+ (do 
+ _ <- parseSymbol SymMinus 
+ pure Contravariant)
 
-parseKind :: Parser Kind 
+parseKind :: SrcParser Kind 
 parseKind = 
-  (MkKind <$> parseEvaluationOrder) <|> 
-  (MkKindVar  . Kindvar <$> parseIdentifier)
+  (MkKind <$> parseEvaluationOrder) 
+  <|> 
+  (do
+  nm <- parseIdentifier
+  pure $ MkKindVar (Kindvar {unKindvar:nm}))
 
-parseModulename :: Parser Modulename
-parseModulename = Modulename <$> parseIdentifier
+parseModulename :: SrcParser Modulename
+parseModulename = do
+  nm <- parseIdentifier 
+  pure $ Modulename {unModulename : nm} 
 
-parseVariable :: Parser Variable
-parseVariable = Variable <$>  parseIdentifier
+parseVariable :: SrcParser Variable
+parseVariable = do 
+  nm <- parseIdentifier
+  pure $ Variable {unVariable:nm}
 
-parseXtorname :: Parser Xtorname 
-parseXtorname = Xtorname <$> parseIdentifier 
+parseXtorname :: SrcParser Xtorname 
+parseXtorname = do 
+  nm <- parseIdentifier
+  pure $ Xtorname { unXtorname:nm}
 
-parseTypename :: Parser Typename
-parseTypename = Typename <$> parseIdentifier 
+parseTypename :: SrcParser Typename
+parseTypename = do
+  nm <- parseIdentifier 
+  pure $ Typename {unTypename:nm}
 
-parseTypevar :: Parser Typevar
-parseTypevar = Typevar <$> parseIdentifier 
+parseTypevar :: SrcParser Typevar
+parseTypevar = do 
+  nm <- parseIdentifier 
+  pure $ Typevar {unTypevar:nm}
 
-parseVariantVar :: Parser VariantVar 
+parseVariantVar :: SrcParser VariantVar 
 parseVariantVar = do 
   tyv <- parseTypevar 
-  sc 
-  parseSymbol SymColon
-  sc 
-  VariantVar tyv <$> parseVariance
+  _ <- sc 
+  _ <- parseSymbol SymColon
+  _ <- sc 
+  var <- parseVariance
+  pure $ VariantVar {variantVar:tyv, variantVariance:var }

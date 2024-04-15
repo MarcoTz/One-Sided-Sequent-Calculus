@@ -11,65 +11,76 @@ module Parser.Lexer (
   getCurrLoc
 ) where 
 
-import Parser.Keywords
-import Parser.Symbols
-import Parser.Definition
-import Loc
- 
-import Text.Megaparsec 
-import Text.Megaparsec.Char
-import Text.Megaparsec.Char.Lexer qualified as L
-import Control.Monad
+import Loc (Loc(..),SourcePosition(..))
+import Parser.Definition (SrcParser)
+import Parser.Keywords (Keyword, allKws)
+import Parser.Symbols (Sym(..))
 
+import Prelude (show, bind, pure,($), Unit, unit, (<$>), (<>))
+import Data.List (elem)
+import Parsing (fail, position, Position(..))
+import Parsing.String (string, anyChar, char)
+import Parsing.String.Basic (space, alphaNum)
+import Parsing.Combinators (choice, many1, manyTill, try, (<|>))
 
-parseParens :: Parser a -> Parser a
-parseParens p = do 
-  parseSymbol SymParensO 
-  sc
-  a <- p
-  sc
-  parseSymbol SymParensC 
-  return a
-
-parseAngO :: Parser () 
-parseAngO = parseSymbol SymAngO <|> parseSymbol SymAngOUnicode 
-
-parseAngC :: Parser () 
-parseAngC = parseSymbol SymAngC <|> parseSymbol SymAngCUnicode
-
-parseKeyword :: Keyword -> Parser () 
-parseKeyword kw = do
- _ <- string (show kw)
- return () 
-
-parseSymbol :: Sym -> Parser () 
+parseSymbol :: Sym -> SrcParser Unit
 parseSymbol sym = do 
   _ <- string (show sym)
-  return ()
+  pure $ unit
 
-parseComment :: Parser()
+parseComment :: SrcParser Unit
 parseComment = try $ do
-  parseSymbol SymMinus
-  parseSymbol SymMinus
-  _ <- takeWhileP (Just "character") (/= '\n')
-  return ()
+  _ <- parseSymbol SymMinus
+  _ <- parseSymbol SymMinus
+  _ <- manyTill anyChar (char '\n') 
+  pure unit
 
-sc :: Parser () 
-sc = L.space space1 parseComment empty 
+sc :: SrcParser Unit 
+sc = choice [manySpace,parseComment]
+  where 
+    manySpace = do 
+      _ <- many1 space
+      pure unit
 
-parseCommaSep :: Parser ()
-parseCommaSep = parseSymbol SymComma>>sc
 
-parseIdentifier :: Parser String
+parseParens :: forall a.SrcParser a -> SrcParser a
+parseParens p = do 
+  _<-parseSymbol SymParensO 
+  _<- sc
+  a <- p
+  _<- sc
+  _ <- parseSymbol SymParensC 
+  pure a
+
+parseAngO :: SrcParser Unit 
+parseAngO = parseSymbol SymAngO <|> parseSymbol SymAngOUnicode 
+
+parseAngC :: SrcParser Unit 
+parseAngC = parseSymbol SymAngC <|> parseSymbol SymAngCUnicode
+
+parseKeyword :: Keyword -> SrcParser Unit 
+parseKeyword kw = do
+ _ <- string (show kw)
+ pure unit
+
+
+
+parseCommaSep :: SrcParser Unit
+parseCommaSep = do 
+  _ <- parseSymbol SymComma
+  sc
+
+parseIdentifier :: SrcParser String
 parseIdentifier = do
-  ident <- some alphaNumChar
-  guard (ident `notElem` (show <$> allKws))
-  return ident
+  ident <- show <$> many1 alphaNum
+  if ident `elem` (show <$> allKws) then fail ("identifier cannot be a keyword, got " <> show ident) else pure ident
 
-getCurrPos :: Parser SourcePosition
+getCurrPos :: SrcParser SourcePosition
 getCurrPos = do 
-  SourcePos _ line column <- getSourcePos
-  return (MkSourcePos (unPos line) (unPos column))
+  Position { column:col, index:_, line:ln } <- position 
+  pure (SourcePosition {srcCol:col,srcLine:ln})
 
-getCurrLoc :: SourcePosition -> Parser Loc 
-getCurrLoc startPos = MkLoc startPos <$> getCurrPos 
+getCurrLoc :: SourcePosition -> SrcParser Loc 
+getCurrLoc startPos = do 
+    currPos <- getCurrPos
+    pure $ Loc {locStart:startPos, locEnd:currPos }

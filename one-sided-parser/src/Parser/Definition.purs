@@ -1,25 +1,25 @@
 module Parser.Definition (
-  Parser,
+  SrcParser,
   runSourceParser,
-  ParseDecl (..),
+  ParseDecl (..)
 ) where 
 
-import Common
-import Syntax.Parsed.Program
-import Syntax.Parsed.Terms
-import Parser.Errors 
+import Syntax.Parsed.Program (DataDecl, VarDecl, AnnotDecl, Import, RecDecl)
+import Syntax.Parsed.Terms (Command)
 
-import Text.Megaparsec
-import Control.Monad.Plus
-import Control.Applicative (Alternative)
+import Parser.Errors (ParserErr,parseErrorToParserErr)
 
-newtype Parser a = Parser { getParser :: Parsec String String  a }
-  deriving newtype (Functor, Applicative, Monad, MonadFail, Alternative, MonadPlus, MonadParsec String String)
+import Prelude (($))
+import Parsing (Parser, runParser)
+import Data.Either (Either(..))
+
+type SrcParser a = Parser String a
 
 
-runSourceParser :: String -> Modulename -> Parser b -> Either ParserErr b
-runSourceParser src (Modulename srcName) p = case runParser (getParser p) srcName src of 
-  Left bundle -> Left $ bundleToErr bundle
+runSourceParser :: forall a. String -> SrcParser a -> Either ParserErr a
+runSourceParser src p = case runParser src p of 
+  Left err -> Left $ parseErrorToParserErr  err
+--  Right p@(Program _) -> Right $ setSrcProgram src p
   Right b -> Right b
 
-data ParseDecl = MkD !DataDecl | MkV !VarDecl | MkA !AnnotDecl | MkI !Import | MkM !Command | MkR !RecDecl
+data ParseDecl = MkD DataDecl | MkV VarDecl | MkA AnnotDecl | MkI Import | MkM Command | MkR RecDecl

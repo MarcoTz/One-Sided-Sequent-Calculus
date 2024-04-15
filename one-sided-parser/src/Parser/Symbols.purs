@@ -1,5 +1,7 @@
 module Parser.Symbols (Sym (..)) where 
 
+import Prelude (class Show)
+
 data Sym = 
   SymParensO
   | SymParensC 

@@ -1,4 +1,7 @@
 package:
   name: one-sided-parser
   dependencies:
+    - one-sided-defs
     - prelude
+    - parsing
+    - strings
