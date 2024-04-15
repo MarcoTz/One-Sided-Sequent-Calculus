@@ -1,4 +1,6 @@
 package:
   name: one-sided-kinding
   dependencies: 
+    - one-sided-defs
+    - transformers
     - prelude

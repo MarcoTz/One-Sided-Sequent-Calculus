@@ -2,12 +2,14 @@ module Kinding.Errors (
   KindError (..)
 )where 
 
-import Errors 
-import Loc
+import Loc (Loc)
+import Errors (class Error)
 
-data KindError where 
-  ErrNotImplemented :: Loc -> String -> KindError 
-  ErrOther :: Loc -> String -> KindError 
+import Prelude ((<>))
+
+data KindError =
+  ErrNotImplemented Loc String 
+  | ErrOther        Loc String 
 
 instance Error KindError where 
   getMessage (ErrOther _ msg) = msg 

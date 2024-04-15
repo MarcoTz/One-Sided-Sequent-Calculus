@@ -3,15 +3,14 @@ module Kinding.Definition (
   runKindM
 ) where 
 
-import Kinding.Errors
-import Environment 
+import Environment (Environment)
+import Kinding.Errors (KindError)
 
-import Control.Monad.Reader 
-import Control.Monad.Except
+import Data.Either (Either)
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Except (Except, runExcept)
 
+type KindM a = ReaderT Environment (Except KindError) a
 
-newtype KindM a = KindM { getKindM :: ReaderT Environment (Except KindError) a }
-  deriving newtype (Functor, Applicative, Monad, MonadReader Environment, MonadError KindError)
-
-runKindM :: Environment -> KindM a -> Either KindError a
-runKindM env m = runExcept (runReaderT (getKindM m) env) 
+runKindM :: forall a.Environment -> KindM a -> Either KindError a
+runKindM env m = runExcept (runReaderT m env) 
