@@ -1,8 +1,10 @@
 module Syntax.Kinded.Types (
-  Ty (..)
+  Ty (..),
+  embedType
 ) where 
 
 import Common (Typevar,Kind, Typename, class GetKind, getKind, shiftEvalOrder, class ContainsKindvar, containsKindvar, class ShiftEvalOrder)
+import Syntax.Typed.Types (Ty(..)) as T
 
 import Prelude (class Eq, (<$>), ($), class Show, show, (<>))
 import Data.List (List,null,intercalate)
@@ -40,3 +42,10 @@ instance ShiftEvalOrder Ty where
   shiftEvalOrder (TyShift ty knd) = TyShift (shiftEvalOrder ty) (shiftEvalOrder knd)
   shiftEvalOrder (TyCo ty) = TyCo (shiftEvalOrder ty)
   shiftEvalOrder (TyForall args ty) = TyForall args (shiftEvalOrder ty)
+
+embedType :: Ty -> T.Ty
+embedType (TyVar v _) = T.TyVar v
+embedType (TyDecl tyn tyargs _) = T.TyDecl tyn (embedType <$> tyargs)
+embedType (TyShift ty _) = T.TyShift (embedType ty)
+embedType (TyCo ty) = T.TyCo (embedType ty)
+embedType (TyForall args ty) = T.TyForall args (embedType ty)

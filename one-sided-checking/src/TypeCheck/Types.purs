@@ -1,44 +1,49 @@
 module TypeCheck.Types (
   checkKindedTy,
-  checkType,
+  checkType
 ) 
 where 
 
-import TypeCheck.Definition
-import Syntax.Desugared.Types qualified as D
-import Syntax.Typed.Types     qualified as T
-import Syntax.Kinded.Program  qualified as K
-import Errors
-import Loc
-import Environment
+import Loc (Loc) 
+import Environment (lookupDecl)
+import Errors (zipWithErrorM)
+import Syntax.Desugared.Types (Ty(..), KindedTy(..)) as D 
+import Syntax.Typed.Types (Ty(..),KindedTy(..)) as T
+import Syntax.Kinded.Program (DataDecl(..)) as K
+import TypeCheck.Definition (CheckM, getCheckerTyVars, addCheckerTyVar)
+import TypeCheck.Errors (CheckerError(..))
 
-import Control.Monad
-import Control.Monad.Except
-
+import Prelude (bind,pure, ($))
+import Data.List (elem)
+import Data.Traversable (for)
+import Control.Monad.Except (throwError)
 
 checkType :: Loc -> D.Ty -> CheckM T.Ty 
 checkType loc (D.TyVar v) = do
   tyVars <- getCheckerTyVars 
-  if v `elem` tyVars then return (T.TyVar v) else throwError (ErrFreeTyVar loc v)
+  if v `elem` tyVars then pure (T.TyVar v) else throwError (ErrFreeTyVar loc v)
 
 checkType loc (D.TyDecl tyn tyArgs) = do 
-   K.MkData _ _ argVars _  _ <- lookupDecl loc tyn
-   _ <- zipWithErrorM tyArgs argVars (ErrTypeArity loc tyn) 
-   args' <- forM tyArgs (checkType loc)
-   return (T.TyDecl tyn args')
+   K.DataDecl decl <- lookupDecl loc tyn
+   _ <- zipWithErrorM tyArgs decl.declArgs (ErrTypeArity loc tyn) 
+   args' <- for tyArgs (checkType loc)
+   pure (T.TyDecl tyn args')
 
 checkType loc (D.TyCo ty) = do
   ty' <- checkType loc ty 
-  return (T.TyCo ty')
+  pure (T.TyCo ty')
 
 checkType loc (D.TyShift ty) = do 
   ty' <- checkType loc ty 
-  return (T.TyShift ty')
+  pure (T.TyShift ty')
 
 checkType loc (D.TyForall args ty) = do
-  forM_ args addCheckerTyVar 
+  _ <- for args addCheckerTyVar 
   ty' <- checkType loc ty 
-  return (T.TyForall args ty')
+  pure (T.TyForall args ty')
 
 checkKindedTy :: Loc -> D.KindedTy -> CheckM T.KindedTy
-checkKindedTy loc (D.KindedTy ty knd) = (`T.KindedTy` knd) <$> checkType loc ty
+checkKindedTy loc (D.KindedTy kty) = do 
+  ty <- checkType loc kty.kindedTy
+  pure $ T.KindedTy {kindedTy:ty,kindedKind:kty.kindedKind}
+

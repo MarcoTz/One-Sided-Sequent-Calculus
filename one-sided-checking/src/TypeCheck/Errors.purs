@@ -2,38 +2,37 @@ module TypeCheck.Errors (
   CheckerError (..)
 ) where 
 
-import Common 
-import Errors
-import Loc
-import Syntax.Typed.Types     qualified as T
-import Syntax.Typed.Terms     qualified as T
-import Syntax.Desugared.Terms qualified as D
-import Syntax.Desugared.Types qualified as D
-import Pretty.Common ()
-import Pretty.Typed ()
-import Pretty.Desugared()
+import Loc (Loc)
+import Common (Variable,Typename,Typevar,Xtorname)
+import Syntax.Typed.Types     (Ty)           as T
+import Syntax.Typed.Terms     (Term)         as T
+import Syntax.Desugared.Terms (Term,Command) as D
+import Syntax.Desugared.Types (Ty)           as D 
+import Errors (class Error,getMessage)
 
-import Data.List (intercalate)
+import Prelude ((<>),show,(<$>))
+import Data.List (List, intercalate)
 
-data CheckerError where 
-  ErrNoAnnot        :: Loc -> Variable -> CheckerError 
-  ErrUndefinedVar   :: Loc -> Variable -> CheckerError 
-  ErrNotSubsumed    :: Loc -> T.Ty -> T.Ty -> CheckerError
-  ErrUndefinedTyVar :: Loc -> Typevar -> D.Term-> CheckerError 
-  ErrFreeTyVar      :: Loc -> Typevar-> CheckerError 
-  ErrTyCoForShift   :: Loc -> T.Term ->T.Ty-> CheckerError 
-  ErrKindNeq        :: Loc -> T.Ty -> T.Ty ->D.Term-> CheckerError 
-  ErrKindUnclear    :: Loc -> D.Ty -> CheckerError
-  ErrTypeNeq        :: Loc -> T.Ty -> T.Ty -> D.Term-> CheckerError 
-  ErrNotTyDecl      :: Loc -> Typename -> T.Ty -> D.Term-> CheckerError 
-  ErrTypeArity      :: Loc -> Typename-> CheckerError 
-  ErrXtorArity      :: Loc -> Xtorname-> CheckerError 
-  ErrBadPattern     :: Loc -> [Xtorname] -> [Xtorname] -> D.Term-> CheckerError 
-  ErrCutKind        :: Loc -> T.Ty -> T.Ty -> D.Command-> CheckerError 
-  ErrBadType        :: Loc -> D.Term -> T.Ty -> CheckerError 
-  ErrUnclearType    :: Loc -> D.Command -> CheckerError 
-  ErrList           :: Loc -> [CheckerError] -> CheckerError
-  ErrOther          :: Loc -> String -> CheckerError 
+
+data CheckerError =
+  ErrNoAnnot          Loc Variable 
+  | ErrUndefinedVar   Loc Variable
+  | ErrNotSubsumed    Loc T.Ty T.Ty 
+  | ErrUndefinedTyVar Loc Typevar D.Term
+  | ErrFreeTyVar      Loc Typevar
+  | ErrTyCoForShift   Loc T.Term T.Ty
+  | ErrKindNeq        Loc T.Ty T.Ty D.Term
+  | ErrKindUnclear    Loc D.Ty 
+  | ErrTypeNeq        Loc T.Ty T.Ty D.Term
+  | ErrNotTyDecl      Loc Typename T.Ty D.Term
+  | ErrTypeArity      Loc Typename
+  | ErrXtorArity      Loc Xtorname
+  | ErrBadPattern     Loc (List Xtorname) (List Xtorname) D.Term
+  | ErrCutKind        Loc T.Ty T.Ty D.Command
+  | ErrBadType        Loc D.Term T.Ty 
+  | ErrUnclearType    Loc D.Command 
+  | ErrList           Loc (List CheckerError) 
+  | ErrOther          Loc String 
 
 
 whileTerm :: D.Term -> String 

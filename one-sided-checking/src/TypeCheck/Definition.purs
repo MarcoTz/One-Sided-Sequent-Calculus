@@ -1,5 +1,6 @@
 module TypeCheck.Definition (
   runCheckM,
+  CheckerState,
   CheckM,
   getCheckerVars,
   getCheckerTyVars,
@@ -7,75 +8,79 @@ module TypeCheck.Definition (
   addCheckerTyVar,
   withCheckerVars,
   getMTypeVar,
-  getTypeVar,
-  CheckerError (..)
+  getTypeVar
 ) where 
 
-import Environment
-import Common
-import Loc
-import Embed.Definition
-import Embed.EmbedKinded ()
-import TypeCheck.Errors
-import Syntax.Typed.Types    qualified as T 
-import Syntax.Kinded.Program qualified as K
-import Pretty.Typed () 
-import Pretty.Desugared ()
+import Loc (Loc)
+import Common (Variable,Typevar)
+import Environment (Environment,lookupMVar,lookupMRec)
+import Syntax.Typed.Types (Ty) as T
+import Syntax.Kinded.Types (embedType)
+import Syntax.Kinded.Program (VarDecl(..),RecDecl(..))
+import TypeCheck.Errors (CheckerError(..))
 
-import Control.Monad.Except 
-import Control.Monad.Reader
-import Control.Monad.State
-import Data.Map qualified as M
+import Prelude (bind,pure)
+import Data.Map (Map,empty,insert,lookup,union)
+import Data.List (List(..))
+import Data.Unit (Unit, unit)
+import Data.Either (Either(..))
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.State (StateT,runStateT,modify,gets)
+import Control.Monad.Except (Except, runExcept, throwError)
 
-
-data CheckerState = MkCheckState { checkVars :: !(M.Map Variable T.Ty), checkTyVars :: ![Typevar]}
+data CheckerState = MkCheckState { checkVars :: (Map Variable T.Ty), checkTyVars :: List Typevar}
 
 initialCheckerState :: CheckerState 
-initialCheckerState = MkCheckState M.empty []
+initialCheckerState = MkCheckState {checkVars:empty, checkTyVars:Nil}
 
 
-newtype CheckM a = CheckM { getCheckM :: ReaderT Environment (StateT CheckerState (Except CheckerError)) a }
-  deriving newtype (Functor, Applicative, Monad, MonadReader Environment, MonadError CheckerError, MonadState CheckerState)
+type CheckM a = ReaderT Environment (StateT CheckerState (Except CheckerError)) a 
 
-runCheckM :: Environment -> CheckM a -> Either CheckerError a
-runCheckM env m = case runExcept (runStateT (runReaderT (getCheckM m) env) initialCheckerState) of 
+runCheckM :: forall a. Environment -> CheckM a -> Either CheckerError a
+runCheckM env m = case runExcept (runStateT (runReaderT m env) initialCheckerState) of 
   Left err -> Left err
-  Right (x,_) -> Right x
+  Right (Tuple x _) -> Right x
 
-addCheckerVar :: Variable -> T.Ty -> CheckM () 
-addCheckerVar v ty = modify (\s -> MkCheckState (M.insert v ty (checkVars s)) (checkTyVars s))
+addCheckerVar :: Variable -> T.Ty -> CheckM Unit
+addCheckerVar v ty = do 
+  _ <- modify (\(MkCheckState s) -> MkCheckState (s {checkVars=(insert v ty s.checkVars)}))
+  pure unit
 
-addCheckerTyVar :: Typevar -> CheckM ()
-addCheckerTyVar tyv = modify (\s -> MkCheckState (checkVars s) (tyv:checkTyVars s))
+addCheckerTyVar :: Typevar -> CheckM Unit
+addCheckerTyVar tyv = do 
+  _ <- modify (\(MkCheckState s) -> MkCheckState (s {checkTyVars=Cons tyv s.checkTyVars}))
+  pure unit
 
-getCheckerVars :: CheckM (M.Map Variable T.Ty)
-getCheckerVars = gets checkVars
+getCheckerVars :: CheckM (Map Variable T.Ty)
+getCheckerVars = gets (\(MkCheckState s) -> s.checkVars)
 
-getCheckerTyVars :: CheckM [Typevar] 
-getCheckerTyVars = gets checkTyVars
+getCheckerTyVars :: CheckM (List Typevar)
+getCheckerTyVars = gets (\(MkCheckState s) -> s.checkTyVars)
 
-withCheckerVars :: M.Map Variable T.Ty -> CheckM a -> CheckM  a
+withCheckerVars :: forall a.Map Variable T.Ty -> CheckM a -> CheckM  a
 withCheckerVars newVars fun = do
-  currVars <- gets checkVars
-  modify (MkCheckState newVars . checkTyVars) 
+  currVars <- getCheckerVars 
+  _ <- modify (\(MkCheckState s) -> MkCheckState s{checkVars=union currVars newVars}) 
   res <- fun  
-  modify (MkCheckState currVars . checkTyVars)
-  return res
+  _ <- modify (\(MkCheckState s) -> MkCheckState s{checkVars=currVars}) 
+  pure res
 
 getMTypeVar :: Variable -> CheckM (Maybe T.Ty)
 getMTypeVar v = do
   vars <- getCheckerVars 
   mvar <- lookupMVar v
   mrec <- lookupMRec v
-  case (M.lookup v vars,mvar,mrec) of 
-    (Nothing,Nothing,Nothing) -> return Nothing 
-    (Just ty,_,_) -> return (Just ty)
-    (_,Just vdecl,_) -> return (Just . embed . K.varTy $ vdecl)
-    (_,_,Just rdecl) -> return (Just . embed . K.recTy $ rdecl) 
+  case Tuple (lookup v vars) (Tuple mvar mrec) of 
+    (Tuple Nothing (Tuple Nothing Nothing)) -> pure Nothing 
+    (Tuple (Just ty) (Tuple _ _)) -> pure (Just ty)
+    (Tuple _ (Tuple (Just (VarDecl vdecl)) _)) -> pure (Just (embedType vdecl.varTy))
+    (Tuple _ (Tuple _ (Just (RecDecl rdecl)))) -> pure (Just (embedType rdecl.recTy))
 
 getTypeVar :: Loc -> Variable -> CheckM T.Ty 
 getTypeVar loc v = do 
   mty <- getMTypeVar v 
   case mty of 
     Nothing -> throwError (ErrUndefinedVar loc v)
-    Just ty -> return ty
+    Just ty -> pure ty
