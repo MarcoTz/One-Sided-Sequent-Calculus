@@ -3,49 +3,56 @@ module Driver.Definition (
   runDriverM,
   liftErr,
   debug,
-  setDebug,
   addRecDecl,
   addVarDecl,
   addDecl,
-  DriverState (..),
-  DriverError (..)
+  DriverState (..)
 ) where 
 
-import Driver.Errors
-import Syntax.Kinded.Program
-import Errors
-import Common
-import Environment
+import Common (Modulename)
+import Errors (class Error, convertError)
+import Driver.Errors (DriverError(..))
+import Environment (Environment, addDeclEnv,addVarEnv,addRecEnv)
+import Syntax.Kinded.Program (DataDecl, VarDecl, RecDecl)
 
-import Control.Monad.State 
-import Control.Monad.Except 
-import Control.Monad 
+import Prelude (class Show, show, (<>), bind, pure) 
+import Data.Tuple (Tuple)
+import Data.Either (Either(..))
+import Data.Unit (Unit,unit)
+import Data.List (List(..))
+import Control.Monad.State (StateT, modify,runStateT)
+import Control.Monad.Except (Except, throwError, runExcept)
 
-data DriverState = MkDriverState { drvDebug :: !Bool, drvEnv :: !Environment} 
 
-newtype DriverM a = DriverM { getDriverM :: StateT DriverState (ExceptT DriverError IO) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DriverState, MonadError DriverError, MonadIO)
+data DriverState = MkDriverState { drvEnv :: Environment, drvDebug :: List String} 
+instance Show DriverState where 
+  show (MkDriverState st) = "Current environment: " <> show st.drvEnv  
 
-runDriverM :: DriverState -> DriverM a -> IO (Either DriverError (a,DriverState))
-runDriverM drvst m = runExceptT (runStateT (getDriverM m) drvst)
+type DriverM a = StateT DriverState (Except DriverError) a 
 
-addDecl :: Modulename -> DataDecl -> DriverM ()
-addDecl nm decl = modify (\s -> MkDriverState (drvDebug s) (addDeclEnv nm decl (drvEnv s)) )
+runDriverM :: forall a.DriverState -> DriverM a -> Either DriverError (Tuple a DriverState)
+runDriverM drvst m = runExcept (runStateT m drvst) 
 
-addVarDecl :: Modulename -> VarDecl -> DriverM ()
-addVarDecl nm var = modify (\s -> MkDriverState (drvDebug s) (addVarEnv nm var (drvEnv s)))
+addDecl :: Modulename -> DataDecl -> DriverM Unit
+addDecl nm decl = do 
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvEnv=addDeclEnv nm decl s.drvEnv}) 
+  pure unit
 
-addRecDecl :: Modulename -> RecDecl -> DriverM () 
-addRecDecl nm rec = modify (\s -> MkDriverState (drvDebug s) (addRecEnv nm rec (drvEnv s)))
+addVarDecl :: Modulename -> VarDecl -> DriverM Unit
+addVarDecl nm var = do 
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvEnv=addVarEnv nm var s.drvEnv})
+  pure unit
 
-setDebug :: Bool -> DriverM () 
-setDebug b = modify (MkDriverState b . drvEnv)
+addRecDecl :: Modulename -> RecDecl -> DriverM Unit
+addRecDecl nm rec = do 
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvEnv=addRecEnv nm rec s.drvEnv})
+  pure unit
 
-liftErr :: Error e => Either e a -> String -> DriverM a
+liftErr :: forall e a. Error e => Either e a -> String -> DriverM a
 liftErr (Left err) wh = throwError (ErrWithWhere (convertError err) wh)
-liftErr (Right a) _ = return a 
+liftErr (Right a) _ = pure a 
 
-debug :: String -> DriverM () 
-debug st = do  
-  db <- gets drvDebug
-  Control.Monad.when db $ liftIO (putStrLn st)
+debug :: String -> DriverM Unit
+debug st = do
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebug = Cons st s.drvDebug})
+  pure unit

@@ -1,12 +1,14 @@
 module Driver.Errors ( DriverError (..) ) where 
 
-import Loc 
-import Errors 
+import Loc (Loc)
+import Errors (class Error,getMessage,getLocation)
 
-data DriverError where
-  ErrTypeInference :: Loc -> DriverError
-  ErrWithWhere :: DriverError -> String -> DriverError
-  ErrOther :: Loc -> String -> DriverError
+import Prelude ((<>))
+
+data DriverError =
+  ErrTypeInference Loc 
+  | ErrWithWhere   DriverError String
+  | ErrOther       Loc String 
 
 instance Error DriverError where 
   getMessage (ErrTypeInference _) = "Type Inference is not implemented yet"
