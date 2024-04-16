@@ -1,0 +1,10 @@
+package:
+  name: one-sided-web-app
+  dependencies:
+    - one-sided-defs
+    - one-sided-eval
+    - one-sided-driver
+    - prelude
+    - effect
+    - console
+
