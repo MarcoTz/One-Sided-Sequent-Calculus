@@ -1,7 +1,8 @@
 module Syntax.Typed.Types (
   Ty (..),
   KindedTy (..),
-  isSubsumed 
+  isSubsumed ,
+  embedType
 ) where 
 
 import Prelude (class Eq, (==), (<$>), (<>), (&&), identity,map, class Show, show)
@@ -9,6 +10,7 @@ import Data.List (List, elem, null, filter, zip, intercalate)
 import Data.Tuple (Tuple(..))
 
 import Common (Typevar, Typename, Kind)
+import Syntax.Desugared.Types (Ty(..)) as D
 
 data Ty = 
   TyVar  Typevar 
@@ -45,3 +47,10 @@ isSubsumed (TyShift ty) ty' = isSubsumed ty ty'
 isSubsumed ty (TyShift ty') = isSubsumed ty ty'
 isSubsumed (TyCo ty) (TyCo ty') = isSubsumed ty ty'
 isSubsumed _ _ = false
+
+embedType :: Ty -> D.Ty
+embedType (TyVar v) = D.TyVar v
+embedType (TyDecl tyn args) = D.TyDecl tyn (embedType <$> args)
+embedType (TyShift ty) = D.TyShift (embedType ty)
+embedType (TyCo ty) = D.TyCo (embedType ty)
+embedType (TyForall args ty) = D.TyForall args (embedType ty)

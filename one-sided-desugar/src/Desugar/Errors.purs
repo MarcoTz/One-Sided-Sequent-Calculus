@@ -1,18 +1,18 @@
 module Desugar.Errors (DesugarError (..)) where 
 
-import Common 
-import Loc
-import Errors
-import Syntax.Desugared.Types 
-import Pretty.Common ()
-import Pretty.Desugared ()
+import Common (Variable, Typename, Xtorname)
+import Loc (Loc)
+import Errors (class Error)
+import Syntax.Desugared.Types (Ty)
 
-data DesugarError where 
-  ErrVariable      :: Loc -> Variable -> DesugarError
-  ErrMultipleNames :: Loc -> Typename -> DesugarError
-  ErrMultipleXtor  :: Loc -> Xtorname -> DesugarError
-  ErrMultipleAnnot :: Loc -> Variable -> Ty -> Ty -> DesugarError
-  ErrOther         :: Loc -> String -> DesugarError
+import Prelude ((<>), show)
+
+data DesugarError =
+  ErrVariable        Loc Variable 
+  | ErrMultipleNames Loc Typename
+  | ErrMultipleXtor  Loc Xtorname
+  | ErrMultipleAnnot Loc Variable Ty Ty
+  | ErrOther         Loc String
 
 instance Error DesugarError where 
   getMessage (ErrVariable _ var) = "Definition for variable " <> show var <> "could not be found"

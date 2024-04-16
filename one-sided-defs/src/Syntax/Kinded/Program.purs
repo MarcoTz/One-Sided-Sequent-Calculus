@@ -19,14 +19,16 @@ module Syntax.Kinded.Program (
   setSrcProgram,
   getSrcProgram,
   emptyProg,
-  isEmpty
+  isEmpty,
+  embedXtorSig
 ) where 
 
 
 import Loc (Loc, class HasLoc) 
 import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename)
-import Syntax.Kinded.Types (Ty)
+import Syntax.Kinded.Types (Ty,embedType)
 import Syntax.Kinded.Terms (Term, Command)
+import Syntax.Typed.Program (XtorSig(..)) as T
 
 import Prelude ((&&), (==), class Show, show, (<>), (<$>))
 import Data.List (List, null, intercalate)
@@ -44,6 +46,9 @@ instance Show XtorSig where
   show (XtorSig sig) = show sig.sigName <> "(" <> intercalate ", " (show <$> sig.sigArgs)
 getXtorname :: XtorSig -> Xtorname
 getXtorname (XtorSig sig) = sig.sigName
+
+embedXtorSig :: XtorSig -> T.XtorSig
+embedXtorSig (XtorSig sig) = T.XtorSig {sigPos:sig.sigPos, sigName:sig.sigName, sigArgs:embedType <$> sig.sigArgs}
 
 data DataDecl = DataDecl {declPos :: Loc, declName :: Typename, declArgs :: List VariantVar, declType :: DeclTy, declXtors :: List XtorSig} 
 instance HasLoc DataDecl where 

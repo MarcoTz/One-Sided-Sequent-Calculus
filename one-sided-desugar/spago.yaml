@@ -1,4 +1,6 @@
 package:
   name: one-sided-desugar
   dependencies:
+    - one-sided-defs
     - prelude
+    - foldable-traversable
