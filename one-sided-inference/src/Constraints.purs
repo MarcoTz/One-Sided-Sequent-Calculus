@@ -1,18 +1,21 @@
 module Constraints (
   ConstraintSet (..),
-  Constraint (..),
-  insertConstraint
+  Constr (..)
 ) where 
 
-import Syntax.Typed.Types
-import Common
+import Common (Kind)
+import Syntax.Typed.Types (Ty)
 
-data Constraint = 
-  MkTyEq !Ty !Ty
-  | MkKindEq !Kind !Kind
-  | MkKindNeq !Kind !Kind
+import Prelude (class Show, show, (<>))
+import Data.List (List(..))
 
-newtype ConstraintSet = MkConstraintSet { ctrConstr :: [Constraint]}
+data Constr = 
+  MkTyEq Ty Ty
+  | MkKindEq Kind Kind
+  | MkKindNeq Kind Kind
+instance Show Constr where 
+  show (MkTyEq ty1 ty2) = show ty1 <> " = " <> show ty2
+  show (MkKindEq knd1 knd2) = show knd1 <> " = " <> show knd2
+  show (MkKindNeq knd1 knd2) = show knd1 <> "!="<> show knd2
 
-insertConstraint :: Constraint -> ConstraintSet -> ConstraintSet
-insertConstraint c (MkConstraintSet ctrs) = MkConstraintSet (c:ctrs)
+type ConstraintSet = List Constr

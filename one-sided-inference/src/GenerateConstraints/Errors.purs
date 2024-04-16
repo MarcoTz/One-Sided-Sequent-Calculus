@@ -2,21 +2,20 @@ module GenerateConstraints.Errors (
   GenerateError (..)
 ) where
 
-import Common
-import Errors
-import Loc
-import Syntax.Typed.Types
-import Pretty.Common ()
-import Pretty.Typed ()
+import Common (Xtorname,Typename)
+import Loc (Loc)
+import Errors (class Error)
+import Syntax.Desugared.Types (Ty)
 
-import Data.List (intercalate)
+import Prelude (show, (<>),(<$>))
+import Data.List (List, intercalate)
 
-data GenerateError where 
-  ErrXtorArity  :: Loc -> Xtorname -> GenerateError
-  ErrTyArity    :: Loc -> Typename -> GenerateError
-  ErrKindNeq    :: Loc -> Ty -> Ty -> GenerateError
-  ErrBadPattern :: Loc -> [Xtorname] -> GenerateError
-  ErrOther      :: Loc -> String -> GenerateError
+data GenerateError =
+  ErrXtorArity    Loc Xtorname 
+  | ErrTyArity    Loc Typename
+  | ErrKindNeq    Loc Ty Ty
+  | ErrBadPattern Loc (List Xtorname)
+  | ErrOther      Loc String
 
 instance Error GenerateError where 
   getMessage (ErrXtorArity _ xtn) = "Wrong number of arguments for xtor " <> show xtn
@@ -32,4 +31,3 @@ instance Error GenerateError where
   getLocation (ErrOther loc _) = loc
 
   toError = ErrOther
-

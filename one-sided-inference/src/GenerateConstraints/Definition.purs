@@ -1,5 +1,6 @@
 module GenerateConstraints.Definition (
   GenM,
+  GenerateState,
   runGenM,
   addGenVar,
   getGenVars,
@@ -7,90 +8,95 @@ module GenerateConstraints.Definition (
   freshTyVar,
   freshTyVarsDecl,
   addConstraint,
-  addConstraintsXtor,
-  GenerateError (..)
+  addConstraintsXtor
 ) where 
 
-import GenerateConstraints.Errors
-import Constraints
-import Syntax.Typed.Types
-import Common
-import Loc
-import Environment
-import Pretty.Common ()
-import Pretty.Typed ()
-
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Except
-import Control.Monad.Reader
-import Data.Map qualified as M
 
 ----------------------
 -- Constraint Monad --
 ---------------------
 
+import GenerateConstraints.Errors (GenerateError(..))
+import Constraints (ConstraintSet, Constr(..))
+import Loc (Loc)
+import Common (Variable, Typevar(..), VariantVar(..),Kind(..),Kindvar(..), Xtorname)
+import Environment (Environment)
+import Syntax.Typed.Types (Ty(..))
+
+import Prelude (bind, (<>), show,pure,(+),(<$>))
+import Data.Map (Map,empty,fromFoldable,insert)
+import Data.List (List(..))
+import Data.Tuple (Tuple(..), fst,snd)
+import Data.Either (Either(..))
+import Data.Unit (Unit,unit)
+import Data.Traversable (for)
+import Control.Monad.Reader (ReaderT, runReaderT) 
+import Control.Monad.State (StateT, runStateT, gets, modify)
+import Control.Monad.Except (Except, runExcept, throwError)
 
 data GenerateState = MkGenState{
-  varEnv :: !(M.Map Variable Ty),
-  tyVarCnt :: !Int,
-  kVarCnt :: !Int,
-  constrSet :: !ConstraintSet 
+  varEnv :: (Map Variable Ty),
+  tyVarCnt :: Int,
+  kVarCnt :: Int,
+  constrSet :: ConstraintSet 
 }
 
 initialGenState :: GenerateState 
-initialGenState = MkGenState M.empty 0 0 (MkConstraintSet [])
+initialGenState = MkGenState {varEnv:empty, tyVarCnt:0, kVarCnt:0, constrSet:Nil}
 
-newtype GenM a = GenM { getGenM :: ReaderT Environment (StateT GenerateState (Except GenerateError)) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState GenerateState, MonadError GenerateError, MonadReader Environment)
+type GenM a = ReaderT Environment (StateT GenerateState (Except GenerateError)) a 
 
-runGenM :: Environment -> GenM a -> Either GenerateError (a, ConstraintSet)
-runGenM env m = case runExcept (runStateT (runReaderT (getGenM m) env) initialGenState) of
+runGenM :: forall a.Environment -> GenM a -> Either GenerateError (Tuple a ConstraintSet)
+runGenM env m = case runExcept (runStateT (runReaderT m env) initialGenState) of
   Left err -> Left err 
-  Right (x, st) ->  Right (x,constrSet st)
+  Right (Tuple x (MkGenState st)) ->  Right (Tuple x st.constrSet)
 
 -- Fresh Variables 
 freshTyVar :: GenM Ty
 freshTyVar = do 
-  cnt <- gets tyVarCnt
-  let newVar = Typevar ("X" <> show cnt)
-  modify (\s -> MkGenState (varEnv s) (kVarCnt s) (cnt+1) (constrSet s))
-  return (TyVar newVar)
+  cnt <- gets (\(MkGenState st) -> st.tyVarCnt)
+  let newVar = Typevar {unTypevar:"X" <> show cnt}
+  _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=cnt+1}) 
+  pure (TyVar newVar)
 
-freshTyVarsDecl :: [VariantVar] -> GenM ([Ty],M.Map Typevar Ty) 
+freshTyVarsDecl :: List VariantVar -> GenM (Tuple (List Ty) (Map Typevar Ty))
 freshTyVarsDecl vars = do
-  varL <- forM vars (\(VariantVar v _) -> do
+  varL <- for vars (\(VariantVar v) -> do
     v' <- freshTyVar
-    let varpair = (v,v')
-    return (v',varpair))
+    let varpair = Tuple v.variantVar v'
+    pure (Tuple v' varpair))
   let newVars = fst <$> varL
-  let newMap = M.fromList (snd <$> varL)
-  return (newVars, newMap)
+  let newMap = fromFoldable (snd <$> varL)
+  pure (Tuple newVars newMap)
 
 freshKVar :: GenM Kind
 freshKVar = do 
-  cnt <- gets kVarCnt 
-  let newVar = Kindvar ("k" <> show cnt)
-  modify (\s -> MkGenState (varEnv s) (cnt+1) (tyVarCnt s) (constrSet s))
-  return (MkKindVar newVar)
+  cnt <- gets (\(MkGenState s) -> s.kVarCnt )
+  let newVar = Kindvar {unKindvar:"k" <> show cnt}
+  _ <- modify (\(MkGenState s) -> MkGenState s{kVarCnt=cnt+1})
+  pure (MkKindVar newVar)
 
 -- modify environment
-addConstraint :: Constraint -> GenM () 
-addConstraint ctr = modify (\s -> MkGenState (varEnv s) (kVarCnt s) (tyVarCnt s) (insertConstraint ctr (constrSet s)))
+addConstraint :: Constr -> GenM Unit 
+addConstraint ctr = do
+  _ <- modify (\(MkGenState s) -> MkGenState s{constrSet=Cons ctr s.constrSet})
+  pure unit
 
-getGenVars :: GenM (M.Map Variable Ty)
-getGenVars = gets varEnv
+getGenVars :: GenM (Map Variable Ty)
+getGenVars = gets (\(MkGenState s) -> s.varEnv)
 
-addGenVar :: Variable -> Ty -> GenM ()
+addGenVar :: Variable -> Ty -> GenM Unit
 addGenVar v ty = do 
-  vars <- gets varEnv
-  modify (\s -> MkGenState (M.insert v ty vars) (kVarCnt s) (tyVarCnt s) (constrSet s))
+  vars <- gets (\(MkGenState s) -> s.varEnv)
+  _ <- modify (\(MkGenState s) -> MkGenState s{varEnv=insert v ty vars})
+  pure unit
 
 
-addConstraintsXtor :: Loc -> Xtorname -> [Ty] -> [Ty] -> GenM () 
-addConstraintsXtor _ _ [] [] = return ()
-addConstraintsXtor loc xt _ [] = throwError (ErrXtorArity loc xt)
-addConstraintsXtor loc xt [] _ = throwError (ErrXtorArity loc xt)
-addConstraintsXtor loc xt (ty1:tys1) (ty2:tys2) = do 
-  addConstraint (MkTyEq ty1 ty2)
-  addConstraintsXtor loc xt tys1 tys2
+addConstraintsXtor :: Loc -> Xtorname -> List Ty -> List Ty -> GenM Unit
+addConstraintsXtor _ _ Nil Nil = pure unit
+addConstraintsXtor loc xt _ Nil = throwError (ErrXtorArity loc xt)
+addConstraintsXtor loc xt Nil _ = throwError (ErrXtorArity loc xt)
+addConstraintsXtor loc xt (Cons ty1 tys1) (Cons ty2 tys2) = do 
+  _ <- addConstraint (MkTyEq ty1 ty2)
+  _ <- addConstraintsXtor loc xt tys1 tys2
+  pure unit

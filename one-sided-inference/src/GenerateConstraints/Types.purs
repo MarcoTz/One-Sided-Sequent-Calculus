@@ -1,35 +1,43 @@
-module GenerateConstraints.Types where 
+module GenerateConstraints.Types (
+  genConstraintsTy,
+  genConstraintsKindedTy
+)where 
 
-import Loc
-import Common
-import Errors
-import Environment
-import GenerateConstraints.Definition
-import Syntax.Desugared.Types qualified as D
-import Syntax.Typed.Types     qualified as T
-import Syntax.Kinded.Program  qualified as K
+import GenerateConstraints.Definition (GenM)
+import GenerateConstraints.Errors (GenerateError(..))
+import Loc (Loc)
+import Common (VariantVar(..),Kind(..),varianceEvalOrder, defaultEo)
+import Errors (zipWithError)
+import Environment (lookupDecl)
+import Syntax.Typed.Types (Ty(..),KindedTy(..)) as T 
+import Syntax.Desugared.Types (Ty(..),KindedTy(..)) as D 
+import Syntax.Kinded.Program (DataDecl(..)) as K
 
-import Control.Monad
-import Control.Monad.Except
+import Prelude (($),(<$>),pure,bind)
+import Data.Either (Either(..))
+import Data.Traversable (for)
+import Control.Monad.Except (throwError)
 
 genConstraintsTy :: Loc -> D.Ty -> GenM T.Ty
-genConstraintsTy _ (D.TyVar v) = return $ T.TyVar v
+genConstraintsTy _ (D.TyVar v) = pure $ T.TyVar v
 genConstraintsTy loc (D.TyDecl tyn args) = do 
-  decl <- lookupDecl loc tyn 
-  let argPols = MkKind . (`varianceEvalOrder` (defaultEo $ K.declType decl)) . variantVariance <$> K.declArgs decl
+  (K.DataDecl decl) <- lookupDecl loc tyn 
+  let argPols = (\(VariantVar v) -> MkKind (varianceEvalOrder v.variantVariance (defaultEo decl.declType))) <$> decl.declArgs
   let argsZipped = zipWithError args argPols (ErrTyArity loc tyn)
   case argsZipped of 
     Right err -> throwError err
     Left _ -> do 
-      args' <- forM args (genConstraintsTy loc)
-      return $ T.TyDecl tyn args' 
+      args' <- for args (genConstraintsTy loc)
+      pure $ T.TyDecl tyn args' 
 genConstraintsTy loc (D.TyCo ty) = do 
   ty' <- genConstraintsTy loc ty 
-  return $ T.TyCo ty'
+  pure $ T.TyCo ty'
 genConstraintsTy loc (D.TyShift ty) = do
   ty' <- genConstraintsTy loc ty 
-  return $ T.TyShift ty' 
+  pure $ T.TyShift ty' 
 genConstraintsTy loc (D.TyForall args ty) = T.TyForall args <$> genConstraintsTy loc ty
 
-genConstraintsKindedTy :: Loc -> D.KindedTy -> GenM T.Ty
-genConstraintsKindedTy loc (D.KindedTy ty _) = genConstraintsTy loc ty
+genConstraintsKindedTy :: Loc -> D.KindedTy -> GenM T.KindedTy
+genConstraintsKindedTy loc (D.KindedTy kty) = do
+    ty' <- genConstraintsTy loc kty.kindedTy
+    pure $ T.KindedTy {kindedKind:kty.kindedKind,kindedTy:ty'}

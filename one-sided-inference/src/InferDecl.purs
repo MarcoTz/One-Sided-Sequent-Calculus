@@ -1,38 +1,43 @@
 module InferDecl (
   runDeclM,
-  inferDecl
+  DeclState,
+  inferDecl,
+  InferDeclError
 ) where 
 
-import Syntax.Desugared.Program qualified as D
-import Syntax.Desugared.Types   qualified as D
-import Syntax.Kinded.Program     qualified as K
-import Syntax.Kinded.Types       qualified as K
-import Embed.EmbedDesugared ()
-import Errors
-import Common
-import Loc
-import Pretty.Common ()
-import Pretty.Desugared ()
+import Loc (Loc)
+import Common (EvaluationOrder,Typename, Typevar, VariantVar(..), DeclTy, Kind(..),defaultEo, varianceEvalOrder, shiftEvalOrder)
+import Errors (class Error)
+import Syntax.Kinded.Program (DataDecl(..),XtorSig(..)) as K
+import Syntax.Kinded.Types (Ty(..)) as K
+import Syntax.Desugared.Types (Ty(..)) as D
+import Syntax.Desugared.Program (DataDecl(..),XtorSig(..)) as D
 
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Except
-import Data.Map qualified as M
+import Prelude ((<>),(<$>),($), show,bind,pure)
+import Data.Map (Map,empty,fromFoldable,lookup)
+import Data.Maybe (Maybe(..))
+import Data.Either (Either(..))
+import Data.Tuple (Tuple(..))
+import Data.List (List)
+import Data.Unit (Unit,unit)
+import Data.Traversable (for)
+import Control.Monad.State (StateT, runStateT,modify, gets)
+import Control.Monad.Except (Except, runExcept,throwError)
 
 data DeclState = MkDeclState{
-  declsDone :: !(M.Map Typename K.DataDecl),
-  currVars :: !(M.Map Typevar EvaluationOrder),
-  currEo :: !(Maybe EvaluationOrder)
+  declsDone :: (Map Typename K.DataDecl),
+  currVars :: (Map Typevar EvaluationOrder),
+  currEo :: (Maybe EvaluationOrder)
 }
 
 initialDeclState :: DeclState 
-initialDeclState = MkDeclState M.empty M.empty Nothing
+initialDeclState = MkDeclState {declsDone:empty, currVars:empty, currEo:Nothing}
 
-data InferDeclError where 
-  ErrUndefinedTyVar :: Loc -> Typevar -> InferDeclError
-  ErrUndefinedType :: Loc -> Typename -> InferDeclError
-  ErrIllegalType :: Loc -> D.Ty -> InferDeclError 
-  ErrOther :: Loc -> String -> InferDeclError
+data InferDeclError = 
+  ErrUndefinedTyVar  Loc Typevar 
+  | ErrUndefinedType Loc Typename
+  | ErrIllegalType   Loc D.Ty 
+  | ErrOther         Loc String 
 
 instance Error InferDeclError where 
   getMessage (ErrUndefinedTyVar _ tyv) = "Type Variable " <> show tyv <> " was not defined" 
@@ -47,52 +52,54 @@ instance Error InferDeclError where
 
   toError = ErrOther 
 
-newtype DeclM a = DeclM { getGenM :: StateT DeclState (Except InferDeclError) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState DeclState, MonadError InferDeclError)
+type DeclM a = StateT DeclState (Except InferDeclError) a 
 
-runDeclM :: DeclM a -> Either InferDeclError a 
-runDeclM m = case runExcept (runStateT (getGenM m) initialDeclState) of
+runDeclM :: forall a.DeclM a -> Either InferDeclError a 
+runDeclM m = case runExcept (runStateT m initialDeclState) of
   Left err -> Left err 
-  Right (x, _) ->  Right x
+  Right (Tuple x _) ->  Right x
 
-setCurrVars :: [VariantVar] -> DeclTy -> DeclM () 
+setCurrVars :: List VariantVar -> DeclTy -> DeclM Unit 
 setCurrVars vars isco = do
   let eo = defaultEo isco
-  let newM = M.fromList ((\(VariantVar tyv var) -> (tyv,varianceEvalOrder var eo)) <$> vars)
-  modify (\s -> MkDeclState (declsDone s) newM (currEo s))
+  let newM = fromFoldable ((\(VariantVar v) -> (Tuple v.variantVar (varianceEvalOrder v.variantVariance eo))) <$> vars)
+  _ <- modify (\(MkDeclState s) -> MkDeclState s{currVars=newM})
+  pure unit
 
-setCurrPol :: EvaluationOrder -> DeclM () 
-setCurrPol eo = modify (\s -> MkDeclState (declsDone s) (currVars s) (Just eo))
+setCurrPol :: EvaluationOrder -> DeclM Unit 
+setCurrPol eo = do
+  _ <- modify (\(MkDeclState s) -> MkDeclState (s{currEo=Just eo}))
+  pure unit
 
 inferDecl :: D.DataDecl -> DeclM K.DataDecl
-inferDecl (D.MkData loc tyn args isco xtors) = do 
-  setCurrVars args isco
-  setCurrPol (defaultEo isco) 
-  xtors' <- forM xtors inferXtorSig 
-  return $ K.MkData loc tyn args isco xtors'
+inferDecl (D.DataDecl decl) = do 
+  _ <- setCurrVars decl.declArgs decl.declType
+  _ <- setCurrPol (defaultEo decl.declType) 
+  xtors' <- for decl.declXtors inferXtorSig 
+  pure $ K.DataDecl {declPos:decl.declPos,declName:decl.declName,declArgs:decl.declArgs,declType:decl.declType,declXtors:xtors'} 
 
 inferXtorSig :: D.XtorSig -> DeclM K.XtorSig
-inferXtorSig (D.MkXtorSig loc nm args) = do 
-  args' <- forM args (inferType loc)
-  return $ K.MkXtorSig loc nm args'
+inferXtorSig (D.XtorSig sig) = do 
+  args' <- for sig.sigArgs (inferType sig.sigPos)
+  pure $ K.XtorSig {sigPos:sig.sigPos, sigName:sig.sigName, sigArgs:args'}
 
 inferType :: Loc -> D.Ty -> DeclM K.Ty
 inferType loc (D.TyVar v) = do 
-  vars <- gets currVars 
-  case M.lookup v vars of 
+  vars <- gets (\(MkDeclState s) -> s.currVars)
+  case lookup v vars of 
     Nothing -> throwError (ErrUndefinedTyVar loc v)
-    Just eo -> return $ K.TyVar v (MkKind eo)
+    Just eo -> pure $ K.TyVar v (MkKind eo)
 inferType loc (D.TyDecl tyn args) = do
 
-  args' <- forM args (inferType loc)
-  decls <- gets declsDone 
-  case M.lookup tyn decls of 
+  args' <- for args (inferType loc)
+  decls <- gets (\(MkDeclState s) -> s.declsDone)
+  case lookup tyn decls of 
     Nothing -> do 
-      eo <- gets currEo 
+      eo <- gets (\(MkDeclState s) -> s.currEo)
       case eo of 
         Nothing -> throwError (ErrUndefinedType loc tyn)
-        Just eo' -> return $ K.TyDecl tyn args' (MkKind eo')
-    Just (K.MkData _ _ _ isco _) -> return $ K.TyDecl tyn args' (MkKind . defaultEo $ isco)
+        Just eo' -> pure $ K.TyDecl tyn args' (MkKind eo')
+    Just (K.DataDecl decl) -> pure $ K.TyDecl tyn args' (MkKind (defaultEo decl.declType))
 inferType loc (D.TyCo ty) = K.TyCo <$> inferType loc ty
 inferType loc (D.TyShift ty) = shiftEvalOrder <$> inferType loc ty 
 inferType loc ty@(D.TyForall _ _ ) = throwError (ErrIllegalType loc ty)

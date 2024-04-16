@@ -1,74 +1,79 @@
 module SolveConstraints.Definition (
   SolverM,
+  SolverState,
   runSolveM,
   ConstrTy (..),
   addSlvTyVar,
   getSlvTyVars,
   getNextConstr,
   addConstraintsArgs,
-  addConstraint,
+  addConstraint
 ) where 
 
-import SolveConstraints.Errors
-import Constraints
-import Syntax.Typed.Types
-import Common 
-import Pretty.Common ()
-import Pretty.Typed ()
+import SolveConstraints.Errors (SolverError(..))
+import Constraints (ConstraintSet, Constr(..))
+import Common (Typevar,Typename)
+import Syntax.Typed.Types (Ty)
 
-import Data.Map qualified as M
-import Control.Monad.Except
-import Control.Monad.State
-
+import Prelude (bind,pure, ($))
+import Data.Map (Map,empty,insert)
+import Data.Tuple (Tuple(..))
+import Data.List (List(..))
+import Data.Unit (Unit,unit)
+import Data.Either (Either(..))
+import Data.Maybe (Maybe (..))
+import Control.Monad.Except (Except, runExcept,throwError)
+import Control.Monad.State (StateT, runStateT, gets, modify)
 --
 -- Solver Monad 
 -- 
 data SolverState = MkSolverState 
   { 
-  slvTyVars :: !(M.Map Typevar Ty), 
-  remConstrs :: !ConstraintSet 
+  slvTyVars  :: (Map Typevar Ty), 
+  remConstrs :: ConstraintSet 
 }
 
 data ConstrTy = Eq | Neq
 
 initialSolverState :: ConstraintSet -> SolverState
-initialSolverState = MkSolverState M.empty 
+initialSolverState constrs= MkSolverState {slvTyVars:empty , remConstrs:constrs}
 
-newtype SolverM a = MkSolveM { getSolveM :: StateT SolverState (Except SolverError) a }
-  deriving newtype (Functor, Applicative, Monad, MonadState SolverState, MonadError SolverError)
+type SolverM a = StateT SolverState (Except SolverError) a 
 
-runSolveM :: ConstraintSet -> SolverM a -> Either SolverError (a,M.Map Typevar Ty)
-runSolveM constrs m = case runExcept (runStateT (getSolveM m) (initialSolverState constrs) ) of 
+runSolveM :: forall a.ConstraintSet -> SolverM a -> Either SolverError (Tuple a (Map Typevar Ty))
+runSolveM constrs m = case runExcept (runStateT m (initialSolverState constrs) ) of 
   Left err -> Left err 
-  Right (x,st) -> Right (x,slvTyVars st)
+  Right (Tuple x (MkSolverState st)) -> Right (Tuple x st.slvTyVars)
 
-getNextConstr :: SolverM (Maybe Constraint)
+getNextConstr :: SolverM (Maybe Constr)
 getNextConstr = do 
-  (MkConstraintSet constrs) <- gets remConstrs 
+  constrs <- gets (\(MkSolverState s) -> s.remConstrs)
   case constrs of 
-    [] -> return Nothing 
-    (c1:ctrs) -> do 
-      modify (\s  -> MkSolverState (slvTyVars s) (MkConstraintSet ctrs))
-      return (Just c1)
+    Nil -> pure Nothing 
+    (Cons c1 ctrs) -> do 
+      _ <- modify (\(MkSolverState s)  -> MkSolverState s {remConstrs=ctrs} )
+      pure (Just c1)
 
-getSlvTyVars :: SolverM (M.Map Typevar Ty)
-getSlvTyVars = gets slvTyVars 
+getSlvTyVars :: SolverM (Map Typevar Ty)
+getSlvTyVars = gets (\(MkSolverState st) -> st.slvTyVars)
 
-addSlvTyVar :: Typevar -> Ty -> SolverM ()
+addSlvTyVar :: Typevar -> Ty -> SolverM Unit
 addSlvTyVar v ty = do 
-  vars <- gets slvTyVars
-  modify $ MkSolverState (M.insert v ty vars) . remConstrs
+  _ <- modify $ (\(MkSolverState st) -> MkSolverState st {slvTyVars=insert v ty st.slvTyVars})
+  pure unit
 
-addConstraint :: Constraint -> SolverM ()
+addConstraint :: Constr -> SolverM Unit
 addConstraint constr = do
-  (MkConstraintSet constrs) <- gets remConstrs
-  modify (\s -> MkSolverState (slvTyVars s) (MkConstraintSet (constr:constrs)))
+  constrs <- gets (\(MkSolverState st) -> st.remConstrs)
+  _ <- modify (\(MkSolverState s) -> MkSolverState s{remConstrs=Cons constr constrs} )
+  pure unit
 
-addConstraintsArgs :: Typename -> [Ty] -> [Ty] -> SolverM () 
-addConstraintsArgs _ [] [] = return () 
-addConstraintsArgs tyn [] _ = throwError (ErrTyArity tyn)
-addConstraintsArgs tyn _ [] = throwError (ErrTyArity tyn)
-addConstraintsArgs tyn (ty1:tys1) (ty2:tys2) = do
-  addConstraint (MkTyEq ty1 ty2)
-  addConstraintsArgs tyn tys1 tys2
+addConstraintsArgs :: Typename -> List Ty -> List Ty -> SolverM Unit
+addConstraintsArgs _ Nil Nil = pure unit 
+addConstraintsArgs tyn Nil _ = throwError (ErrTyArity tyn)
+addConstraintsArgs tyn _ Nil = throwError (ErrTyArity tyn)
+addConstraintsArgs tyn (Cons ty1 tys1) (Cons ty2 tys2) = do
+  _ <- addConstraint (MkTyEq ty1 ty2)
+  _ <- addConstraintsArgs tyn tys1 tys2
+  pure unit 
 

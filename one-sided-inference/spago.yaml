@@ -1,4 +1,7 @@
 package:
   name: one-sided-inference
   dependencies:
+    - one-sided-defs
+    - foldable-traversable
+    - transformers
     - prelude

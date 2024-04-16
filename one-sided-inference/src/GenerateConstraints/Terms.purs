@@ -2,99 +2,102 @@ module GenerateConstraints.Terms (
   genConstraintsTerm
 ) where 
 
-import Syntax.Typed.Types 
-import Syntax.Desugared.Terms qualified as D
-import Syntax.Typed.Terms qualified as T
-import Syntax.Typed.Substitution qualified as T
-import Syntax.Kinded.Program qualified as K
-import GenerateConstraints.Definition
-import GenerateConstraints.Types
-import Embed.Definition
-import Embed.EmbedKinded ()
-import Constraints
-import Loc
-import Environment
-import Embed.EmbedTyped ()
+import GenerateConstraints.Definition (GenM, addConstraint,getGenVars,freshTyVar, addGenVar, freshTyVarsDecl, addConstraintsXtor)
+import GenerateConstraints.Errors (GenerateError(..))
+import GenerateConstraints.Types (genConstraintsTy)
+import Constraints (Constr(..))
+import Loc (Loc) 
+import Environment (lookupXtorDecl, lookupXtor)
+import Syntax.Desugared.Terms (Term(..), Pattern(..),Command(..)) as D
+import Syntax.Typed.Terms (Command(..),getType,Term(..),Pattern(..)) as T
+import Syntax.Typed.Substitution (substTyvars) as T
+import Syntax.Typed.Types (Ty(..)) as T
+import Syntax.Kinded.Program (DataDecl(..),XtorSig(..)) as K
+import Syntax.Kinded.Types (embedType) 
 
-import Control.Monad.Except
-import Control.Monad
-import Data.Map qualified as M
+import Prelude (bind,pure, (<$>),identity, ($))
+import Data.List (List(..),elem,null,filter, zip)
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
+import Data.Map (lookup)
+import Data.Traversable (for)
+import Control.Monad.Except (throwError)
 
-
-checkPts :: Loc -> [D.Pattern] -> GenM (Maybe K.DataDecl)
-checkPts _ [] = return Nothing 
-checkPts loc (pt:pts) = do 
-  d@(K.MkData _ _ _ _ xtors) <- lookupXtorDecl loc (D.ptxt pt)
-  if all ((`elem` (K.sigName <$> xtors)) . D.ptxt) pts then return (Just d) else return Nothing
+checkPts :: Loc -> List D.Pattern -> GenM (Maybe K.DataDecl)
+checkPts _ Nil = pure Nothing 
+checkPts loc (Cons (D.Pattern pt) pts) = do 
+  (K.DataDecl decl) <- lookupXtorDecl loc pt.ptxt
+  let areElems = (\(D.Pattern pt') -> pt'.ptxt `elem` ((\(K.XtorSig sig) -> sig.sigName) <$> decl.declXtors)) <$> pts
+  if null (filter identity areElems) then pure (Just (K.DataDecl decl)) else pure Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut loc t eo u) = do 
   t' <- genConstraintsTerm t
   u' <- genConstraintsTerm u
-  addConstraint (MkTyEq (T.getType t') (T.getType u'))
-  return (T.Cut loc t' eo u')
+  _ <- addConstraint (MkTyEq (T.getType t') (T.getType u'))
+  pure (T.Cut loc t' eo u')
 genConstraintsCmd (D.CutAnnot loc t ty eo u) = do
   t' <- genConstraintsTerm t
   let ty1' = T.getType t'
   u' <- genConstraintsTerm u 
   ty' <- genConstraintsTy loc ty 
-  addConstraint (MkTyEq ty1' (T.getType u'))
-  addConstraint (MkTyEq ty1' ty')
-  return $ T.Cut loc t' eo u'
-genConstraintsCmd (D.Done loc) = return $ T.Done loc
-genConstraintsCmd (D.Err loc err) = return $ T.Err loc err
+  _ <- addConstraint (MkTyEq ty1' (T.getType u'))
+  _ <- addConstraint (MkTyEq ty1' ty')
+  pure $ T.Cut loc t' eo u'
+genConstraintsCmd (D.Done loc) = pure $ T.Done loc
+genConstraintsCmd (D.Err loc err) = pure $ T.Err loc err
 genConstraintsCmd (D.Print loc t) = do 
   t' <- genConstraintsTerm t
-  return $ T.Print loc t'  
+  pure $ T.Print loc t'  
 genConstraintsCmd (D.PrintAnnot loc t ty) = do
   t' <- genConstraintsTerm t
   ty' <- genConstraintsTy loc ty
-  addConstraint (MkTyEq (T.getType t') ty')
-  return $ T.Print loc t'
+  _ <- addConstraint (MkTyEq (T.getType t') ty')
+  pure $ T.Print loc t'
 genConstraintsTerm :: D.Term -> GenM T.Term 
 genConstraintsTerm (D.Var loc v) = do 
    vars <- getGenVars 
-   case M.lookup v vars of 
+   case lookup v vars of 
      Nothing -> do 
        tyV <- freshTyVar
-       addGenVar v tyV
-       return (T.Var loc v tyV) 
-     Just ty -> return (T.Var loc v ty)
+       _ <- addGenVar v tyV
+       pure (T.Var loc v tyV) 
+     Just ty -> pure (T.Var loc v ty)
 
 genConstraintsTerm (D.Mu loc v  c) = do 
   tyV <- freshTyVar
-  addGenVar v tyV
+  _ <- addGenVar v tyV
   c' <- genConstraintsCmd c
-  return $ T.Mu loc v c' tyV 
+  pure $ T.Mu loc v c' tyV 
 
 genConstraintsTerm (D.Xtor loc nm args) = do 
-  (K.MkData _ tyn tyargs _ _) <- lookupXtorDecl loc nm
-  xtSig <- lookupXtor loc nm
-  (newVars,varmap) <- freshTyVarsDecl tyargs 
-  args' <- forM args genConstraintsTerm
+  (K.DataDecl decl) <- lookupXtorDecl loc nm
+  (K.XtorSig sig) <- lookupXtor loc nm
+  (Tuple newVars varmap) <- freshTyVarsDecl decl.declArgs 
+  args' <- for args genConstraintsTerm
   let argTys = T.getType <$> args'
-  let varsSubst = T.substTyvars varmap . embed <$>  K.sigArgs xtSig
-  addConstraintsXtor loc nm argTys varsSubst
-  let newT = TyDecl tyn newVars 
-  return (T.Xtor loc nm args' newT)
+  let varsSubst = (\ty -> T.substTyvars varmap (embedType ty)) <$> sig.sigArgs
+  _ <- addConstraintsXtor loc nm argTys varsSubst
+  let newT = T.TyDecl decl.declName newVars 
+  pure (T.Xtor loc nm args' newT)
 genConstraintsTerm (D.XCase loc pts)  = do 
-  decl <- checkPts loc pts
-  case decl of 
-    Nothing -> throwError (ErrBadPattern loc (D.ptxt <$> pts))
-    Just (K.MkData _ tyn tyArgs _ _) -> do
-      (newVars, varmap) <- freshTyVarsDecl tyArgs 
-      pts' <- forM pts (\pt -> do 
-        forM_ (zip (D.ptv pt) newVars) (uncurry addGenVar) 
-        c' <- genConstraintsCmd (D.ptcmd pt)
-        return $ T.MkPattern (D.ptxt pt) (D.ptv pt) c' )
+  mdecl <- checkPts loc pts
+  case mdecl of 
+    Nothing -> throwError (ErrBadPattern loc ((\(D.Pattern pt) -> pt.ptxt) <$> pts))
+    Just (K.DataDecl decl) -> do
+      (Tuple newVars varmap) <- freshTyVarsDecl decl.declArgs 
+      pts' <- for pts (\(D.Pattern pt) -> do 
+        _ <- for (zip pt.ptv newVars) (\(Tuple x y) -> addGenVar x y) 
+        c' <- genConstraintsCmd pt.ptcmd
+        pure $ T.Pattern {ptxt:pt.ptxt,ptv:pt.ptv,ptcmd:c'})
       let pts'' = T.substTyvars varmap <$> pts'
-      let newT = TyDecl tyn newVars 
-      return (T.XCase loc pts'' newT)
+      let newT = T.TyDecl decl.declName newVars 
+      pure (T.XCase loc pts'' newT)
 genConstraintsTerm (D.ShiftCBV loc t) = do 
   t' <- genConstraintsTerm t 
-  let newT = TyShift (T.getType t') 
-  return (T.ShiftCBV loc t' newT)
+  let newT = T.TyShift (T.getType t') 
+  pure (T.ShiftCBV loc t' newT)
 genConstraintsTerm (D.ShiftCBN loc t) = do  
   t' <- genConstraintsTerm t 
-  let newT = TyShift (T.getType t') 
-  return (T.ShiftCBN loc t' newT)
+  let newT = T.TyShift (T.getType t') 
+  pure (T.ShiftCBN loc t' newT)
