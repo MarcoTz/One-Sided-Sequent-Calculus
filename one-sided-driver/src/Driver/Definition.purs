@@ -16,26 +16,24 @@ import Driver.Errors (DriverError(..))
 import Environment (Environment, emptyEnv, addDeclEnv,addVarEnv,addRecEnv)
 import Syntax.Kinded.Program (DataDecl, VarDecl, RecDecl)
 
-import Prelude (class Show, show, (<>), bind, pure) 
+import Prelude (bind, pure) 
 import Data.Tuple (Tuple)
 import Data.Either (Either(..))
 import Data.Unit (Unit,unit)
-import Data.List (List(..))
-import Control.Monad.State (StateT, modify,runStateT)
-import Control.Monad.Except (Except, throwError, runExcept)
+import Data.List (List(..),snoc)
+import Control.Monad.State (State, modify,runState)
+import Control.Monad.Except (ExceptT, throwError, runExceptT)
 
 
 data DriverState = MkDriverState { drvEnv :: Environment, drvDebug :: List String} 
-instance Show DriverState where 
-  show (MkDriverState st) = "Current environment: " <> show st.drvEnv  
 
 initialDriverState :: DriverState
 initialDriverState = MkDriverState {drvEnv:emptyEnv, drvDebug:Nil}
 
-type DriverM a = StateT DriverState (Except DriverError) a 
+type DriverM a = ExceptT DriverError (State DriverState) a 
 
-runDriverM :: forall a.DriverState -> DriverM a -> Either DriverError (Tuple a DriverState)
-runDriverM drvst m = runExcept (runStateT m drvst) 
+runDriverM :: forall a.DriverState -> DriverM a -> Tuple (Either DriverError a) DriverState
+runDriverM drvst m = runState (runExceptT m) drvst
 
 addDecl :: Modulename -> DataDecl -> DriverM Unit
 addDecl nm decl = do 
@@ -58,5 +56,5 @@ liftErr (Right a) _ = pure a
 
 debug :: String -> DriverM Unit
 debug st = do
-  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebug = Cons st s.drvDebug})
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebug = snoc s.drvDebug st })
   pure unit

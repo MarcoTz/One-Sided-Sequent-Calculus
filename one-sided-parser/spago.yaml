@@ -3,5 +3,6 @@ package:
   dependencies:
     - one-sided-defs
     - prelude
+    - debug
     - parsing
     - strings

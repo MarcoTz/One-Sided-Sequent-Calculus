@@ -5,6 +5,7 @@ import Definitions (Input(..),State, getExSource, runProg, indexToEx)
 import Halogen (modify_)
 
 import Prelude (bind,($))
+import Data.List (intercalate)
 import Data.Unit (Unit)
 import Control.Monad.State (class MonadState, gets)
 
@@ -19,7 +20,7 @@ selectExample = \i  -> ExampleSelect $ indexToEx i
 
 handleAction :: forall m. MonadState State m => Input -> m Unit
 handleAction inp = case inp of 
-  ExampleSelect ex -> modify_ (\st -> st {progSrc=getExSource ex})                      
+  ExampleSelect ex -> modify_ (\st -> st {progSrc=intercalate "\n" (getExSource ex)})
   ProgramInput src -> modify_ (\st -> st {progSrc=src})
   RunProg -> do
     src <- gets (\st -> st.progSrc)

@@ -10,7 +10,9 @@ module Parser.Common (
   parseDataCodata
 ) where 
 
-import Common (EvaluationOrder(..),Variance(..),Kind(..),Modulename(..),Variable(..),Typename(..),Typevar(..), DeclTy(..), Kindvar(..), Xtorname(..), VariantVar(..))
+import Common (
+  EvaluationOrder(..),Variance(..),  Kind(..), Modulename(..),Variable(..),
+  Typename(..),Typevar(..), DeclTy(..), Kindvar(..), Xtorname(..), VariantVar(..))
 import Parser.Definition (SrcParser)
 import Parser.Lexer (sc, parseKeyword, parseSymbol, parseIdentifier)
 import Parser.Keywords (Keyword(..))

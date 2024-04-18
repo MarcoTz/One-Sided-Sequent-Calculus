@@ -9,37 +9,38 @@ module Definitions (
   indexToEx
 ) where 
 
-import Prelude (class Show,(<>), show,($))
+import Prelude (show,($))
 import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
+import Data.List (intercalate)
 
-import Driver.Definition (DriverState,initialDriverState, runDriverM)
+import Driver.Definition (DriverState(..),initialDriverState, runDriverM)
 import Driver.Driver (runStr)
 import Driver.Errors (DriverError)
-import Errors (getMessage)
+import Errors (showInSrc)
 import Syntax.Kinded.Terms (Command)
 import Eval.Definition (EvalTrace(..))
 
 data Input = ExampleSelect Examples | ProgramInput String | RunProg
 
 
-data RunResult = ResErr String | ResSucc String String String
-instance Show RunResult where 
-  show (ResErr str) = str 
-  show (ResSucc str1 str2 str3) = str1 <> str2 <> str3
+data RunResult = ResErr String String | ResSucc String String String
 type State = {progSrc::String, runRes::RunResult}
 
 initialState :: Input -> State
-initialState (ExampleSelect ex) = {progSrc:getExSource ex,runRes:ResSucc "" "" ""} 
-initialState _ = {progSrc:tupleStr, runRes:ResSucc "" "" ""}
+initialState (ExampleSelect ex) = {progSrc:intercalate "\n" (getExSource ex),runRes:ResSucc "" "" ""} 
+initialState _ = {progSrc:intercalate "\n" tupleStr, runRes:ResSucc "" "" ""}
 
 runProg :: String -> RunResult  
-runProg progSource = toRunResult $ runDriverM initialDriverState (runStr progSource true)
+runProg progSource = toRunResult progSource $ runDriverM initialDriverState (runStr progSource true)
 
-toRunResult :: (Either DriverError (Tuple (Either Command EvalTrace) DriverState)) -> RunResult
-toRunResult (Left err) = ResErr (getMessage err)
-toRunResult (Right (Tuple (Left c) st)) = ResSucc (show c) "" (show st)
-toRunResult (Right (Tuple (Right (MkTrace c tr)) st)) = ResSucc (show c) (show tr) (show st)
+toRunResult :: String -> Tuple (Either DriverError (Either Command EvalTrace)) DriverState -> RunResult
+toRunResult src (Tuple (Left err) st) = ResErr (showInSrc err src) (stateOutput st)
+toRunResult _ (Tuple (Right (Left c)) st) = ResSucc (show c) (stateOutput st) ""
+toRunResult _ (Tuple (Right (Right (MkTrace c tr))) st) = ResSucc (show c) (stateOutput st) (show tr)
+
+stateOutput :: DriverState -> String 
+stateOutput (MkDriverState {drvDebug:db, drvEnv:_env}) = intercalate "\n" db
 
 
 data Examples = ExTuple | ExList | ExFun | ExNat
@@ -51,20 +52,91 @@ indexToEx 2 = ExNat
 indexToEx 3 = ExFun 
 indexToEx _ = ExTuple
 
-getExSource :: Examples -> String 
+getExSource :: Examples -> Array String 
 getExSource ExTuple = tupleStr
 getExSource ExList = listStr
 getExSource ExFun = funStr
 getExSource ExNat = natStr
 
-tupleStr :: String 
-tupleStr = "data Pair(a:+,b:+){\n\tTup(a,b)\n}\n\ndata Nat {\n\tZ,\n\tS(Nat)\n}\n\ndata Fun(a:+,b:-) {\n\tAp(a,b)\n}\n\nprintCons :: forall X.X;\nprintCons := mu x.Print x;\n\nswap :: forall X Y. Fun(Pair(X,Y),Pair(Y,X));\nswap := case { Ap(p,a) =&gt;\n\t&lt; case { \n\t\tTup(b,c) =&gt; &lt; Tup(c,b) | Pair(Y,X): CBV | a&gt;\n\t} | CBV | p&gt;\n};\n\npair1 :: Pair(Nat,Nat);\npair1 := Tup(Z,S(Z));\n\n main := &lt; swap | CBV | Ap(pair1,printCons)&gt;;"
+tupleStr :: Array String 
+tupleStr = [
+  "module Pair",
+  "data Pair(a:+,b:+){" ,
+  "\tTup(a,b)",
+   "}",
+  "",
+  "",
+  "data Nat {",
+  "\tZ,",
+  "\tS(Nat)",
+  "}",
+  "" ,
+  "",
+  "data Fun(a:+,b:-) {",
+  "\tAp(a,b)",
+  "}",
+  "",
+  "printCons :: forall X.X;",
+  "printCons := mu x.Print x;",
+  "",
+  "swap :: forall X Y. Fun(Pair(X,Y),Pair(Y,X));",
+  "swap := case { Ap(p,a) =>",
+  "\t< case { ",
+  "\t\tTup(b,c) => < Tup(c,b) | Pair(Y,X): CBV | a>",
+  "\t} | CBV | p>",
+  "};",
+  "",
+  "pair1 :: Pair(Nat,Nat);",
+  "pair1 := Tup(Z,S(Z));",
+  "",
+  " main := < swap | CBV | Ap(pair1,printCons)>;"]
 
-listStr :: String 
-listStr = ""
+listStr :: Array String 
+listStr = ["module List" ,
+  "data List(a:+){",
+  "\tNil,",
+  "\tCons(a,List(a))",
+  "}"]
 
-natStr :: String 
-natStr = "data Nat {\n\tZ,\n\tS(Nat)\n}\n\ndata Fun(a:+,b:-) { \n\tAp(a,b)\n}\n\nprintCons :: Forall X.X;\nprintCons := mu x. Print x;\n\npred :: Fun(Nat,Nat);\npred := case { Ap(n,a) =&gt;\n\t&lt; case { \n\t\tZ =&gt; &lt; Z | CBV | a&gt;,\nt\t\tS(m) =&gt; &lt; m | CBV | a &gt;\n\t} | CBV | n&gt;\n};\n\nnat1 :: Nat;\nnat1 := S(S(Z));\n\n main := &lt; pred | CBV | Ap(nat1,printCons)&gt;;"
+natStr :: Array String 
+natStr = ["module Nat",
+  "data Nat {",
+  "\tZ,",
+  "\tS(Nat)",
+  "}",
+  "",
+  "data Fun(a:+,b:-) { ",
+  "\tAp(a,b)",
+  "}",
+  "",
+  "printCons :: Forall X.X;",
+  "printCons := mu x. Print x;",
+  "",
+  "pred :: Fun(Nat,Nat);",
+  "pred := case { Ap(n,a) =>",
+  "\t< case { ",
+  "\t\tZ => < Z | CBV | a>,",
+  "\t\tS(m) => < m | CBV | a >",
+  "\t} | CBV | n>",
+  "};",
+  "",
+  "nat1 :: Nat;",
+  "nat1 := S(S(Z));",
+  "",
+  "main := < pred | CBV | Ap(nat1,printCons)>;"]
 
-funStr :: String 
-funStr = "data Fun(a:+,b:-){ \n\tAp(a,b)\n}\n\ndata Unit {MkUnit}\n\nprintCons :: Forall X.X;\nprintCons := mu x. Print x;\n\nid :: forall X. Fun(X,X);\nid := case { Ap(x,a) =&gt; &lt;x | CBV | a&gt; };\n\nmain := &lt; id | CBV | Ap(MkUnit,printCons)&gt;; "
+funStr :: Array String 
+funStr = ["module Fun",
+  "data Fun(a:+,b:-){ ",
+  "\tAp(a,b)",
+  "}",
+  "",
+  "data Unit {MkUnit}",
+  "",
+  "printCons :: Forall X.X;",
+  "printCons := mu x. Print x;",
+  "",
+  "id :: forall X. Fun(X,X);",
+  "id := case { Ap(x,a) => <x | CBV | a> };",
+  "",
+  "main := < id | CBV | Ap(MkUnit,printCons)>; "]

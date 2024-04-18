@@ -38,7 +38,7 @@ parseProgram src = do
   _ <- sc
   decls <- manyTill 
     (do
-     decl <- parseDecl 
+     decl <- parseDecl
      _ <- sc
      pure decl) eof
   foldM foldFun (emptyProg nm src) decls
@@ -106,9 +106,13 @@ parseVarDecl :: SrcParser VarDecl
 parseVarDecl = do 
   startPos <- getCurrPos 
   nm <- parseVariable 
+  pos <- getCurrPos
   _ <- sc
+  pos' <- getCurrPos 
   _ <- parseSymbol SymColon
+  pos'' <- getCurrPos
   _ <- parseSymbol SymEq
+  pos''' <- getCurrPos
   _ <- sc
   t <- parseTerm
   _ <- sc

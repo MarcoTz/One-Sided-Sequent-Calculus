@@ -47,4 +47,4 @@ showWithLoc :: forall e. Error e => e -> String
 showWithLoc e = getMessage e <> "\n" <> show (getLocation e)
 
 showInSrc :: forall e.Error e => e -> String -> String
-showInSrc e src = showLocInSource src (getLocation e) <> "\n" <> getMessage e
+showInSrc e src = getMessage e <> "\nAt: " <> showLocInSource src (getLocation e) 

@@ -8,7 +8,7 @@ module Loc (
   showLocInSource
 ) where 
 
-import Prelude (class Eq, class Ord, class Show, show, (<>))
+import Prelude (class Eq, class Ord, class Show, show, (<>), (+),(-))
 import Data.List (List(..), take, drop)
 import Data.String as S
 import Data.Array (toUnfoldable)
@@ -42,12 +42,16 @@ showLocInSource src (Loc loc) = do
   let posLines = betweenList (getLine loc.locStart) (getCol loc.locEnd) srcLines 
   case posLines of 
     Nil -> ""
-    (Cons l1 _) -> betweenString (getCol loc.locStart) (getCol loc.locEnd) l1
+    (Cons l1 _) -> do
+      let offset = 2
+      let msg = betweenString ((getCol loc.locStart) - offset) ((getCol loc.locEnd)+offset) l1
+      let startMsg = "line " <> show (getLine loc.locStart) <> ", " <> show (getCol loc.locStart)
+      let endMsg = "line " <> show (getLine loc.locEnd) <> ", " <> show (getCol loc.locEnd)
+      msg <> "\n" <> startMsg <> "-" <> endMsg
   where 
 
     betweenList :: forall a. Int -> Int -> List a -> List a 
     betweenList start end ls = take end (drop start ls) 
-
 
     betweenString :: Int -> Int -> String -> String
     betweenString start end str = S.take end (S.drop start str)

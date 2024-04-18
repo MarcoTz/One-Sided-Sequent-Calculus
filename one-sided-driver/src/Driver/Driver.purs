@@ -51,6 +51,7 @@ import Control.Monad.Except (throwError)
 
 runStr :: String -> Boolean -> DriverM (Either K.Command EvalTrace) 
 runStr progText withTrace = do 
+  _ <- debug ("parsing program " <> show progText)
   let progParsed = runSourceParser progText (parseProgram progText) 
   progParsed' <- liftErr progParsed "parsing" 
   prog <- inferProgram progParsed' Nil

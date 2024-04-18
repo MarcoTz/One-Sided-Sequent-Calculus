@@ -18,10 +18,11 @@ import Parser.Symbols (Sym(..))
 
 import Prelude (show, bind, pure,($), Unit, unit, (<$>), (<>))
 import Data.List (elem)
+import Control.Monad ((*>))
 import Parsing (fail, position, Position(..))
 import Parsing.String (string, anyChar, char)
 import Parsing.String.Basic (space, alphaNum)
-import Parsing.Combinators (choice, many1, manyTill, try, (<|>))
+import Parsing.Combinators (many, many1, manyTill, try, (<|>))
 
 parseSymbol :: Sym -> SrcParser Unit
 parseSymbol sym = do 
@@ -36,12 +37,7 @@ parseComment = try $ do
   pure unit
 
 sc :: SrcParser Unit 
-sc = choice [manySpace,parseComment]
-  where 
-    manySpace = do 
-      _ <- many1 space
-      pure unit
-
+sc = many (space *> pure unit <|> parseComment)  *> pure unit
 
 parseParens :: forall a.SrcParser a -> SrcParser a
 parseParens p = do 
