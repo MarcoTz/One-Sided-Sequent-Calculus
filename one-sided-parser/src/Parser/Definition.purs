@@ -19,7 +19,6 @@ type SrcParser a = Parser String a
 runSourceParser :: forall a. String -> SrcParser a -> Either ParserErr a
 runSourceParser src p = case runParser src p of 
   Left err -> Left $ parseErrorToParserErr  err
---  Right p@(Program _) -> Right $ setSrcProgram src p
   Right b -> Right b
 
 data ParseDecl = MkD DataDecl | MkV VarDecl | MkA AnnotDecl | MkI Import | MkM Command | MkR RecDecl

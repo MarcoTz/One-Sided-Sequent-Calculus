@@ -4643,6 +4643,16 @@
   var identity8 = /* @__PURE__ */ identity(categoryFn);
   var show3 = /* @__PURE__ */ show(showInt);
   var compare3 = /* @__PURE__ */ compare(ordString);
+  var Xtorname = /* @__PURE__ */ function() {
+    function Xtorname2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Xtorname2.create = function(value0) {
+      return new Xtorname2(value0);
+    };
+    return Xtorname2;
+  }();
   var Covariant = /* @__PURE__ */ function() {
     function Covariant2() {
     }
@@ -4657,6 +4667,26 @@
     Contravariant2.value = new Contravariant2();
     return Contravariant2;
   }();
+  var Variable = /* @__PURE__ */ function() {
+    function Variable2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Variable2.create = function(value0) {
+      return new Variable2(value0);
+    };
+    return Variable2;
+  }();
+  var Typevar = /* @__PURE__ */ function() {
+    function Typevar2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Typevar2.create = function(value0) {
+      return new Typevar2(value0);
+    };
+    return Typevar2;
+  }();
   var VariantVar = /* @__PURE__ */ function() {
     function VariantVar2(value0) {
       this.value0 = value0;
@@ -4666,6 +4696,26 @@
       return new VariantVar2(value0);
     };
     return VariantVar2;
+  }();
+  var Typename = /* @__PURE__ */ function() {
+    function Typename2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Typename2.create = function(value0) {
+      return new Typename2(value0);
+    };
+    return Typename2;
+  }();
+  var Modulename = /* @__PURE__ */ function() {
+    function Modulename2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Modulename2.create = function(value0) {
+      return new Modulename2(value0);
+    };
+    return Modulename2;
   }();
   var CBV = /* @__PURE__ */ function() {
     function CBV2() {
@@ -4717,32 +4767,32 @@
   }();
   var showXtorname = {
     show: function(v) {
-      return v.unXtorname;
+      return v.value0;
     }
   };
   var showVariable = {
     show: function(v) {
-      return v.unVariable;
+      return v.value0;
     }
   };
   var showTypevar = {
     show: function(v) {
-      return v.unTypevar;
+      return v.value0;
     }
   };
   var showTypename = {
     show: function(v) {
-      return v.unTypename;
+      return v.value0;
     }
   };
   var showModulename = {
     show: function(v) {
-      return v.unModulename;
+      return v.value0;
     }
   };
   var showKindvar = {
     show: function(v) {
-      return v.value0.unKindvar;
+      return v.value0;
     }
   };
   var show32 = /* @__PURE__ */ show(showKindvar);
@@ -4822,8 +4872,8 @@
           return function(ctor) {
             return function(vars) {
               var newV = ctor(prefix + show3(n));
-              var $164 = member4(newV)(vars);
-              if ($164) {
+              var $169 = member4(newV)(vars);
+              if ($169) {
                 return freshVarN(dictEq)(dictOrd)(n + 1 | 0)(prefix)(ctor)(vars);
               }
               ;
@@ -4837,14 +4887,14 @@
   var eqXtorname = {
     eq: function(x) {
       return function(y) {
-        return x.unXtorname === y.unXtorname;
+        return x.value0 === y.value0;
       };
     }
   };
   var ordXtorname = {
     compare: function(x) {
       return function(y) {
-        return compare3(x.unXtorname)(y.unXtorname);
+        return compare3(x.value0)(y.value0);
       };
     },
     Eq0: function() {
@@ -4854,14 +4904,14 @@
   var eqVariable = {
     eq: function(x) {
       return function(y) {
-        return x.unVariable === y.unVariable;
+        return x.value0 === y.value0;
       };
     }
   };
   var ordVariable = {
     compare: function(x) {
       return function(y) {
-        return compare3(x.unVariable)(y.unVariable);
+        return compare3(x.value0)(y.value0);
       };
     },
     Eq0: function() {
@@ -4871,14 +4921,14 @@
   var eqTypevar = {
     eq: function(x) {
       return function(y) {
-        return x.unTypevar === y.unTypevar;
+        return x.value0 === y.value0;
       };
     }
   };
   var ordTypevar = {
     compare: function(x) {
       return function(y) {
-        return compare3(x.unTypevar)(y.unTypevar);
+        return compare3(x.value0)(y.value0);
       };
     },
     Eq0: function() {
@@ -4888,14 +4938,14 @@
   var eqTypename = {
     eq: function(x) {
       return function(y) {
-        return x.unTypename === y.unTypename;
+        return x.value0 === y.value0;
       };
     }
   };
   var ordTypename = {
     compare: function(x) {
       return function(y) {
-        return compare3(x.unTypename)(y.unTypename);
+        return compare3(x.value0)(y.value0);
       };
     },
     Eq0: function() {
@@ -4905,14 +4955,14 @@
   var eqModulename = {
     eq: function(x) {
       return function(y) {
-        return x.unModulename === y.unModulename;
+        return x.value0 === y.value0;
       };
     }
   };
   var ordModulename = {
     compare: function(x) {
       return function(y) {
-        return compare3(x.unModulename)(y.unModulename);
+        return compare3(x.value0)(y.value0);
       };
     },
     Eq0: function() {
@@ -4922,7 +4972,7 @@
   var eqKindvar = {
     eq: function(x) {
       return function(y) {
-        return x.value0.unKindvar === y.value0.unKindvar;
+        return x.value0 === y.value0;
       };
     }
   };
@@ -8436,12 +8486,10 @@
         if (v2 instanceof Var4) {
           return bind6(lookupMVar2(v2.value1))(function(mdef) {
             return bind6(lookupMXtor2(function(v3) {
-              return {
-                unXtorname: v3.unVariable
-              };
+              return new Xtorname(v3.value0);
             }(v2.value1)))(function(mxtor) {
-              var $76 = isJust(mdef) || (isJust(mxtor) || elem22(v2.value1)(v1));
-              if ($76) {
+              var $77 = isJust(mdef) || (isJust(mxtor) || elem22(v2.value1)(v1));
+              if ($77) {
                 return pure5(unit);
               }
               ;
@@ -8457,9 +8505,7 @@
         }
         ;
         if (v2 instanceof Xtor4) {
-          return bind6($$for4(v2.value2)(addEdgesVariableT(v)(new Cons({
-            unVariable: v2.value1.unXtorname
-          }, v1))))(function() {
+          return bind6($$for4(v2.value2)(addEdgesVariableT(v)(new Cons(new Variable(v2.value1.value0), v1))))(function() {
             return pure5(unit);
           });
         }
@@ -8485,9 +8531,7 @@
   var addEdgesVariablePt = function(vert) {
     return function(ignore) {
       return function(v) {
-        return addEdgesVariableC(vert)(append3(v.value0.ptv)(new Cons({
-          unVariable: v.value0.ptxt.unXtorname
-        }, ignore)))(v.value0.ptcmd);
+        return addEdgesVariableC(vert)(append3(v.value0.ptv)(new Cons(new Variable(v.value0.ptxt.value0), ignore)))(v.value0.ptcmd);
       };
     };
   };
@@ -8537,9 +8581,7 @@
     return bind6($$for4(vars)(addVariable))(function(vertsTerms) {
       return bind6($$for4(recs)(addRec))(function(recsTerms) {
         var xtToVar = function(v1) {
-          return {
-            unVariable: v1.unXtorname
-          };
+          return new Variable(v1.value0);
         };
         var ignore = map21(function(v1) {
           return xtToVar(v1.value0.sigName);
@@ -8714,14 +8756,10 @@
     return MkDesugarState2;
   }();
   var varToXtor = function(v) {
-    return {
-      unXtorname: v.unVariable
-    };
+    return new Xtorname(v.value0);
   };
   var tyvarToTyName = function(v) {
-    return {
-      unTypename: v.unTypevar
-    };
+    return new Typename(v.value0);
   };
   var setDesMain = function(m) {
     return bind7(modify7(function(v) {
@@ -9389,11 +9427,7 @@
     var freeVars1 = freeVars(dictFreeVariables);
     return function(a2) {
       var frV = freeVars1(a2);
-      return freshVarN2(0)("x")(function(x) {
-        return {
-          unVariable: x
-        };
-      })(frV);
+      return freshVarN2(0)("x")(Variable.create)(frV);
     };
   };
   var freeVariablesList = function(dictFreeVariables) {
@@ -10766,7 +10800,7 @@
         return new Right(v.value0);
       }
       ;
-      throw new Error("Failed pattern match at Parser.Definition (line 20, column 25 - line 23, column 21): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Parser.Definition (line 20, column 25 - line 22, column 21): " + [v.constructor.name]);
     };
   };
 
@@ -27640,9 +27674,7 @@
   var pure17 = /* @__PURE__ */ pure(applicativeParserT);
   var alt4 = /* @__PURE__ */ alt(altParserT);
   var parseXtorname = /* @__PURE__ */ bind18(parseIdentifier)(function(nm) {
-    return pure17({
-      unXtorname: nm
-    });
+    return pure17(new Xtorname(nm));
   });
   var parseVariance = /* @__PURE__ */ function() {
     return alt4(bind18(parseSymbol(SymPlus.value))(function() {
@@ -27652,14 +27684,10 @@
     }));
   }();
   var parseVariable = /* @__PURE__ */ bind18(parseIdentifier)(function(nm) {
-    return pure17({
-      unVariable: nm
-    });
+    return pure17(new Variable(nm));
   });
   var parseTypevar = /* @__PURE__ */ bind18(parseIdentifier)(function(nm) {
-    return pure17({
-      unTypevar: nm
-    });
+    return pure17(new Typevar(nm));
   });
   var parseVariantVar = /* @__PURE__ */ bind18(parseTypevar)(function(tyv) {
     return bind18(sc)(function() {
@@ -27676,14 +27704,10 @@
     });
   });
   var parseTypename = /* @__PURE__ */ bind18(parseIdentifier)(function(nm) {
-    return pure17({
-      unTypename: nm
-    });
+    return pure17(new Typename(nm));
   });
   var parseModulename = /* @__PURE__ */ bind18(parseIdentifier)(function(nm) {
-    return pure17({
-      unModulename: nm
-    });
+    return pure17(new Modulename(nm));
   });
   var parseEvaluationOrder = /* @__PURE__ */ function() {
     return alt4(bind18(parseKeyword(KwCBV.value))(function() {
@@ -28397,34 +28421,26 @@
             }));
           }
           ;
-          throw new Error("Failed pattern match at Parser.Program (line 155, column 3 - line 157, column 73): " + [args.constructor.name]);
+          throw new Error("Failed pattern match at Parser.Program (line 151, column 3 - line 153, column 73): " + [args.constructor.name]);
         });
       });
     });
   });
   var parseVarDecl = /* @__PURE__ */ bind21(getCurrPos)(function(startPos) {
     return bind21(parseVariable)(function(nm) {
-      return bind21(getCurrPos)(function(pos) {
-        return bind21(sc)(function() {
-          return bind21(getCurrPos)(function(pos$prime) {
-            return bind21(parseSymbol(SymColon.value))(function() {
-              return bind21(getCurrPos)(function(pos$prime$prime) {
-                return bind21(parseSymbol(SymEq.value))(function() {
-                  return bind21(getCurrPos)(function(pos$prime$prime$prime) {
-                    return bind21(sc)(function() {
-                      return bind21(parseTerm)(function(t) {
-                        return bind21(sc)(function() {
-                          return bind21(parseSymbol(SymSemi.value))(function() {
-                            return bind21(getCurrLoc(startPos))(function(loc) {
-                              return pure20(new VarDecl4({
-                                varPos: loc,
-                                varName: nm,
-                                varBody: t
-                              }));
-                            });
-                          });
-                        });
-                      });
+      return bind21(sc)(function() {
+        return bind21(parseSymbol(SymColon.value))(function() {
+          return bind21(parseSymbol(SymEq.value))(function() {
+            return bind21(sc)(function() {
+              return bind21(parseTerm)(function(t) {
+                return bind21(sc)(function() {
+                  return bind21(parseSymbol(SymSemi.value))(function() {
+                    return bind21(getCurrLoc(startPos))(function(loc) {
+                      return pure20(new VarDecl4({
+                        varPos: loc,
+                        varName: nm,
+                        varBody: t
+                      }));
                     });
                   });
                 });
@@ -28480,9 +28496,7 @@
           return parseModulename;
         });
       });
-    }))(pure20({
-      unModulename: ""
-    }));
+    }))(pure20(new Modulename("")));
   }();
   var parseMain = /* @__PURE__ */ function() {
     return bind21(alt7(parseKeyword(KwMain.value))(parseKeyword(Kwmain.value)))(function() {
@@ -30058,7 +30072,7 @@
         return new ResSucc(show48(v1.value0.value0.value0.value0), stateOutput(v1.value1), show120(v1.value0.value0.value0.value1));
       }
       ;
-      throw new Error("Failed pattern match at Definitions (line 37, column 1 - line 37, column 104): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Definitions (line 35, column 1 - line 35, column 104): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var runProg = function(progSource) {
@@ -30103,7 +30117,7 @@
       return natStr;
     }
     ;
-    throw new Error("Failed pattern match at Definitions (line 55, column 1 - line 55, column 40): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Definitions (line 53, column 1 - line 53, column 40): " + [v.constructor.name]);
   };
   var initialState = function(v) {
     if (v instanceof ExampleSelect) {

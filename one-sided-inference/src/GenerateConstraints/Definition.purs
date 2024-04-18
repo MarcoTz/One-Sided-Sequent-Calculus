@@ -55,7 +55,7 @@ runGenM env m = case runExcept (runStateT (runReaderT m env) initialGenState) of
 freshTyVar :: GenM Ty
 freshTyVar = do 
   cnt <- gets (\(MkGenState st) -> st.tyVarCnt)
-  let newVar = Typevar {unTypevar:"X" <> show cnt}
+  let newVar = Typevar ("X" <> show cnt)
   _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=cnt+1}) 
   pure (TyVar newVar)
 
@@ -72,7 +72,7 @@ freshTyVarsDecl vars = do
 freshKVar :: GenM Kind
 freshKVar = do 
   cnt <- gets (\(MkGenState s) -> s.kVarCnt )
-  let newVar = Kindvar {unKindvar:"k" <> show cnt}
+  let newVar = Kindvar ("k" <> show cnt)
   _ <- modify (\(MkGenState s) -> MkGenState s{kVarCnt=cnt+1})
   pure (MkKindVar newVar)
 

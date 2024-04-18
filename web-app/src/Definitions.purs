@@ -22,8 +22,6 @@ import Syntax.Kinded.Terms (Command)
 import Eval.Definition (EvalTrace(..))
 
 data Input = ExampleSelect Examples | ProgramInput String | RunProg
-
-
 data RunResult = ResErr String String | ResSucc String String String
 type State = {progSrc::String, runRes::RunResult}
 

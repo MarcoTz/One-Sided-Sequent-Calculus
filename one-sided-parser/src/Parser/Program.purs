@@ -30,7 +30,7 @@ parseModuleDecl = (do
   _ <- space
   _ <- sc 
   parseModulename)
-  <|> pure (Modulename {unModulename:""})
+  <|> pure (Modulename "")
 
 parseProgram :: String -> SrcParser Program 
 parseProgram src = do 
@@ -106,13 +106,9 @@ parseVarDecl :: SrcParser VarDecl
 parseVarDecl = do 
   startPos <- getCurrPos 
   nm <- parseVariable 
-  pos <- getCurrPos
   _ <- sc
-  pos' <- getCurrPos 
   _ <- parseSymbol SymColon
-  pos'' <- getCurrPos
   _ <- parseSymbol SymEq
-  pos''' <- getCurrPos
   _ <- sc
   t <- parseTerm
   _ <- sc

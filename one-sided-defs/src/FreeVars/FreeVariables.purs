@@ -18,7 +18,7 @@ instance FreeVariables a => FreeVariables (List a) where
   freeVars ls = unions (freeVars <$> ls)
 
 freshVar :: forall a.FreeVariables a => a -> Variable
-freshVar a = let frV = freeVars a in freshVarN 0 "x" (\x -> Variable {unVariable:x}) frV
+freshVar a = let frV = freeVars a in freshVarN 0 "x" Variable frV
 
 instance FreeVariables Term where 
   freeVars (Var _ v _)          = singleton v

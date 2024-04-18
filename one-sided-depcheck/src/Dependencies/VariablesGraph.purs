@@ -33,7 +33,7 @@ depOrderProgram (Program prog) = do
       decls = snd <$> toUnfoldable prog.progDecls
   vertsTerms <- for vars addVariable
   recsTerms <- for recs addRec
-  let xtToVar (Xtorname xt) = Variable {unVariable:xt.unXtorname}
+  let xtToVar (Xtorname xt) = Variable xt 
   let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) decls  
   _ <- for (vertsTerms<>recsTerms) (\(Tuple v t) -> addEdgesVariableT v ignore t)
   _ <- removeSelfLoops
@@ -54,14 +54,14 @@ addRec (RecDecl rec) = do
 addEdgesVariableT :: Vertex Variable -> List Variable -> Term -> DepVar Unit
 addEdgesVariableT vert ignore (Var loc var) = do 
   mdef <- lookupMVar var 
-  mxtor <- lookupMXtor ((\(Variable v) -> Xtorname {unXtorname:v.unVariable}) $ var)
+  mxtor <- lookupMXtor ((\(Variable v) -> Xtorname v) $ var)
   if isJust mdef || isJust mxtor || var `elem` ignore then pure unit
   else do
     vert' <- getVertexError var (ErrUndefinedVar loc var)
     addEdgeM (Tuple vert vert')
 addEdgesVariableT vert ignore (Mu _ v c) = addEdgesVariableC vert (Cons v ignore) c 
-addEdgesVariableT vert ignore (Xtor _ (Xtorname {unXtorname:nm}) args) = do
-  _ <- for args (addEdgesVariableT vert (Cons (Variable {unVariable:nm}) ignore))
+addEdgesVariableT vert ignore (Xtor _ (Xtorname nm) args) = do
+  _ <- for args (addEdgesVariableT vert (Cons (Variable nm) ignore))
   pure unit
 addEdgesVariableT vert ignore (XCase _ pts) = do
   _ <- for pts (addEdgesVariablePt vert ignore)
@@ -71,8 +71,8 @@ addEdgesVariableT vert ignore (ShiftCBN _ t) = addEdgesVariableT vert ignore t
 
 addEdgesVariablePt :: Vertex Variable -> List Variable -> Pattern -> DepVar Unit
 addEdgesVariablePt vert ignore (Pattern pt) = do 
-  let (Xtorname {unXtorname:nm}) = pt.ptxt
-  addEdgesVariableC vert (pt.ptv <> (Cons (Variable {unVariable: nm} ) ignore)) pt.ptcmd
+  let (Xtorname nm) = pt.ptxt
+  addEdgesVariableC vert (pt.ptv <> (Cons (Variable nm) ignore)) pt.ptcmd
 
 addEdgesVariableC :: Vertex Variable -> List Variable -> Command -> DepVar Unit
 addEdgesVariableC vert ignore (Cut _ t _ u) = do

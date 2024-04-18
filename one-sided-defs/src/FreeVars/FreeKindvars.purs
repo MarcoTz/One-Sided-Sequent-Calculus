@@ -12,7 +12,7 @@ class FreeKindvars a where
   freeKindvars :: a -> Set Kindvar 
 
 freshKindvar :: forall a.FreeKindvars a => a -> Kindvar 
-freshKindvar a = let frV = freeKindvars a in freshVarN 0 "k" (\x -> Kindvar {unKindvar:x}) frV
+freshKindvar a = let frV = freeKindvars a in freshVarN 0 "k" Kindvar frV
 
 
 instance FreeKindvars Kind where

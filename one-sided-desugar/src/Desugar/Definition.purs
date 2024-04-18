@@ -50,10 +50,10 @@ runDesugarM env nm m = case runExcept (runStateT (runReaderT m env) (initialDesu
   Right (Tuple x _) ->  Right x 
 
 varToXtor :: Variable -> Xtorname
-varToXtor (Variable {unVariable:v}) = Xtorname {unXtorname:v}
+varToXtor (Variable v) = Xtorname v 
 
 tyvarToTyName :: Typevar -> Typename
-tyvarToTyName (Typevar {unTypevar:v}) = Typename {unTypename:v}
+tyvarToTyName (Typevar v) = Typename v 
 
 getDesDoneProg :: DesugarM D.Program
 getDesDoneProg = gets (\(MkDesugarState s) -> s.desDone)

@@ -12,7 +12,7 @@ class FreeTypevars a where
   freeTypevars :: a -> Set Typevar
 
 freshTypevar :: forall a.FreeTypevars a => a -> Typevar 
-freshTypevar a = let frV = freeTypevars a in freshVarN 0 "X" (\x -> Typevar {unTypevar:x}) frV
+freshTypevar a = let frV = freeTypevars a in freshVarN 0 "X" Typevar frV
 
 instance FreeTypevars Ty where 
   freeTypevars (TyVar v) = singleton v 

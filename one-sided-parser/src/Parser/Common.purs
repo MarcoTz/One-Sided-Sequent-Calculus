@@ -57,32 +57,32 @@ parseKind =
   <|> 
   (do
   nm <- parseIdentifier
-  pure $ MkKindVar (Kindvar {unKindvar:nm}))
+  pure $ MkKindVar (Kindvar nm))
 
 parseModulename :: SrcParser Modulename
 parseModulename = do
   nm <- parseIdentifier 
-  pure $ Modulename {unModulename : nm} 
+  pure $ Modulename nm 
 
 parseVariable :: SrcParser Variable
 parseVariable = do 
   nm <- parseIdentifier
-  pure $ Variable {unVariable:nm}
+  pure $ Variable nm 
 
 parseXtorname :: SrcParser Xtorname 
 parseXtorname = do 
   nm <- parseIdentifier
-  pure $ Xtorname { unXtorname:nm}
+  pure $ Xtorname nm
 
 parseTypename :: SrcParser Typename
 parseTypename = do
   nm <- parseIdentifier 
-  pure $ Typename {unTypename:nm}
+  pure $ Typename nm 
 
 parseTypevar :: SrcParser Typevar
 parseTypevar = do 
   nm <- parseIdentifier 
-  pure $ Typevar {unTypevar:nm}
+  pure $ Typevar nm 
 
 parseVariantVar :: SrcParser VariantVar 
 parseVariantVar = do 

@@ -40,47 +40,47 @@ firstJust (Cons (Just a) _) = Just a
 -----------
 -- Names --
 -----------
-newtype Modulename = Modulename {unModulename :: String}
+data Modulename = Modulename String 
 derive instance eqModulename :: Eq Modulename
 derive instance ordModulename :: Ord Modulename
 instance Show Modulename where 
-  show (Modulename nm) = nm.unModulename
+  show (Modulename nm) = nm
 
-newtype Xtorname = Xtorname {unXtorname :: String}
+data Xtorname = Xtorname String 
 derive instance eqXtorname :: Eq Xtorname
 derive instance ordXtorname :: Ord Xtorname
 instance Show Xtorname where 
-  show (Xtorname xtn) = xtn.unXtorname
+  show (Xtorname nm) = nm 
 
-newtype Typename = Typename {unTypename :: String}
+data Typename = Typename String
 derive instance eqTypename :: Eq Typename
 derive instance ordTypename :: Ord Typename
 instance Show Typename where 
-  show (Typename tyn) = tyn.unTypename
+  show (Typename tyn) = tyn
 ---------------
 -- Variables --
 ---------------
-newtype Typevar  = Typevar {unTypevar :: String}
+data Typevar = Typevar String
 derive instance eqTypevar :: Eq Typevar 
 derive instance ordTypevar :: Ord Typevar
 instance Show Typevar where 
-  show (Typevar tyv) = tyv.unTypevar
+  show (Typevar tyv) = tyv 
 
-newtype Variable = Variable {unVariable :: String} 
+data Variable = Variable String
 derive instance eqVariable :: Eq Variable 
 derive instance ordVariable :: Ord Variable
 instance Show Variable where 
-  show (Variable v) = v.unVariable
+  show (Variable v) = v 
 
 data PrdCns = Prd | Cns 
 derive instance eqPrdCns :: Eq PrdCns
 derive instance ordPrdCns :: Ord PrdCns
 
-data Kindvar  = Kindvar {unKindvar :: String} 
+data Kindvar = Kindvar String
 derive instance eqKindvar :: Eq Kindvar
 derive instance ordKindvar :: Ord Kindvar
 instance Show Kindvar where 
-  show (Kindvar kv) = kv.unKindvar
+ show (Kindvar kv) = kv 
 
 --------------------------------------------------------
 -------------- Classes for Free Variables --------------
