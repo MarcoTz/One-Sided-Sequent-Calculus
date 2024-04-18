@@ -6,13 +6,14 @@ module Driver.Definition (
   addRecDecl,
   addVarDecl,
   addDecl,
+  initialDriverState,
   DriverState (..)
 ) where 
 
 import Common (Modulename)
 import Errors (class Error, convertError)
 import Driver.Errors (DriverError(..))
-import Environment (Environment, addDeclEnv,addVarEnv,addRecEnv)
+import Environment (Environment, emptyEnv, addDeclEnv,addVarEnv,addRecEnv)
 import Syntax.Kinded.Program (DataDecl, VarDecl, RecDecl)
 
 import Prelude (class Show, show, (<>), bind, pure) 
@@ -27,6 +28,9 @@ import Control.Monad.Except (Except, throwError, runExcept)
 data DriverState = MkDriverState { drvEnv :: Environment, drvDebug :: List String} 
 instance Show DriverState where 
   show (MkDriverState st) = "Current environment: " <> show st.drvEnv  
+
+initialDriverState :: DriverState
+initialDriverState = MkDriverState {drvEnv:emptyEnv, drvDebug:Nil}
 
 type DriverM a = StateT DriverState (Except DriverError) a 
 

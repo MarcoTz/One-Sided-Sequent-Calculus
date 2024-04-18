@@ -4,7 +4,11 @@ package:
     - one-sided-defs
     - one-sided-eval
     - one-sided-driver
+    - halogen
+    - web-dom
+    - web-html
     - prelude
     - effect
     - console
+    - transformers
 
