@@ -1,21 +1,21 @@
 module Layout (render) where 
 
-import Definitions (RunResult(..),Input, State,getExSource,Examples(..))
+import Definitions (RunResult(..),Input, State)
 import Events (runSrc, selectExample,getSrc)
 
-import Prelude (($),(<$>))
-import Data.String (Pattern(..), split)
-import Data.Array(concatMap)
+import Prelude (($),(<>))
+--import Data.String (Pattern(..), split)
+--import Data.Array(concatMap)
 import Web.HTML.Common (ClassName(..))
 import Halogen.HTML (HTML,text)
-import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_, h3_,br_, select,option)
+import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_,br_, select,option)
 import Halogen.HTML.Properties (class_,id, readOnly,value)
 import Halogen.HTML.Events (onClick,onValueChange,onSelectedIndexChange)
 
-strToText :: forall w. String -> Array (HTML w Input)
-strToText str = do
-  let lines = split (Pattern "\n") str
-  concatMap (\l -> [text l,br_]) lines
+--strToText :: forall w. String -> Array (HTML w Input)
+--strToText str = do
+--  let lines = split (Pattern "\n") str
+--  concatMap (\l -> [text l,br_]) lines
 
 render :: forall w. State -> HTML w Input
 render {progSrc:src,runRes:res} = layout src res
@@ -32,22 +32,21 @@ progDiv src = div
 resDiv :: forall w.RunResult -> HTML w Input 
 resDiv (ResErr err debug) = div [ class_ $ ClassName "results"]
   [
-    h2_ [text "Results"],
-    div [class_ $ ClassName "evalError"] (strToText err),
+    h1_ [text "Results"],
+    h2_ [text "Output"],
+    textarea [class_ $ ClassName "evalError", value ("Error: " <> err)],
     br_,
+    h2_ [text "Debug Trace"],
     textarea [id "traceStr", readOnly true, value debug]
   ]
-resDiv (ResSucc cmd tr st) = div 
+resDiv (ResSucc cmd tr _st) = div 
   [ class_ $ ClassName "results" ]
   [ 
     h1_ [text "Results"],
-    div [class_ $ ClassName "code", id "resultStr"] [text cmd],
+    h2_ [text "Output"],
+    textarea [class_ $ ClassName "evalSucc", id "resultStr", value cmd],
     br_,
-    h3_ [text "Types in Program"],
-    br_, 
-    textarea [id "typeStr", readOnly true, value st] ,
-    br_, 
-    h3_ [text "Evaluation Trace"],
+    h2_ [text "Debug Trace"],
     br_, 
     textarea [id "traceStr", readOnly true, value tr]
   ]
@@ -65,22 +64,11 @@ exSelect = div_ [
   br_
   ]
 
-exampleDiv :: forall w. HTML w Input 
-exampleDiv = div
-  [id "examples"]
-  [
-    div [id "tuple"] (text <$> getExSource ExTuple),
-    div [id "list"]  (text <$> getExSource ExList),
-    div [id "nat"]   (text <$> getExSource ExNat),
-    div [id "fun"]   (text <$> getExSource ExFun)
-  ]
-
 layout :: forall w. String -> RunResult -> HTML w Input
 layout src res = body  []
   [
     h1_ [text "One Sided Sequent Calculus"],
     exSelect,
     progDiv src,
-    resDiv res,
-    exampleDiv
+    resDiv res
   ]

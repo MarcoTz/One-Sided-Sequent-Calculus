@@ -8,7 +8,6 @@ module Dependencies.Definition (
   removeSelfLoops
 ) where
 
-import Common (Modulename,Variable)
 import Environment (Environment)
 import Dependencies.Graph (Graph(..), Vertex, Edge(..), emptyGraph, addVertex, getVertex, addEdge, getEndingVert, getEdgesStartingAt)
 import Dependencies.Errors (DepError)
@@ -25,9 +24,6 @@ import Control.Monad (when)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Control.Monad.State (StateT,gets,modify, runStateT)
 import Control.Monad.Except (Except,throwError, runExcept)
-
-type MNGraph = Graph Modulename
-type VarGraph = Graph Variable 
 
 type DepM a b = ReaderT Environment (StateT (Graph a) (Except DepError)) b 
 

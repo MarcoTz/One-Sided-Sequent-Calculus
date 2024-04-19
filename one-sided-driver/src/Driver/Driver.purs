@@ -43,6 +43,7 @@ import Prelude (bind,pure, ($), (<$>), compare, not, (<>), show)
 import Data.List (List(..), elemIndex, sortBy, filter)
 import Data.Tuple (Tuple(..),fst,snd)
 import Data.Either (Either(..))
+import Data.String (take)
 import Data.Maybe (fromMaybe, isNothing)
 import Data.Map (lookup, fromFoldable, toUnfoldable)
 import Data.Traversable (for) 
@@ -51,9 +52,10 @@ import Control.Monad.Except (throwError)
 
 runStr :: String -> Boolean -> DriverM (Either K.Command EvalTrace) 
 runStr progText withTrace = do 
-  _ <- debug ("parsing program " <> show progText)
+  _ <- debug ("parsing program from strimg \"" <> (take 19 progText) <> "...\"")
   let progParsed = runSourceParser progText (parseProgram progText) 
   progParsed' <- liftErr progParsed "parsing" 
+  _ <- debug ("sucessfully parsed program, inferring variables and declarations")
   prog <- inferProgram progParsed' Nil
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
 

@@ -16,8 +16,10 @@ import Parser.Definition (SrcParser)
 import Parser.Keywords (Keyword, allKws)
 import Parser.Symbols (Sym(..))
 
-import Prelude (show, bind, pure,($), Unit, unit, (<$>), (<>))
-import Data.List (elem)
+import Prelude (show, bind, pure,($), Unit, unit, (<$>), (<>), (<<<))
+import Data.List (List(..),elem)
+import Data.String.CodeUnits (singleton)
+import Data.List.NonEmpty (toList)
 import Control.Monad ((*>))
 import Parsing (fail, position, Position(..))
 import Parsing.String (string, anyChar, char)
@@ -59,8 +61,6 @@ parseKeyword kw = do
  _ <- string (show kw)
  pure unit
 
-
-
 parseCommaSep :: SrcParser Unit
 parseCommaSep = do 
   _ <- parseSymbol SymComma
@@ -68,8 +68,15 @@ parseCommaSep = do
 
 parseIdentifier :: SrcParser String
 parseIdentifier = do
-  ident <- show <$> many1 alphaNum
+  ident <- (lsToStr <<< toList) <$> many1 alphaNum
   if ident `elem` (show <$> allKws) then fail ("identifier cannot be a keyword, got " <> show ident) else pure ident
+  where 
+    lsToStr :: List Char -> String
+    lsToStr Nil = ""
+    lsToStr (Cons c1 cs) = 
+      let rst :: String 
+          rst = lsToStr cs 
+      in (singleton c1) <> rst 
 
 getCurrPos :: SrcParser SourcePosition
 getCurrPos = do 
