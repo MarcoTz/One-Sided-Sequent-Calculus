@@ -8,18 +8,26 @@ module Loc (
   showLocInSource
 ) where 
 
-import Prelude (show, (<>), (+),(-))
+import Prelude (class Eq, class Ord, class Show, show, (<>), (+),(-))
 import Data.List (List(..), take, drop)
 import Data.String as S
 import Data.Array (toUnfoldable)
 
 type SourcePosition = {srcLine :: Int, srcCol :: Int}
+derive instance eqSourcePosition :: Eq SourcePosition
+derive instance ordSOurcePosition :: Ord SourcePosition
+instance Show SourcePosition where 
+  show {srcLine:line,srcCol:col} = "Line : " <> show line <> ", Column: " <> show col
 
 defaultPos :: SourcePosition
 defaultPos = {srcLine:0, srcCol:0}
 
 
 type Loc = { locStart :: SourcePosition, locEnd :: SourcePosition}
+derive instance eqLoc :: Eq Loc 
+derive instance ordLoc :: Ord Loc
+instance Show Loc where 
+  show {locStart:startPos,locEnd:endPos} = "Between " <> show startPos <> " and " <> show endPos
 defaultLoc :: Loc 
 defaultLoc = {locStart:defaultPos,locEnd:defaultPos}
 
@@ -33,8 +41,8 @@ showLocInSource src loc = do
     (Cons l1 _) -> do
       let offset = 2
       let msg = betweenString (loc.locStart.srcCol - offset) (loc.locEnd.srcCol+offset) l1
-      let startMsg = "line " <> show (loc.locStart.srcLine) <> ", " <> show loc.locStart.srcCol
-      let endMsg = "line " <> show loc.locEnd.srcLine <> ", " <> show loc.locEnd.srcCol
+      let startMsg = "line " <> show (getLine loc.locStart) <> ", " <> show (getCol loc.locStart)
+      let endMsg = "line " <> show (getLine loc.locEnd) <> ", " <> show (getCol loc.locEnd)
       msg <> "\n" <> startMsg <> "-" <> endMsg
   where 
 

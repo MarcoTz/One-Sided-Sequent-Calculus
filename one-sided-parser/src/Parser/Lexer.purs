@@ -11,7 +11,7 @@ module Parser.Lexer (
   getCurrLoc
 ) where 
 
-import Loc (Loc(..),SourcePosition(..))
+import Loc (Loc,SourcePosition)
 import Parser.Definition (SrcParser)
 import Parser.Keywords (Keyword, allKws)
 import Parser.Symbols (Sym(..))
@@ -74,9 +74,9 @@ parseIdentifier = do
 getCurrPos :: SrcParser SourcePosition
 getCurrPos = do 
   Position { column:col, index:_, line:ln } <- position 
-  pure (SourcePosition {srcCol:col,srcLine:ln})
+  pure {srcCol:col,srcLine:ln}
 
 getCurrLoc :: SourcePosition -> SrcParser Loc 
 getCurrLoc startPos = do 
     currPos <- getCurrPos
-    pure $ Loc {locStart:startPos, locEnd:currPos }
+    pure {locStart:startPos, locEnd:currPos }

@@ -4,7 +4,7 @@ module Parser.Errors (
 )where 
 
 import Errors (class Error, getMessage)
-import Loc (Loc(..), SourcePosition(..))
+import Loc (Loc)
 
 import Prelude (class Eq, class Ord, class Show)
 import Parsing (ParseError(..),Position(..))
@@ -27,6 +27,6 @@ instance Show ParserErr where
 
 parseErrorToParserErr :: ParseError -> ParserErr
 parseErrorToParserErr (ParseError msg (Position {column:col,line:lin,index:_})) = 
-  let pos = SourcePosition {srcCol:col,srcLine:lin} 
-      loc = Loc {locStart:pos, locEnd:pos}
+  let pos = {srcCol:col,srcLine:lin} 
+      loc = {locStart:pos, locEnd:pos}
   in ErrParser loc msg

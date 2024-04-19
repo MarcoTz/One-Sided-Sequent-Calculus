@@ -33,11 +33,11 @@ import Data.Maybe (Maybe(..))
 import Control.Monad.Reader (class MonadReader, asks)
 import Control.Monad.Except (class MonadError, throwError)
 
-newtype Environment = Environment { envDefs :: Map Modulename Program }
+newtype Environment = Environment (Map Modulename Program)
 instance Show Environment where 
   show (Environment env) = 
     let progs :: List Program 
-        progs = snd <$> toUnfoldable env.envDefs 
+        progs = snd <$> toUnfoldable env
      in intercalate "\n\n" (show <$> progs)
 
 declErr :: forall e.Loc -> Error e => Typename -> e
@@ -48,10 +48,10 @@ xtorErr :: forall e. Loc -> Error e => Xtorname -> e
 xtorErr loc xtn = toError loc ("Xtor " <> show xtn <> " not found in environment") 
 
 emptyEnv :: Environment
-emptyEnv = Environment {envDefs:empty}
+emptyEnv = Environment empty 
 
 getTypes :: Modulename -> Environment -> List (Tuple Variable Ty)
-getTypes mn (Environment env) = case lookup mn env.envDefs of 
+getTypes mn (Environment env) = case lookup mn env of 
   Nothing -> Nil
   Just (Program prog) -> do
    let varDecls :: List VarDecl 
@@ -66,25 +66,25 @@ getTypes mn (Environment env) = case lookup mn env.envDefs of
 
 addDeclEnv :: Modulename -> DataDecl -> Environment -> Environment 
 addDeclEnv nm decl (Environment env) = 
-  case lookup nm env.envDefs of 
-    Nothing -> let newProg = addDeclProgram decl (emptyProg nm "") in Environment (env{envDefs=(insert nm newProg env.envDefs)})
-    Just prog -> Environment (env {envDefs=(insert nm (addDeclProgram decl prog) env.envDefs)})
+  case lookup nm env of 
+    Nothing -> let newProg = addDeclProgram decl (emptyProg nm "") in Environment (insert nm newProg env)
+    Just prog -> Environment (insert nm (addDeclProgram decl prog) env)
 
 addVarEnv :: Modulename -> VarDecl -> Environment -> Environment 
 addVarEnv nm var (Environment env) = 
-  case lookup nm env.envDefs of 
-    Nothing -> let newProg = addVarProgram var (emptyProg nm "") in Environment (env {envDefs =insert nm newProg env.envDefs}) 
-    Just prog -> Environment (env {envDefs =insert nm (addVarProgram var prog) env.envDefs}) 
+  case lookup nm env of 
+    Nothing -> let newProg = addVarProgram var (emptyProg nm "") in Environment (insert nm newProg env) 
+    Just prog -> Environment (insert nm (addVarProgram var prog) env) 
 
 addRecEnv :: Modulename -> RecDecl -> Environment -> Environment 
 addRecEnv nm rec (Environment env) = 
-  case lookup nm env.envDefs of 
-    Nothing -> let newProg = addRecProgram rec (emptyProg nm "") in Environment (env {envDefs = (insert nm newProg env.envDefs)})
-    Just prog -> Environment (env {envDefs=(insert nm (addRecProgram rec prog) env.envDefs)})
+  case lookup nm env of 
+    Nothing -> let newProg = addRecProgram rec (emptyProg nm "") in Environment (insert nm newProg env)
+    Just prog -> Environment (insert nm (addRecProgram rec prog) env)
 
 getDecls :: forall e m. Error e => MonadError e m => MonadReader Environment m => m (Map Typename DataDecl)
 getDecls = do
-  defs <- asks (\(Environment env) -> env.envDefs)
+  defs <- asks (\(Environment env) -> env)
   let progs :: List Program 
       progs = snd <$> toUnfoldable defs
   let decls = unions (getDeclsProgram <$> progs)
@@ -92,7 +92,7 @@ getDecls = do
 
 getVars :: forall e m. Error e => MonadError e m => MonadReader Environment m => m (Map Variable VarDecl)
 getVars = do 
-  defs <- asks (\(Environment env) -> env.envDefs) 
+  defs <- asks (\(Environment env) -> env) 
   let progs :: List Program
       progs = snd <$> (toUnfoldable defs)
   let vars = unions (getVarsProgram <$> progs) 
@@ -100,7 +100,7 @@ getVars = do
 
 getRecs :: forall e m. Error e => MonadError e m => MonadReader Environment m => m (Map Variable RecDecl)
 getRecs = do 
-  defs <- asks (\(Environment env) -> env.envDefs) 
+  defs <- asks (\(Environment env) -> env) 
   let progs :: List Program
       progs = snd <$> (toUnfoldable defs)
   let recs = unions (getRecsProgram <$> progs)

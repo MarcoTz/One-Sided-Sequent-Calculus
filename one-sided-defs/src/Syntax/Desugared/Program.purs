@@ -22,13 +22,13 @@ import Data.List (List, null, intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Map (Map,insert,empty)
 
-data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
+XtorSig = {sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
 instance HasLoc XtorSig where 
-  getLoc (XtorSig sig) = sig.sigPos
-  setLoc loc (XtorSig sig) = XtorSig (sig {sigPos=loc})
+  getLoc sig = sig.sigPos
+  setLoc loc sig = sig {sigPos=loc}
 instance Show XtorSig where 
-  show (XtorSig sig) | null sig.sigArgs = show sig.sigName 
-  show (XtorSig sig) = show sig.sigName <> "(" <> intercalate "," (show <$> sig.sigArgs)
+  show sig | null sig.sigArgs = show sig.sigName 
+  show sig = show sig.sigName <> "(" <> intercalate "," (show <$> sig.sigArgs)
 
 data DataDecl = DataDecl {declPos :: Loc, declName :: Typename, declArgs :: List VariantVar, declType :: DeclTy, declXtors :: List XtorSig} 
 instance HasLoc DataDecl where 

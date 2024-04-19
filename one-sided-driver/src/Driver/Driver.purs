@@ -74,9 +74,9 @@ inferProgram :: P.Program -> List P.Program -> DriverM K.Program
 inferProgram p@(P.Program prog) imports = do
   (Environment env) <- gets (\(MkDriverState s) -> s.drvEnv)
   let mn = prog.progName
-  let currProg = fromMaybe (K.emptyProg mn "") (lookup prog.progName (env.envDefs))
+  let currProg = fromMaybe (K.emptyProg mn "") (lookup prog.progName env)
   if not $ K.isEmpty currProg  then pure currProg else do 
-    let imports' = filter (\(P.Program prog') -> isNothing $ lookup prog'.progName env.envDefs) imports 
+    let imports' = filter (\(P.Program prog') -> isNothing $ lookup prog'.progName env) imports 
     _ <- debug "ordering imports"
     depsOrdered <- getInferOrder p imports'
     _ <- debug ("infering imports in order: " <> show ((\(P.Program prog') -> prog'.progName) <$> depsOrdered))
