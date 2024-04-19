@@ -30,16 +30,16 @@ progDiv src = div
   ]
 
 resDiv :: forall w.RunResult -> HTML w Input 
-resDiv (ResErr err debug) = div [ class_ $ ClassName "results"]
+resDiv (ResErr {errMsg:err, errDebug:debug}) = div [ class_ $ ClassName "results"]
   [
     h1_ [text "Results"],
     h2_ [text "Output"],
     textarea [class_ $ ClassName "evalError", id "evalRes", readOnly true, value ("Error: " <> err)],
     br_,
     h2_ [text "Debug Trace"],
-    textarea [id "traceStr", readOnly true, value debug]
+    textarea [id "debugStr", readOnly true, value debug]
   ]
-resDiv (ResSucc cmd tr _st) = div 
+resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug}) = div 
   [ class_ $ ClassName "results" ]
   [ 
     h1_ [text "Results"],
@@ -47,7 +47,9 @@ resDiv (ResSucc cmd tr _st) = div
     textarea [class_ $ ClassName "evalSucc", id "evalRes", readOnly true, id "resultStr", value cmd],
     br_,
     h2_ [text "Debug Trace"],
-    br_, 
+    textarea [id "debugStr", readOnly true, value debug],
+    h2_ [text "Evaluation Trace"],
+    br_,
     textarea [id "traceStr", readOnly true, value tr]
   ]
 

@@ -22,20 +22,31 @@ import Syntax.Kinded.Terms (Command)
 import Eval.Definition (EvalTrace(..))
 
 data Input = ExampleSelect Examples | ProgramInput String | RunProg
-data RunResult = ResErr String String | ResSucc String String String
+data RunResult = 
+  ResErr {errMsg :: String,  errDebug::String} 
+  | ResSucc {succCmd::String, succTrace::String, succDebug::String}
 type State = {progSrc::String, runRes::RunResult}
 
 initialState :: Input -> State
-initialState (ExampleSelect ex) = {progSrc:intercalate "\n" (getExSource ex),runRes:ResSucc "" "" ""} 
-initialState _ = {progSrc:intercalate "\n" tupleStr, runRes:ResSucc "" "" ""}
+initialState (ExampleSelect ex) = {
+  progSrc:intercalate "\n" (getExSource ex),
+  runRes:ResSucc{succCmd:"",succTrace:"",succDebug:""}
+  }
+initialState _ = {
+  progSrc:intercalate "\n" tupleStr, 
+  runRes:ResSucc {succCmd:"", succTrace:"", succDebug:""}
+  }
 
 runProg :: String -> RunResult  
 runProg progSource = toRunResult progSource $ runDriverM initialDriverState (runStr progSource true)
 
 toRunResult :: String -> Tuple (Either DriverError (Either Command EvalTrace)) DriverState -> RunResult
-toRunResult src (Tuple (Left err) st) = ResErr (showInSrc err src) (stateOutput st)
-toRunResult _ (Tuple (Right (Left c)) st) = ResSucc (show c) (stateOutput st) ""
-toRunResult _ (Tuple (Right (Right (MkTrace c tr))) st) = ResSucc (show c) (stateOutput st) (show tr)
+toRunResult src (Tuple (Left err) st) = 
+  ResErr {errMsg:showInSrc err src, errDebug:stateOutput st}
+toRunResult _ (Tuple (Right (Left c)) st) =
+  ResSucc {succCmd:show c,succTrace:"", succDebug:stateOutput st} 
+toRunResult _ (Tuple (Right (Right (MkTrace c tr))) st) = 
+  ResSucc {succCmd:show c, succTrace:show tr, succDebug:stateOutput st}
 
 stateOutput :: DriverState -> String 
 stateOutput (MkDriverState {drvDebug:db, drvEnv:_env}) = intercalate "\n" db

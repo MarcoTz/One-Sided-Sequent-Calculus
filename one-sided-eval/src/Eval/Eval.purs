@@ -3,72 +3,82 @@ module Eval.Eval (
   evalWithTrace
 ) where 
 
-import Loc (Loc,getLoc,setLoc)
-import Common (shiftEvalOrder, Xtorname)
+import Loc (getLoc,setLoc)
+import Common (shiftEvalOrder, Variable)
+import Errors (zipWithErrorM)
 import Environment (lookupBody)
-import Syntax.Kinded.Terms (Command(..), Term(..), isValue, Pattern(..))
-import Syntax.Kinded.Substitution (substituteVariable)
-import Eval.Definition (EvalM, EvalTrace(..),emptyTrace, EvalError(..), appendTrace, inTrace)
-import Eval.Focusing (focus)
+import Syntax.Kinded.Terms (Command(..), Term(..), isValue, Pattern(..), getType)
+import Syntax.Kinded.Substitution (substituteVariable,substVars)
+import FreeVars.FreeVariables (freshVar) 
+import Eval.Definition (EvalM, EvalTrace(..),emptyTrace, EvalError(..), appendTrace)
 
-import Prelude (bind,pure,($),identity,(<$>), (==))
-import Data.List (List(..),elem,null,filter)
+import Prelude (bind,pure,($), (==),(/=))
+import Data.List (List(..))
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
+import Data.Map (fromFoldable)
+import Control.Monad (when)
 import Control.Monad.Except (throwError)
 
---Co Equivalence <t | + | u> = < u | - | t >
-coTrans :: Command -> Command
-coTrans (Cut loc t eo u) = Cut loc u (shiftEvalOrder eo) t
-coTrans (Done loc) = Done loc
-coTrans (Err loc err) = Err loc err
-coTrans (Print loc t) = Print loc t
 
-eval :: Command -> EvalM Command 
-eval c = let c' = focus c in evalFocused c'
-
-evalWithTrace :: Command -> EvalM EvalTrace 
-evalWithTrace c = let c' = focus c in evalFocusedWithTrace c' (emptyTrace c')
-
-evalFocusedWithTrace :: Command -> EvalTrace -> EvalM EvalTrace 
-evalFocusedWithTrace c (MkTrace _ tr) | c `elem` tr = throwError (ErrLoop (getLoc c) c)
-evalFocusedWithTrace c tr = do 
+evalWithTrace :: Command -> EvalTrace -> EvalM EvalTrace 
+evalWithTrace c tr = do 
   c' <- evalOnce c 
+  _ <- when (c == c') $ throwError (ErrLoop (getLoc c) c)
   let newTr = appendTrace tr c'
   case c' of 
     (Done _)  -> pure newTr
     (Err _ _) -> pure newTr
     (Print _ _) -> pure newTr
-    (Cut _ _ _ _) | inTrace tr c' -> throwError (ErrLoop (getLoc c') c)
-    (Cut _ _ _ _) -> evalFocusedWithTrace c' newTr
+    (Cut _ _ _ _) -> evalWithTrace c' newTr
 
 
-evalFocused :: Command -> EvalM Command 
-evalFocused c = do
-  MkTrace c' _ <- evalFocusedWithTrace c (emptyTrace c)
+eval :: Command -> EvalM Command 
+eval c = do
+  MkTrace c' _ <- evalWithTrace c (emptyTrace c)
   pure c'
 
 evalOnce :: Command -> EvalM Command
 evalOnce (Err loc err) = pure $ Err loc err
-evalOnce (Done loc) = pure $ Done loc
+evalOnce (Done loc)    = pure $ Done loc
 evalOnce (Print loc t) = pure $ Print loc t 
-evalOnce (Cut loc t pol (Var loc' v _)) = do 
-  u <- lookupBody loc v 
-  pure $ Cut loc t pol (setLoc loc' u)
-evalOnce (Cut _ t pol (Mu _ v c _)) | isValue pol t = pure $ substituteVariable v t c 
 evalOnce (Cut loc (ShiftCBV _ t _) eo u) = pure $ Cut loc t eo u
 evalOnce (Cut loc (ShiftCBN _ t _) eo u) = pure $ Cut loc t eo u
-evalOnce (Cut loc (Xtor _ nm args _) pol (XCase _ pats _)) | null (filter identity ((isValue pol) <$> args)) = do 
-  pt <- findXtor loc nm pats
-  substCase loc pt args 
-evalOnce cmd = pure $ coTrans cmd
+evalOnce (Cut loc t eo (ShiftCBV _ u _)) = pure $ Cut loc t eo u
+evalOnce (Cut loc t eo (ShiftCBN _ u _)) = pure $ Cut loc t eo u
+evalOnce (Cut loc (Var loc' v _) eo u) = do 
+  t <- lookupBody loc v 
+  pure $ Cut loc (setLoc loc' t) eo u 
+evalOnce (Cut loc t eo (Var loc' v _)) = do
+  u <- lookupBody loc v 
+  pure $ Cut loc t eo (setLoc loc' u)
+evalOnce (Cut _ t _ (Mu _ v c _)) = pure $ substituteVariable v t c 
+evalOnce (Cut _ (Mu _ v c _) _ u) = pure $ substituteVariable v u c
+evalOnce (Cut loc (Xtor loc1 nm args ty) eo xc@(XCase _ pats _)) = do
+  let (Tuple args' mv) = evalArgs args
+  case mv of 
+      -- all arguments are values 
+      Nothing -> do
+        substCase pats
+      Just (Tuple var t') -> do
+        let xtt = Xtor loc1 nm args' ty
+        pure $ Cut loc (Mu loc1 var (Cut loc1 xtt eo t') (getType t')) eo xc
+  where 
+    evalArgs :: List Term -> Tuple (List Term) (Maybe (Tuple Variable Term))
+    evalArgs Nil = Tuple Nil Nothing
+    evalArgs (Cons t1 ts) | isValue eo t1 = let Tuple ts' mv = evalArgs ts in Tuple (Cons t1 ts') mv
+    evalArgs (Cons t1 ts) = do
+      let frv = freshVar ts 
+      let newArgs = Cons (Var (getLoc t1) frv (getType t1)) ts
+      Tuple newArgs (Just (Tuple frv t1))
 
-substCase :: Loc -> Pattern -> List Term -> EvalM Command
-substCase _ (Pattern{ptxt:_, ptv:Nil, ptcmd:cmd}) Nil = pure cmd
-substCase loc (Pattern{ptxt:xt, ptv:(Cons v vs), ptcmd:cmd}) (Cons t ts) = 
-  let newcmd = substituteVariable v t cmd
-  in substCase loc (Pattern{ptxt:xt,ptv:vs,ptcmd:newcmd}) ts
-substCase loc (Pattern{ptxt:xt,ptv:Nil,ptcmd:_}) (Cons _ _) = throwError (ErrXtorArity loc xt) 
-substCase loc (Pattern{ptxt:xt,ptv:Cons _ _,ptcmd:_}) Nil = throwError (ErrXtorArity loc xt) 
-
-findXtor :: Loc -> Xtorname -> List Pattern -> EvalM Pattern
-findXtor loc xt Nil = throwError (ErrMissingPt loc xt) 
-findXtor loc xt (Cons (Pattern pt) pts) = if pt.ptxt == xt then pure (Pattern pt) else findXtor loc xt pts
+    substCase :: List Pattern -> EvalM Command
+    substCase Nil = throwError (ErrMissingPt loc nm) 
+    substCase (Cons (Pattern pt) pts) | pt.ptxt /= nm = substCase pts
+    substCase (Cons (Pattern pt) _) = do 
+       argsZipped <- zipWithErrorM pt.ptv args (ErrMissingPt loc nm)
+       let varmap = fromFoldable argsZipped
+       pure $ substVars varmap pt.ptcmd
+evalOnce (Cut loc xc@(XCase _ _ _) eo xt@(Xtor _ _ _ _)) = pure (Cut loc xt (shiftEvalOrder eo) xc)
+evalOnce c@(Cut loc (XCase _ _ _) _ (XCase _ _ _)) = throwError (ErrTwoCase loc c)
+evalOnce c@(Cut loc (Xtor _ _ _ _) _ (Xtor _ _ _ _)) = throwError (ErrTwoXtor loc c)

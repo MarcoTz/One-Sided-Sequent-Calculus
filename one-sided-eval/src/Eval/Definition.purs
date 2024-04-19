@@ -25,17 +25,23 @@ data EvalError =
   ErrXtorArity    Loc Xtorname 
   | ErrMissingPt  Loc Xtorname
   | ErrLoop       Loc Command
+  | ErrTwoCase    Loc Command
+  | ErrTwoXtor    Loc Command
   | ErrOther      Loc String
 
 instance Error EvalError where
   getMessage (ErrXtorArity _ xtn) = "Wrong number of arguments for xtor " <> show xtn
   getMessage (ErrMissingPt _ xtn) = "No pattern for xtor " <> show xtn 
   getMessage (ErrLoop _ c) = "Cannot evaluate " <> show c <> ", evaluation results in loop"
+  getMessage (ErrTwoCase _ c) = "Cannot evaluate " <> show c <> ", cut between cases"
+  getMessage (ErrTwoXtor _ c) = "Cannot evaluate " <> show c <> ", cut between xtors"
   getMessage (ErrOther _ str) = str
 
   getLocation (ErrXtorArity loc _) = loc 
   getLocation (ErrMissingPt loc _) = loc 
   getLocation (ErrLoop loc _) = loc
+  getLocation (ErrTwoCase loc _) = loc
+  getLocation (ErrTwoXtor loc _) = loc
   getLocation (ErrOther loc _) = loc 
 
   toError = ErrOther 

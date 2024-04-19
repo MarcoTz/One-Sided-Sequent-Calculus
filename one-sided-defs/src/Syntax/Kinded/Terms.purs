@@ -53,14 +53,13 @@ data Term =
   | ShiftCBN Loc Term Ty 
 derive instance eqTerm :: Eq Term
 instance Show Term where 
-  show (Var _ v ty) = show v <> " : " <> show ty
-  show (Mu _ v c ty) = show v <> ", " <> show c <> " : " <> show ty
-  show (Xtor _ nm args ty) | null args = show nm <> " : " <> show ty
-  show (Xtor _ nm args ty) = show nm <> "(" <> intercalate ", " (show <$> args) <> ") : " <> show ty
-  show (XCase _ pts ty) = "case { " <> intercalate ", " (show <$> pts) <> " }" <> ": " <> show ty
-  show (ShiftCBV _ t ty) = "{" <> show t <> ":CBV} : " <> show ty
-  show (ShiftCBN _ t ty) = "{" <> show t <> ":CBV} : " <> show ty
-
+  show (Var _ v _)        = show v 
+  show (Mu _ v c _)       = "mu " <> show v <> ", " <> show c 
+  show (Xtor _ nm args _) | null args = show nm
+  show (Xtor _ nm args _) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
+  show (XCase _ pts _)    = "case { " <> intercalate ", " (show <$> pts) <> " }" 
+  show (ShiftCBV _ t _)   = "{" <> show t <> ":CBV}" 
+  show (ShiftCBN _ t _)   = "{" <> show t <> ":CBV}" 
 instance HasLoc Term where 
   getLoc (Var loc _ _) = loc 
   getLoc (Mu loc _ _ _) = loc

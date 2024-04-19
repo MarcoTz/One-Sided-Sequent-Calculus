@@ -76,7 +76,7 @@ runProgramTrace (K.Program prog) = do
   let main = fromMaybe (K.Done defaultLoc) prog.progMain
   env <- gets (\(MkDriverState s) -> s.drvEnv )
   _ <- debug ("evaluating " <> show main)
-  let evaled = runEvalM env (evalWithTrace main) 
+  let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
   liftErr evaled "evaluation (with trace)"
 
 
