@@ -4,4 +4,3 @@ package:
     - one-sided-defs
     - transformers
     - prelude
-    - graphs

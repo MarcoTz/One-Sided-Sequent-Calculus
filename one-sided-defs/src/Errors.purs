@@ -10,9 +10,9 @@ module Errors (
   showInSrc
 ) where 
 
-import Loc (Loc, showLocInSource)
+import Loc (Loc, defaultLoc,showLocInSource)
 
-import Prelude (pure, (<>), show)
+import Prelude (pure, (<>),(==), show)
 import Data.List (List (..))
 import Data.Either (Either (..))
 import Data.Tuple (Tuple (..))
@@ -47,4 +47,7 @@ showWithLoc :: forall e. Error e => e -> String
 showWithLoc e = getMessage e <> "\n" <> show (getLocation e)
 
 showInSrc :: forall e.Error e => e -> String -> String
-showInSrc e src = getMessage e <> "\nAt: " <> showLocInSource src (getLocation e) 
+showInSrc e src = 
+  let msg = getMessage e in
+  if getLocation e == defaultLoc then msg else 
+  msg <> "\nAt: " <> showLocInSource src (getLocation e) 

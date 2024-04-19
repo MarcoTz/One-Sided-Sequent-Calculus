@@ -34,7 +34,7 @@ resDiv (ResErr err debug) = div [ class_ $ ClassName "results"]
   [
     h1_ [text "Results"],
     h2_ [text "Output"],
-    textarea [class_ $ ClassName "evalError", value ("Error: " <> err)],
+    textarea [class_ $ ClassName "evalError", id "evalRes", readOnly true, value ("Error: " <> err)],
     br_,
     h2_ [text "Debug Trace"],
     textarea [id "traceStr", readOnly true, value debug]
@@ -44,7 +44,7 @@ resDiv (ResSucc cmd tr _st) = div
   [ 
     h1_ [text "Results"],
     h2_ [text "Output"],
-    textarea [class_ $ ClassName "evalSucc", id "resultStr", value cmd],
+    textarea [class_ $ ClassName "evalSucc", id "evalRes", readOnly true, id "resultStr", value cmd],
     br_,
     h2_ [text "Debug Trace"],
     br_, 

@@ -13,21 +13,27 @@ module Dependencies.Graph (
   getVertexLabel
 ) where
 
-import Prelude (class Eq, class Ord, (==))
+import Prelude (class Eq, class Ord, class Show, show, (==),(<$>),(<>))
 import Data.Set (Set, empty, insert)
-import Data.List (List(..), find, elem, filter)
+import Data.List (List(..), find, elem, filter,intercalate)
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
 
 newtype Vertex a = MkVertex a
 derive instance eqVertex :: Eq a => Eq (Vertex a)
 derive instance ordVertex :: Ord a => Ord (Vertex a)
+instance Show a => Show (Vertex a) where 
+  show (MkVertex a) = show a
 
 data Edge a = MkEdge   (Vertex a) (Vertex a)
 derive instance eqEdge :: Eq a => Eq (Edge a)
 derive instance ordEdge :: Ord a => Ord (Edge a)
+instance Show a => Show (Edge a) where 
+  show (MkEdge v1 v2) = show v1 <> " --> " <> show v2
 
 data Graph  a = MkGraph {grVerts :: (Set (Vertex a)), grEdges :: List (Edge a)}
+instance Show a => Show (Graph a) where 
+  show (MkGraph {grVerts:_,grEdges:edgs}) = intercalate "\n" (show <$> edgs)
 
 emptyGraph :: forall a.Graph a 
 emptyGraph = MkGraph {grVerts:empty, grEdges:Nil}

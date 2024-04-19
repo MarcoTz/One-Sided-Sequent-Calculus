@@ -12,7 +12,8 @@ import Environment (Environment)
 import Dependencies.Graph (Graph(..), Vertex, Edge(..), emptyGraph, addVertex, getVertex, addEdge, getEndingVert, getEdgesStartingAt)
 import Dependencies.Errors (DepError)
 
-import Prelude (class Eq, class Ord, class Show, bind, pure, const, (/=), (<$>), ($), identity)
+import Prelude (class Eq, class Ord, class Show, show,
+  bind, pure, const, (/=), (<$>), ($), identity)
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
 import Data.List (List(..), filter,elem, null)
@@ -20,10 +21,11 @@ import Data.Either (Either(..))
 import Data.Unit (Unit,unit)
 import Data.Set (toUnfoldable)
 import Data.Traversable (for)
-import Control.Monad (when)
+import Control.Monad (unless)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Control.Monad.State (StateT,gets,modify, runStateT)
 import Control.Monad.Except (Except,throwError, runExcept)
+
 
 type DepM a b = ReaderT Environment (StateT (Graph a) (Except DepError)) b 
 
@@ -73,7 +75,7 @@ ensureAcyclic err = do
       let newSeenV = Cons startV seenV
       let outg = getEndingVert <$> getEdgesStartingAt startV gr
       let elems = (\x -> (x `elem` outg)) <$> newSeenV
-      _ <- when (null (filter identity elems))  $ throwError err
+      _ <- unless (null (filter identity elems))  $ throwError err
       _ <- for outg (\v -> traverseGr gr v newSeenV) 
       pure Nil
       
