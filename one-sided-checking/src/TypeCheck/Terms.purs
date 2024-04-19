@@ -9,9 +9,9 @@ import TypeCheck.Types (checkType)
 import TypeCheck.Errors (CheckerError(..))
 import Common (Typevar,VariantVar(..))
 import Loc (getLoc)
-import Environment (lookupMVar,lookupMRec, lookupXtorDecl, lookupXtor)
+import Environment (lookupMVar,lookupXtorDecl, lookupXtor)
 import Errors (zipWithErrorM)
-import Syntax.Kinded.Program (VarDecl(..),DataDecl(..),XtorSig(..),RecDecl(..)) as K
+import Syntax.Kinded.Program (VarDecl(..),DataDecl(..),XtorSig(..)) as K
 import Syntax.Kinded.Types (embedType)
 import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D 
 import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..)) as T
@@ -47,16 +47,12 @@ checkTerm t (T.TyCo ty) = do
 checkTerm (D.Var loc v) ty = do
   checkerTy <- lookup v <$> getCheckerVars 
   vardecl <- lookupMVar v
-  recdecl <- lookupMRec v
   let mvarty = (\(K.VarDecl d) -> embedType d.varTy) <$> vardecl
-  let mrecty = (\(K.RecDecl d) -> embedType d.recTy) <$> recdecl
-  ty' <- firstJust (Cons checkerTy (Cons  mvarty (Cons  mrecty Nil)))
+  ty' <- case Tuple checkerTy mvarty of 
+      (Tuple Nothing Nothing) -> throwError (ErrUndefinedVar loc v)
+      (Tuple _ (Just ty'')) -> pure ty'' 
+      (Tuple (Just ty'') _) -> pure ty'' 
   if T.isSubsumed ty ty' then pure (T.Var loc v ty) else throwError (ErrNotSubsumed loc ty ty')
-  where 
-    firstJust :: forall a. List (Maybe a) -> CheckM a
-    firstJust Nil = throwError (ErrUndefinedVar loc v)
-    firstJust (Cons (Just a) _) = pure a
-    firstJust (Cons Nothing as) = firstJust as
 
 checkTerm (D.Mu loc v c) ty = do
   _ <- addCheckerVar v ty 

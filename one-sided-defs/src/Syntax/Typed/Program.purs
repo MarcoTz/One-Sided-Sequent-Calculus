@@ -1,16 +1,14 @@
 module Syntax.Typed.Program (
   Program (..),
-  RecDecl (..),
   VarDecl (..),
   DataDecl (..),
   XtorSig (..),
-  addRecProgram,
   addVarProgram,
   addDeclProgram,
   setMainProgram,
   setSrcProgram,
   emptyProg,
-  isEmpty,
+  progIsEmpty,
   embedXtorSig
 ) where 
 
@@ -20,11 +18,10 @@ import Syntax.Typed.Types (Ty,embedType)
 import Syntax.Typed.Terms (Term, Command)
 import Syntax.Desugared.Program (XtorSig(..)) as D
 
-import Prelude ((&&), (==), class Show, show, (<>), (<$>))
-import Data.Map (Map,empty, insert)
-import Data.Map (isEmpty) as M
+import Prelude ((&&), class Show, show, (<>), (<$>))
+import Data.Map (Map,empty, insert,isEmpty)
 import Data.List (List,null,intercalate)
-import Data.Maybe (Maybe (..))
+import Data.Maybe (Maybe (..),isNothing)
 
 data XtorSig = XtorSig {sigPos::Loc, sigName::Xtorname, sigArgs::List Ty} 
 instance HasLoc XtorSig where 
@@ -45,25 +42,19 @@ instance Show DataDecl where
   show (DataDecl decl) | null decl.declArgs = show decl.declName <> "{" <> intercalate ", " (show <$> decl.declXtors) <> "}"
   show (DataDecl decl) = show decl.declName <> "(" <> intercalate ", " (show <$> decl.declArgs) <> ") {" <> intercalate ", " (show <$> decl.declXtors) <> "}"
 
-data VarDecl = VarDecl {varPos::Loc, varName::Variable, varTy::Ty,varBody::Term}
+data VarDecl = VarDecl {varPos::Loc, varName::Variable, varIsRec::Boolean, varTy::Ty,varBody::Term}
 instance HasLoc VarDecl where 
   getLoc (VarDecl decl) = decl.varPos 
   setLoc loc (VarDecl decl) = VarDecl (decl {varPos=loc})
 instance Show VarDecl where 
-  show (VarDecl decl) = show decl.varName <> ": " <> show decl.varTy <> " := " <> show decl.varBody
-
-data RecDecl = RecDecl  {recPos::Loc, recName::Variable, recTy::Ty,recBody::Term}
-instance HasLoc RecDecl where 
-  getLoc (RecDecl decl) = decl.recPos 
-  setLoc loc (RecDecl decl) = RecDecl (decl {recPos=loc}) 
-instance Show RecDecl where 
-  show (RecDecl decl) = "rec " <> show decl.recName <> ": " <> show decl.recTy <> " := " <> show decl.recBody
+  show (VarDecl decl) = do 
+   let recStr = if decl.varIsRec then "rec " else ""
+   recStr <> show decl.varName <> ": " <> show decl.varTy <> " := " <> show decl.varBody
 
 data Program = Program {
   progName  :: Modulename, 
   progDecls :: (Map Typename DataDecl), 
   progVars  :: (Map Variable VarDecl),
-  progRecs  :: (Map Variable RecDecl),
   progMain  :: (Maybe Command),
   progSrc   :: String
 }
@@ -72,23 +63,20 @@ instance Show Program where
     "Module " <> show prog.progName <> "\n" <> 
     "Declarations: " <> show prog.progDecls <> "\n" <> 
     "Variables: " <> show prog.progVars <> "\n" <> 
-    "Recursive Definitions: " <> show prog.progRecs <> "\n" <> 
     "Main: " <> show prog.progMain
 
 emptyProg :: Modulename -> Program
-emptyProg nm = Program {progName:nm,progDecls:empty,progVars:empty,progRecs:empty,progMain:Nothing,progSrc:""}
+emptyProg nm = Program {progName:nm,progDecls:empty,progVars:empty,progMain:Nothing,progSrc:""}
 
-isEmpty :: Program -> Boolean
-isEmpty (Program prog) = M.isEmpty prog.progDecls && M.isEmpty prog.progVars && M.isEmpty prog.progRecs && Nothing == prog.progMain
+progIsEmpty :: Program -> Boolean
+progIsEmpty (Program {progName:_,progDecls:decls,progVars:vars,progMain:main}) = 
+  isEmpty decls && isEmpty vars && isNothing main
 
 addDeclProgram :: DataDecl -> Program -> Program
 addDeclProgram (DataDecl decl) (Program prog) = Program (prog { progDecls = insert decl.declName (DataDecl decl) prog.progDecls })
 
 addVarProgram :: VarDecl -> Program -> Program
 addVarProgram (VarDecl var) (Program prog) = Program (prog { progVars = insert var.varName (VarDecl var) prog.progVars })
-
-addRecProgram :: RecDecl -> Program -> Program
-addRecProgram (RecDecl rec) (Program prog) = Program (prog { progRecs = insert rec.recName (RecDecl rec) prog.progRecs })
 
 setMainProgram :: Command -> Program -> Program
 setMainProgram c (Program prog) = Program (prog { progMain = Just c })

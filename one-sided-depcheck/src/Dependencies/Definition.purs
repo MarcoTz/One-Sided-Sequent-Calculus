@@ -12,7 +12,7 @@ import Environment (Environment)
 import Dependencies.Graph (Graph(..), Vertex, Edge(..), emptyGraph, addVertex, getVertex, addEdge, getEndingVert, getEdgesStartingAt)
 import Dependencies.Errors (DepError)
 
-import Prelude (class Eq, class Ord, class Show, show,
+import Prelude (class Eq, class Ord, class Show,
   bind, pure, const, (/=), (<$>), ($), identity)
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))

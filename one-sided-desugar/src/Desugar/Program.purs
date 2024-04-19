@@ -4,20 +4,19 @@ module Desugar.Program (
 
 import Common (Typename, Xtorname)
 import Environment (getTypeNames,getXtorNames)
-import Desugar.Definition (DesugarM,setDesCurrDecl, getDesDoneProg, addDesDecl, addDesVar,addDesRec, getDesDoneVar, setDesMain)
+import Desugar.Definition (DesugarM,setDesCurrDecl, getDesDoneProg, addDesDecl, addDesVar, getDesDoneVar, setDesMain)
 import Desugar.Terms (desugarTerm,desugarCommand)
 import Desugar.Types (desugarTy)
 import Desugar.Errors (DesugarError(..))
-import Syntax.Parsed.Program (Program(..),DataDecl(..),VarDecl(..),RecDecl(..),XtorSig(..), AnnotDecl(..)) as P
+import Syntax.Parsed.Program (Program(..),DataDecl(..),VarDecl(..),XtorSig(..), AnnotDecl(..)) as P
 import Syntax.Parsed.Terms (Command) as P
-import Syntax.Desugared.Program (Program,DataDecl(..),VarDecl(..),RecDecl(..),XtorSig(..)) as D
+import Syntax.Desugared.Program (Program,DataDecl(..),VarDecl(..),XtorSig(..)) as D
 
-import Prelude (bind,pure, (<$>), (||),(==))
+import Prelude (bind,pure, (<$>), (||),(==),($))
 import Data.List (List(..),elem, concatMap)
 import Data.Unit (Unit,unit)
 import Data.Tuple (snd)
 import Data.Maybe (Maybe(..))
-import Data.Either (Either(..))
 import Data.Map (toUnfoldable)
 import Data.Traversable (for)
 import Control.Monad.Except (throwError)
@@ -42,7 +41,6 @@ desugarProgram (P.Program prog) = do
   _ <- checkXtorNames envXtns (concatMap (\(P.DataDecl x) -> x.declXtors) (snd <$> toUnfoldable prog.progDecls))
   _ <- for decls desugarDecl 
   _ <- for prog.progVars desugarVar
-  _ <- for prog.progRecs desugarRec
   _ <- for prog.progAnnots desugarAnnot
   _ <- desugarMain prog.progMain
   getDesDoneProg
@@ -58,28 +56,16 @@ desugarDecl d@(P.DataDecl decl)= do
 desugarVar :: P.VarDecl -> DesugarM Unit 
 desugarVar (P.VarDecl var) = do 
   t' <- desugarTerm var.varBody
-  let newV = D.VarDecl {varPos:var.varPos, varName:var.varName, varTy:Nothing, varBody:t'}
-  addDesVar newV
-
-desugarRec :: P.RecDecl -> DesugarM Unit
-desugarRec (P.RecDecl rec) = do
-  t' <- desugarTerm rec.recBody
-  let newR = D.RecDecl {recPos:rec.recPos,recName:rec.recName,recTy:Nothing,recBody:t'}
-  addDesRec newR
+  let newVar = {varPos:var.varPos,varName:var.varName,varIsRec:var.varIsRec,varTy:Nothing,varBody:t'}
+  addDesVar $ D.VarDecl newVar 
 
 desugarAnnot :: P.AnnotDecl -> DesugarM Unit
 desugarAnnot (P.AnnotDecl annot) = do 
-  decl <- getDesDoneVar annot.annotPos annot.annotName
+  (D.VarDecl decl) <- getDesDoneVar annot.annotPos annot.annotName
   ty' <- desugarTy annot.annotType
-  case decl of 
-    Left (D.VarDecl {varPos:loc',varName:v, varTy:Nothing,varBody:t}) -> 
-      addDesVar (D.VarDecl {varPos:loc',varName:v, varTy:Just ty', varBody:t})
-    Left (D.VarDecl {varPos:_, varName:v, varTy:Just ty'', varBody:_}) -> 
-      if ty' == ty'' then pure unit else throwError (ErrMultipleAnnot annot.annotPos v ty' ty'')
-    Right (D.RecDecl {recPos:loc', recName:v, recTy:Nothing, recBody:t}) -> 
-      addDesRec (D.RecDecl {recPos:loc',recName:v,recTy:(Just ty'),recBody:t})
-    Right (D.RecDecl {recPos:_, recName:_, recTy:Just ty'', recBody:_}) -> 
-      if ty' == ty'' then pure unit else throwError (ErrMultipleAnnot annot.annotPos annot.annotName ty' ty'')
+  case decl.varTy of 
+      Nothing -> addDesVar (D.VarDecl decl{varTy=Just ty'})
+      Just ty'' -> if ty'==ty'' then pure unit else throwError (ErrMultipleAnnot annot.annotPos decl.varName ty' ty'')
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.XtorSig sig) = do

@@ -9,11 +9,11 @@ import Parser.Terms (parseCommand,parseTerm)
 import Parser.Types (parseTy, parseTyArgs)
 import Common (Modulename(..))
 import Syntax.Parsed.Program (
-  Program(..), DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), RecDecl(..), XtorSig(..),
-  addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, addRecProgram, setMainProgram, emptyProg)
+  Program(..), DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), XtorSig(..),
+  addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, setMainProgram, emptyProg)
 import Syntax.Parsed.Terms (Command)
 
-import Prelude (bind,pure, (<>), ($), (<$>), show)
+import Prelude (bind,pure, (<>), ($), (<$>), show, (<*))
 import Data.Map (member)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..),isJust)
@@ -54,14 +54,12 @@ parseProgram src = do
     foldFun prog (MkI imp) = pure $ addImportProgram imp prog
     foldFun p@(Program prog) (MkM mn) = do 
       if isJust (prog.progMain) then fail "multiple definitions of main" else pure $ setMainProgram mn p
-    foldFun prog (MkR rec) = pure $ addRecProgram rec prog
 
 parseDecl :: SrcParser ParseDecl 
 parseDecl = 
  (MkI <$> parseImport)       <|>
  (MkD <$> parseDataDecl)     <|>  
  (MkM <$> parseMain)         <|>
- (MkR <$> parseRecDecl)      <|>
  (MkV <$> try parseVarDecl)  <|> 
  (MkA <$> try parseTypeAnnot)
 
@@ -105,6 +103,7 @@ parseTypeAnnot = do
 parseVarDecl :: SrcParser VarDecl 
 parseVarDecl = do 
   startPos <- getCurrPos 
+  isRec <- optionMaybe (parseKeyword KwRec <* sc)
   nm <- parseVariable 
   _ <- sc
   _ <- parseSymbol SymColon
@@ -114,14 +113,7 @@ parseVarDecl = do
   _ <- sc
   _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
-  pure $ VarDecl {varPos:loc, varName:nm, varBody:t}
-
-parseRecDecl :: SrcParser RecDecl 
-parseRecDecl = do 
-  _ <- parseKeyword KwRec
-  _ <- sc
-  (VarDecl var) <- parseVarDecl
-  pure $ RecDecl {recPos:var.varPos, recName:var.varName, recBody:var.varBody}
+  pure $ VarDecl {varPos:loc, varName:nm, varIsRec:isJust isRec, varBody:t}
 
 parseDataDecl :: SrcParser DataDecl 
 parseDataDecl = do 

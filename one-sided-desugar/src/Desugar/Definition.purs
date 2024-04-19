@@ -10,7 +10,6 @@ module Desugar.Definition (
   getDesDoneProg,
   setDesMain,
   setDesCurrDecl,
-  addDesRec,
   addDesVar,
   addDesDecl
 ) where 
@@ -21,7 +20,7 @@ import Loc (Loc)
 import Environment (Environment,lookupMXtor)
 import Syntax.Kinded.Program    (embedXtorSig) as K
 import Syntax.Typed.Program (embedXtorSig) as T
-import Syntax.Desugared.Program (Program(..),emptyProg,XtorSig(..),VarDecl,DataDecl(..),RecDecl,addDeclProgram, addVarProgram, addRecProgram,setMainProgram) as D
+import Syntax.Desugared.Program (Program(..),emptyProg,XtorSig(..),VarDecl,DataDecl(..),addDeclProgram, addVarProgram, setMainProgram) as D
 import Syntax.Desugared.Terms  (Command) as D
 import Syntax.Parsed.Program (DataDecl(..)) as P
 
@@ -84,15 +83,13 @@ getDesMXtor xtn = do
     (Tuple (Just sig) _) -> pure $ Just (T.embedXtorSig (K.embedXtorSig sig))
     (Tuple _ (Just sig)) -> pure $ Just sig 
 
-getDesDoneVar :: Loc -> Variable -> DesugarM (Either D.VarDecl D.RecDecl)
+getDesDoneVar :: Loc -> Variable -> DesugarM D.VarDecl
 getDesDoneVar loc v = do 
   doneProg <- gets (\(MkDesugarState s) -> s.desDone) 
   let doneVars = (\(D.Program prog) -> prog.progVars) doneProg
-  let doneRecs = (\(D.Program prog) -> prog.progRecs) doneProg
-  case (Tuple (lookup v doneVars) (lookup v doneRecs)) of 
-    (Tuple Nothing Nothing) -> throwError (ErrVariable loc v)
-    (Tuple (Just vdecl) _) -> pure $ Left vdecl
-    (Tuple _ (Just rdecl)) -> pure $ Right rdecl
+  case lookup v doneVars of 
+      Nothing -> throwError (ErrVariable loc v)
+      Just vdecl -> pure vdecl
 
 addDesDecl :: D.DataDecl -> DesugarM Unit 
 addDesDecl decl = do 
@@ -102,11 +99,6 @@ addDesDecl decl = do
 addDesVar :: D.VarDecl -> DesugarM Unit
 addDesVar var = do 
   _ <- modify (\(MkDesugarState s) -> MkDesugarState s{desDone=D.addVarProgram var s.desDone})
-  pure unit
-
-addDesRec :: D.RecDecl -> DesugarM Unit
-addDesRec rec = do 
-  _ <- modify (\(MkDesugarState s) -> MkDesugarState s{desDone=D.addRecProgram rec s.desDone})
   pure unit
 
 setDesMain :: D.Command -> DesugarM Unit 

@@ -13,10 +13,10 @@ module TypeCheck.Definition (
 
 import Loc (Loc)
 import Common (Variable,Typevar)
-import Environment (Environment,lookupMVar,lookupMRec)
+import Environment (Environment,lookupMVar)
 import Syntax.Typed.Types (Ty) as T
 import Syntax.Kinded.Types (embedType)
-import Syntax.Kinded.Program (VarDecl(..),RecDecl(..))
+import Syntax.Kinded.Program (VarDecl(..))
 import TypeCheck.Errors (CheckerError(..))
 
 import Prelude (bind,pure)
@@ -71,12 +71,10 @@ getMTypeVar :: Variable -> CheckM (Maybe T.Ty)
 getMTypeVar v = do
   vars <- getCheckerVars 
   mvar <- lookupMVar v
-  mrec <- lookupMRec v
-  case Tuple (lookup v vars) (Tuple mvar mrec) of 
-    (Tuple Nothing (Tuple Nothing Nothing)) -> pure Nothing 
-    (Tuple (Just ty) (Tuple _ _)) -> pure (Just ty)
-    (Tuple _ (Tuple (Just (VarDecl vdecl)) _)) -> pure (Just (embedType vdecl.varTy))
-    (Tuple _ (Tuple _ (Just (RecDecl rdecl)))) -> pure (Just (embedType rdecl.recTy))
+  case Tuple (lookup v vars) mvar of 
+    (Tuple Nothing Nothing) -> pure Nothing 
+    (Tuple (Just ty) _) -> pure (Just ty)
+    (Tuple _ (Just (VarDecl vdecl))) -> pure (Just (embedType vdecl.varTy))
 
 getTypeVar :: Loc -> Variable -> CheckM T.Ty 
 getTypeVar loc v = do 

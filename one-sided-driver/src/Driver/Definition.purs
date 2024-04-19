@@ -3,25 +3,28 @@ module Driver.Definition (
   runDriverM,
   liftErr,
   debug,
-  addRecDecl,
   addVarDecl,
   addDecl,
   initialDriverState,
+  inEnv,
+  getProg,
   DriverState (..)
 ) where 
 
 import Common (Modulename)
 import Errors (class Error, convertError)
 import Driver.Errors (DriverError(..))
-import Environment (Environment, emptyEnv, addDeclEnv,addVarEnv,addRecEnv)
-import Syntax.Kinded.Program (DataDecl, VarDecl, RecDecl)
+import Environment (Environment(..), emptyEnv, addDeclEnv,addVarEnv)
+import Syntax.Kinded.Program (Program, DataDecl, VarDecl)
 
-import Prelude (bind, pure) 
+import Prelude (bind, pure,($)) 
 import Data.Tuple (Tuple)
+import Data.Maybe (Maybe(..),isJust)
 import Data.Either (Either(..))
+import Data.Map (lookup)
 import Data.Unit (Unit,unit)
 import Data.List (List(..),snoc)
-import Control.Monad.State (State, modify,runState)
+import Control.Monad.State (State, modify,runState,gets)
 import Control.Monad.Except (ExceptT, throwError, runExceptT)
 
 
@@ -45,11 +48,18 @@ addVarDecl nm var = do
   _ <- modify (\(MkDriverState s) -> MkDriverState s{drvEnv=addVarEnv nm var s.drvEnv})
   pure unit
 
-addRecDecl :: Modulename -> RecDecl -> DriverM Unit
-addRecDecl nm rec = do 
-  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvEnv=addRecEnv nm rec s.drvEnv})
-  pure unit
+inEnv :: Modulename -> DriverM Boolean
+inEnv mn = do 
+   (Environment env) <- gets (\(MkDriverState st) -> st.drvEnv)
+   pure $ isJust (lookup mn env)
 
+getProg :: Modulename -> DriverM Program
+getProg mn = do
+  (Environment env) <- gets (\(MkDriverState st) -> st.drvEnv)
+  case lookup mn env of 
+    Nothing -> throwError (ErrNotFound mn)
+    Just p -> pure p
+   
 liftErr :: forall e a. Error e => Either e a -> String -> DriverM a
 liftErr (Left err) wh = throwError (ErrWithWhere (convertError err) wh)
 liftErr (Right a) _ = pure a 

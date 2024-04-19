@@ -7,7 +7,7 @@ import Environment (lookupMVar, lookupMXtor)
 import Dependencies.Definition (DepM, removeSelfLoops, ensureAcyclic, addVertexM, getVertexError, addEdgeM)
 import Dependencies.Errors (DepError(..))
 import Dependencies.Graph (Graph(..), Vertex,getVertexLabel, getStartingVert, getEdgesEndingAt)
-import Syntax.Parsed.Program (Program(..), DataDecl(..), VarDecl(..), RecDecl(..), XtorSig(..))
+import Syntax.Parsed.Program (Program(..), DataDecl(..), VarDecl(..), XtorSig(..))
 import Syntax.Parsed.Terms (Term(..),Pattern(..), Command(..))
 
 import Prelude (bind, (<$>), (<>),pure,($), (||))
@@ -27,15 +27,12 @@ depOrderProgram :: Program -> DepVar (List Variable)
 depOrderProgram (Program prog) = do 
   let vars :: List VarDecl 
       vars = snd <$> toUnfoldable prog.progVars
-  let recs :: List RecDecl 
-      recs = snd <$> toUnfoldable prog.progRecs
   let decls :: List DataDecl
       decls = snd <$> toUnfoldable prog.progDecls
   vertsTerms <- for vars addVariable
-  recsTerms <- for recs addRec
   let xtToVar (Xtorname xt) = Variable xt 
   let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) decls  
-  _ <- for (vertsTerms<>recsTerms) (\(Tuple v t) -> addEdgesVariableT v ignore t)
+  _ <- for vertsTerms (\(Tuple v t) -> addEdgesVariableT v ignore t)
   _ <- removeSelfLoops
   _ <- ensureAcyclic (ErrMutualRec prog.progName)
   order <- getVarOrder
@@ -45,11 +42,6 @@ addVariable :: VarDecl -> DepVar (Tuple (Vertex Variable) Term)
 addVariable (VarDecl var) = do
   vert <- addVertexM (var.varName)
   pure (Tuple vert var.varBody)
-
-addRec :: RecDecl -> DepVar (Tuple (Vertex Variable) Term)
-addRec (RecDecl rec) = do 
-  vert <- addVertexM rec.recName 
-  pure (Tuple vert rec.recBody)
 
 addEdgesVariableT :: Vertex Variable -> List Variable -> Term -> DepVar Unit
 addEdgesVariableT vert ignore (Var loc var) = do 
