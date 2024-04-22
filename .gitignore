@@ -1,6 +1,7 @@
 dist-newstyle/*
 web-app/all.js
 
+.purs-repl
 .psc-ide-port
 spago.lock
 output/*
