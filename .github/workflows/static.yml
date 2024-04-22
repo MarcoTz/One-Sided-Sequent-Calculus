@@ -19,9 +19,10 @@ jobs:
           uses: actions/setup-node@v1
           with: 
             node-version: 21
-        - name: Install Pursescript and Spago 
+        - name: Install Pursescript
           run: npm install purescript 
-               npm install spago
+        - name: Install Spago
+          run: npm install spago
         - name: Build project
           run: spago --version && make build 
         - name: Move files
