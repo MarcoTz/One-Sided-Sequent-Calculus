@@ -23,6 +23,8 @@ jobs:
           run: npm install -g purescript@0.15
         - name: Install Spago
           run: npm install -g spago@0.93
+        - name: Install esbuild
+          run: npm install -g esbuild
         - name: Build project
           run: spago --version && make build 
         - name: Move files
