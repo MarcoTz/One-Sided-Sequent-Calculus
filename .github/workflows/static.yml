@@ -15,11 +15,11 @@ jobs:
 
         steps:
         - uses: actions/checkout@v4
-        - name: Install Purescript and Spago 
-          uses: purescript-contrib/setup-purescript@main 
-          with: 
-            purescript: "latest"
-            spago: "latest"
+        - name: Install Node
+          uses: actions/setup-node@v1
+        - name: Install Pursescript and Spago 
+          run: npm install purescript 
+               npm install spago
         - name: Build project
           run: spago --version && make build 
         - name: Move files
