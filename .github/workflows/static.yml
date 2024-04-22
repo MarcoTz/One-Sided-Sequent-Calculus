@@ -17,6 +17,9 @@ jobs:
         - uses: actions/checkout@v4
         - name: Install Purescript and Spago 
           uses: purescript-contrib/setup-purescript@main 
+          with: 
+            purescript: "latest"
+            spago: "latest"
         - name: Build project
           run: spago --version && make build 
         - name: Move files
