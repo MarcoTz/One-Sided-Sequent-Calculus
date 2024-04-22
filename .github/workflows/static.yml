@@ -20,9 +20,9 @@ jobs:
           with: 
             node-version: 21
         - name: Install Pursescript
-          run: npm install purescript 
+          run: npm install -g purescript 
         - name: Install Spago
-          run: npm install spago
+          run: npm install -g spago
         - name: Build project
           run: spago --version && make build 
         - name: Move files
