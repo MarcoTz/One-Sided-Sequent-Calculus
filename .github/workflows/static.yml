@@ -18,7 +18,7 @@ jobs:
         - name: Install Purescript and Spago 
           uses: purescript-contrib/setup-purescript@main 
         - name: Build project
-          run: make build 
+          run: spago --version && make build 
         - name: Move files
           run: |
             mkdir ../public
