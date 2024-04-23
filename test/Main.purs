@@ -1,6 +1,6 @@
 module Test.Main where
 
-import Prelude (bind, pure,($), show,(<>), class Show)
+import Prelude (bind, pure,($), show,(<>), class Show, (+))
 import Data.Unit (Unit,unit)
 import Data.Tuple (Tuple(..))
 import Data.Either (Either(..))
@@ -16,15 +16,18 @@ import Errors (getMessage)
 
 import CounterExamples (getCex, numCex)
 
+cexPrefix :: Int -> String
+cexPrefix i = "Counterexample " <> show (i+1)
+
 data TestRes = 
   TestSucc Int 
   | TestParserErr Int String
   | TestErr Int
 
 instance Show TestRes where 
-  show (TestSucc i) = "Counterexample " <> show i <> " failed successfully"
-  show (TestParserErr i msg) = "Counterexmaple " <> show i <> " could not be parsed,\nerror: " <> msg
-  show (TestErr i) = "Counterexample " <> show i <> " did not fail"
+  show (TestSucc i) = cexPrefix i <> " failed successfully"
+  show (TestParserErr i msg) = cexPrefix i <> " could not be parsed,\nerror: " <> msg
+  show (TestErr i) = cexPrefix i <> " did not fail"
 
 runCounterExample :: Int -> String -> TestRes 
 runCounterExample i src = do 

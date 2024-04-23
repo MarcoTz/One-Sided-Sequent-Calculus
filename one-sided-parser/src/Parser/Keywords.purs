@@ -63,7 +63,7 @@ allKws = Cons KwModule
   (Cons Kwco
   (Cons KwImport
   (Cons KwMain
-  (Cons KwMain
+  (Cons Kwmain
   (Cons KwError
   (Cons KwRec
   (Cons KwCBV
