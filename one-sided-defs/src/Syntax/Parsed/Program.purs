@@ -22,7 +22,6 @@ import Data.List (List(..), null, intercalate)
 import Syntax.Parsed.Terms (Term,Command)
 import Syntax.Parsed.Types (Ty)
 
-import Data.Map (Map, empty,insert)
 import Data.Maybe (Maybe(..))
 
 data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
@@ -83,9 +82,9 @@ instance HasLoc Import where
 
 data Program = Program { 
   progName    :: Modulename, 
-  progDecls   :: (Map Typename DataDecl), 
-  progVars    :: (Map Variable VarDecl), 
-  progAnnots  :: (Map Variable AnnotDecl),
+  progDecls   :: List DataDecl, 
+  progVars    :: List VarDecl, 
+  progAnnots  :: List AnnotDecl,
   progImports :: List Import,
   progMain    :: (Maybe Command),
   progSrc     :: String}
@@ -110,25 +109,25 @@ instance Show Program where
 emptyProg :: Modulename -> String -> Program 
 emptyProg mn src = Program {
   progName   : mn,
-  progDecls  : empty,
-  progVars   : empty,
-  progAnnots : empty,
+  progDecls  : Nil,
+  progVars   : Nil,
+  progAnnots : Nil,
   progImports: Nil,
   progMain   : Nothing,
   progSrc    : src
 }
 
 addDeclProgram :: DataDecl -> Program -> Program 
-addDeclProgram (DataDecl decl) (Program prog) = 
-  Program (prog { progDecls = insert (decl.declName) (DataDecl decl) (prog.progDecls) })
+addDeclProgram decl (Program prog) = 
+  Program (prog { progDecls = Cons decl prog.progDecls })
 
 addVarProgram :: VarDecl -> Program -> Program 
-addVarProgram (VarDecl var) (Program prog) = 
-  Program (prog { progVars = insert (var.varName) (VarDecl var) (prog.progVars) })
+addVarProgram var (Program prog) = 
+  Program (prog { progVars = Cons var prog.progVars })
 
 addAnnotProgram :: AnnotDecl -> Program -> Program 
-addAnnotProgram (AnnotDecl annot) (Program prog) = 
-  Program (prog { progAnnots = insert (annot.annotName) (AnnotDecl annot) (prog.progAnnots) })
+addAnnotProgram annot (Program prog) = 
+  Program (prog { progAnnots = Cons annot prog.progAnnots})
 
 addImportProgram :: Import -> Program -> Program
 addImportProgram imp (Program prog) = 

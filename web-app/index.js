@@ -29418,20 +29418,21 @@
   var gets7 = /* @__PURE__ */ gets(/* @__PURE__ */ monadStateExceptT(/* @__PURE__ */ monadStateStateT(monadIdentity)));
   var show40 = /* @__PURE__ */ show(showCommand);
   var liftErr2 = /* @__PURE__ */ liftErr(errorEvalError);
+  var liftErr1 = /* @__PURE__ */ liftErr(errorParserErr);
   var throwError14 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowExceptT(monadStateT4));
   var show118 = /* @__PURE__ */ show(showVariable);
-  var liftErr1 = /* @__PURE__ */ liftErr(errorCheckerError);
-  var liftErr22 = /* @__PURE__ */ liftErr(errorKindError);
+  var liftErr22 = /* @__PURE__ */ liftErr(errorCheckerError);
+  var liftErr3 = /* @__PURE__ */ liftErr(errorKindError);
   var show214 = /* @__PURE__ */ show(showTypename);
-  var liftErr3 = /* @__PURE__ */ liftErr(errorInferDeclError);
+  var liftErr4 = /* @__PURE__ */ liftErr(errorInferDeclError);
   var show311 = /* @__PURE__ */ show(showModulename);
-  var liftErr4 = /* @__PURE__ */ liftErr(errorDepError);
+  var liftErr5 = /* @__PURE__ */ liftErr(errorDepError);
   var intercalate13 = /* @__PURE__ */ intercalate(foldableList)(monoidString);
   var map38 = /* @__PURE__ */ map(functorList);
   var applySecond4 = /* @__PURE__ */ applySecond(/* @__PURE__ */ applyExceptT(monadStateT4));
   var compare4 = /* @__PURE__ */ compare(/* @__PURE__ */ ordMaybe(ordInt));
   var elemIndex4 = /* @__PURE__ */ elemIndex(eqModulename);
-  var liftErr5 = /* @__PURE__ */ liftErr(errorDesugarError);
+  var liftErr6 = /* @__PURE__ */ liftErr(errorDesugarError);
   var ifM2 = /* @__PURE__ */ ifM(bindExceptT2);
   var $$for13 = /* @__PURE__ */ $$for(applicativeExceptT2);
   var for12 = /* @__PURE__ */ $$for13(traversableMap);
@@ -29441,7 +29442,6 @@
   var fromFoldable9 = /* @__PURE__ */ fromFoldable(ordVariable)(foldableList);
   var for3 = /* @__PURE__ */ $$for13(traversableMaybe);
   var lookup9 = /* @__PURE__ */ lookup(ordModulename);
-  var liftErr6 = /* @__PURE__ */ liftErr(errorParserErr);
   var map113 = /* @__PURE__ */ map(/* @__PURE__ */ functorExceptT(/* @__PURE__ */ functorStateT(functorIdentity)));
   var runProgramTrace = function(v) {
     if (isNothing(v.value0.progMain)) {
@@ -29473,6 +29473,15 @@
       });
     });
   };
+  var parseProg = function(src9) {
+    var progTextShort = take3(fromMaybe(10)(indexOf2("\n")(src9)))(src9);
+    return bind26(debug('parsing program from string "' + (progTextShort + '..."')))(function() {
+      var progParsed = runSourceParser(src9)(parseProgram(src9));
+      return bind26(liftErr1(progParsed)("parsing"))(function(prog) {
+        return pure25(prog);
+      });
+    });
+  };
   var inferVarDecl = function(v) {
     return function(v1) {
       if (isNothing(v1.value0.varTy)) {
@@ -29484,9 +29493,9 @@
           return v3.value0.drvEnv;
         }))(function(env) {
           var v$prime = runCheckM(env)(checkVarDecl(v1));
-          return bind26(liftErr1(v$prime)("type checking"))(function(v$prime$prime) {
+          return bind26(liftErr22(v$prime)("type checking"))(function(v$prime$prime) {
             var vk = runKindM(env)(kindVariable(v$prime$prime));
-            return bind26(liftErr22(vk)("kind vardecl"))(function(vk$prime) {
+            return bind26(liftErr3(vk)("kind vardecl"))(function(vk$prime) {
               return bind26(addVarDecl(v)(vk$prime))(function() {
                 return pure25(vk$prime);
               });
@@ -29500,7 +29509,7 @@
     return function(v) {
       return bind26(debug("infering declaration " + show214(v.value0.declName)))(function() {
         var decl$prime = runDeclM(inferDecl(v));
-        return bind26(liftErr3(decl$prime)("inferring declaration"))(function(decl$prime$prime) {
+        return bind26(liftErr4(decl$prime)("inferring declaration"))(function(decl$prime$prime) {
           return bind26(addDecl(mn)(decl$prime$prime))(function() {
             return pure25(decl$prime$prime);
           });
@@ -29513,9 +29522,9 @@
       return v.value0.drvEnv;
     }))(function(env) {
       var c$prime = runCheckM(env)(checkCommand(c));
-      return bind26(liftErr1(c$prime)("type checking (command)"))(function(c$prime$prime) {
+      return bind26(liftErr22(c$prime)("type checking (command)"))(function(c$prime$prime) {
         var ck = runKindM(env)(kindCommand(c$prime$prime));
-        return liftErr22(ck)("kinding command");
+        return liftErr3(ck)("kinding command");
       });
     });
   };
@@ -29529,7 +29538,7 @@
         return v1.value0.drvEnv;
       }))(function(env) {
         var progOrder = runDepM(env)(depOrderProgram(v));
-        return bind26(liftErr4(progOrder)("dependency order (variables)"))(function(progOrder$prime) {
+        return bind26(liftErr5(progOrder)("dependency order (variables)"))(function(progOrder$prime) {
           var orderStr = intercalate13(", ")(map38(show118)(progOrder$prime));
           return bind26(debug("ordered variables: " + orderStr))(function() {
             return pure25(progOrder$prime);
@@ -29549,7 +29558,7 @@
           return v2.value0.drvEnv;
         }))(function(env) {
           var order = runDepM(env)(depOrderModule(v)(v1));
-          return bind26(liftErr4(order)("dependency order (modules)"))(function(order$prime) {
+          return bind26(liftErr5(order)("dependency order (modules)"))(function(order$prime) {
             var indexFun = function(v2) {
               return function(v3) {
                 return compare4(elemIndex4(v2.value0.progName)(order$prime))(elemIndex4(v3.value0.progName)(order$prime));
@@ -29566,19 +29575,22 @@
       });
     };
   };
+  var getImports = function(v) {
+    return pure25(Nil.value);
+  };
   var desugarProg = function(v) {
     return bind26(debug("desugaring program " + show311(v.value0.progName)))(function() {
       return bind26(gets7(function(v1) {
         return v1.value0.drvEnv;
       }))(function(env) {
         var prog$prime = runDesugarM(env)(v.value0.progName)(desugarProgram(v));
-        return liftErr5(prog$prime)("desugaring");
+        return liftErr6(prog$prime)("desugaring");
       });
     });
   };
   var inferProgram = function(v) {
-    return function(imports) {
-      return ifM2(inEnv(v.value0.progName))(getProg(v.value0.progName))(bind26(getInferOrder(v)(imports))(function(impsOrdered) {
+    return ifM2(inEnv(v.value0.progName))(getProg(v.value0.progName))(bind26(getImports(v))(function(imports) {
+      return bind26(getInferOrder(v)(imports))(function(impsOrdered) {
         return bind26(inferImportsOrdered(impsOrdered))(function() {
           return bind26(desugarProg(v))(function(v1) {
             return bind26(debug("inferring declarations in " + show311(v1.value0.progName)))(function() {
@@ -29611,8 +29623,8 @@
             });
           });
         });
-      }));
-    };
+      });
+    }));
   };
   var inferImportsOrdered = function(v) {
     if (v instanceof Nil) {
@@ -29628,7 +29640,7 @@
         })(v);
         return bind26(debug("ordering imports"))(function() {
           return bind26(for22(imports$prime)(function(x) {
-            return inferProgram(x)(Nil.value);
+            return inferProgram(x);
           }))(function() {
             return pure25(unit);
           });
@@ -29638,18 +29650,14 @@
   };
   var runStr = function(progText) {
     return function(withTrace) {
-      var progTextShort = take3(fromMaybe(10)(indexOf2("\n")(progText)))(progText);
-      return bind26(debug('parsing program from string "' + (progTextShort + '..."')))(function() {
-        var progParsed = runSourceParser(progText)(parseProgram(progText));
-        return bind26(liftErr6(progParsed)("parsing"))(function(progParsed$prime) {
-          return bind26(debug("sucessfully parsed program, inferring variables and declarations"))(function() {
-            return bind26(inferProgram(progParsed$prime)(Nil.value))(function(prog) {
-              if (withTrace) {
-                return map113(Right.create)(runProgramTrace(prog));
-              }
-              ;
-              return map113(Left.create)(runProgram(prog));
-            });
+      return bind26(parseProg(progText))(function(progParsed$prime) {
+        return bind26(debug("sucessfully parsed program, inferring variables and declarations"))(function() {
+          return bind26(inferProgram(progParsed$prime))(function(prog) {
+            if (withTrace) {
+              return map113(Right.create)(runProgramTrace(prog));
+            }
+            ;
+            return map113(Left.create)(runProgram(prog));
           });
         });
       });

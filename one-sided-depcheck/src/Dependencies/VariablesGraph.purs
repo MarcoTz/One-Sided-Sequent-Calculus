@@ -15,8 +15,7 @@ import Data.Unit (Unit,unit)
 import Data.Foldable (foldM)
 import Data.Traversable (for)
 import Data.List (List(..),concat, concatMap,elem)
-import Data.Tuple (Tuple(..),snd)
-import Data.Map (toUnfoldable)
+import Data.Tuple (Tuple(..))
 import Data.Maybe (isJust)
 import Control.Monad.State (get)
 
@@ -25,13 +24,9 @@ type DepVar a = DepM Variable a
 
 depOrderProgram :: Program -> DepVar (List Variable)
 depOrderProgram (Program prog) = do 
-  let vars :: List VarDecl 
-      vars = snd <$> toUnfoldable prog.progVars
-  let decls :: List DataDecl
-      decls = snd <$> toUnfoldable prog.progDecls
-  vertsTerms <- for vars addVariable
+  vertsTerms <- for prog.progVars addVariable
   let xtToVar (Xtorname xt) = Variable xt 
-  let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) decls  
+  let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) prog.progDecls
   _ <- for vertsTerms (\(Tuple v t) -> addEdgesVariableT v ignore t)
   _ <- removeSelfLoops
   _ <- ensureAcyclic (ErrMutualRec prog.progName)

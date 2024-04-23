@@ -40,13 +40,13 @@ import Kinding.Definition (runKindM)
 import Kinding.Program (kindVariable)
 import Kinding.Terms (kindCommand)
 
-import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>))
+import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>),(==))
 import Data.List (List(..), elemIndex, sortBy, filter, intercalate)
 import Data.Tuple (Tuple(..),snd)
 import Data.Either (Either(..))
 import Data.String (take,indexOf,Pattern(..))
 import Data.Maybe (fromMaybe, isNothing)
-import Data.Map (lookup, fromFoldable, toUnfoldable, isEmpty)
+import Data.Map (lookup, fromFoldable, toUnfoldable)
 import Data.Unit (Unit,unit)
 import Data.Traversable (for) 
 import Control.Bind (ifM)
@@ -142,7 +142,7 @@ inferImportsOrdered imports = do
   pure unit
 
 getVarOrder :: P.Program -> DriverM (List Variable)
-getVarOrder (P.Program prog) | isEmpty prog.progVars = pure Nil
+getVarOrder (P.Program prog) | Nil==prog.progVars = pure Nil
 getVarOrder p@(P.Program prog) = do
   _ <- debug ("ordering variables in " <> show prog.progName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)

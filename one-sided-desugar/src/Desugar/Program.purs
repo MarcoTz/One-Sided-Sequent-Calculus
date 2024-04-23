@@ -15,9 +15,7 @@ import Syntax.Desugared.Program (Program,DataDecl(..),VarDecl(..),XtorSig(..)) a
 import Prelude (bind,pure, (<$>), (||),(==),($))
 import Data.List (List(..),elem, concatMap)
 import Data.Unit (Unit,unit)
-import Data.Tuple (snd)
 import Data.Maybe (Maybe(..))
-import Data.Map (toUnfoldable)
 import Data.Traversable (for)
 import Control.Monad.Except (throwError)
 
@@ -36,9 +34,9 @@ desugarProgram :: P.Program -> DesugarM D.Program
 desugarProgram (P.Program prog) = do 
   let decls = prog.progDecls 
   envTyNames <- getTypeNames
-  _ <- checkTypeNames envTyNames (snd <$> toUnfoldable decls)
+  _ <- checkTypeNames envTyNames decls 
   envXtns <- getXtorNames
-  _ <- checkXtorNames envXtns (concatMap (\(P.DataDecl x) -> x.declXtors) (snd <$> toUnfoldable prog.progDecls))
+  _ <- checkXtorNames envXtns (concatMap (\(P.DataDecl x) -> x.declXtors) (prog.progDecls))
   _ <- for decls desugarDecl 
   _ <- for prog.progVars desugarVar
   _ <- for prog.progAnnots desugarAnnot

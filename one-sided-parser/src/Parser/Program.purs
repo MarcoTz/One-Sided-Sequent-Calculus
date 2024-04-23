@@ -13,8 +13,7 @@ import Syntax.Parsed.Program (
   addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, setMainProgram, emptyProg)
 import Syntax.Parsed.Terms (Command)
 
-import Prelude (bind,pure, (<>), ($), (<$>), show, (<*))
-import Data.Map (member)
+import Prelude (bind,pure, ($), (<$>), (<*))
 import Data.List (List(..))
 import Data.Maybe (Maybe(..),isJust)
 import Data.Foldable (foldM)
@@ -44,12 +43,8 @@ parseProgram src = do
   foldM foldFun (emptyProg nm src) decls
   where 
     foldFun :: Program -> ParseDecl -> SrcParser Program 
-    foldFun p@(Program prog) (MkD d@(DataDecl decl)) = do 
-      let tyn = decl.declName 
-      if member tyn (prog.progDecls) then fail ("multiple declarations for type " <> show tyn) else pure $ addDeclProgram d p
-    foldFun p@(Program prog) (MkV v@(VarDecl var))  = do
-      let nm = var.varName
-      if member nm (prog.progVars) then fail ("multiple declarations for variable " <> show v) else pure $ addVarProgram v p
+    foldFun p (MkD d) = pure $ addDeclProgram d p
+    foldFun p (MkV v)  = pure $ addVarProgram v p
     foldFun prog (MkA annot) = pure $ addAnnotProgram annot prog
     foldFun prog (MkI imp) = pure $ addImportProgram imp prog
     foldFun p@(Program prog) (MkM mn) = do 
