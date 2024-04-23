@@ -2,6 +2,7 @@ module Desugar.Program (
   desugarProgram
 ) where 
 
+import Loc (getLoc)
 import Common (Typename, Xtorname)
 import Environment (getTypeNames,getXtorNames)
 import Desugar.Definition (DesugarM,setDesCurrDecl, getDesDoneProg, addDesDecl, addDesVar, getDesDoneVar, setDesMain)
@@ -70,8 +71,9 @@ desugarXtorSig (P.XtorSig sig) = do
   args' <- for sig.sigArgs desugarTy
   pure (D.XtorSig {sigPos:sig.sigPos,sigName:sig.sigName, sigArgs:args'})
 
-desugarMain :: Maybe P.Command -> DesugarM  Unit
-desugarMain Nothing = pure unit
-desugarMain (Just c) = do 
+desugarMain :: List P.Command -> DesugarM  Unit
+desugarMain Nil = pure unit
+desugarMain (Cons c Nil) = do 
   c' <- desugarCommand c 
   setDesMain c'
+desugarMain (Cons c _) = throwError (ErrMultipleMain (getLoc c))

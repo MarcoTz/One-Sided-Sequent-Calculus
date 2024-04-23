@@ -5,7 +5,7 @@ module Syntax.Parsed.Program (
   DataDecl (..),
   Import (..),
   Program (..),
-  setMainProgram,
+  addMainProgram,
   addImportProgram,
   addAnnotProgram,
   addVarProgram,
@@ -86,13 +86,13 @@ data Program = Program {
   progVars    :: List VarDecl, 
   progAnnots  :: List AnnotDecl,
   progImports :: List Import,
-  progMain    :: (Maybe Command),
+  progMain    :: List Command,
   progSrc     :: String}
 derive instance eqProgram :: Eq Program
 derive instance ordProgram :: Ord Program
 
 instance Show Program where 
-  show (Program prog) | Nothing == prog.progMain = 
+  show (Program prog) | Nil == prog.progMain = 
     "module " <> show prog.progName  <>
     "\nImports: " <> intercalate "," (show <$> prog.progImports) <> 
     "\nDeclarations: " <> show prog.progDecls <> 
@@ -113,7 +113,7 @@ emptyProg mn src = Program {
   progVars   : Nil,
   progAnnots : Nil,
   progImports: Nil,
-  progMain   : Nothing,
+  progMain   : Nil,
   progSrc    : src
 }
 
@@ -133,9 +133,9 @@ addImportProgram :: Import -> Program -> Program
 addImportProgram imp (Program prog) = 
   Program (prog { progImports = (Cons imp prog.progImports)})
 
-setMainProgram :: Command -> Program -> Program
-setMainProgram c (Program prog) = 
-  Program (prog { progMain = Just c })
+addMainProgram :: Command -> Program -> Program
+addMainProgram c (Program prog) = 
+  Program (prog { progMain = Cons c prog.progMain })
 
 setSrcProgram :: String -> Program -> Program 
 setSrcProgram src (Program prog) = 

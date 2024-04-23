@@ -9,15 +9,13 @@ import Parser.Terms (parseCommand,parseTerm)
 import Parser.Types (parseTy, parseTyArgs)
 import Common (Modulename(..))
 import Syntax.Parsed.Program (
-  Program(..), DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), XtorSig(..),
-  addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, setMainProgram, emptyProg)
+  Program, DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), XtorSig(..),
+  addDeclProgram, addVarProgram, addAnnotProgram, addImportProgram, addMainProgram, emptyProg)
 import Syntax.Parsed.Terms (Command)
 
 import Prelude (bind,pure, ($), (<$>), (<*))
-import Data.List (List(..))
+import Data.List (List(..),foldr)
 import Data.Maybe (Maybe(..),isJust)
-import Data.Foldable (foldM)
-import Parsing (fail)
 import Parsing.Combinators (manyTill, try, sepBy, optionMaybe)
 import Parsing.String (eof)
 import Parsing.String.Basic (space)
@@ -40,15 +38,15 @@ parseProgram src = do
      decl <- parseDecl
      _ <- sc
      pure decl) eof
-  foldM foldFun (emptyProg nm src) decls
+  let progRes = foldr foldFun (emptyProg nm src) decls
+  pure progRes
   where 
-    foldFun :: Program -> ParseDecl -> SrcParser Program 
-    foldFun p (MkD d) = pure $ addDeclProgram d p
-    foldFun p (MkV v)  = pure $ addVarProgram v p
-    foldFun prog (MkA annot) = pure $ addAnnotProgram annot prog
-    foldFun prog (MkI imp) = pure $ addImportProgram imp prog
-    foldFun p@(Program prog) (MkM mn) = do 
-      if isJust (prog.progMain) then fail "multiple definitions of main" else pure $ setMainProgram mn p
+    foldFun :: ParseDecl -> Program -> Program 
+    foldFun (MkD d)     = addDeclProgram d
+    foldFun (MkV v)     = addVarProgram v 
+    foldFun (MkA annot) =  addAnnotProgram annot 
+    foldFun (MkI imp)   =  addImportProgram imp 
+    foldFun (MkM mn)    = addMainProgram mn 
 
 parseDecl :: SrcParser ParseDecl 
 parseDecl = 
