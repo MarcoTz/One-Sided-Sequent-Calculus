@@ -46,7 +46,7 @@ cex03 = ["module cex03",
 
 -- mutual recursion is not allowed
 cex04 :: Array String
-cex04 = ["cex04", 
+cex04 = ["module cex04", 
   "import Unit;",
   "",
   "test :: Unit;",
@@ -55,7 +55,7 @@ cex04 = ["cex04",
 
 -- cannot use two cases in a cut
 cex05 :: Array String 
-cex05 = ["cex05",
+cex05 = ["module cex05",
   "import Unit;",
   "doubleCns :: Unit;",
   "doubleCns := case {MkUnit => Done};",
@@ -66,7 +66,7 @@ cex05 = ["cex05",
 cex06 :: Array String
 cex06 = ["module cex06",
   "data TwoCons{",
-  "  MkOne",
+  "  MkOne,",
   "  MkTwo",
   "}",
   "badPat :: TwoCons;",
