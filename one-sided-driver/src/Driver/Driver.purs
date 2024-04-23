@@ -1,5 +1,7 @@
 module Driver.Driver (
-  runStr
+  runStr,
+  parseProg,
+  inferAndRun
 ) where 
 
 
@@ -53,12 +55,9 @@ import Control.Monad.Except (throwError)
 
 runStr :: String -> Boolean -> DriverM (Either K.Command EvalTrace) 
 runStr progText withTrace = do 
-  let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") progText)) progText
-  _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"")
-  let progParsed = runSourceParser progText (parseProgram progText) 
-  progParsed' <- liftErr progParsed "parsing" 
+  progParsed' <- parseProg progText 
   _ <- debug ("sucessfully parsed program, inferring variables and declarations")
-  prog <- inferProgram progParsed' Nil
+  prog <- inferProgram progParsed'
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
 
 runProgram :: K.Program -> DriverM K.Command
@@ -79,9 +78,21 @@ runProgramTrace (K.Program prog) = do
   let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
   liftErr evaled "evaluation (with trace)"
 
+parseProg :: String -> DriverM P.Program 
+parseProg src = do 
+  let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") src)) src 
+  _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"")
+  let progParsed = runSourceParser src (parseProgram src)
+  prog <- liftErr progParsed "parsing"
+  pure prog
 
-inferProgram :: P.Program -> List P.Program -> DriverM K.Program
-inferProgram p@(P.Program prog) imports = ifM (inEnv prog.progName) (getProg prog.progName) (do
+getImports :: P.Program -> DriverM (List P.Program)
+-- this should check standard lib
+getImports (P.Program _prog) = pure Nil
+
+inferProgram :: P.Program -> DriverM K.Program
+inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progName) (do
+  imports  <- getImports p
   impsOrdered <- getInferOrder p imports
   _ <- inferImportsOrdered impsOrdered
   D.Program prog' <- desugarProg p
@@ -100,6 +111,11 @@ inferProgram p@(P.Program prog) imports = ifM (inEnv prog.progName) (getProg pro
        progVars:varmap,
        progMain:main',
        progSrc:prog.progSrc})
+
+inferAndRun :: P.Program -> DriverM K.Command
+inferAndRun p = do 
+  p' <- inferProgram p
+  runProgram p'
 
 getInferOrder :: P.Program -> List P.Program -> DriverM (List P.Program)
 getInferOrder (P.Program prog) Nil = 
@@ -122,7 +138,7 @@ inferImportsOrdered imports = do
   (Environment env) <- gets (\(MkDriverState s) -> s.drvEnv)
   let imports' = filter (\(P.Program prog') -> isNothing $ lookup prog'.progName env) imports 
   _ <- debug "ordering imports"
-  _ <- for imports' (\x -> inferProgram x Nil)
+  _ <- for imports' (\x -> inferProgram x)
   pure unit
 
 getVarOrder :: P.Program -> DriverM (List Variable)

@@ -6,8 +6,8 @@ workspace:
 package:
   name: one-sided-sc
   dependencies:
-    - one-sided-driver
     - one-sided-web-app
+    - one-sided-examples
   bundle:
     module: Main
     outfile: "./web-app/index.js"
@@ -15,5 +15,5 @@ package:
   test:
     main: Test.Main
     dependencies:
-      - one-sided-driver
-
+      - prelude
+      - one-sided-defs
