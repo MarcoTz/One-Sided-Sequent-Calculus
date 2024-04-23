@@ -27,7 +27,7 @@ defaultLoc = {locStart:defaultPos,locEnd:defaultPos}
 showLocInSource :: String -> Loc -> String
 showLocInSource src loc = do
   let srcLines = toUnfoldable (S.split (S.Pattern "\n") src)
-  let posLines = betweenList loc.locStart.srcLine loc.locEnd.srcCol srcLines 
+  let posLines = betweenList (loc.locStart.srcLine-1) loc.locEnd.srcCol srcLines 
   case posLines of 
     Nil -> ""
     (Cons l1 _) -> do

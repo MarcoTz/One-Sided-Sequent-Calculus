@@ -12,7 +12,7 @@ import Effect.Class.Console (logShow)
 
 import Driver.Driver (parseProg,inferAndRun)
 import Driver.Definition (runDriverM,initialDriverState)
-import Errors (getMessage)
+import Errors (showInSrc)
 
 import CounterExamples (getCex, numCex)
 
@@ -33,7 +33,7 @@ runCounterExample :: Int -> String -> TestRes
 runCounterExample i src = do 
   let progParsed = runDriverM initialDriverState (parseProg src)
   case progParsed of 
-    Tuple (Left err) _  -> TestParserErr i ("Error Parsing: " <> getMessage err) 
+    Tuple (Left err) _  -> TestParserErr i (showInSrc err src) 
     Tuple (Right prog) _ -> do
       let progRes = runDriverM initialDriverState (inferAndRun prog)
       case progRes of 

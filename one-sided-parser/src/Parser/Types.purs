@@ -14,23 +14,31 @@ import Parser.Common (parseTypevar, parseTypename, parseVariantVar, parseKind)
 
 import Prelude (bind, pure, ($))
 import Data.List (List(..))
+import Data.Unit (unit)
 import Parsing.String.Basic (space)
 import Parsing.Combinators (try, sepBy, many1)
 import Control.Alt ((<|>))
 
 parseTy :: SrcParser Ty 
-parseTy = --(do parseTyParens) <|> parseTyForall <|> parseTyShift <|> parseTyCo <|> try parseTyDecl <|> parseTyvar
-  -- parens
-  (do 
+parseTy = 
+  (\_ -> parseTyParens) unit   <|> 
+  (\_ -> parseTyForall) unit   <|> 
+  (\_ -> parseTyShift)  unit   <|> 
+  (\_ -> parseTyCo) unit       <|> 
+  (\_ -> try parseTyDecl) unit <|> 
+  (\_ -> parseTyVar) unit
+
+parseTyParens :: SrcParser Ty 
+parseTyParens = do 
   _ <- parseSymbol SymParensO
   _ <- sc
   ty <- parseTy
   _ <- sc
   _ <- parseSymbol SymParensC
-  pure ty)
-  <|>
-  -- forall
-  (do 
+  pure ty
+
+parseTyForall :: SrcParser Ty 
+parseTyForall = do 
   _ <- parseKeyword KwForall <|> parseKeyword Kwforall 
   _ <- sc
   args <- parseTypevar `sepBy` (many1 space)
@@ -38,36 +46,37 @@ parseTy = --(do parseTyParens) <|> parseTyForall <|> parseTyShift <|> parseTyCo 
   _ <- parseSymbol SymDot
   _ <- sc
   ty <- parseTy 
-  pure $ TyForall args ty)
-  <|>
-  -- declared type
-  try ( do 
+  pure $ TyForall args ty
+
+
+parseTyDecl :: SrcParser Ty 
+parseTyDecl = do
   tyn <- parseTypename 
   _ <- parseSymbol SymParensO 
   args <- parseTy `sepBy` parseCommaSep 
   _ <- parseSymbol SymParensC
-  pure (TyDecl tyn args))
-  <|>
-  -- type var
-  (do 
+  pure (TyDecl tyn args)
+
+parseTyVar :: SrcParser Ty 
+parseTyVar = do 
     var <- parseTypevar
-    pure $ TyVar var )
-  <|>
-  -- shift
-  (do
+    pure $ TyVar var 
+
+parseTyShift :: SrcParser Ty 
+parseTyShift = do
   _ <- parseSymbol SymBrackO
   _ <- sc
   ty <- parseTy
   _ <- sc
   _ <- parseSymbol SymBrackC 
-  pure (TyShift ty))
-  <|>
-  -- co type
-  (do 
+  pure (TyShift ty)
+
+parseTyCo :: SrcParser Ty 
+parseTyCo = do 
   _ <- parseKeyword KwCo <|> parseKeyword Kwco
   _ <- sc
   ty <- parseTy 
-  pure $ TyCo ty )
+  pure $ TyCo ty 
   
 parseTyArgs :: SrcParser (List VariantVar)
 parseTyArgs = (do 
