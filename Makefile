@@ -1,11 +1,11 @@
-SPAGO = spago bundle
+SPAGO = spago
 MAIN = ./web-app/index.html
-PACKAGE = one-sided-web-app
+PACKAGE = one-sided-sc
 
 .PHONY: web-app
 
 build: 
-	$(SPAGO) -p $(PACKAGE) --platform browser
+	$(SPAGO) bundle -p $(PACKAGE) 
 
-run: build 
-	xdg-open $(MAIN) & true
+test: 
+	$(SPAGO) test

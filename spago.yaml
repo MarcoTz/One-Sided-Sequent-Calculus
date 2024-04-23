@@ -1,4 +1,19 @@
 workspace:
-  packageSet:
-    registry: 50.8.0
   extraPackages: {}
+  packageSet:
+    registry: 50.11.0
+
+package:
+  name: one-sided-sc
+  dependencies:
+    - one-sided-driver
+    - one-sided-web-app
+  bundle:
+    module: Main
+    outfile: "./web-app/index.js"
+    platform: browser
+  test:
+    main: Test.Main
+    dependencies:
+      - one-sided-driver
+

@@ -26,7 +26,7 @@ jobs:
         - name: Install esbuild
           run: npm install -g esbuild
         - name: Build project
-          run: spago --version && make build 
+          run: make build 
         - name: Move files
           run: |
             mkdir ../public
