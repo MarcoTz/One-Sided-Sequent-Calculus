@@ -4,7 +4,7 @@ import Data.Array (intercalate, (!!), length)
 import Data.Maybe (Maybe(..))
 
 allCex :: Array (Array String)
-allCex = [cex01,cex02,cex03,cex04,cex05,cex06,cex07,cex08,cex09,cex10,cex11,cex12,cex13,cex14,cex15,cex16]
+allCex = [cex01,cex02,cex03,cex04,cex05,cex06,cex07,cex08,cex09,cex10,cex11,cex12,cex13,cex14,cex15,cex16,cex17]
 
 numCex :: Int 
 numCex = length allCex 
@@ -142,6 +142,7 @@ cex15 = ["module cex15",
   "import Unit;",
   "x :: Unit;"]
 
+-- wrong type annotation
 cex16 :: Array String
 cex16 = ["module cex16",
   "data X{MkX}",
@@ -149,3 +150,9 @@ cex16 = ["module cex16",
   "x :: X;",
   "x :: Y;",
   "x := MkX;"]
+
+-- duplicate definitions of main
+cex17 :: Array String 
+cex17 = ["module cex17",
+  "main := Done;",
+  "main := Done;"]
