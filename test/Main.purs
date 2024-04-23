@@ -1,6 +1,6 @@
 module Test.Main where
 
-import Prelude (bind, pure,($), show,(<>), class Show, (+))
+import Prelude (bind, pure,($), show,(<>), class Show, (+),(-))
 import Data.Unit (Unit,unit)
 import Data.Tuple (Tuple(..))
 import Data.Either (Either(..))
@@ -43,7 +43,7 @@ runCounterExample i src = do
 main :: Effect Unit
 main = do
   let cexInds :: Array Int 
-      cexInds = range 0 numCex
+      cexInds = range 0 (numCex-1)
   cexStrs <- for cexInds (\i -> pure $ Tuple i (getCex i))
   ress <- for cexStrs (\(Tuple i src) -> pure $ runCounterExample i src) 
   _ <- for ress (\res -> logShow res)
