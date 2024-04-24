@@ -1,11 +1,14 @@
 SPAGO = spago
-MAIN = ./web-app/index.html
 PACKAGE = one-sided-sc
+FFISH = one-sided-examples/stdlib/libToJs.sh
 
-.PHONY: build test  
+.PHONY: examples build test  
 
-build: 
+examples: 
+	$(FFISH)
+
+build: examples  
 	$(SPAGO) bundle -p $(PACKAGE) 
 
-test: 
+test: examples
 	$(SPAGO) test

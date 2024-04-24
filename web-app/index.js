@@ -27633,9 +27633,12 @@
       return val;
     };
   };
-  var alt5 = /* @__PURE__ */ alt(altParserT);
   var bind19 = /* @__PURE__ */ bind(bindParserT);
   var pure18 = /* @__PURE__ */ pure(applicativeParserT);
+  var alt5 = /* @__PURE__ */ alt(altParserT);
+  var parseTyVar = /* @__PURE__ */ bind19(parseTypevar)(function($$var2) {
+    return pure18(new TyVar4($$var2));
+  });
   var parseTyArgs = /* @__PURE__ */ function() {
     return alt5(bind19(parseSymbol(SymParensO.value))(function() {
       return bind19(sepBy(parseVariantVar)(parseCommaSep))(function(vars) {
@@ -27646,23 +27649,48 @@
     }))(pure18(Nil.value));
   }();
   var $lazy_parseTy = /* @__PURE__ */ $runtime_lazy5("parseTy", "Parser.Types", function() {
-    return alt5(bind19(parseSymbol(SymParensO.value))(function() {
+    return alt5(function(v) {
+      return $lazy_parseTyParens(24);
+    }(unit))(alt5(function(v) {
+      return $lazy_parseTyForall(25);
+    }(unit))(alt5(function(v) {
+      return $lazy_parseTyShift(26);
+    }(unit))(alt5(function(v) {
+      return $lazy_parseTyCo(27);
+    }(unit))(alt5(function(v) {
+      return $$try2($lazy_parseTyDecl(28));
+    }(unit))(/* @__PURE__ */ function(v) {
+      return parseTyVar;
+    }(unit))))));
+  });
+  var $lazy_parseTyCo = /* @__PURE__ */ $runtime_lazy5("parseTyCo", "Parser.Types", function() {
+    return bind19(alt5(parseKeyword(KwCo.value))(parseKeyword(Kwco.value)))(function() {
       return bind19(sc)(function() {
-        return bind19($lazy_parseTy(27))(function(ty) {
-          return bind19(sc)(function() {
-            return bind19(parseSymbol(SymParensC.value))(function() {
-              return pure18(ty);
-            });
+        return bind19($lazy_parseTy(78))(function(ty) {
+          return pure18(new TyCo4(ty));
+        });
+      });
+    });
+  });
+  var $lazy_parseTyDecl = /* @__PURE__ */ $runtime_lazy5("parseTyDecl", "Parser.Types", function() {
+    return bind19(parseTypename)(function(tyn) {
+      return bind19(parseSymbol(SymParensO.value))(function() {
+        return bind19(sepBy($lazy_parseTy(56))(parseCommaSep))(function(args) {
+          return bind19(parseSymbol(SymParensC.value))(function() {
+            return pure18(new TyDecl4(tyn, args));
           });
         });
       });
-    }))(alt5(bind19(alt5(parseKeyword(KwForall.value))(parseKeyword(Kwforall.value)))(function() {
+    });
+  });
+  var $lazy_parseTyForall = /* @__PURE__ */ $runtime_lazy5("parseTyForall", "Parser.Types", function() {
+    return bind19(alt5(parseKeyword(KwForall.value))(parseKeyword(Kwforall.value)))(function() {
       return bind19(sc)(function() {
         return bind19(sepBy(parseTypevar)(many1(space)))(function(args) {
           return bind19(sc)(function() {
             return bind19(parseSymbol(SymDot.value))(function() {
               return bind19(sc)(function() {
-                return bind19($lazy_parseTy(40))(function(ty) {
+                return bind19($lazy_parseTy(48))(function(ty) {
                   return pure18(new TyForall4(args, ty));
                 });
               });
@@ -27670,19 +27698,25 @@
           });
         });
       });
-    }))(alt5($$try2(bind19(parseTypename)(function(tyn) {
-      return bind19(parseSymbol(SymParensO.value))(function() {
-        return bind19(sepBy($lazy_parseTy(47))(parseCommaSep))(function(args) {
-          return bind19(parseSymbol(SymParensC.value))(function() {
-            return pure18(new TyDecl4(tyn, args));
+    });
+  });
+  var $lazy_parseTyParens = /* @__PURE__ */ $runtime_lazy5("parseTyParens", "Parser.Types", function() {
+    return bind19(parseSymbol(SymParensO.value))(function() {
+      return bind19(sc)(function() {
+        return bind19($lazy_parseTy(35))(function(ty) {
+          return bind19(sc)(function() {
+            return bind19(parseSymbol(SymParensC.value))(function() {
+              return pure18(ty);
+            });
           });
         });
       });
-    })))(alt5(bind19(parseTypevar)(function($$var2) {
-      return pure18(new TyVar4($$var2));
-    }))(alt5(bind19(parseSymbol(SymBrackO.value))(function() {
+    });
+  });
+  var $lazy_parseTyShift = /* @__PURE__ */ $runtime_lazy5("parseTyShift", "Parser.Types", function() {
+    return bind19(parseSymbol(SymBrackO.value))(function() {
       return bind19(sc)(function() {
-        return bind19($lazy_parseTy(60))(function(ty) {
+        return bind19($lazy_parseTy(69))(function(ty) {
           return bind19(sc)(function() {
             return bind19(parseSymbol(SymBrackC.value))(function() {
               return pure18(new TyShift4(ty));
@@ -27690,15 +27724,9 @@
           });
         });
       });
-    }))(bind19(alt5(parseKeyword(KwCo.value))(parseKeyword(Kwco.value)))(function() {
-      return bind19(sc)(function() {
-        return bind19($lazy_parseTy(69))(function(ty) {
-          return pure18(new TyCo4(ty));
-        });
-      });
-    }))))));
+    });
   });
-  var parseTy = /* @__PURE__ */ $lazy_parseTy(21);
+  var parseTy = /* @__PURE__ */ $lazy_parseTy(22);
 
   // output/Parser.Terms/index.js
   var $runtime_lazy6 = function(name15, moduleName, init3) {

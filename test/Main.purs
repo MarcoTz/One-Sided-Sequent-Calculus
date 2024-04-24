@@ -16,7 +16,7 @@ import Driver.Definition (runDriverM,initialDriverState)
 import Errors (showInSrc)
 
 import CounterExamples (getCex, numCex)
-import StdLib.ImportLibs (unitSrc)
+import ImportLibs (libSources)
 
 data Example = CounterExample Int | Example String
 instance Show Example where 
@@ -50,6 +50,12 @@ runCounterExamples = do
   _ <- for ress (\res -> logShow res)
   pure unit
 
+runExamples :: Effect Unit
+runExamples = do
+  ress <- for libSources (\(Tuple name src) -> pure $ runExample (Example name) src false)
+  _ <- for ress (\res -> logShow res)
+  pure unit
+
 runExample :: Example -> String -> Boolean -> TestRes
 runExample ex src shouldFail = do 
   let parseRes = parseExample ex src
@@ -64,7 +70,6 @@ runExample ex src shouldFail = do
 main :: Effect Unit
 main = do
   _ <- runCounterExamples 
-  _ <- logShow ( runExample (Example "Unit") (unitSrc) false) 
-  pure unit
+  runExamples
 
 
