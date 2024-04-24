@@ -1,12 +1,15 @@
 module Events (runSrc, selectExample, getSrc, handleAction) where 
 
-import Definitions (Input(..),State, getExSource, runProg, indexToEx)
+import Definitions (Input(..),State, runProg)
+import ImportLibs (libSources) 
 
 import Halogen (modify_)
 
-import Prelude (bind,($))
-import Data.List (intercalate)
+import Prelude (bind)
 import Data.Unit (Unit)
+import Data.Array((!!))
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 import Control.Monad.State (class MonadState, gets)
 
 getSrc :: String -> Input 
@@ -16,11 +19,12 @@ runSrc::forall ev. ev->Input
 runSrc = \_ -> RunProg
 
 selectExample :: Int -> Input
-selectExample = \i  -> ExampleSelect $ indexToEx i
+selectExample = \i  -> case libSources !! i of 
+  Just (Tuple _ src) -> ProgramInput src 
+  Nothing -> ProgramInput ""
 
 handleAction :: forall m. MonadState State m => Input -> m Unit
 handleAction inp = case inp of 
-  ExampleSelect ex -> modify_ (\st -> st {progSrc=intercalate "\n" (getExSource ex)})
   ProgramInput src -> modify_ (\st -> st {progSrc=src})
   RunProg -> do
     src <- gets (\st -> st.progSrc)

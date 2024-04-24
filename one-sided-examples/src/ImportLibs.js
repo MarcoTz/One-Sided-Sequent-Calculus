@@ -1,7 +1,6 @@
 
 
-export const streamSrc = 
-`
+export const streamSrc = `
 module Stream
 
 import Bool;
@@ -15,8 +14,7 @@ constTrue :: Stream(Bool);
 constTrue := mu a. <case { Head(a) => <True | CBV | a>, Tail(str) => < constTrue | CBV | a >  } | CBV | a>;
 `;
 
-export const natSrc = 
-`
+export const natSrc = `
 module Nat 
 
 import Fun;
@@ -41,8 +39,7 @@ rec pred := case { Ap(n,a) =>
 main := <pred | CBV | Ap(S(S(S(Z))),mu x.Print x)>;
 `;
 
-export const boolSrc = 
-`
+export const boolSrc = `
 module Bool
 
 import Fun;
@@ -86,8 +83,7 @@ printCons := mu x.Print x;
 main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>;
 `;
 
-export const lpairSrc = 
-`
+export const lpairSrc = `
 module LPair 
 
 codata LPair(a:-,b:-){ 
@@ -96,8 +92,7 @@ codata LPair(a:-,b:-){
 }
 `;
 
-export const listSrc = 
-`
+export const listSrc = `
 module List
 
 import Fun;
@@ -142,8 +137,7 @@ printCons := mu x. Print x;
 main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>;
 `;
 
-export const pairSrc = 
-`
+export const pairSrc = `
 module Pair
 
 import Fun; 
@@ -156,8 +150,7 @@ diag :: forall X. Fun(X,Pair(X,X));
 diag := case { Ap(x,a) => <Tup(x,x) | CBV | a> };
 `;
 
-export const funSrc = 
-`
+export const funSrc = `
 module Fun
 
 import Unit;
@@ -172,8 +165,7 @@ id2 :: Forall X. Fun(X,X);
 id2 := id;
 `;
 
-export const unitSrc = 
-`
+export const unitSrc = `
 module Unit
 
 data Unit { MkUnit }

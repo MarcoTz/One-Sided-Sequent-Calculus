@@ -23,6 +23,7 @@ import Control.Alt ((<|>))
 
 parseModuleDecl :: SrcParser Modulename
 parseModuleDecl = (do 
+  _ <- sc
   _ <- parseKeyword KwModule 
   _ <- space
   _ <- sc 

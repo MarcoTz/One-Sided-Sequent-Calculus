@@ -19,5 +19,5 @@ foreign import unitSrc :: String
 
 libSources :: Array (Tuple String String)
 libSources = [
-Tuple "streamSrc" streamSrc,Tuple "natSrc" natSrc,Tuple "boolSrc" boolSrc,Tuple "lpairSrc" lpairSrc,Tuple "listSrc" listSrc,Tuple "pairSrc" pairSrc,Tuple "funSrc" funSrc,Tuple "unitSrc" unitSrc
+Tuple "stream" streamSrc,Tuple "nat" natSrc,Tuple "bool" boolSrc,Tuple "lpair" lpairSrc,Tuple "list" listSrc,Tuple "pair" pairSrc,Tuple "fun" funSrc,Tuple "unit" unitSrc
 ]

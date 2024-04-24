@@ -10,7 +10,7 @@ import Halogen.VDom.Driver (runUI)
 import Halogen.Query.HalogenQ (HalogenQ)
 import Halogen.Query.HalogenM (HalogenM)
 
-import Definitions (Input(..),State, Examples(..),initialState)
+import Definitions (Input(..),State, initialState)
 import Layout (render)
 import Events (handleAction)
 
@@ -23,4 +23,4 @@ eval = mkEval defaultEval {handleAction=handleAction}
 uiRunner :: Effect Unit
 uiRunner = runHalogenAff do
   body <- awaitBody
-  runUI component (ExampleSelect ExTuple) body
+  runUI component (RunProg) body

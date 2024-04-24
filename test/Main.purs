@@ -13,7 +13,7 @@ import Effect.Class.Console (logShow)
 import Syntax.Parsed.Program (Program)
 import Driver.Driver (parseProg,inferAndRun)
 import Driver.Definition (runDriverM,initialDriverState)
-import Errors (showInSrc)
+import Errors (showInSrc,getMessage)
 
 import CounterExamples (getCex, numCex)
 import ImportLibs (libSources)
@@ -27,12 +27,12 @@ instance Show Example where
 data TestRes = 
   TestSucc Example 
   | TestParserErr Example String
-  | TestErr Example
+  | TestErr Example String
 
 instance Show TestRes where 
   show (TestSucc ex) = "Test for " <> show ex <> " executed successfully"
   show (TestParserErr ex msg) = show ex <> " could not be parsed,\nerror: " <> msg
-  show (TestErr ex) = "Text for " <> show ex <> " failed"
+  show (TestErr ex msg) = "Test for " <> show ex <> " failed with message: " <> msg
 
 parseExample :: Example -> String -> Either Program TestRes
 parseExample ex src = do 
@@ -64,8 +64,8 @@ runExample ex src shouldFail = do
     Left prog -> do 
       let progRes = runDriverM initialDriverState (inferAndRun prog)
       case progRes of 
-          Tuple (Left _) _ -> if shouldFail then TestSucc ex else TestErr ex
-          Tuple (Right _) _ -> if shouldFail then TestErr ex else TestSucc ex 
+          Tuple (Left err) _ -> if shouldFail then TestSucc ex else TestErr ex (getMessage err)
+          Tuple (Right _) _ -> if shouldFail then TestErr ex "" else TestSucc ex 
 
 main :: Effect Unit
 main = do

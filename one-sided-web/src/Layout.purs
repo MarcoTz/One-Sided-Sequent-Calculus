@@ -2,13 +2,15 @@ module Layout (render) where
 
 import Definitions (RunResult(..),Input, State)
 import Events (runSrc, selectExample,getSrc)
+import ImportLibs (libSources)
 
-import Prelude (($),(<>))
+import Prelude (($),(<>),(<$>))
 --import Data.String (Pattern(..), split)
 --import Data.Array(concatMap)
+import Data.Tuple (Tuple(..))
 import Web.HTML.Common (ClassName(..))
 import Halogen.HTML (HTML,text)
-import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_,br_, select,option)
+import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_,br_, select,option_)
 import Halogen.HTML.Properties (class_,id, readOnly,value)
 import Halogen.HTML.Events (onClick,onValueChange,onSelectedIndexChange)
 
@@ -57,12 +59,7 @@ exSelect :: forall w. HTML w Input
 exSelect = div_ [
   text "Choose Example ",
   select [id "exampleSelect", onSelectedIndexChange selectExample] 
-    [
-    option [value "tuple"] [text "Tuples"],
-    option [value "list"] [text "Lists"],
-    option [value "nat"] [text "Natural Numbers"],
-    option [value "fun"] [text "Functions"]
-    ],
+    ((\(Tuple id _) -> option_ [text id]) <$>  libSources),
   br_
   ]
 

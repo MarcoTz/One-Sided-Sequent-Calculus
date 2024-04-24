@@ -19,15 +19,14 @@ do
   VARNAME="$LIBLOWER"Src
 
   echo "" >> $OUTJS
-  echo "export const $VARNAME = " >> $OUTJS
-  echo "\`" >> $OUTJS
+  echo "export const $VARNAME = \`" >> $OUTJS
   cat $FILE >> $OUTJS
   echo "\`;" >> $OUTJS
 
   echo "foreign import $VARNAME :: String" >> $OUTPURS
   echo "" >> $OUTPURS
 
-  ALLVARS+=("Tuple \"$VARNAME\" $VARNAME")
+  ALLVARS+=("Tuple \"$LIBLOWER\" $VARNAME")
 done
 
 printf -v VARSTR '%s,' "${ALLVARS[@]}"
