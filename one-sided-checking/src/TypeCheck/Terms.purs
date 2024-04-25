@@ -17,6 +17,7 @@ import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D
 import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..)) as T
 import Syntax.Typed.Types (Ty(..),isSubsumed) as T 
 import Syntax.Typed.Substitution (substTyvars) as T
+import FreeVars.FreeTypevars (generalize)
 
 import Prelude (bind,pure,($),(<$>), (==))
 import Data.List (List(..),foldr)
@@ -52,7 +53,7 @@ checkTerm (D.Var loc v) ty = do
       (Tuple Nothing Nothing) -> throwError (ErrUndefinedVar loc v)
       (Tuple _ (Just ty'')) -> pure ty'' 
       (Tuple (Just ty'') _) -> pure ty'' 
-  if T.isSubsumed ty ty' then pure (T.Var loc v ty) else throwError (ErrNotSubsumed loc ty ty')
+  if T.isSubsumed (generalize ty) ty' then pure (T.Var loc v ty) else throwError (ErrNotSubsumed loc ty ty')
 
 checkTerm (D.Mu loc v c) ty = do
   _ <- addCheckerVar v ty 

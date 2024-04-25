@@ -26,7 +26,7 @@ instance Show Ty where
   show (TyShift ty) = "{" <> show ty <> "}"
   show (TyCo ty) = "co " <> show ty 
   show (TyForall args ty) | null args = show ty
-  show (TyForall args ty) = intercalate " " (show <$> args) <> ". " <> show ty
+  show (TyForall args ty) = "forall " <> intercalate " " (show <$> args) <> ". " <> show ty
 
 data KindedTy = KindedTy {kindedTy :: Ty, kindedKind :: Kind}
 derive instance eqKindedTy :: Eq KindedTy

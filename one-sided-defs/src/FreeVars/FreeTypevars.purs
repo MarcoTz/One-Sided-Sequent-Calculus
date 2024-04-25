@@ -1,11 +1,16 @@
-module FreeVars.FreeTypevars where 
+module FreeVars.FreeTypevars (
+  class FreeTypevars,
+  freeTypevars,
+  freshTypevar,
+  generalize) 
+where 
 
 import Common (Typevar(..), freshVarN)
 import Syntax.Typed.Types (Ty(..))
 import Syntax.Typed.Terms (Term(..), Pattern(..), Command(..))
 
-import Prelude ((<$>))
-import Data.Set (Set,singleton,unions, difference, fromFoldable, union, empty)
+import Prelude ((<$>),(<>))
+import Data.Set (Set,singleton,unions, difference, fromFoldable,toUnfoldable, union, empty)
 import Data.List (List(..))
 
 class FreeTypevars a where 
@@ -37,3 +42,7 @@ instance FreeTypevars Command where
   freeTypevars (Done _) = empty
   freeTypevars (Err _ _) = empty
   freeTypevars (Print _ t) = freeTypevars t
+
+generalize :: Ty -> Ty 
+generalize (TyForall args ty) = let args' = freeTypevars ty in TyForall (args<>toUnfoldable args') ty
+generalize ty = let args = freeTypevars ty in TyForall (toUnfoldable args) ty
