@@ -45,7 +45,7 @@ import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>),(==))
 import Data.List (List(..), elemIndex, sortBy, filter, intercalate,null)
 import Data.Tuple (Tuple(..),fst,snd)
 import Data.Either (Either(..))
-import Data.String (take,indexOf,Pattern(..))
+import Data.String (take,indexOf,Pattern(..),trim)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Map (lookup, fromFoldable, toUnfoldable)
 import Data.Unit (Unit,unit)
@@ -82,7 +82,8 @@ runProgramTrace (K.Program prog) = do
 
 parseProg :: String -> DriverM P.Program 
 parseProg src = do 
-  let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") src)) src 
+  let srcStripped = trim src
+  let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") srcStripped)) srcStripped
   _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"")
   let progParsed = runSourceParser src (parseProgram src)
   prog <- liftErr progParsed "parsing"

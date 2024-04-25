@@ -29,7 +29,7 @@ type State = {progSrc::String, runRes::RunResult}
 
 initialState :: Input -> State
 initialState _ = {
-  progSrc:intercalate "\n" (lookup (Modulename "Stream") libMap), 
+  progSrc:intercalate "\n" (lookup (Modulename "Bool") libMap), 
   runRes:ResSucc {succCmd:"", succTrace:"", succDebug:""}
   }
 

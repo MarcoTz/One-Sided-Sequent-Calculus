@@ -2,9 +2,10 @@ module Layout (render) where
 
 import Definitions (RunResult(..),Input, State)
 import Events (runSrc, selectExample,getSrc)
-import ImportLibs (libSources)
+import StandardLib (libMap)
 
-import Prelude (($),(<>),(<$>))
+import Prelude (($),(<>),(<$>),show)
+import Data.Map (toUnfoldable)
 --import Data.String (Pattern(..), split)
 --import Data.Array(concatMap)
 import Data.Tuple (Tuple(..))
@@ -12,7 +13,7 @@ import Web.HTML.Common (ClassName(..))
 import Halogen.HTML (HTML,text)
 import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_,br_, select,option_)
 import Halogen.HTML.Properties (class_,id, readOnly,value)
-import Halogen.HTML.Events (onClick,onValueChange,onSelectedIndexChange)
+import Halogen.HTML.Events (onClick,onValueChange)
 
 --strToText :: forall w. String -> Array (HTML w Input)
 --strToText str = do
@@ -58,8 +59,8 @@ resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug}) = div
 exSelect :: forall w. HTML w Input
 exSelect = div_ [
   text "Choose Example ",
-  select [id "exampleSelect", onSelectedIndexChange selectExample] 
-    ((\(Tuple id _) -> option_ [text id]) <$>  libSources),
+  select [id "exampleSelect", onValueChange selectExample] 
+    ((\(Tuple mn _) -> option_ [text (show mn)]) <$>  toUnfoldable libMap),
   br_
   ]
 
