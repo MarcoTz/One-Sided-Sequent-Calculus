@@ -50,4 +50,4 @@ showInSrc :: forall e.Error e => e -> String -> String
 showInSrc e src = 
   let msg = getMessage e in
   if getLocation e == defaultLoc then msg else 
-  msg <> "\nAt: " <> showLocInSource src (getLocation e) 
+  msg <> "\nAt: \"" <> showLocInSource src (getLocation e)  <> "\""

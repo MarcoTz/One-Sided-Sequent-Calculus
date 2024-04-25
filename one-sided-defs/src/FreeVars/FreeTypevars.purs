@@ -9,9 +9,9 @@ import Common (Typevar(..), freshVarN)
 import Syntax.Typed.Types (Ty(..))
 import Syntax.Typed.Terms (Term(..), Pattern(..), Command(..))
 
-import Prelude ((<$>),(<>))
+import Prelude ((<$>),(<>),($))
 import Data.Set (Set,singleton,unions, difference, fromFoldable,toUnfoldable, union, empty)
-import Data.List (List(..))
+import Data.List (List(..),null)
 
 class FreeTypevars a where 
   freeTypevars :: a -> Set Typevar
@@ -45,4 +45,4 @@ instance FreeTypevars Command where
 
 generalize :: Ty -> Ty 
 generalize (TyForall args ty) = let args' = freeTypevars ty in TyForall (args<>toUnfoldable args') ty
-generalize ty = let args = freeTypevars ty in TyForall (toUnfoldable args) ty
+generalize ty = let args = toUnfoldable $ freeTypevars ty in if null args then ty else TyForall args ty
