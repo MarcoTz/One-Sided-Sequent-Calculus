@@ -19,8 +19,8 @@ import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Data.String.CodeUnits (singleton)
-import Parsing.Combinators (try, sepBy, manyTill, optionMaybe)
-import Parsing.String (anyChar, char)
+import Parsing.Combinators (try, sepBy, many, optionMaybe)
+import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
 
 
@@ -97,9 +97,6 @@ parseVar = do
   loc <- getCurrLoc startPos
   pure $ Var loc v
 
---  <|>
---  parseParens parseTerm
-
 
 parsePattern :: SrcParser Pattern 
 parsePattern = do 
@@ -120,13 +117,12 @@ parseCommand = parseParens ((\_ -> parseC) unit) <|> (\_ -> parseC) unit
 
 parseC :: SrcParser Command 
 parseC = 
-  (\_ -> parseErr) unit        <|> 
-  (\_ -> parseDone) unit       <|>
-  (\_ -> parseCut) unit        <|> 
-
-  (\_ -> try parseCutCBV) unit     <|>
-  (\_ -> try parseCutCBN) unit     <|>
-  (\_ -> try parsePrint)  unit     <|> 
+  (\_ -> parseErr)            unit <|> 
+  (\_ -> parseDone)           unit <|>
+  (\_ -> parseCut)            unit <|> 
+  (\_ -> try parseCutCBV)     unit <|>
+  (\_ -> try parseCutCBN)     unit <|>
+  (\_ -> try parsePrint)      unit <|> 
   (\_ -> try parsePrintAnnot) unit      
 
 parseCut :: SrcParser Command 
@@ -163,7 +159,7 @@ parseErr = do
   _ <- parseKeyword KwError
   _ <- sc 
   _ <- parseSymbol SymQuot
-  msg <- manyTill anyChar (char '\n') 
+  msg <- many (noneOf ['\"'])
   _ <- parseSymbol SymQuot
   loc <- getCurrLoc startPos
   pure (Err loc (charlsToStr msg))
