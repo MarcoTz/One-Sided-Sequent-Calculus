@@ -4,10 +4,11 @@ module Test.Definition (
   runExample
 )where
 
-import Prelude (class Show,show,(<),(<>),(+),($)) 
-import Data.String (replaceAll, Pattern(..),Replacement(..))
+import Prelude (class Show,show,(<),(<>),(+),($),(-)) 
+import Data.String (replaceAll, Pattern(..),Replacement(..),length)
 import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
+import Data.Monoid (power)
 
 import Common (Modulename)
 import Errors (showInSrc,getMessage)
@@ -22,7 +23,15 @@ instance Show Example where
       showNr :: Int -> String 
       showNr n | n<10 = "0" <> show n
       showNr n = show n 
-  show (StdLib mn) = "Library " <> show mn
+  show (StdLib mn) = "Library " <> showMn mn
+    where 
+      showMn :: Modulename -> String
+      showMn name = do
+        let nm = show name
+        let nr = length nm
+        if nr < 6 then 
+          nm <> power " " (6-nr)
+        else nm
 
 
 data TestRes = 

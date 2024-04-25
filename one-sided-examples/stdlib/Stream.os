@@ -8,4 +8,6 @@ codata Stream(a:-){
 }
 
 constTrue :: Stream(Bool);
-constTrue := mu a. <case { Head(a) => <True | CBV | a>, Tail(str) => < constTrue | CBV | a >  } | CBV | a>;
+rec constTrue := mu a. 
+  <case { Head(b) => <True | CBV |b>, Tail(str) => < constTrue | CBV | str >  } | CBV | a>;
+
