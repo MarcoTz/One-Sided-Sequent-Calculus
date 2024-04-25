@@ -3,10 +3,12 @@ module Desugar.Terms (
   desugarTerm
 ) where 
 
+import Common (Xtorname(..),EvaluationOrder(..))
 import Desugar.Definition(DesugarM,varToXtor,getDesMXtor)
 import Desugar.Types (desugarTy)
 import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..)) as P
 import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D
+import FreeVars.FreeVariables (freshVar)
 
 import Prelude (bind,($),pure,(<$>))
 import Data.Traversable (for)
@@ -35,6 +37,20 @@ desugarTerm (P.ShiftCBV loc t) = do
 desugarTerm (P.ShiftCBN loc t) = do 
   t' <- desugarTerm t
   pure $ D.ShiftCBN loc t'
+desugarTerm t@(P.App loc t1 t2) = do
+  t1' <- desugarTerm t1 
+  t2' <- desugarTerm t2
+  let v = freshVar t
+  let args = Cons t2' (Cons (D.Var loc v) Nil)
+  let cut = D.Cut loc t1' CBV (D.Xtor loc (Xtorname "Ap") args) 
+  pure $ D.Mu loc v cut
+desugarTerm t@(P.Lam loc v t') = do
+  let v' = freshVar t
+  let ptVars = Cons v (Cons v' Nil)
+  t'' <- desugarTerm t'
+  let cut = D.Cut loc t'' CBV (D.Var loc v')
+  let pt = D.Pattern {ptxt:Xtorname "Ap", ptv:ptVars, ptcmd:cut }
+  pure $ D.XCase loc (Cons pt Nil) 
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 

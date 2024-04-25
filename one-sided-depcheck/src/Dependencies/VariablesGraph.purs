@@ -7,15 +7,16 @@ import Environment (lookupMVar, lookupMXtor)
 import Dependencies.Definition (DepM, removeSelfLoops, ensureAcyclic, addVertexM, getVertexError, addEdgeM)
 import Dependencies.Errors (DepError(..))
 import Dependencies.Graph (Graph(..), Vertex,getVertexLabel, getStartingVert, getEdgesEndingAt)
-import Syntax.Parsed.Program (Program(..), DataDecl(..), VarDecl(..), XtorSig(..))
-import Syntax.Parsed.Terms (Term(..),Pattern(..), Command(..))
+import Syntax.Desugared.Program (Program(..), DataDecl(..), VarDecl(..), XtorSig(..))
+import Syntax.Desugared.Terms (Term(..),Pattern(..), Command(..))
 
 import Prelude (bind, (<$>), (<>),pure,($), (||))
 import Data.Unit (Unit,unit)
 import Data.Foldable (foldM)
 import Data.Traversable (for)
 import Data.List (List(..),concat, concatMap,elem)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..),snd)
+import Data.Map (toUnfoldable)
 import Data.Maybe (isJust)
 import Control.Monad.State (get)
 
@@ -26,7 +27,7 @@ depOrderProgram :: Program -> DepVar (List Variable)
 depOrderProgram (Program prog) = do 
   vertsTerms <- for prog.progVars addVariable
   let xtToVar (Xtorname xt) = Variable xt 
-  let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) prog.progDecls
+  let ignore = (\(XtorSig x) -> xtToVar (x.sigName)) <$> concatMap (\(DataDecl d) -> d.declXtors) (snd <$> toUnfoldable prog.progDecls)
   _ <- for vertsTerms (\(Tuple v t) -> addEdgesVariableT v ignore t)
   _ <- removeSelfLoops
   _ <- ensureAcyclic (ErrMutualRec prog.progName)

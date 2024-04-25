@@ -41,13 +41,13 @@ import Kinding.Definition (runKindM)
 import Kinding.Program (kindVariable)
 import Kinding.Terms (kindCommand)
 
-import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>),(==))
+import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>))
 import Data.List (List(..), elemIndex, sortBy, filter, intercalate,null)
 import Data.Tuple (Tuple(..),fst,snd)
 import Data.Either (Either(..))
 import Data.String (take,indexOf,Pattern(..),trim)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
-import Data.Map (lookup, fromFoldable, toUnfoldable)
+import Data.Map (lookup, fromFoldable, toUnfoldable,isEmpty)
 import Data.Unit (Unit,unit)
 import Data.Traversable (for) 
 import Control.Bind (ifM)
@@ -113,10 +113,10 @@ inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progNa
   imports  <- getImports p
   impsOrdered <- getInferOrder p imports
   _ <- inferImportsOrdered impsOrdered
-  D.Program prog' <- desugarProg p
+  p'@(D.Program prog') <- desugarProg p
   _ <- debug ("inferring declarations in " <> show prog'.progName)
   decls' <- for prog'.progDecls (inferDataDecl prog'.progName)
-  progOrder <- getVarOrder p
+  progOrder <- getVarOrder p'
   let indexFun (D.VarDecl var1) (D.VarDecl var2) = compare (elemIndex var1.varName progOrder) (elemIndex var2.varName progOrder)
   let varsSorted = sortBy indexFun (snd <$> toUnfoldable prog'.progVars)
   _ <- debug ("infering variables in " <> show prog'.progName)
@@ -159,9 +159,9 @@ inferImportsOrdered imports = do
   _ <- for imports' (\x -> inferProgram x)
   pure unit
 
-getVarOrder :: P.Program -> DriverM (List Variable)
-getVarOrder (P.Program prog) | Nil==prog.progVars = pure Nil
-getVarOrder p@(P.Program prog) = do
+getVarOrder :: D.Program -> DriverM (List Variable)
+getVarOrder (D.Program prog) | isEmpty prog.progVars = pure Nil
+getVarOrder p@(D.Program prog) = do
   _ <- debug ("ordering variables in " <> show prog.progName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let progOrder = runDepM env (depOrderProgram p)
