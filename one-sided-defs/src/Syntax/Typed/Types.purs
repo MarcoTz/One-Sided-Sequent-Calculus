@@ -5,8 +5,8 @@ module Syntax.Typed.Types (
   embedType
 ) where 
 
-import Prelude (class Eq, (==), (<$>), (<>), (&&), identity,map, class Show, show)
-import Data.List (List, elem, null, filter, zip, intercalate)
+import Prelude (class Eq, (==), (<$>), (<>), (&&), class Show, show)
+import Data.List (List, null, zip, intercalate,foldr)
 import Data.Tuple (Tuple(..))
 
 import Common (Typevar, Typename, Kind)
@@ -35,14 +35,11 @@ instance Show KindedTy where
 
 isSubsumed :: Ty -> Ty -> Boolean
 isSubsumed ty1 ty2 | ty1 == ty2 = true
-isSubsumed ty (TyForall args ty') = case ty' of 
-  TyVar v -> v `elem` args
-  TyDecl tyn tyargs-> isSubsumed ty (TyDecl tyn (TyForall args <$> tyargs))
-  TyShift ty'' -> isSubsumed ty (TyShift (TyForall args ty''))
-  TyCo ty'' -> isSubsumed ty (TyCo (TyForall args ty''))
-  TyForall args' ty'' -> isSubsumed ty (TyForall (args<>args') ty'')
-isSubsumed (TyVar _) (TyVar _) = true
-isSubsumed (TyDecl tyn args) (TyDecl tyn' args') = tyn == tyn' && null (filter identity (map (\(Tuple x y) -> isSubsumed x y)  (zip args args')))
+isSubsumed ty (TyForall _ ty')  = isSubsumed ty ty'
+isSubsumed (TyForall _ ty) ty'  = isSubsumed ty ty'
+isSubsumed _ (TyVar _)  = true
+  -- does not check for argument variance
+isSubsumed (TyDecl tyn args) (TyDecl tyn' args') = tyn == tyn' && foldr (\(Tuple a1 a2) b -> b && isSubsumed a1 a2) true (zip args args') 
 isSubsumed (TyShift ty) ty' = isSubsumed ty ty'
 isSubsumed ty (TyShift ty') = isSubsumed ty ty'
 isSubsumed (TyCo ty) (TyCo ty') = isSubsumed ty ty'
