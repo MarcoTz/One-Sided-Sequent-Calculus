@@ -15,6 +15,7 @@ import Data.Map (lookup)
 import Driver.Definition (DriverState(..),initialDriverState, runDriverM)
 import Driver.Driver (runStr)
 import Driver.Errors (DriverError)
+import Common (Modulename(..))
 import Errors (showInSrc)
 import Syntax.Kinded.Terms (Command)
 import Eval.Definition (EvalTrace(..))
@@ -28,7 +29,7 @@ type State = {progSrc::String, runRes::RunResult}
 
 initialState :: Input -> State
 initialState _ = {
-  progSrc:intercalate "\n" (lookup "stream" libMap), 
+  progSrc:intercalate "\n" (lookup (Modulename "Stream") libMap), 
   runRes:ResSucc {succCmd:"", succTrace:"", succDebug:""}
   }
 

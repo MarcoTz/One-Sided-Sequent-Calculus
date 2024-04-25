@@ -10,8 +10,9 @@ import Driver.Errors (DriverError(..))
 import Common (Modulename, Variable)
 import Loc (defaultLoc)
 import Environment (Environment(..))
+import StandardLib (libMap)
 
-import Syntax.Parsed.Program (Program(..)) as P
+import Syntax.Parsed.Program (Program(..),Import(..)) as P
 import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
 import Syntax.Desugared.Terms (Command) as D
 import Syntax.Kinded.Terms (Command(..)) as K
@@ -41,15 +42,16 @@ import Kinding.Program (kindVariable)
 import Kinding.Terms (kindCommand)
 
 import Prelude (bind,pure, ($), (<$>), compare, (<>), show, (*>),(==))
-import Data.List (List(..), elemIndex, sortBy, filter, intercalate)
-import Data.Tuple (Tuple(..),snd)
+import Data.List (List(..), elemIndex, sortBy, filter, intercalate,null)
+import Data.Tuple (Tuple(..),fst,snd)
 import Data.Either (Either(..))
 import Data.String (take,indexOf,Pattern(..))
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Map (lookup, fromFoldable, toUnfoldable)
 import Data.Unit (Unit,unit)
 import Data.Traversable (for) 
 import Control.Bind (ifM)
+import Control.Monad(unless)
 import Control.Monad.State (gets)
 import Control.Monad.Except (throwError)
 
@@ -87,8 +89,23 @@ parseProg src = do
   pure prog
 
 getImports :: P.Program -> DriverM (List P.Program)
--- this should check standard lib
-getImports (P.Program _prog) = pure Nil
+getImports (P.Program prog) = do
+  _ <- debug ("loading standard library imports")
+  let imps = (\(P.Import imp) -> imp.importName) <$> prog.progImports
+  let maybeSrcs = (\mn ->Tuple mn (lookup mn libMap)) <$> imps
+  let (Tuple notFoundImps foundImps) = splitImps maybeSrcs
+  _ <- unless (null notFoundImps) $ throwError (ErrNotStdLib notFoundImps)
+  let impNames = fst <$> foundImps
+  _ <- debug ("loading imports " <> intercalate ", " (show <$> impNames))
+  impsParsed <- for foundImps (\(Tuple nm src) -> do 
+     _ <- debug ("loading import " <> show nm)
+     parseProg src)
+  pure impsParsed
+  where 
+    splitImps :: List (Tuple Modulename (Maybe String)) -> Tuple (List Modulename) (List (Tuple Modulename String))
+    splitImps Nil = Tuple Nil Nil 
+    splitImps (Cons (Tuple nm Nothing) rst) = let (Tuple notFound found) = splitImps rst in Tuple (Cons nm notFound) found
+    splitImps (Cons (Tuple nm (Just src)) rst) = let (Tuple notFound found) = splitImps rst in Tuple notFound (Cons (Tuple nm src) found)
 
 inferProgram :: P.Program -> DriverM K.Program
 inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progName) (do

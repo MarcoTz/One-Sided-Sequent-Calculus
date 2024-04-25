@@ -8,7 +8,7 @@ import Data.Unfoldable (range)
 import Data.Traversable (for)
 
 import Effect (Effect)
-import Effect.Class.Console (logShow)
+import Effect.Class.Console (log,logShow)
 
 import Syntax.Parsed.Program (Program)
 import Driver.Driver (parseProg,inferAndRun)
@@ -69,7 +69,14 @@ runExample ex src shouldFail = do
 
 main :: Effect Unit
 main = do
+  _ <- log "============================="
+  _ <- log "===Testing Counterexamples==="
+  _ <- log "============================="
   _ <- runCounterExamples 
+  _ <- log ""
+  _ <- log "=============================="
+  _ <- log "===Testing Standard Library==="
+  _ <- log "=============================="
   runExamples
 
 

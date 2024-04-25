@@ -2743,11 +2743,11 @@
   // output/Control.Monad/index.js
   var unlessM = function(dictMonad) {
     var bind30 = bind(dictMonad.Bind1());
-    var unless4 = unless(dictMonad.Applicative0());
+    var unless5 = unless(dictMonad.Applicative0());
     return function(mb) {
       return function(m) {
         return bind30(mb)(function(b2) {
-          return unless4(b2)(m);
+          return unless5(b2)(m);
         });
       };
     };
@@ -3311,6 +3311,17 @@
         return tailRecM5(go2)(Nil.value);
       };
     };
+  };
+  var head = function(v) {
+    if (v instanceof Nil) {
+      return Nothing.value;
+    }
+    ;
+    if (v instanceof Cons) {
+      return new Just(v.value0);
+    }
+    ;
+    throw new Error("Failed pattern match at Data.List (line 230, column 1 - line 230, column 22): " + [v.constructor.name]);
   };
   var findIndex = function(fn) {
     var go2 = function($copy_v) {
@@ -28498,6 +28509,191 @@
     });
   };
 
+  // output/ImportLibs/foreign.js
+  var streamSrc = `
+module Stream
+
+import Bool;
+
+codata Stream(a:-){
+  Head(a),
+  Tail(Stream(a))
+}
+
+constTrue :: Stream(Bool);
+constTrue := mu a. <case { Head(a) => <True | CBV | a>, Tail(str) => < constTrue | CBV | a >  } | CBV | a>;
+`;
+  var natSrc = `
+module Nat 
+
+import Fun;
+
+data Nat{ 
+  Z,
+  S(Nat)
+}
+
+
+succ :: Fun(Nat,Nat);
+succ := case { Ap(n,a) => <S(n) | CBV | a> };
+
+pred :: Fun(Nat,Nat);
+rec pred := case { Ap(n,a) => 
+  <  case {
+    Z => <Z|CBV|a>,
+    S(m) => <mu b. <pred | CBV | Ap(m,b)> |CBV|a>
+  } | CBV | n> 
+};
+
+main := <pred | CBV | Ap(S(S(S(Z))),mu x.Print x)>;
+`;
+  var boolSrc = `
+module Bool
+
+import Fun;
+
+data Bool{ 
+  True,
+  False
+}
+
+not :: Fun(Bool,Bool);
+not := case { Ap(b,a) => 
+  <case {
+    True  => <False | CBV | a>,
+    False => <True  | CBV | a>
+  } | CBV | b>
+};
+
+and :: Fun(Bool,Fun(Bool,Bool));
+and := case { Ap(b1,a) =>
+  < case { Ap(b2,b) => 
+    < case {
+      True => <b2|CBV|b>,
+      False => <False|CBV|b>
+    } | CBV | b1 > 
+  } | CBV | a>
+};
+ 
+or :: Fun(Bool,Fun(Bool,Bool));
+or := case { Ap(b1,a) => 
+  < case { Ap(b2, b) => 
+    < case { 
+      True  => <True|CBV|b>,
+      False => <b2  |CBV|b> 
+    } | CBV | b1> 
+  } | CBV | a> 
+};
+
+printCons :: Forall X. X;
+printCons := mu x.Print x;
+
+main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>;
+`;
+  var lpairSrc = `
+module LPair 
+
+codata LPair(a:-,b:-){ 
+  fst(a),
+  snd(b)
+}
+`;
+  var listSrc = `
+module List
+
+import Fun;
+import Nat;
+import Unit;
+
+-- Lists
+data List(a:+){
+  Cons(a,List(a)),
+  Nil
+}
+
+tail :: forall X. Fun(List(X),List(X));
+tail := case { Ap(ls,a) => 
+  < case { 
+    Nil         => <Nil | CBV | a>,
+    Cons(hd,rs) => <rs  | CBV | a>
+  } | CBV | ls> 
+};
+
+head :: forall X. Fun(List(X),X);
+head := case { Ap(ls,a) => 
+  < case { 
+    Nil         => error "cannot take head of empty list",
+    Cons(hd,rs) => <hd  | CBV | a>
+  } | CBV | ls> 
+};
+
+
+len :: forall X. Fun(List(X),Nat);
+rec len := case { Ap(ls,a) => 
+  < case {
+    Nil => <Z|CBV|a>,
+    Cons(l1,lrs) => 
+     <len | CBV | Ap(lrs,mu x.<S(x)|CBV|a>)>
+  } | CBV | ls>
+};
+
+printCons :: Forall X. X;
+printCons := mu x. Print x;
+
+main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>;
+`;
+  var pairSrc = `
+module Pair
+
+import Fun; 
+
+data Pair(a:+,b:+) {
+  Tup(a,b)
+}
+
+diag :: forall X. Fun(X,Pair(X,X));
+diag := case { Ap(x,a) => <Tup(x,x) | CBV | a> };
+`;
+  var funSrc = `
+module Fun
+
+import Unit;
+codata Fun(a:+,b:-){ 
+  Ap(a,b)
+}
+
+id :: forall X. Fun(X,X);
+id := case { Ap(x,a) => <x | CBV | a> };
+
+id2 :: Forall X. Fun(X,X);
+id2 := id;
+`;
+  var unitSrc = `
+module Unit
+
+data Unit { MkUnit }
+
+cbvU :: {Unit};
+cbvU := {MkUnit:CBV};
+
+cbnU :: {Unit};
+cbnU := {MkUnit:CBN}; 
+
+cutCBV :: Unit; 
+cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done);
+
+cutCBN :: Unit;
+cutCBN := Mu y. (MkUnit << Unit << Mu x. Done); 
+`;
+
+  // output/ImportLibs/index.js
+  var libSources = /* @__PURE__ */ function() {
+    return [new Tuple("stream", streamSrc), new Tuple("nat", natSrc), new Tuple("bool", boolSrc), new Tuple("lpair", lpairSrc), new Tuple("list", listSrc), new Tuple("pair", pairSrc), new Tuple("fun", funSrc), new Tuple("unit", unitSrc)];
+  }();
+
+  // output/StandardLib/index.js
+  var libMap = /* @__PURE__ */ fromFoldable(ordString)(foldableArray)(libSources);
+
   // output/TypeCheck.Errors/index.js
   var show30 = /* @__PURE__ */ show(showTerm2);
   var show114 = /* @__PURE__ */ show(showCommand2);
@@ -29507,17 +29703,21 @@
   var applySecond4 = /* @__PURE__ */ applySecond(/* @__PURE__ */ applyExceptT(monadStateT4));
   var compare4 = /* @__PURE__ */ compare(/* @__PURE__ */ ordMaybe(ordInt));
   var elemIndex4 = /* @__PURE__ */ elemIndex(eqModulename);
+  var lookup9 = /* @__PURE__ */ lookup(ordString);
+  var map113 = /* @__PURE__ */ map(functorMaybe);
+  var unless4 = /* @__PURE__ */ unless(applicativeExceptT2);
+  var show45 = /* @__PURE__ */ show(showString);
+  var $$for13 = /* @__PURE__ */ $$for(applicativeExceptT2);
+  var for1 = /* @__PURE__ */ $$for13(traversableList);
   var liftErr6 = /* @__PURE__ */ liftErr(errorDesugarError);
   var ifM2 = /* @__PURE__ */ ifM(bindExceptT2);
-  var $$for13 = /* @__PURE__ */ $$for(applicativeExceptT2);
-  var for1 = /* @__PURE__ */ $$for13(traversableMap);
+  var for2 = /* @__PURE__ */ $$for13(traversableMap);
   var elemIndex1 = /* @__PURE__ */ elemIndex(eqVariable);
   var toUnfoldable9 = /* @__PURE__ */ toUnfoldable(unfoldableList);
-  var for2 = /* @__PURE__ */ $$for13(traversableList);
   var fromFoldable9 = /* @__PURE__ */ fromFoldable(ordVariable)(foldableList);
   var for3 = /* @__PURE__ */ $$for13(traversableMaybe);
-  var lookup9 = /* @__PURE__ */ lookup(ordModulename);
-  var map113 = /* @__PURE__ */ map(/* @__PURE__ */ functorExceptT(/* @__PURE__ */ functorStateT(functorIdentity)));
+  var lookup14 = /* @__PURE__ */ lookup(ordModulename);
+  var map211 = /* @__PURE__ */ map(/* @__PURE__ */ functorExceptT(/* @__PURE__ */ functorStateT(functorIdentity)));
   var runProgramTrace = function(v) {
     if (isNothing(v.value0.progMain)) {
       return pure25(emptyTrace(new Done2(defaultLoc)));
@@ -29651,7 +29851,45 @@
     };
   };
   var getImports = function(v) {
-    return pure25(Nil.value);
+    var splitImps = function(v1) {
+      if (v1 instanceof Nil) {
+        return new Tuple(Nil.value, Nil.value);
+      }
+      ;
+      if (v1 instanceof Cons && v1.value0.value1 instanceof Nothing) {
+        var v2 = splitImps(v1.value1);
+        return new Tuple(new Cons(v1.value0.value0, v2.value0), v2.value1);
+      }
+      ;
+      if (v1 instanceof Cons && v1.value0.value1 instanceof Just) {
+        var v2 = splitImps(v1.value1);
+        return new Tuple(v2.value0, new Cons(new Tuple(v1.value0.value0, v1.value0.value1.value0), v2.value1));
+      }
+      ;
+      throw new Error("Failed pattern match at Driver.Driver (line 106, column 5 - line 106, column 104): " + [v1.constructor.name]);
+    };
+    return bind26(debug("loading standard library imports"))(function() {
+      var imps = map36(function(v12) {
+        return v12.value0.importName;
+      })(v.value0.progImports);
+      var maybeSrcs = map36(function(v12) {
+        return new Tuple(v12.value0, lookup9(v12.value0)(libMap));
+      })(imps);
+      var v1 = splitImps(maybeSrcs);
+      var firstNotFound = map113(Modulename.create)(head(v1.value0));
+      return bind26(unless4(isNothing(firstNotFound))(throwError14(new ErrNotFound(fromMaybe(new Modulename(""))(firstNotFound)))))(function() {
+        var impNames = map36(fst)(v1.value1);
+        return bind26(debug("loading imports " + intercalate11(", ")(map36(show45)(impNames))))(function() {
+          return bind26(for1(v1.value1)(function(v2) {
+            return bind26(debug("loading import " + v2.value0))(function() {
+              return parseProg(v2.value1);
+            });
+          }))(function(impsParsed) {
+            return pure25(impsParsed);
+          });
+        });
+      });
+    });
   };
   var desugarProg = function(v) {
     return bind26(debug("desugaring program " + show38(v.value0.progName)))(function() {
@@ -29669,7 +29907,7 @@
         return bind26(inferImportsOrdered(impsOrdered))(function() {
           return bind26(desugarProg(v))(function(v1) {
             return bind26(debug("inferring declarations in " + show38(v1.value0.progName)))(function() {
-              return bind26(for1(v1.value0.progDecls)(inferDataDecl(v1.value0.progName)))(function(decls$prime) {
+              return bind26(for2(v1.value0.progDecls)(inferDataDecl(v1.value0.progName)))(function(decls$prime) {
                 return bind26(getVarOrder2(v))(function(progOrder) {
                   var indexFun = function(v2) {
                     return function(v3) {
@@ -29678,7 +29916,7 @@
                   };
                   var varsSorted = sortBy(indexFun)(map36(snd)(toUnfoldable9(v1.value0.progVars)));
                   return bind26(debug("infering variables in " + show38(v1.value0.progName)))(function() {
-                    return bind26(for2(varsSorted)(inferVarDecl(v1.value0.progName)))(function(kindedVars) {
+                    return bind26(for1(varsSorted)(inferVarDecl(v1.value0.progName)))(function(kindedVars) {
                       var varmap = fromFoldable9(map36(function(v2) {
                         return new Tuple(v2.value0.varName, v2);
                       })(kindedVars));
@@ -29711,10 +29949,10 @@
         return v1.value0.drvEnv;
       }))(function(v1) {
         var imports$prime = filter(function(v2) {
-          return isNothing(lookup9(v2.value0.progName)(v1));
+          return isNothing(lookup14(v2.value0.progName)(v1));
         })(v);
         return bind26(debug("ordering imports"))(function() {
-          return bind26(for2(imports$prime)(function(x) {
+          return bind26(for1(imports$prime)(function(x) {
             return inferProgram(x);
           }))(function() {
             return pure25(unit);
@@ -29729,200 +29967,15 @@
         return bind26(debug("sucessfully parsed program, inferring variables and declarations"))(function() {
           return bind26(inferProgram(progParsed$prime))(function(prog) {
             if (withTrace) {
-              return map113(Right.create)(runProgramTrace(prog));
+              return map211(Right.create)(runProgramTrace(prog));
             }
             ;
-            return map113(Left.create)(runProgram(prog));
+            return map211(Left.create)(runProgram(prog));
           });
         });
       });
     };
   };
-
-  // output/ImportLibs/foreign.js
-  var streamSrc = `
-module Stream
-
-import Bool;
-
-codata Stream(a:-){
-  Head(a),
-  Tail(Stream(a))
-}
-
-constTrue :: Stream(Bool);
-constTrue := mu a. <case { Head(a) => <True | CBV | a>, Tail(str) => < constTrue | CBV | a >  } | CBV | a>;
-`;
-  var natSrc = `
-module Nat 
-
-import Fun;
-
-data Nat{ 
-  Z,
-  S(Nat)
-}
-
-
-succ :: Fun(Nat,Nat);
-succ := case { Ap(n,a) => <S(n) | CBV | a> };
-
-pred :: Fun(Nat,Nat);
-rec pred := case { Ap(n,a) => 
-  <  case {
-    Z => <Z|CBV|a>,
-    S(m) => <mu b. <pred | CBV | Ap(m,b)> |CBV|a>
-  } | CBV | n> 
-};
-
-main := <pred | CBV | Ap(S(S(S(Z))),mu x.Print x)>;
-`;
-  var boolSrc = `
-module Bool
-
-import Fun;
-
-data Bool{ 
-  True,
-  False
-}
-
-not :: Fun(Bool,Bool);
-not := case { Ap(b,a) => 
-  <case {
-    True  => <False | CBV | a>,
-    False => <True  | CBV | a>
-  } | CBV | b>
-};
-
-and :: Fun(Bool,Fun(Bool,Bool));
-and := case { Ap(b1,a) =>
-  < case { Ap(b2,b) => 
-    < case {
-      True => <b2|CBV|b>,
-      False => <False|CBV|b>
-    } | CBV | b1 > 
-  } | CBV | a>
-};
- 
-or :: Fun(Bool,Fun(Bool,Bool));
-or := case { Ap(b1,a) => 
-  < case { Ap(b2, b) => 
-    < case { 
-      True  => <True|CBV|b>,
-      False => <b2  |CBV|b> 
-    } | CBV | b1> 
-  } | CBV | a> 
-};
-
-printCons :: Forall X. X;
-printCons := mu x.Print x;
-
-main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>;
-`;
-  var lpairSrc = `
-module LPair 
-
-codata LPair(a:-,b:-){ 
-  fst(a),
-  snd(b)
-}
-`;
-  var listSrc = `
-module List
-
-import Fun;
-import Nat;
-import Unit;
-
--- Lists
-data List(a:+){
-  Cons(a,List(a)),
-  Nil
-}
-
-tail :: forall X. Fun(List(X),List(X));
-tail := case { Ap(ls,a) => 
-  < case { 
-    Nil         => <Nil | CBV | a>,
-    Cons(hd,rs) => <rs  | CBV | a>
-  } | CBV | ls> 
-};
-
-head :: forall X. Fun(List(X),X);
-head := case { Ap(ls,a) => 
-  < case { 
-    Nil         => error "cannot take head of empty list",
-    Cons(hd,rs) => <hd  | CBV | a>
-  } | CBV | ls> 
-};
-
-
-len :: forall X. Fun(List(X),Nat);
-rec len := case { Ap(ls,a) => 
-  < case {
-    Nil => <Z|CBV|a>,
-    Cons(l1,lrs) => 
-     <len | CBV | Ap(lrs,mu x.<S(x)|CBV|a>)>
-  } | CBV | ls>
-};
-
-printCons :: Forall X. X;
-printCons := mu x. Print x;
-
-main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>;
-`;
-  var pairSrc = `
-module Pair
-
-import Fun; 
-
-data Pair(a:+,b:+) {
-  Tup(a,b)
-}
-
-diag :: forall X. Fun(X,Pair(X,X));
-diag := case { Ap(x,a) => <Tup(x,x) | CBV | a> };
-`;
-  var funSrc = `
-module Fun
-
-import Unit;
-codata Fun(a:+,b:-){ 
-  Ap(a,b)
-}
-
-id :: forall X. Fun(X,X);
-id := case { Ap(x,a) => <x | CBV | a> };
-
-id2 :: Forall X. Fun(X,X);
-id2 := id;
-`;
-  var unitSrc = `
-module Unit
-
-data Unit { MkUnit }
-
-cbvU :: {Unit};
-cbvU := {MkUnit:CBV};
-
-cbnU :: {Unit};
-cbnU := {MkUnit:CBN}; 
-
-cutCBV :: Unit; 
-cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done);
-
-cutCBN :: Unit;
-cutCBN := Mu y. (MkUnit << Unit << Mu x. Done); 
-`;
-
-  // output/ImportLibs/index.js
-  var libSources = /* @__PURE__ */ function() {
-    return [new Tuple("stream", streamSrc), new Tuple("nat", natSrc), new Tuple("bool", boolSrc), new Tuple("lpair", lpairSrc), new Tuple("list", listSrc), new Tuple("pair", pairSrc), new Tuple("fun", funSrc), new Tuple("unit", unitSrc)];
-  }();
-
-  // output/StandardLib/index.js
-  var libMap = /* @__PURE__ */ fromFoldable(ordString)(foldableArray)(libSources);
 
   // output/Definitions/index.js
   var intercalate12 = /* @__PURE__ */ intercalate(foldableList)(monoidString);
@@ -30526,7 +30579,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
       var root = EMPTY;
       function kill2(error4, par2, cb2) {
         var step4 = par2;
-        var head5 = null;
+        var head6 = null;
         var tail2 = null;
         var count = 0;
         var kills2 = {};
@@ -30547,14 +30600,14 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                     };
                   });
                 }
-                if (head5 === null) {
+                if (head6 === null) {
                   break loop;
                 }
-                step4 = head5._2;
+                step4 = head6._2;
                 if (tail2 === null) {
-                  head5 = null;
+                  head6 = null;
                 } else {
-                  head5 = tail2._1;
+                  head6 = tail2._1;
                   tail2 = tail2._2;
                 }
                 break;
@@ -30563,10 +30616,10 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                 break;
               case APPLY:
               case ALT:
-                if (head5) {
-                  tail2 = new Aff2(CONS, head5, tail2);
+                if (head6) {
+                  tail2 = new Aff2(CONS, head6, tail2);
                 }
-                head5 = step4;
+                head6 = step4;
                 step4 = step4._1;
                 break;
             }
@@ -30582,7 +30635,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
         }
         return kills2;
       }
-      function join3(result, head5, tail2) {
+      function join3(result, head6, tail2) {
         var fail3, step4, lhs, rhs, tmp, kid;
         if (util.isLeft(result)) {
           fail3 = result;
@@ -30600,30 +30653,30 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
             if (interrupt !== null) {
               return;
             }
-            if (head5 === null) {
+            if (head6 === null) {
               cb(fail3 || step4)();
               return;
             }
-            if (head5._3 !== EMPTY) {
+            if (head6._3 !== EMPTY) {
               return;
             }
-            switch (head5.tag) {
+            switch (head6.tag) {
               case MAP:
                 if (fail3 === null) {
-                  head5._3 = util.right(head5._1(util.fromRight(step4)));
-                  step4 = head5._3;
+                  head6._3 = util.right(head6._1(util.fromRight(step4)));
+                  step4 = head6._3;
                 } else {
-                  head5._3 = fail3;
+                  head6._3 = fail3;
                 }
                 break;
               case APPLY:
-                lhs = head5._1._3;
-                rhs = head5._2._3;
+                lhs = head6._1._3;
+                rhs = head6._2._3;
                 if (fail3) {
-                  head5._3 = fail3;
+                  head6._3 = fail3;
                   tmp = true;
                   kid = killId++;
-                  kills[kid] = kill2(early, fail3 === lhs ? head5._2 : head5._1, function() {
+                  kills[kid] = kill2(early, fail3 === lhs ? head6._2 : head6._1, function() {
                     return function() {
                       delete kills[kid];
                       if (tmp) {
@@ -30643,24 +30696,24 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                   return;
                 } else {
                   step4 = util.right(util.fromRight(lhs)(util.fromRight(rhs)));
-                  head5._3 = step4;
+                  head6._3 = step4;
                 }
                 break;
               case ALT:
-                lhs = head5._1._3;
-                rhs = head5._2._3;
+                lhs = head6._1._3;
+                rhs = head6._2._3;
                 if (lhs === EMPTY && util.isLeft(rhs) || rhs === EMPTY && util.isLeft(lhs)) {
                   return;
                 }
                 if (lhs !== EMPTY && util.isLeft(lhs) && rhs !== EMPTY && util.isLeft(rhs)) {
                   fail3 = step4 === lhs ? rhs : lhs;
                   step4 = null;
-                  head5._3 = fail3;
+                  head6._3 = fail3;
                 } else {
-                  head5._3 = step4;
+                  head6._3 = step4;
                   tmp = true;
                   kid = killId++;
-                  kills[kid] = kill2(early, step4 === lhs ? head5._2 : head5._1, function() {
+                  kills[kid] = kill2(early, step4 === lhs ? head6._2 : head6._1, function() {
                     return function() {
                       delete kills[kid];
                       if (tmp) {
@@ -30680,9 +30733,9 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                 break;
             }
             if (tail2 === null) {
-              head5 = null;
+              head6 = null;
             } else {
-              head5 = tail2._1;
+              head6 = tail2._1;
               tail2 = tail2._2;
             }
           }
@@ -30699,7 +30752,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
       function run3() {
         var status = CONTINUE;
         var step4 = par;
-        var head5 = null;
+        var head6 = null;
         var tail2 = null;
         var tmp, fid;
         loop:
@@ -30710,31 +30763,31 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
               case CONTINUE:
                 switch (step4.tag) {
                   case MAP:
-                    if (head5) {
-                      tail2 = new Aff2(CONS, head5, tail2);
+                    if (head6) {
+                      tail2 = new Aff2(CONS, head6, tail2);
                     }
-                    head5 = new Aff2(MAP, step4._1, EMPTY, EMPTY);
+                    head6 = new Aff2(MAP, step4._1, EMPTY, EMPTY);
                     step4 = step4._2;
                     break;
                   case APPLY:
-                    if (head5) {
-                      tail2 = new Aff2(CONS, head5, tail2);
+                    if (head6) {
+                      tail2 = new Aff2(CONS, head6, tail2);
                     }
-                    head5 = new Aff2(APPLY, EMPTY, step4._2, EMPTY);
+                    head6 = new Aff2(APPLY, EMPTY, step4._2, EMPTY);
                     step4 = step4._1;
                     break;
                   case ALT:
-                    if (head5) {
-                      tail2 = new Aff2(CONS, head5, tail2);
+                    if (head6) {
+                      tail2 = new Aff2(CONS, head6, tail2);
                     }
-                    head5 = new Aff2(ALT, EMPTY, step4._2, EMPTY);
+                    head6 = new Aff2(ALT, EMPTY, step4._2, EMPTY);
                     step4 = step4._1;
                     break;
                   default:
                     fid = fiberId++;
                     status = RETURN;
                     tmp = step4;
-                    step4 = new Aff2(FORKED, fid, new Aff2(CONS, head5, tail2), EMPTY);
+                    step4 = new Aff2(FORKED, fid, new Aff2(CONS, head6, tail2), EMPTY);
                     tmp = Fiber(util, supervisor, tmp);
                     tmp.onComplete({
                       rethrow: false,
@@ -30747,21 +30800,21 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                 }
                 break;
               case RETURN:
-                if (head5 === null) {
+                if (head6 === null) {
                   break loop;
                 }
-                if (head5._1 === EMPTY) {
-                  head5._1 = step4;
+                if (head6._1 === EMPTY) {
+                  head6._1 = step4;
                   status = CONTINUE;
-                  step4 = head5._2;
-                  head5._2 = EMPTY;
+                  step4 = head6._2;
+                  head6._2 = EMPTY;
                 } else {
-                  head5._2 = step4;
-                  step4 = head5;
+                  head6._2 = step4;
+                  step4 = head6;
                   if (tail2 === null) {
-                    head5 = null;
+                    head6 = null;
                   } else {
-                    head5 = tail2._1;
+                    head6 = tail2._1;
                     tail2 = tail2._2;
                   }
                 }
@@ -33674,7 +33727,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
   // output/Halogen.Aff.Driver.Eval/index.js
   var traverse_4 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableMaybe);
   var bindFlipped6 = /* @__PURE__ */ bindFlipped(bindMaybe);
-  var lookup15 = /* @__PURE__ */ lookup(ordSubscriptionId);
+  var lookup16 = /* @__PURE__ */ lookup(ordSubscriptionId);
   var bind110 = /* @__PURE__ */ bind(bindAff);
   var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
   var discard4 = /* @__PURE__ */ discard(discardUnit);
@@ -33688,14 +33741,14 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
   var parallel3 = /* @__PURE__ */ parallel(parallelAff);
   var map116 = /* @__PURE__ */ map(functorAff);
   var sequential2 = /* @__PURE__ */ sequential(parallelAff);
-  var map211 = /* @__PURE__ */ map(functorMaybe);
+  var map212 = /* @__PURE__ */ map(functorMaybe);
   var insert10 = /* @__PURE__ */ insert(ordSubscriptionId);
   var retractFreeAp2 = /* @__PURE__ */ retractFreeAp(applicativeParAff);
   var $$delete7 = /* @__PURE__ */ $$delete(ordForkId);
   var unlessM2 = /* @__PURE__ */ unlessM(monadEffect);
   var insert13 = /* @__PURE__ */ insert(ordForkId);
   var traverse_32 = /* @__PURE__ */ traverse_12(foldableMaybe);
-  var lookup16 = /* @__PURE__ */ lookup(ordForkId);
+  var lookup17 = /* @__PURE__ */ lookup(ordForkId);
   var lookup23 = /* @__PURE__ */ lookup(ordString);
   var foldFree2 = /* @__PURE__ */ foldFree(monadRecAff);
   var alter2 = /* @__PURE__ */ alter(ordString);
@@ -33704,7 +33757,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
       return function __do2() {
         var v = read(ref2)();
         var subs = read(v.subscriptions)();
-        return traverse_4(unsubscribe)(bindFlipped6(lookup15(sid))(subs))();
+        return traverse_4(unsubscribe)(bindFlipped6(lookup16(sid))(subs))();
       };
     };
   };
@@ -33826,7 +33879,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
                   return handleAff(evalF(render2)(ref2)(new Action(act)));
                 })))(function(finalize) {
                   return bind110(liftEffect4(read(ref2)))(function(v2) {
-                    return discard1(liftEffect4(modify_(map211(insert10(sid)(finalize)))(v2.subscriptions)))(function() {
+                    return discard1(liftEffect4(modify_(map212(insert10(sid)(finalize)))(v2.subscriptions)))(function() {
                       return pure32(v1.value1(sid));
                     });
                   });
@@ -33887,7 +33940,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
             if (v1 instanceof Join) {
               return bind110(liftEffect4(read(ref2)))(function(v2) {
                 return bind110(liftEffect4(read(v2.forks)))(function(forkMap) {
-                  return discard1(traverse_32(joinFiber)(lookup16(v1.value0)(forkMap)))(function() {
+                  return discard1(traverse_32(joinFiber)(lookup17(v1.value0)(forkMap)))(function() {
                     return pure32(v1.value1);
                   });
                 });
@@ -33897,7 +33950,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done);
             if (v1 instanceof Kill) {
               return bind110(liftEffect4(read(ref2)))(function(v2) {
                 return bind110(liftEffect4(read(v2.forks)))(function(forkMap) {
-                  return discard1(traverse_32(killFiber(error("Cancelled")))(lookup16(v1.value0)(forkMap)))(function() {
+                  return discard1(traverse_32(killFiber(error("Cancelled")))(lookup17(v1.value0)(forkMap)))(function() {
                     return pure32(v1.value1);
                   });
                 });
