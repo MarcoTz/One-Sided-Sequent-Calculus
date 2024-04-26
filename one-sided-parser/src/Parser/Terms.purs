@@ -28,6 +28,7 @@ import Control.Alt ((<|>))
 parseTerm :: SrcParser Term 
 parseTerm = do 
   t <- parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
+  _ <- sc
   t' <- optionMaybe parseApp
   case t' of 
       Nothing -> pure t 
@@ -161,6 +162,7 @@ parseCut = do
   _ <- parseAngO
   _ <- sc
   t <- parseTerm
+  let _ = trace ("parsed cut term " <> show t) (\_->unit)
   _ <- sc
   _ <- parseSymbol SymBar
   _ <- sc
