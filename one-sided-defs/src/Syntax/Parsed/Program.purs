@@ -22,7 +22,6 @@ import Data.List (List(..), null, intercalate)
 import Syntax.Parsed.Terms (Term,Command)
 import Syntax.Parsed.Types (Ty)
 
-import Data.Maybe (Maybe(..))
 
 data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
 derive instance eqXtorSig :: Eq XtorSig 

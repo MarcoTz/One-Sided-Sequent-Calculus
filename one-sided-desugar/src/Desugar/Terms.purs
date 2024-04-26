@@ -67,6 +67,12 @@ desugarTerm (P.Tup loc ts) = case uncons ts of
     t1' <- desugarTerm t1
     pairRest <- desugarTerm (P.Tup loc ts') 
     pure $ D.Xtor loc (Xtorname "Tup") (Cons t1' (Cons pairRest Nil))
+desugarTerm (P.Lst loc ts) = case ts of 
+  Nil -> pure $ D.Xtor loc (Xtorname "Nil") Nil
+  Cons t1 ts' -> do
+     t1' <- desugarTerm t1
+     listRest <- desugarTerm (P.Lst loc ts')
+     pure $ D.Xtor loc (Xtorname "Cons") (Cons t1' (Cons listRest Nil))
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 

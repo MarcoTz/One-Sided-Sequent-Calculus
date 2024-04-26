@@ -61,6 +61,7 @@ data Term =
   | Lam       Loc Variable Term
   | Seq       Loc Term Term
   | Tup       Loc (List Term)
+  | Lst       Loc (List Term)
 derive instance eqTerm :: Eq Term
 derive instance ordTerm :: Ord Term
 instance Show Term where 
@@ -75,6 +76,8 @@ instance Show Term where
   show (Lam _ v t) = "\\" <> show v <> ". " <> show t
   show (Seq _ t1 t2) = show t1 <> "; " <> show t2
   show (Tup _ ts) = "(" <> intercalate ", " (show <$> ts) <> ")"
+  show (Lst _ ts) = "[" <> intercalate ", " (show <$> ts) <> "]"
+
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
   getLoc (Mu loc _ _) = loc 
@@ -86,6 +89,7 @@ instance HasLoc Term where
   getLoc (Lam loc _ _) = loc
   getLoc (Seq loc _ _) = loc
   getLoc (Tup loc _) = loc
+  getLoc (Lst loc _) = loc
 
   setLoc loc (Var _ v) = Var loc v 
   setLoc loc (Mu _ v c) = Mu loc v c
@@ -97,3 +101,4 @@ instance HasLoc Term where
   setLoc loc (Lam _ v t) = Lam loc v t
   setLoc loc (Seq _ t1 t2) = Seq loc t1 t2
   setLoc loc (Tup _ ts) = Tup loc ts
+  setLoc loc (Lst _ ts) = Lst loc ts
