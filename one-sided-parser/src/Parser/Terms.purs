@@ -10,6 +10,7 @@ import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 import Parser.Types (parseTy)
 import Common (EvaluationOrder(..))
+import Loc (Loc)
 import Syntax.Parsed.Terms (Term(..),Command(..),Pattern(..))
 import Syntax.Parsed.Types (Ty)
 
@@ -25,15 +26,32 @@ import Control.Alt ((<|>))
 
 
 parseTerm :: SrcParser Term 
-parseTerm = parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
+parseTerm = do 
+  t <- parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
+  t' <- optionMaybe parseApp
+  case t' of 
+      Nothing -> pure t 
+      Just (Tuple t2 loc) -> pure $ App loc t t2
+
+parseApp :: SrcParser (Tuple Term Loc)
+parseApp = do 
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymSqBrackO
+  _ <- sc
+  t2 <- parseTerm 
+  _ <- sc 
+  _ <- parseSymbol SymSqBrackC
+  loc <- getCurrLoc startPos 
+  pure $ Tuple t2 loc
 
 parseT :: SrcParser Term
 parseT =
-  (\_ -> parseMu) unit    <|> 
-  (\_ -> parseXCase) unit <|>
-  (\_ -> parseShift) unit <|>
+  (\_ -> parseMu)       unit <|> 
+  (\_ -> parseXCase)    unit <|>
+  (\_ -> parseShift)    unit <|>
+  (\_ -> parseLam)      unit <|>
   (\_ -> try parseXtor) unit <|> 
-  (\_ -> parseVar) unit 
+  (\_ -> parseVar)      unit 
 
 parseMu :: SrcParser Term   
 parseMu = do 
@@ -89,6 +107,18 @@ parseXtor = do
   _ <- parseSymbol SymParensC 
   loc <- getCurrLoc startPos
   pure $ Xtor loc nm args
+
+parseLam :: SrcParser Term 
+parseLam = do 
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymBackSl <|> parseSymbol SymLambda
+  v <- parseVariable
+  _ <- sc
+  _ <- parseSymbol SymDot
+  _ <- sc
+  t <- parseTerm
+  loc <- getCurrLoc startPos
+  pure $ Lam loc v t
 
 parseVar :: SrcParser Term -- variable
 parseVar = do
