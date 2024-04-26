@@ -24,13 +24,14 @@ import Control.Monad.Except (throwError)
 evalWithTrace :: Command -> EvalTrace -> EvalM EvalTrace 
 evalWithTrace c tr = do 
   c' <- evalOnce c 
-  _ <- when (c == c') $ throwError (ErrLoop (getLoc c) c)
   let newTr = appendTrace tr c'
   case c' of 
     (Done _)  -> pure newTr
     (Err _ _) -> pure newTr
     (Print _ _) -> pure newTr
-    (Cut _ _ _ _) -> evalWithTrace c' newTr
+    (Cut _ _ _ _) -> do
+       _ <- when (c == c') $ throwError (ErrLoop (getLoc c) c)
+       evalWithTrace c' newTr
 
 
 eval :: Command -> EvalM Command 
