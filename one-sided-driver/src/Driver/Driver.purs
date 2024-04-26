@@ -17,6 +17,7 @@ import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
 import Syntax.Desugared.Terms (Command) as D
 import Syntax.Kinded.Terms (Command(..)) as K
 import Syntax.Kinded.Program (Program(..),DataDecl, VarDecl(..)) as K
+import Syntax.Typed.Substitution (substTyvars)
 
 import Eval.Definition (runEvalM,EvalTrace,emptyTrace)
 import Eval.Eval (eval,evalWithTrace)
@@ -32,6 +33,11 @@ import Desugar.Definition (runDesugarM)
 import Desugar.Program (desugarProgram)
 
 import InferDecl (runDeclM, inferDecl)
+
+import GenerateConstraints.Definition (runGenM) 
+import GenerateConstraints.Program (genConstraintsVarDecl)
+import SolveConstraints.Definition (runSolveM)
+import SolveConstraints.Solver (solve)
 
 import TypeCheck.Definition (runCheckM)
 import TypeCheck.Program (checkVarDecl)
@@ -186,7 +192,21 @@ inferDataDecl mn d@(D.DataDecl decl) = do
   pure decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM K.VarDecl
-inferVarDecl _ (D.VarDecl decl) | isNothing decl.varTy = throwError (ErrTypeInference decl.varPos)
+inferVarDecl mn v@(D.VarDecl var) | isNothing var.varTy = do 
+  _ <- debug ("inferring type for " <> show var.varName)
+  env <- gets (\(MkDriverState s) -> s.drvEnv)
+  let constr = runGenM env (genConstraintsVarDecl v) 
+  (Tuple v' constrs) <- liftErr constr mn "generate constraints"
+  _ <- debug ("generated constraints " <> show constrs)
+  let slv = runSolveM constrs solve
+  (Tuple _ varmap) <- liftErr slv mn "solve constraints"
+  _ <- debug ("solved constraints and got substitution " <> show varmap)
+  let v'' = substTyvars varmap v'
+  let vk = runKindM env (kindVariable v'')
+  vk' <- liftErr vk mn "kind vardecl"
+  _ <- addVarDecl mn vk'
+  pure vk'
+
 inferVarDecl mn v@(D.VarDecl var) = do 
   _<-debug ("type checking variable " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)

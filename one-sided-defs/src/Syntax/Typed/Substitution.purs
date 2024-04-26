@@ -4,7 +4,7 @@ module Syntax.Typed.Substitution (
 ) where 
 
 import Syntax.Typed.Types  (Ty(..))
-import Syntax.Typed.Program (XtorSig (..))
+import Syntax.Typed.Program (XtorSig (..),VarDecl(..))
 import Syntax.Typed.Terms (Term (..), Pattern(..), Command(..))
 import Common (Typevar)
 
@@ -20,6 +20,8 @@ import Data.Maybe (fromMaybe)
 class SubstituteTypevars a where 
   substTyvars :: Map Typevar Ty -> a -> a 
 
+instance SubstituteTypevars VarDecl where 
+  substTyvars varmap (VarDecl v) = VarDecl v{varBody=substTyvars varmap v.varBody}
 instance SubstituteTypevars XtorSig where 
   substTyvars varmap (XtorSig sig) = XtorSig (sig {sigArgs=(substTyvars varmap <$> sig.sigArgs)})
 
