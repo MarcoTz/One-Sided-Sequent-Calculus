@@ -24,13 +24,9 @@ import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
 
 
-import Debug (trace) 
-import Prelude (show) 
-
 parseTerm :: SrcParser Term 
 parseTerm = do 
   t <- parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
-  let _ = trace ("parsed term " <> show t) (\_ -> unit)
   try (parseSeq t) <|> try (parseApp t) <|> pure t
 
 parseSeq :: Term -> SrcParser Term

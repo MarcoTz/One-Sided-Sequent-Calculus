@@ -48,6 +48,7 @@ instance FreeVariables P.Term where
   freeVars (P.Lam _ v t)        = delete v (freeVars t) 
   freeVars (P.App _ t1 t2)      = union (freeVars t1) (freeVars t2)
   freeVars (P.Seq _ t1 t2)      = union (freeVars t1) (freeVars t2)
+  freeVars (P.Tup _ ts)         = unions (freeVars <$> ts)
 
 instance FreeVariables P.Command where
   freeVars (P.Cut _ t1 _ t2) = union (freeVars t1) (freeVars t2) 

@@ -13,6 +13,7 @@ data DesugarError =
   | ErrMultipleXtor  Loc Xtorname
   | ErrMultipleAnnot Loc Variable Ty Ty
   | ErrMultipleMain  Loc
+  | ErrEmptyPair     Loc 
   | ErrOther         Loc String
 
 instance Error DesugarError where 
@@ -21,6 +22,7 @@ instance Error DesugarError where
   getMessage (ErrMultipleAnnot _ var ty1 ty2) = "Multiple incompatible annotations for variable" <> show var <> ": " <> show ty1 <> " and " <> show ty2
   getMessage (ErrMultipleXtor _ xtn) = show xtn <> " was defined multiple times "
   getMessage (ErrMultipleMain _) = "Multiple definitions of main"
+  getMessage (ErrEmptyPair _) = "Pairs require at least two elements"
   getMessage (ErrOther _ str) = str
 
   getLocation (ErrVariable loc _) = loc
@@ -28,6 +30,7 @@ instance Error DesugarError where
   getLocation (ErrMultipleXtor loc _) = loc
   getLocation (ErrMultipleAnnot loc _ _ _) = loc 
   getLocation (ErrMultipleMain loc) = loc
+  getLocation (ErrEmptyPair loc) = loc
   getLocation (ErrOther loc _) = loc
 
   toError = ErrOther 

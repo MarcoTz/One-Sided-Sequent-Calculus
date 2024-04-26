@@ -5,6 +5,7 @@ module Desugar.Terms (
 
 import Common (Xtorname(..),EvaluationOrder(..))
 import Desugar.Definition(DesugarM,varToXtor,getDesMXtor)
+import Desugar.Errors (DesugarError(..))
 import Desugar.Types (desugarTy)
 import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..)) as P
 import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D
@@ -12,8 +13,9 @@ import FreeVars.FreeVariables (freshVar)
 
 import Prelude (bind,($),pure,(<$>))
 import Data.Traversable (for)
-import Data.List (List(..))
+import Data.List (List(..),uncons)
 import Data.Maybe (Maybe(..))
+import Control.Monad.Except (throwError)
 
 desugarTerm :: P.Term -> DesugarM D.Term
 desugarTerm (P.Var loc v) = do
@@ -54,6 +56,17 @@ desugarTerm t@(P.Lam loc v t') = do
 desugarTerm t@(P.Seq loc t1 t2) = do 
   let v = freshVar t
   desugarTerm $ P.App loc (P.Lam loc v t2) t1
+desugarTerm (P.Tup loc ts) = case uncons ts of 
+  Nothing -> throwError (ErrEmptyPair loc)
+  Just {head:_,tail:Nil} -> throwError (ErrEmptyPair loc)
+  Just {head:t1,tail:Cons t2 Nil} -> do
+    t1' <- desugarTerm t1 
+    t2' <- desugarTerm t2
+    pure $ D.Xtor loc (Xtorname "Tup") (Cons t1' (Cons t2' Nil))
+  Just {head:t1,tail:ts'} -> do 
+    t1' <- desugarTerm t1
+    pairRest <- desugarTerm (P.Tup loc ts') 
+    pure $ D.Xtor loc (Xtorname "Tup") (Cons t1' (Cons pairRest Nil))
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 
