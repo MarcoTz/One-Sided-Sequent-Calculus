@@ -51,6 +51,9 @@ desugarTerm t@(P.Lam loc v t') = do
   let cut = D.Cut loc t'' CBV (D.Var loc v')
   let pt = D.Pattern {ptxt:Xtorname "Ap", ptv:ptVars, ptcmd:cut }
   pure $ D.XCase loc (Cons pt Nil) 
+desugarTerm t@(P.Seq loc t1 t2) = do 
+  let v = freshVar t
+  desugarTerm $ P.App loc (P.Lam loc v t2) t1
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 

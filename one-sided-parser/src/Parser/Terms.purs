@@ -162,7 +162,6 @@ parseCut = do
   _ <- parseAngO
   _ <- sc
   t <- parseTerm
-  let _ = trace ("parsed cut term " <> show t) (\_->unit)
   _ <- sc
   _ <- parseSymbol SymBar
   _ <- sc

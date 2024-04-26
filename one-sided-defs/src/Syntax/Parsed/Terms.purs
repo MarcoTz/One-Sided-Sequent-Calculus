@@ -59,6 +59,7 @@ data Term =
   -- sugar
   | App       Loc Term Term 
   | Lam       Loc Variable Term
+  | Seq       Loc Term Term
 derive instance eqTerm :: Eq Term
 derive instance ordTerm :: Ord Term
 instance Show Term where 
@@ -69,8 +70,9 @@ instance Show Term where
   show (XCase _ pts) = "case {" <>  intercalate ", " (show <$> pts) <> "}"
   show (ShiftCBV _ t) = "{" <> show t <> ":CBV}"
   show (ShiftCBN _ t) = "{" <> show t <> ":CBN}" 
-  show (App _ t1 t2) = show t1 <> " " <> show t2
+  show (App _ t1 t2) = show t1 <> " [" <> show t2 <> "]"
   show (Lam _ v t) = "\\" <> show v <> ". " <> show t
+  show (Seq _ t1 t2) = show t1 <> "; " <> show t2
 
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
@@ -81,6 +83,7 @@ instance HasLoc Term where
   getLoc (ShiftCBN loc _) = loc
   getLoc (App loc _ _) = loc
   getLoc (Lam loc _ _) = loc
+  getLoc (Seq loc _ _) = loc
 
   setLoc loc (Var _ v) = Var loc v 
   setLoc loc (Mu _ v c) = Mu loc v c
@@ -90,3 +93,4 @@ instance HasLoc Term where
   setLoc loc (ShiftCBN _ t) = ShiftCBN loc t
   setLoc loc (App _ t1 t2) = App loc t1 t2
   setLoc loc (Lam _ v t) = Lam loc v t
+  setLoc loc (Seq _ t1 t2) = Seq loc t1 t2
