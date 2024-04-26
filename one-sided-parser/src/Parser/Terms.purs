@@ -20,7 +20,7 @@ import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Data.String.CodeUnits (singleton)
 import Parsing.Combinators (try, sepBy, many, optionMaybe)
-import Parsing.String.Basic (noneOf)
+import Parsing.String.Basic (noneOf,space)
 import Control.Alt ((<|>))
 
 
@@ -81,9 +81,32 @@ parseT =
   (\_ -> parseLam)      unit <|>
   (\_ -> parseLst)      unit <|>
   (\_ -> parseNot)      unit <|>
+  (\_ -> parseIf)       unit <|>
   (\_ -> try parseTup)  unit <|>
   (\_ -> try parseXtor) unit <|> 
   (\_ -> parseVar)      unit 
+
+parseIf :: SrcParser Term
+parseIf = do 
+  startPos <- getCurrPos 
+  _ <- parseKeyword KwIf <|> parseKeyword Kwif
+  _ <- space 
+  _ <- sc 
+  b <- parseTerm 
+  _ <- space 
+  _ <- sc
+  _ <- parseKeyword KwThen <|> parseKeyword Kwthen
+  _ <- space
+  _ <- sc
+  t1 <- parseTerm
+  _ <- space
+  _ <- sc
+  _ <- parseKeyword KwElse <|> parseKeyword Kwelse
+  _ <- space 
+  _ <- sc 
+  t2 <- parseTerm 
+  loc <- getCurrLoc startPos 
+  pure $ IfThenElse loc b t1 t2
 
 parseNot :: SrcParser Term
 parseNot = do 

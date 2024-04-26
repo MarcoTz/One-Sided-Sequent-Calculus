@@ -103,6 +103,9 @@ orEx := True || True
 notEx :: Bool
 notEx := !True 
 
+ifTrue :: Bool
+ifTrue := if True then True else False
+
 main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>
 `;
 

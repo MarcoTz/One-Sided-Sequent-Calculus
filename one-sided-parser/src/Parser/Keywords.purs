@@ -27,6 +27,12 @@ data Keyword =
   | KwRec 
   | KwPrint
   | Kwprint
+  | KwIf
+  | Kwif
+  | KwThen
+  | Kwthen
+  | KwElse
+  | Kwelse
 
 instance Show Keyword where 
   show KwModule = "module"
@@ -49,6 +55,12 @@ instance Show Keyword where
   show KwRec    = "rec"
   show KwPrint  = "Print"
   show Kwprint  = "print"
+  show KwIf     = "If"
+  show Kwif     = "if"
+  show KwThen   = "Then"
+  show Kwthen   = "then"
+  show KwElse   = "Else"
+  show Kwelse   = "else"
 
 allKws :: List Keyword
 allKws = Cons KwModule 
@@ -68,4 +80,10 @@ allKws = Cons KwModule
   (Cons KwRec
   (Cons KwCBV
   (Cons KwCBN
-  (Cons KwCodata Nil)))))))))))))))))
+  (Cons KwCodata 
+  (Cons KwIf
+  (Cons Kwif
+  (Cons KwThen
+  (Cons Kwthen
+  (Cons KwElse
+  (Cons Kwelse Nil)))))))))))))))))))))))
