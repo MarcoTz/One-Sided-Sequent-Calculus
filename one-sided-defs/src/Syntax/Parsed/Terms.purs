@@ -18,6 +18,9 @@ data Command =
   | Print      Loc Term 
   | PrintAnnot Loc Term Ty 
   | Done       Loc 
+  -- sugar
+  | CaseOf     Loc Term (List Pattern)
+
 derive instance eqCommand :: Eq Command 
 derive instance ordCOmmand :: Ord Command
 instance Show Command where 
@@ -27,6 +30,8 @@ instance Show Command where
   show (Err _ err) = "error " <> err
   show (Print _ t) = "Print " <> show t
   show (PrintAnnot _ t ty) = " Print " <> show t <> " :: " <> show ty
+  show (CaseOf _ t pts) = "case " <> show t <> " of { " <> intercalate ", " (show <$> pts) <> "}"
+
 instance HasLoc Command where 
   getLoc (Cut loc _ _ _ ) = loc 
   getLoc (CutAnnot loc _ _ _ _) = loc 
@@ -34,6 +39,7 @@ instance HasLoc Command where
   getLoc (Done loc) = loc
   getLoc (Print loc _) = loc
   getLoc (PrintAnnot loc _ _) = loc
+  getLoc (CaseOf loc _ _) = loc 
 
   setLoc loc (Cut _ t pol u) = Cut loc t pol u
   setLoc loc (CutAnnot _ t ty pol u) = CutAnnot loc t ty pol u
@@ -41,6 +47,7 @@ instance HasLoc Command where
   setLoc loc (Done _) = Done loc
   setLoc loc (Print _ t) = Print loc t 
   setLoc loc (PrintAnnot _ t ty) = PrintAnnot loc t ty
+  setLoc loc (CaseOf _ t pts) = CaseOf loc t pts
 
 data Pattern = Pattern{ptxt :: Xtorname, ptv :: List Variable, ptcmd :: Command}
 derive instance eqPattern :: Eq Pattern

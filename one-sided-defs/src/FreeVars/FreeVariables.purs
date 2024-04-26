@@ -62,6 +62,7 @@ instance FreeVariables P.Command where
   freeVars (P.Err _ _)  = empty
   freeVars (P.Print _ t) = freeVars t
   freeVars (P.PrintAnnot _ t _) = freeVars t
+  freeVars (P.CaseOf _ t pts) = union (freeVars t) (unions (freeVars <$> pts))
 
 instance FreeVariables P.Pattern where 
   freeVars (P.Pattern pt) = foldr delete (freeVars pt.ptcmd) pt.ptv

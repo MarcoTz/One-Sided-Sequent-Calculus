@@ -108,3 +108,8 @@ desugarCommand (P.PrintAnnot loc t ty) = do
   t' <- desugarTerm t
   ty' <- desugarTy ty
   pure $ D.PrintAnnot loc t' ty' 
+desugarCommand (P.CaseOf loc t pts) = do 
+  pts' <- for pts desugarPattern
+  let xcase = D.XCase loc pts'
+  t' <- desugarTerm t
+  pure $ D.Cut loc t' CBV xcase
