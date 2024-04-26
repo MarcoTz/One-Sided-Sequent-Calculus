@@ -82,6 +82,9 @@ desugarTerm (P.AndBool loc t1 t2) = do
 desugarTerm (P.OrBool loc t1 t2) = do
   let orFun = P.Var loc (Variable "or")
   desugarTerm $ P.App loc (P.App loc orFun t1) t2
+desugarTerm (P.IfThenElse loc b t1 t2) = do 
+  let iteFun = P.Var loc (Variable "ifthenelse")
+  desugarTerm $ P.App loc (P.App loc (P.App loc iteFun b) t1) t2
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 
