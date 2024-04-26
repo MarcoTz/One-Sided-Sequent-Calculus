@@ -3,6 +3,7 @@ module Desugar.Types (
   desugarTy
 ) where
 
+import Common (Typename (..))
 import Environment (getTypeNames)
 import Desugar.Definition(DesugarM,tyvarToTyName,getDesDefNames)
 import Syntax.Parsed.Types (Ty(..),KindedTy(..)) as P 
@@ -24,6 +25,10 @@ desugarTy (P.TyDecl tyn args) = do
 desugarTy (P.TyCo ty) = D.TyCo <$> desugarTy ty
 desugarTy (P.TyShift ty) = D.TyShift <$> desugarTy ty
 desugarTy (P.TyForall args ty) = D.TyForall args <$> desugarTy ty
+desugarTy (P.TyFun ty1 ty2) = do
+  ty1' <- desugarTy ty1 
+  ty2' <- desugarTy ty2
+  pure $ D.TyDecl (Typename "Fun") (Cons ty1' (Cons ty2' Nil))
 
 desugarKindedTy :: P.KindedTy -> DesugarM D.KindedTy
 desugarKindedTy (P.KindedTy kty) = do

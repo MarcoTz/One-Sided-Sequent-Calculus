@@ -14,6 +14,7 @@ data Ty =
   |TyCo     Ty 
   |TyShift  Ty 
   |TyForall (List Typevar) Ty 
+  |TyFun    Ty Ty 
 derive instance eqTy :: Eq Ty 
 derive instance ordTy :: Ord Ty 
 instance Show Ty where 
@@ -23,6 +24,7 @@ instance Show Ty where
   show (TyCo ty) = "co " <> show ty
   show (TyShift ty) = "{" <> show ty <> "}"
   show (TyForall args ty) = "forall " <> intercalate ", " (show <$> args) <> ". " <> show ty
+  show (TyFun t1 t2) = show t1 <> " -> " <> show t2
 
 data KindedTy = KindedTy { kindedTy :: Ty, kindedKind :: Kind }
 derive instance eqKindedTy :: Eq KindedTy 

@@ -20,13 +20,24 @@ import Parsing.Combinators (try, sepBy, many1)
 import Control.Alt ((<|>))
 
 parseTy :: SrcParser Ty 
-parseTy = 
-  (\_ -> parseTyParens) unit   <|> 
-  (\_ -> parseTyForall) unit   <|> 
-  (\_ -> parseTyShift)  unit   <|> 
-  (\_ -> parseTyCo) unit       <|> 
-  (\_ -> try parseTyDecl) unit <|> 
-  (\_ -> parseTyVar) unit
+parseTy = do 
+  ty <- (\_ -> parseTyParens) unit   <|> 
+        (\_ -> parseTyForall) unit   <|> 
+        (\_ -> parseTyShift)  unit   <|> 
+        (\_ -> parseTyCo) unit       <|> 
+        (\_ -> try parseTyDecl) unit <|> 
+        (\_ -> parseTyVar) unit
+  try (parseFunTy ty) <|> pure ty
+
+parseFunTy :: Ty -> SrcParser Ty 
+parseFunTy ty1 = do
+  _ <- sc 
+  _ <- parseSymbol SymMinus
+  _ <- parseSymbol SymAngC
+  _ <- sc
+  ty2 <- parseTy 
+  pure $ TyFun ty1 ty2
+
 
 parseTyParens :: SrcParser Ty 
 parseTyParens = do 
