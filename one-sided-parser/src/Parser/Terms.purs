@@ -10,7 +10,6 @@ import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 import Parser.Types (parseTy)
 import Common (EvaluationOrder(..))
-import Loc (Loc)
 import Syntax.Parsed.Terms (Term(..),Command(..),Pattern(..))
 import Syntax.Parsed.Types (Ty)
 
@@ -25,17 +24,28 @@ import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
 
 
+import Debug (trace) 
+import Prelude (show) 
+
 parseTerm :: SrcParser Term 
 parseTerm = do 
   t <- parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
-  _ <- sc
-  t' <- optionMaybe parseApp
-  case t' of 
-      Nothing -> pure t 
-      Just (Tuple t2 loc) -> pure $ App loc t t2
+  let _ = trace ("parsed term " <> show t) (\_ -> unit)
+  try (parseSeq t) <|> try (parseApp t) <|> pure t
 
-parseApp :: SrcParser (Tuple Term Loc)
-parseApp = do 
+parseSeq :: Term -> SrcParser Term
+parseSeq t1 = do
+  _ <- sc
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymSemi
+  _ <- sc 
+  t2 <- parseTerm
+  loc <- getCurrLoc startPos
+  pure $ Seq loc t1 t2
+
+parseApp :: Term -> SrcParser Term 
+parseApp t1 = do 
+  _ <- sc
   startPos <- getCurrPos 
   _ <- parseSymbol SymSqBrackO
   _ <- sc
@@ -43,7 +53,7 @@ parseApp = do
   _ <- sc 
   _ <- parseSymbol SymSqBrackC
   loc <- getCurrLoc startPos 
-  pure $ Tuple t2 loc
+  pure $ App loc t1 t2 
 
 parseT :: SrcParser Term
 parseT =

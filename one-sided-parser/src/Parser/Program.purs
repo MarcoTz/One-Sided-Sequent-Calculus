@@ -21,6 +21,7 @@ import Parsing.String (eof)
 import Parsing.String.Basic (space)
 import Control.Alt ((<|>))
 
+
 parseModuleDecl :: SrcParser Modulename
 parseModuleDecl = (do 
   _ <- sc
@@ -65,8 +66,7 @@ parseMain = do
   _ <- parseSymbol SymEq 
   _ <- sc 
   c <- parseCommand
-  _ <- sc 
-  _ <- parseSymbol SymSemi
+  _ <- sc
   pure c
   
 parseImport :: SrcParser Import
@@ -76,7 +76,7 @@ parseImport = do
   _ <- space
   _ <- sc
   mn <- parseModulename
-  _ <- parseSymbol SymSemi
+  _ <- sc
   loc <- getCurrLoc startPos
   pure $ Import {importPos:loc, importName:mn}
 
@@ -90,7 +90,6 @@ parseTypeAnnot = do
   _ <- sc
   ty <- parseTy
   _ <- sc
-  _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
   pure $ AnnotDecl {annotPos:loc, annotName:nm, annotType:ty}
 
@@ -105,7 +104,6 @@ parseVarDecl = do
   _ <- sc
   t <- parseTerm
   _ <- sc
-  _ <- parseSymbol SymSemi
   loc <- getCurrLoc startPos
   pure $ VarDecl {varPos:loc, varName:nm, varIsRec:isJust isRec, varBody:t}
 

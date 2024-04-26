@@ -38,6 +38,7 @@ parseComment = try $ do
   _ <- manyTill anyChar (char '\n') 
   pure unit
 
+
 sc :: SrcParser Unit 
 sc = many (space *> pure unit <|> parseComment)  *> pure unit
 
@@ -65,6 +66,7 @@ parseCommaSep :: SrcParser Unit
 parseCommaSep = do 
   _ <- parseSymbol SymComma
   sc
+
 
 parseIdentifier :: SrcParser String
 parseIdentifier = do
