@@ -57,6 +57,7 @@ parseT =
   (\_ -> parseXCase)    unit <|>
   (\_ -> parseShift)    unit <|>
   (\_ -> parseLam)      unit <|>
+  (\_ -> parseLst)      unit <|>
   (\_ -> try parseTup)  unit <|>
   (\_ -> try parseXtor) unit <|> 
   (\_ -> parseVar)      unit 
@@ -65,10 +66,23 @@ parseTup :: SrcParser Term
 parseTup = do 
   startPos <- getCurrPos 
   _ <- parseSymbol SymParensO 
+  _ <- sc
   ts <- parseTerm `sepBy` parseCommaSep
+  _ <- sc
   _ <- parseSymbol SymParensC
   loc <- getCurrLoc startPos 
   pure (Tup loc ts)
+
+parseLst :: SrcParser Term
+parseLst = do 
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymSqBrackO 
+  _ <- sc
+  ts <- parseTerm `sepBy` parseCommaSep 
+  _ <- sc 
+  _ <- parseSymbol SymSqBrackC 
+  loc <- getCurrLoc startPos
+  pure (Lst loc ts)
 
 parseMu :: SrcParser Term   
 parseMu = do 

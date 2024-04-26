@@ -107,6 +107,12 @@ data List(a:+){
   Nil
 }
 
+brackEx :: List(Uhit)
+brackEx := [MkUnit,MkUnit,MkUnit]
+
+brackEx2 :: List(Unit)
+brackEx2 := [MkUnit,MkUnit,MkUnit,MkUnit,MkUnit]
+
 tail :: forall X. Fun(List(X),List(X))
 tail := case { Ap(ls,a) => 
   < case { 
