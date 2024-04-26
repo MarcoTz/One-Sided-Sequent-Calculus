@@ -26,7 +26,7 @@ import Control.Alt ((<|>))
 
 parseTerm :: SrcParser Term 
 parseTerm = do 
-  t <- parseParens ((\_ -> parseT) unit) <|> (\_ -> parseT) unit
+  t <-(\_ -> parseT) unit  <|> parseParens ((\_ -> parseT) unit) 
   try (parseSeq t) <|> try (parseApp t) <|> pure t
 
 parseSeq :: Term -> SrcParser Term
@@ -57,8 +57,18 @@ parseT =
   (\_ -> parseXCase)    unit <|>
   (\_ -> parseShift)    unit <|>
   (\_ -> parseLam)      unit <|>
+  (\_ -> try parseTup)  unit <|>
   (\_ -> try parseXtor) unit <|> 
   (\_ -> parseVar)      unit 
+
+parseTup :: SrcParser Term 
+parseTup = do 
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymParensO 
+  ts <- parseTerm `sepBy` parseCommaSep
+  _ <- parseSymbol SymParensC
+  loc <- getCurrLoc startPos 
+  pure (Tup loc ts)
 
 parseMu :: SrcParser Term   
 parseMu = do 
