@@ -55,9 +55,9 @@ import Control.Monad(unless)
 import Control.Monad.State (gets)
 import Control.Monad.Except (throwError)
 
-runStr :: String -> Boolean -> DriverM (Either K.Command EvalTrace) 
-runStr progText withTrace = do 
-  progParsed' <- parseProg progText 
+runStr :: Modulename -> String -> Boolean -> DriverM (Either K.Command EvalTrace) 
+runStr mn progText withTrace = do 
+  progParsed' <- parseProg mn progText 
   _ <- debug ("sucessfully parsed program, inferring variables and declarations")
   prog <- inferProgram progParsed'
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
@@ -69,7 +69,7 @@ runProgram (K.Program prog) = do
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   _ <- debug ("evaluating main " <> show main) 
   let evaled = runEvalM env (eval main)
-  liftErr evaled "evaluation"
+  liftErr evaled prog.progName "evaluation"
 
 runProgramTrace :: K.Program -> DriverM EvalTrace 
 runProgramTrace (K.Program prog) | isNothing prog.progMain = pure $ emptyTrace (K.Done defaultLoc)
@@ -78,15 +78,15 @@ runProgramTrace (K.Program prog) = do
   env <- gets (\(MkDriverState s) -> s.drvEnv )
   _ <- debug ("evaluating " <> show main)
   let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
-  liftErr evaled "evaluation (with trace)"
+  liftErr evaled prog.progName "evaluation (with trace)"
 
-parseProg :: String -> DriverM P.Program 
-parseProg src = do 
+parseProg :: Modulename -> String -> DriverM P.Program 
+parseProg mn src = do 
   let srcStripped = trim src
   let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") srcStripped)) srcStripped
   _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"")
   let progParsed = runSourceParser src (parseProgram src)
-  prog <- liftErr progParsed "parsing"
+  prog <- liftErr progParsed mn "parsing"
   pure prog
 
 getImports :: P.Program -> DriverM (List P.Program)
@@ -100,7 +100,7 @@ getImports (P.Program prog) = do
   _ <- debug ("loading imports " <> intercalate ", " (show <$> impNames))
   impsParsed <- for foundImps (\(Tuple nm src) -> do 
      _ <- debug ("loading import " <> show nm)
-     parseProg src)
+     parseProg nm src)
   pure impsParsed
   where 
     splitImps :: List (Tuple Modulename (Maybe String)) -> Tuple (List Modulename) (List (Tuple Modulename String))
@@ -122,7 +122,7 @@ inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progNa
   _ <- debug ("infering variables in " <> show prog'.progName)
   kindedVars <- for varsSorted (inferVarDecl prog'.progName)
   let varmap = fromFoldable ((\d@(K.VarDecl var) -> Tuple var.varName d) <$> kindedVars)
-  main' <- for prog'.progMain inferCommand
+  main' <- for prog'.progMain (inferCommand prog.progName)
   pure $ K.Program {
        progName:prog.progName, 
        progDecls:decls',
@@ -142,7 +142,7 @@ getInferOrder p@(P.Program prog) progs = do
   _ <- debug ("Ordering Imports for " <> show prog.progName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let order = runDepM env (depOrderModule p progs)
-  order' <- liftErr order "dependency order (modules)"
+  order' <- liftErr order prog.progName "dependency order (modules)"
   let indexFun (P.Program p1) (P.Program p2) = compare (elemIndex p1.progName order') (elemIndex p2.progName order')
   let impsSorted = sortBy indexFun progs
   _ <- debug ("ordered imports" <> intercalate ", " ((\(P.Program p') -> show p'.progName) <$> impsSorted))
@@ -165,7 +165,7 @@ getVarOrder p@(D.Program prog) = do
   _ <- debug ("ordering variables in " <> show prog.progName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let progOrder = runDepM env (depOrderProgram p)
-  progOrder' <- liftErr progOrder "dependency order (variables)"
+  progOrder' <- liftErr progOrder prog.progName "dependency order (variables)"
   let orderStr = intercalate ", " (show <$> progOrder')
   _ <- debug ("ordered variables: " <> orderStr)
   pure progOrder' 
@@ -175,13 +175,13 @@ desugarProg p@(P.Program prog) = do
   _ <- debug ("desugaring program " <> show prog.progName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let prog' = runDesugarM env prog.progName (desugarProgram p)
-  liftErr prog' "desugaring"
+  liftErr prog' prog.progName "desugaring"
 
 inferDataDecl :: Modulename -> D.DataDecl -> DriverM K.DataDecl
 inferDataDecl mn d@(D.DataDecl decl) = do 
   _ <- debug ("infering declaration " <> show decl.declName) 
   let decl' = runDeclM (inferDecl d)
-  decl'' <- liftErr decl' "inferring declaration"
+  decl'' <- liftErr decl' mn "inferring declaration"
   _ <- addDecl mn decl''
   pure decl''
 
@@ -191,16 +191,16 @@ inferVarDecl mn v@(D.VarDecl var) = do
   _<-debug ("type checking variable " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let v' = runCheckM env (checkVarDecl v)
-  v'' <- liftErr v'  "type checking"
+  v'' <- liftErr v' mn "type checking"
   let vk = runKindM env (kindVariable v'')
-  vk' <- liftErr vk "kind vardecl"
+  vk' <- liftErr vk mn "kind vardecl"
   _ <- addVarDecl mn vk'
   pure vk'
 
-inferCommand :: D.Command -> DriverM K.Command
-inferCommand c = do 
+inferCommand :: Modulename -> D.Command -> DriverM K.Command
+inferCommand mn c = do 
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let c' = runCheckM env (checkCommand c)
-  c'' <- liftErr c' "type checking (command)"
+  c'' <- liftErr c' mn "type checking (command)"
   let ck = runKindM env (kindCommand c'')
-  liftErr ck "kinding command"
+  liftErr ck mn "kinding command"

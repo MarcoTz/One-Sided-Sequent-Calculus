@@ -20,7 +20,7 @@ do
 
   echo "" >> $OUTJS
   echo "export const $VARNAME = \`" >> $OUTJS
-  cat $FILE >> $OUTJS
+  sed 's/\\/\\\\/' $FILE >> $OUTJS
   echo "\`;" >> $OUTJS
 
   echo "foreign import $VARNAME :: String" >> $OUTPURS

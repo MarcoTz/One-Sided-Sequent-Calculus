@@ -34,7 +34,7 @@ initialState _ = {
   }
 
 runProg :: String -> RunResult  
-runProg progSource = toRunResult progSource $ runDriverM initialDriverState (runStr progSource true)
+runProg progSource = toRunResult progSource $ runDriverM initialDriverState (runStr (Modulename "WebInput") progSource true)
 
 toRunResult :: String -> Tuple (Either DriverError (Either Command EvalTrace)) DriverState -> RunResult
 toRunResult src (Tuple (Left err) st) = 

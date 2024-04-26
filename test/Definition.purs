@@ -10,7 +10,7 @@ import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
 import Data.Monoid (power)
 
-import Common (Modulename)
+import Common (Modulename(..))
 import Errors (showInSrc,getMessage)
 import Driver.Definition (runDriverM, initialDriverState)
 import Driver.Driver (parseProg,inferAndRun) 
@@ -32,7 +32,9 @@ instance Show Example where
         if nr < 6 then 
           nm <> power " " (6-nr)
         else nm
-
+getModulename :: Example -> Modulename
+getModulename (CounterExample i) = Modulename ("Cex " <> show (i+1))
+getModulename (StdLib mn) = mn
 
 data TestRes = 
   TestSucc Example 
@@ -49,7 +51,7 @@ instance Show TestRes where
 
 parseExample :: Example -> String -> Either Program TestRes
 parseExample ex src = do 
-  let progParsed = runDriverM initialDriverState (parseProg src)
+  let progParsed = runDriverM initialDriverState (parseProg (getModulename ex) src)
   case progParsed of 
     Tuple (Left err) _  -> Right $ TestParserErr ex (showInSrc err src) 
     Tuple (Right prog) _ -> Left prog

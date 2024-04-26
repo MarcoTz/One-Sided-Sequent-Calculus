@@ -60,9 +60,9 @@ getProg mn = do
     Nothing -> throwError (ErrNotFound mn)
     Just p -> pure p
    
-liftErr :: forall e a. Error e => Either e a -> String -> DriverM a
-liftErr (Left err) wh = throwError (ErrWithWhere (convertError err) wh)
-liftErr (Right a) _ = pure a 
+liftErr :: forall e a. Error e => Either e a -> Modulename -> String -> DriverM a
+liftErr (Left err) mn wh = throwError (ErrWithWhere (convertError err) mn wh)
+liftErr (Right a) _ _ = pure a 
 
 debug :: String -> DriverM Unit
 debug st = do
