@@ -3,7 +3,7 @@ module Desugar.Terms (
   desugarTerm
 ) where 
 
-import Common (Xtorname(..),EvaluationOrder(..))
+import Common (Xtorname(..),EvaluationOrder(..),Variable(..))
 import Desugar.Definition(DesugarM,varToXtor,getDesMXtor)
 import Desugar.Errors (DesugarError(..))
 import Desugar.Types (desugarTy)
@@ -73,6 +73,15 @@ desugarTerm (P.Lst loc ts) = case ts of
      t1' <- desugarTerm t1
      listRest <- desugarTerm (P.Lst loc ts')
      pure $ D.Xtor loc (Xtorname "Cons") (Cons t1' (Cons listRest Nil))
+desugarTerm (P.NotBool loc t) = do
+  let notFun = P.Var loc (Variable "not")
+  desugarTerm $ P.App loc notFun t 
+desugarTerm (P.AndBool loc t1 t2) = do
+  let andFun = P.Var loc (Variable "and")
+  desugarTerm $ P.App loc (P.App loc andFun t1) t2
+desugarTerm (P.OrBool loc t1 t2) = do
+  let orFun = P.Var loc (Variable "or")
+  desugarTerm $ P.App loc (P.App loc orFun t1) t2
 
 desugarPattern :: P.Pattern -> DesugarM D.Pattern
 desugarPattern (P.Pattern pt) = do 

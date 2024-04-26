@@ -62,6 +62,10 @@ data Term =
   | Seq       Loc Term Term
   | Tup       Loc (List Term)
   | Lst       Loc (List Term)
+  | NotBool   Loc Term 
+  | AndBool   Loc Term Term
+  | OrBool    Loc Term Term
+
 derive instance eqTerm :: Eq Term
 derive instance ordTerm :: Ord Term
 instance Show Term where 
@@ -77,6 +81,9 @@ instance Show Term where
   show (Seq _ t1 t2) = show t1 <> "; " <> show t2
   show (Tup _ ts) = "(" <> intercalate ", " (show <$> ts) <> ")"
   show (Lst _ ts) = "[" <> intercalate ", " (show <$> ts) <> "]"
+  show (NotBool _ t) = "!" <> show t
+  show (AndBool _ t1 t2) = show t1 <> "&&" <> show t2 
+  show (OrBool _ t1 t2) = show t1 <> "||" <> show t2
 
 instance HasLoc Term where 
   getLoc (Var loc _) = loc 
@@ -90,6 +97,9 @@ instance HasLoc Term where
   getLoc (Seq loc _ _) = loc
   getLoc (Tup loc _) = loc
   getLoc (Lst loc _) = loc
+  getLoc (NotBool loc _) = loc
+  getLoc (AndBool loc _ _) = loc
+  getLoc (OrBool loc _ _) = loc
 
   setLoc loc (Var _ v) = Var loc v 
   setLoc loc (Mu _ v c) = Mu loc v c
@@ -102,3 +112,6 @@ instance HasLoc Term where
   setLoc loc (Seq _ t1 t2) = Seq loc t1 t2
   setLoc loc (Tup _ ts) = Tup loc ts
   setLoc loc (Lst _ ts) = Lst loc ts
+  setLoc loc (NotBool _ t) = NotBool loc t 
+  setLoc loc (AndBool _ t1 t2) = AndBool loc t1 t2
+  setLoc loc (OrBool _ t1 t2) = OrBool loc t1 t2
