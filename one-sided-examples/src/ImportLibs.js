@@ -186,4 +186,7 @@ cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done)
 
 cutCBN :: Unit
 cutCBN := Mu y. (MkUnit << Unit << Mu x. Done) 
+
+sequence :: Unit 
+sequence := MkUnit;MkUnit
 `;
