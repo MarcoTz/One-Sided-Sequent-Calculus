@@ -4,7 +4,7 @@ module Parser.Terms (
 ) where
 
 import Parser.Definition (SrcParser)
-import Parser.Lexer (sc, getCurrPos,getCurrLoc, parseParens,parseKeyword, parseSymbol, parseCommaSep, parseAngC, parseAngO)
+import Parser.Lexer (sc, sc1, getCurrPos,getCurrLoc, parseParens,parseKeyword, parseSymbol, parseCommaSep, parseAngC, parseAngO)
 import Parser.Common (parseVariable, parseXtorname, parseEvaluationOrder)
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
@@ -20,7 +20,7 @@ import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Data.String.CodeUnits (singleton)
 import Parsing.Combinators (try, sepBy, many, optionMaybe)
-import Parsing.String.Basic (noneOf,space)
+import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
 
 
@@ -90,20 +90,15 @@ parseIf :: SrcParser Term
 parseIf = do 
   startPos <- getCurrPos 
   _ <- parseKeyword KwIf <|> parseKeyword Kwif
-  _ <- space 
-  _ <- sc 
+  _ <- sc1
   b <- parseTerm 
-  _ <- space 
-  _ <- sc
+  _ <- sc1
   _ <- parseKeyword KwThen <|> parseKeyword Kwthen
-  _ <- space
-  _ <- sc
+  _ <- sc1
   t1 <- parseTerm
-  _ <- space
-  _ <- sc
+  _ <- sc1
   _ <- parseKeyword KwElse <|> parseKeyword Kwelse
-  _ <- space 
-  _ <- sc 
+  _ <- sc1
   t2 <- parseTerm 
   loc <- getCurrLoc startPos 
   pure $ IfThenElse loc b t1 t2
@@ -154,7 +149,7 @@ parseMu = do
 parseXCase :: SrcParser Term 
 parseXCase = do
   startPos <- getCurrPos
-  _ <- parseKeyword KwCase
+  _ <- parseKeyword KwCase <|> parseKeyword Kwcase
   _ <- sc
   _ <- parseSymbol SymBrackO
   _ <- sc
@@ -235,10 +230,28 @@ parseC =
   (\_ -> parseErr)            unit <|> 
   (\_ -> parseDone)           unit <|>
   (\_ -> parseCut)            unit <|> 
+  (\_ -> parseCaseOf)         unit <|>
   (\_ -> try parseCutCBV)     unit <|>
   (\_ -> try parseCutCBN)     unit <|>
   (\_ -> try parsePrint)      unit <|> 
   (\_ -> try parsePrintAnnot) unit      
+
+parseCaseOf :: SrcParser Command 
+parseCaseOf = do 
+  startPos <- getCurrPos 
+  _ <- parseKeyword KwCase <|> parseKeyword Kwcase
+  _ <- sc1 
+  t <- parseTerm 
+  _ <- sc1
+  _ <- parseKeyword KwOf <|> parseKeyword Kwof
+  _ <- sc 
+  _ <- parseSymbol SymBrackO
+  _ <- sc
+  pts <- parsePattern `sepBy` parseCommaSep 
+  _ <- sc 
+  _ <- parseSymbol SymBrackC 
+  loc <- getCurrLoc startPos 
+  pure $ CaseOf loc t pts
 
 parseCut :: SrcParser Command 
 parseCut = do

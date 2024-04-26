@@ -226,4 +226,6 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
 
 sequence :: Unit 
 sequence := MkUnit;MkUnit
+
+main := case MkUnit of { MkUnit => Done}
 `;

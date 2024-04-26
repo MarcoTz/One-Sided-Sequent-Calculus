@@ -15,6 +15,7 @@ data Keyword =
   | Kwmu
   | KwMu
   | KwCase
+  | Kwcase 
   | KwDone
   | KwForall
   | Kwforall 
@@ -33,6 +34,8 @@ data Keyword =
   | Kwthen
   | KwElse
   | Kwelse
+  | KwOf 
+  | Kwof
 
 instance Show Keyword where 
   show KwModule = "module"
@@ -42,7 +45,8 @@ instance Show Keyword where
   show KwCBN    = "CBN"
   show KwMu     = "Mu"
   show Kwmu     = "mu"
-  show KwCase   = "case"
+  show KwCase   = "Case"
+  show Kwcase   = "case"
   show KwDone   = "Done"
   show KwForall = "Forall"
   show Kwforall = "forall"
@@ -61,6 +65,8 @@ instance Show Keyword where
   show Kwthen   = "then"
   show KwElse   = "Else"
   show Kwelse   = "else"
+  show KwOf     = "Of"
+  show Kwof     = "of"
 
 allKws :: List Keyword
 allKws = Cons KwModule 
@@ -68,6 +74,7 @@ allKws = Cons KwModule
   (Cons Kwmu
   (Cons KwMu 
   (Cons KwCase 
+  (Cons Kwcase
   (Cons KwDone
   (Cons KwForall
   (Cons Kwforall
@@ -86,4 +93,6 @@ allKws = Cons KwModule
   (Cons KwThen
   (Cons Kwthen
   (Cons KwElse
-  (Cons Kwelse Nil)))))))))))))))))))))))
+  (Cons Kwelse 
+  (Cons KwOf
+  (Cons Kwof Nil))))))))))))))))))))))))))

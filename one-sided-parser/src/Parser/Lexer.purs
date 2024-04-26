@@ -1,5 +1,6 @@
 module Parser.Lexer (
   sc,
+  sc1,
   parseSymbol,
   parseKeyword,
   parseCommaSep,
@@ -41,6 +42,9 @@ parseComment = try $ do
 
 sc :: SrcParser Unit 
 sc = many (space *> pure unit <|> parseComment)  *> pure unit
+
+sc1 :: SrcParser Unit 
+sc1 = space *> sc
 
 parseParens :: forall a.SrcParser a -> SrcParser a
 parseParens p = do 

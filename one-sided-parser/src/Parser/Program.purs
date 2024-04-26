@@ -1,7 +1,7 @@
 module Parser.Program (parseProgram) where 
 
 import Parser.Definition (SrcParser, ParseDecl(..)) 
-import Parser.Lexer (sc, parseKeyword, parseSymbol, getCurrPos, getCurrLoc, parseParens, parseCommaSep)
+import Parser.Lexer (sc,sc1, parseKeyword, parseSymbol, getCurrPos, getCurrLoc, parseParens, parseCommaSep)
 import Parser.Common (parseModulename, parseVariable, parseDataCodata, parseXtorname, parseTypename)
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
@@ -18,7 +18,6 @@ import Data.List (List(..),foldr)
 import Data.Maybe (Maybe(..),isJust)
 import Parsing.Combinators (manyTill, try, sepBy, optionMaybe)
 import Parsing.String (eof)
-import Parsing.String.Basic (space)
 import Control.Alt ((<|>))
 
 
@@ -26,8 +25,7 @@ parseModuleDecl :: SrcParser Modulename
 parseModuleDecl = (do 
   _ <- sc
   _ <- parseKeyword KwModule 
-  _ <- space
-  _ <- sc 
+  _ <- sc1
   parseModulename)
   <|> pure (Modulename "")
 
@@ -73,8 +71,7 @@ parseImport :: SrcParser Import
 parseImport = do
   startPos <- getCurrPos
   _ <- parseKeyword KwImport
-  _ <- space
-  _ <- sc
+  _ <- sc1
   mn <- parseModulename
   _ <- sc
   loc <- getCurrLoc startPos
@@ -96,7 +93,8 @@ parseTypeAnnot = do
 parseVarDecl :: SrcParser VarDecl 
 parseVarDecl = do 
   startPos <- getCurrPos 
-  isRec <- optionMaybe (parseKeyword KwRec <* sc)
+  isRec <- optionMaybe (parseKeyword KwRec <* sc1)
+  _ <- sc
   nm <- parseVariable 
   _ <- sc
   _ <- parseSymbol SymColon
@@ -111,8 +109,7 @@ parseDataDecl :: SrcParser DataDecl
 parseDataDecl = do 
   startPos <- getCurrPos
   isco <- parseDataCodata
-  _ <- space
-  _ <- sc
+  _ <- sc1
   nm <- parseTypename 
   _ <- sc
   args <- parseTyArgs
