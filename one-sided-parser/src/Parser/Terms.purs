@@ -26,8 +26,8 @@ import Control.Alt ((<|>))
 
 parseTerm :: SrcParser Term 
 parseTerm = do 
-  t <-(\_ -> parseT) unit  <|> parseParens ((\_ -> parseT) unit) 
-  try (parseSeq t) <|> try (parseApp t) <|> pure t
+  t <- (\_ -> parseT) unit  <|> parseParens ((\_ -> parseT) unit) 
+  try (parseSeq t) <|> try (parseApp t) <|> try (parseAnd t) <|> try (parseOr t) <|> pure t
 
 parseSeq :: Term -> SrcParser Term
 parseSeq t1 = do
@@ -51,6 +51,28 @@ parseApp t1 = do
   loc <- getCurrLoc startPos 
   pure $ App loc t1 t2 
 
+parseAnd :: Term -> SrcParser Term 
+parseAnd t1 = do
+  _ <- sc 
+  startPos <- getCurrPos
+  _ <- parseSymbol SymAmper
+  _ <- parseSymbol SymAmper
+  _ <- sc 
+  t2 <- parseTerm
+  loc <- getCurrLoc startPos
+  pure (AndBool loc t1 t2)
+
+parseOr :: Term -> SrcParser Term
+parseOr t1 = do 
+  _ <- sc
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymBar
+  _ <- parseSymbol SymBar
+  _ <- sc
+  t2 <- parseTerm
+  loc <- getCurrLoc startPos
+  pure (OrBool loc t1 t2)
+
 parseT :: SrcParser Term
 parseT =
   (\_ -> parseMu)       unit <|> 
@@ -58,9 +80,18 @@ parseT =
   (\_ -> parseShift)    unit <|>
   (\_ -> parseLam)      unit <|>
   (\_ -> parseLst)      unit <|>
+  (\_ -> parseNot)      unit <|>
   (\_ -> try parseTup)  unit <|>
   (\_ -> try parseXtor) unit <|> 
   (\_ -> parseVar)      unit 
+
+parseNot :: SrcParser Term
+parseNot = do 
+  startPos <- getCurrPos 
+  _ <- parseSymbol SymExcl
+  t <- parseTerm
+  loc <- getCurrLoc startPos
+  pure $ NotBool loc t
 
 parseTup :: SrcParser Term 
 parseTup = do 
@@ -87,7 +118,7 @@ parseLst = do
 parseMu :: SrcParser Term   
 parseMu = do 
   startPos <- getCurrPos
-  _ <- parseKeyword KwMu <|> parseKeyword Kwmu 
+  _ <- parseKeyword KwMu <|> parseKeyword Kwmu  <|> parseSymbol SymMu
   _ <- sc
   v <- parseVariable 
   _ <- sc

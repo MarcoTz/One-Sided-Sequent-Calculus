@@ -82,6 +82,15 @@ or := case { Ap(b1,a) =>
 printCons :: Forall X. X
 printCons := mu x.Print x
 
+andEx :: Bool
+andEx := True && False 
+
+orEx :: Bool
+orEx := True || True 
+
+notEx :: Bool
+notEx := !True 
+
 main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>
 `;
 

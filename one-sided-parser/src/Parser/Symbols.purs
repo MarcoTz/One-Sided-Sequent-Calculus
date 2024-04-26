@@ -12,6 +12,7 @@ data Sym =
   | SymBrackO
   | SymBrackC
   | SymLambda
+  | SymMu
   | SymSqBrackO
   | SymSqBrackC
   | SymEq
@@ -24,6 +25,8 @@ data Sym =
   | SymDot
   | SymQuot
   | SymBackSl
+  | SymAmper
+  | SymExcl
 
 instance Show Sym where 
   show SymParensO = "("
@@ -37,6 +40,7 @@ instance Show Sym where
   show SymSqBrackO = "["
   show SymSqBrackC = "]"
   show SymLambda  = "λ"
+  show SymMu      = "μ"
   show SymEq      = "="
   show SymSemi    = ";"
   show SymAngO    = "<"
@@ -47,4 +51,5 @@ instance Show Sym where
   show SymDot     = "."
   show SymQuot    = "\""
   show SymBackSl  = "\\"
-
+  show SymAmper   = "&"
+  show SymExcl    = "!"
