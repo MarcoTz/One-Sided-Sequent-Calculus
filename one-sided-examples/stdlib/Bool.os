@@ -62,4 +62,4 @@ notEx := !True
 ifTrue :: Bool
 ifTrue := if True then True else False
 
-main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>
+main := case True of { True => Done, False => error ""} 

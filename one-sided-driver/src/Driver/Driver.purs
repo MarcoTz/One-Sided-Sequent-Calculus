@@ -12,11 +12,14 @@ import Loc (defaultLoc)
 import Environment (Environment(..))
 import StandardLib (libMap)
 
-import Syntax.Parsed.Program (Program(..),Import(..)) as P
+import Syntax.Parsed.Program (Program(..),Import(..))                  as P
 import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
-import Syntax.Desugared.Terms (Command) as D
-import Syntax.Kinded.Terms (Command(..)) as K
-import Syntax.Kinded.Program (Program(..),DataDecl, VarDecl(..)) as K
+import Syntax.Desugared.Terms (Command)                                as D
+import Syntax.Typed.Types (isSubsumed)                                 as T
+import Syntax.Kinded.Types (embedType)                                 as K
+import Syntax.Kinded.Terms (Command(..),getType)                       as K
+import Syntax.Kinded.Program (Program(..),DataDecl, VarDecl(..))       as K
+
 import Syntax.Typed.Substitution (substTyvars)
 
 import Eval.Definition (runEvalM,EvalTrace,emptyTrace)
@@ -161,7 +164,7 @@ inferImportsOrdered imports = do
   _ <- debug ("inferring imports")
   (Environment env) <- gets (\(MkDriverState s) -> s.drvEnv)
   let imports' = filter (\(P.Program prog') -> isNothing $ lookup prog'.progName env) imports 
-  _ <- debug "ordering imports"
+  _ <- debug "inferring imports"
   _ <- for imports' (\x -> inferProgram x)
   pure unit
 
@@ -211,11 +214,17 @@ inferVarDecl mn v@(D.VarDecl var) = do
   _<-debug ("type checking variable " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let v' = runCheckM env (checkVarDecl v)
-  v'' <- liftErr v' mn "type checking"
-  let vk = runKindM env (kindVariable v'')
-  vk' <- liftErr vk mn "kind vardecl"
-  _ <- addVarDecl mn vk'
-  pure vk'
+  case v' of 
+      Left _ -> do
+        _ <- debug ("type checking failed, inferring type instead")
+        kv@(K.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
+        let annotTy = K.embedType $ K.getType var'.varBody 
+        if T.isSubsumed annotTy (K.embedType (K.getType var'.varBody)) then pure kv else throwError (ErrAnnotMismatch var.varPos var.varName)
+      Right v'' -> do
+        let vk = runKindM env (kindVariable v'')
+        vk' <- liftErr vk mn "kind vardecl"
+        _ <- addVarDecl mn vk'
+        pure vk'
 
 inferCommand :: Modulename -> D.Command -> DriverM K.Command
 inferCommand mn c = do 

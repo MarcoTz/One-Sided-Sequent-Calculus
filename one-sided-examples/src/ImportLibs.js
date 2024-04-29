@@ -106,7 +106,7 @@ notEx := !True
 ifTrue :: Bool
 ifTrue := if True then True else False
 
-main := <or | CBV | Ap(True, mu x. <x| CBV |Ap(True,printCons)>)>
+main := case True of { True => Done, False => error ""} 
 `;
 
 export const lpairSrc = `
@@ -164,7 +164,7 @@ rec len := case { Ap(ls,a) =>
 }
 
 printCons :: Forall X. X
-printCons := mu x. Print x
+printCons := mu x. Print x;Done
 
 main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
 `;
@@ -223,9 +223,4 @@ cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done)
 
 cutCBN :: Unit
 cutCBN := Mu y. (MkUnit << Unit << Mu x. Done) 
-
-sequence :: Unit 
-sequence := MkUnit;MkUnit
-
-main := case MkUnit of { MkUnit => Done}
 `;
