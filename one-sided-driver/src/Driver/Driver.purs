@@ -39,12 +39,12 @@ import InferDecl (runDeclM, inferDecl)
 
 import GenerateConstraints.Definition (runGenM) 
 import GenerateConstraints.Program (genConstraintsVarDecl)
+import GenerateConstraints.Terms (genConstraintsCmd)
 import SolveConstraints.Definition (runSolveM)
 import SolveConstraints.Solver (solve)
 
 import TypeCheck.Definition (runCheckM)
 import TypeCheck.Program (checkVarDecl)
-import TypeCheck.Terms (checkCommand)
 
 import Kinding.Definition (runKindM)
 import Kinding.Program (kindVariable)
@@ -229,7 +229,10 @@ inferVarDecl mn v@(D.VarDecl var) = do
 inferCommand :: Modulename -> D.Command -> DriverM K.Command
 inferCommand mn c = do 
   env <- gets (\(MkDriverState s) -> s.drvEnv)
-  let c' = runCheckM env (checkCommand c)
-  c'' <- liftErr c' mn "type checking (command)"
+  let ctr = runGenM env (genConstraintsCmd c)
+  Tuple c' constrs <- liftErr ctr mn "generate constraints command"
+  let vm = runSolveM constrs solve 
+  Tuple _ varmap <- liftErr vm mn "solving constraints command"
+  let c'' = substTyvars varmap c'
   let ck = runKindM env (kindCommand c'')
-  liftErr ck mn "kinding command"
+  liftErr ck mn "kinding command (after infer)"

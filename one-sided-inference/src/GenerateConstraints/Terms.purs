@@ -1,5 +1,6 @@
 module GenerateConstraints.Terms (
-  genConstraintsTerm
+  genConstraintsTerm,
+  genConstraintsCmd
 ) where 
 
 import GenerateConstraints.Definition (GenM, addConstraint,getGenVars,freshTyVar, addGenVar, freshTyVarsDecl, addConstraintsXtor)

@@ -43,6 +43,6 @@ rec len := case { Ap(ls,a) =>
 }
 
 printCons :: Forall X. X
-printCons := mu x. Print x;Done
+printCons := mu x. Print x;mu x.Done
 
 main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>

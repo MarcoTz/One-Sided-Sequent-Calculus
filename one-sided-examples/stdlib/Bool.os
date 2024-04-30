@@ -38,13 +38,13 @@ or := case { Ap(b1,a) =>
 ifthenelse :: forall X. Bool -> X -> X 
 ifthenelse := case { Ap(b1,a) => 
   < case { Ap(t1,b) => 
-    < case { Ap(t2,c) => 
+    < case { Ap(t2,c) =>  
       < case { 
         True => <t1 | CBV | b>,
         False => <t2 | CBV | c> 
-        } | CBV | b> 
-    } | CBV | t2>
-  } | CBV | t1>
+        } | CBV | b1> 
+    } | CBV | b>
+  } | CBV | a>
 }
 
 printCons :: Forall X. X
