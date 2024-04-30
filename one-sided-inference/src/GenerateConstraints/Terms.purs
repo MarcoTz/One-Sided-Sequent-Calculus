@@ -16,7 +16,7 @@ import Syntax.Typed.Types (Ty(..)) as T
 import Syntax.Kinded.Program (DataDecl(..),XtorSig(..)) as K
 import Syntax.Kinded.Types (embedType) 
 
-import Prelude (bind,pure, (<$>),identity, ($))
+import Prelude (bind,pure, (<$>),($),not)
 import Data.List (List(..),elem,null,filter, zip)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
@@ -28,8 +28,10 @@ checkPts :: Loc -> List D.Pattern -> GenM (Maybe K.DataDecl)
 checkPts _ Nil = pure Nothing 
 checkPts loc (Cons (D.Pattern pt) pts) = do 
   (K.DataDecl decl) <- lookupXtorDecl loc pt.ptxt
-  let areElems = (\(D.Pattern pt') -> pt'.ptxt `elem` ((\(K.XtorSig sig) -> sig.sigName) <$> decl.declXtors)) <$> pts
-  if null (filter identity areElems) then pure (Just (K.DataDecl decl)) else pure Nothing
+  let sigNames = (\(K.XtorSig sig) -> sig.sigName) <$> decl.declXtors
+  let ptNames = (\(D.Pattern pt') -> pt'.ptxt) <$> pts
+  let notElems = filter (\xtn -> not $ xtn `elem` sigNames) ptNames
+  if null notElems then pure (Just (K.DataDecl decl)) else pure Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
 genConstraintsCmd (D.Cut loc t eo u) = do 
