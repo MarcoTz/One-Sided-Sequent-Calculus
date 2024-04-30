@@ -44,6 +44,7 @@ import SolveConstraints.Definition (runSolveM)
 import SolveConstraints.Solver (solve)
 
 import TypeCheck.Definition (runCheckM)
+import TypeCheck.Types (checkType)
 import TypeCheck.Program (checkVarDecl)
 
 import Kinding.Definition (runKindM)
@@ -195,7 +196,24 @@ inferDataDecl mn d@(D.DataDecl decl) = do
   pure decl''
 
 inferVarDecl :: Modulename -> D.VarDecl -> DriverM K.VarDecl
-inferVarDecl mn v@(D.VarDecl var) | isNothing var.varTy = do 
+inferVarDecl mn v@(D.VarDecl var@{varPos:_,varName:_, varBody:_, varTy:Just ty}) = do 
+  _<-debug ("type checking variable " <> show var.varName)
+  env <- gets (\(MkDriverState s) -> s.drvEnv)
+  let v' = runCheckM env (checkVarDecl v)
+  case v' of 
+      Left _ -> do
+        _ <- debug ("type checking failed, inferring type instead")
+        let annotTy = runCheckM env (checkType var.varPos ty) 
+        annotTy' <- liftErr annotTy mn "checking type annotation" 
+        kv@(K.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
+        if T.isSubsumed annotTy' (K.embedType (K.getType var'.varBody)) then pure kv else throwError (ErrAnnotMismatch var.varPos var.varName)
+      Right v'' -> do
+        let vk = runKindM env (kindVariable v'')
+        vk' <- liftErr vk mn "kind vardecl"
+        _ <- addVarDecl mn vk'
+        pure vk'
+
+inferVarDecl mn v@(D.VarDecl var) = do 
   _ <- debug ("inferring type for " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let constr = runGenM env (genConstraintsVarDecl v) 
@@ -210,21 +228,6 @@ inferVarDecl mn v@(D.VarDecl var) | isNothing var.varTy = do
   _ <- addVarDecl mn vk'
   pure vk'
 
-inferVarDecl mn v@(D.VarDecl var) = do 
-  _<-debug ("type checking variable " <> show var.varName)
-  env <- gets (\(MkDriverState s) -> s.drvEnv)
-  let v' = runCheckM env (checkVarDecl v)
-  case v' of 
-      Left _ -> do
-        _ <- debug ("type checking failed, inferring type instead")
-        kv@(K.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
-        let annotTy = K.embedType $ K.getType var'.varBody 
-        if T.isSubsumed annotTy (K.embedType (K.getType var'.varBody)) then pure kv else throwError (ErrAnnotMismatch var.varPos var.varName)
-      Right v'' -> do
-        let vk = runKindM env (kindVariable v'')
-        vk' <- liftErr vk mn "kind vardecl"
-        _ <- addVarDecl mn vk'
-        pure vk'
 
 inferCommand :: Modulename -> D.Command -> DriverM K.Command
 inferCommand mn c = do 
