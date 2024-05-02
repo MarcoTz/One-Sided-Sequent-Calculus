@@ -22,7 +22,7 @@ derive instance eqTy :: Eq Ty
 instance Show Ty where
   show (TyVar v) = show v
   show (TyDecl tyn args) | null args = show tyn
-  show (TyDecl tyn args) = show tyn <> " ( " <> intercalate ", " (show <$> args) <> ")"
+  show (TyDecl tyn args) = show tyn <> " (" <> intercalate ", " (show <$> args) <> ")"
   show (TyShift ty) = "{" <> show ty <> "}"
   show (TyCo ty) = "co " <> show ty 
   show (TyForall args ty) | null args = show ty

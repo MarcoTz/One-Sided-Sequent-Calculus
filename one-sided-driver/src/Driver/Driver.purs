@@ -206,7 +206,9 @@ inferVarDecl mn v@(D.VarDecl var@{varPos:_,varName:_, varBody:_, varTy:Just ty})
         let annotTy = runCheckM env (checkType var.varPos ty) 
         annotTy' <- liftErr annotTy mn "checking type annotation" 
         kv@(K.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
-        if T.isSubsumed annotTy' (K.embedType (K.getType var'.varBody)) then pure kv else throwError (ErrAnnotMismatch var.varPos var.varName)
+        let inferTy =  K.embedType (K.getType var'.varBody)
+        if T.isSubsumed annotTy' inferTy then pure kv 
+        else throwError (ErrAnnotMismatch var.varPos var.varName annotTy' inferTy)
       Right v'' -> do
         let vk = runKindM env (kindVariable v'')
         vk' <- liftErr vk mn "kind vardecl"
