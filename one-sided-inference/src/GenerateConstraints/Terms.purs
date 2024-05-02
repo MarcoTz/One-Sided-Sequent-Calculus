@@ -24,6 +24,7 @@ import Data.Map (lookup)
 import Data.Traversable (for)
 import Control.Monad.Except (throwError)
 
+
 checkPts :: Loc -> List D.Pattern -> GenM (Maybe K.DataDecl)
 checkPts _ Nil = pure Nothing 
 checkPts loc (Cons (D.Pattern pt) pts) = do 
@@ -31,7 +32,7 @@ checkPts loc (Cons (D.Pattern pt) pts) = do
   let sigNames = (\(K.XtorSig sig) -> sig.sigName) <$> decl.declXtors
   let ptNames = (\(D.Pattern pt') -> pt'.ptxt) <$> pts
   let notElems = filter (\xtn -> not $ xtn `elem` sigNames) ptNames
-  let notElems2 = filter (\xtn -> not $ xtn `elem` ptNames) sigNames
+  let notElems2 = filter (\xtn -> not $ xtn `elem` (Cons pt.ptxt ptNames)) sigNames
   if null notElems && null notElems2 then pure (Just (K.DataDecl decl)) else pure Nothing
 
 genConstraintsCmd :: D.Command -> GenM T.Command 
