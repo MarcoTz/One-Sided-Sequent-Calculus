@@ -13,12 +13,14 @@ import Prelude (bind,pure,(<>),($),(<$>))
 import Data.Traversable (for)
 import Data.List (List(..),elem)
 
+
 desugarTy :: P.Ty -> DesugarM D.Ty
 desugarTy (P.TyVar v) = do 
   let vty = tyvarToTyName v
   declTys <- getTypeNames
   currNames <- getDesDefNames
-  if vty `elem` (declTys<>currNames) then pure (D.TyDecl vty Nil) else pure $ D.TyVar v 
+  if vty `elem` (declTys<>currNames) then pure (D.TyDecl vty Nil) 
+  else pure $ D.TyVar v 
 desugarTy (P.TyDecl tyn args) = do 
   args' <- for args desugarTy 
   pure $ D.TyDecl tyn args' 

@@ -10,7 +10,7 @@ data List(a:+){
   Nil
 }
 
-brackEx :: List(Uhit)
+brackEx :: List(Unit)
 brackEx := [MkUnit,MkUnit,MkUnit]
 
 brackEx2 :: List(Unit)

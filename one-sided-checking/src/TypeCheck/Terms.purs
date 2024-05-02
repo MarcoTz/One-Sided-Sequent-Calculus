@@ -17,7 +17,6 @@ import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D
 import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..)) as T
 import Syntax.Typed.Types (Ty(..),isSubsumed) as T 
 import Syntax.Typed.Substitution (substTyvars) as T
-import FreeVars.FreeTypevars (generalize)
 
 import Prelude (bind,pure,($),(<$>), (==))
 import Data.List (List(..),foldr)

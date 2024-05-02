@@ -18,6 +18,7 @@ import Data.List (elem)
 import Data.Traversable (for)
 import Control.Monad.Except (throwError)
 
+
 checkType :: Loc -> D.Ty -> CheckM T.Ty 
 checkType loc (D.TyVar v) = do
   tyVars <- getCheckerTyVars 
