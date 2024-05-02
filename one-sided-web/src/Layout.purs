@@ -33,27 +33,31 @@ progDiv src = div
   ]
 
 resDiv :: forall w.RunResult -> HTML w Input 
-resDiv (ResErr {errMsg:err, errDebug:debug}) = div [ class_ $ ClassName "results"]
+resDiv (ResErr {errMsg:err, errDebug:debug, errTypes:tys}) = div [ class_ $ ClassName "results"]
   [
     h1_ [text "Results"],
     h2_ [text "Output"],
     textarea [class_ $ ClassName "evalError", id "evalRes", readOnly true, value ("Error: " <> err)],
     br_,
+    h2_ [text "Inferred Types"],
+    textarea [id "typesStr", readOnly true, value tys],
     h2_ [text "Debug Trace"],
     textarea [id "debugStr", readOnly true, value debug]
   ]
-resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug}) = div 
+resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug, succTypes:tys}) = div 
   [ class_ $ ClassName "results" ]
   [ 
     h1_ [text "Results"],
     h2_ [text "Output"],
     textarea [class_ $ ClassName "evalSucc", id "evalRes", readOnly true, id "resultStr", value cmd],
     br_,
-    h2_ [text "Debug Trace"],
-    textarea [id "debugStr", readOnly true, value debug],
+    h2_ [text "Inferred Types"],
+    textarea [id "typesStr", readOnly true, value tys],
     h2_ [text "Evaluation Trace"],
     br_,
-    textarea [id "traceStr", readOnly true, value tr]
+    textarea [id "traceStr", readOnly true, value tr],
+    h2_ [text "Debug Trace"],
+    textarea [id "debugStr", readOnly true, value debug]
   ]
 
 exSelect :: forall w. HTML w Input
