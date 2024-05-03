@@ -7,7 +7,8 @@ module SolveConstraints.Definition (
   getSlvTyVars,
   getNextConstr,
   addConstraintsArgs,
-  addConstraint
+  addConstraint,
+  showSubst
 ) where 
 
 import SolveConstraints.Errors (SolverError(..))
@@ -15,10 +16,10 @@ import Constraints (ConstraintSet, Constr(..))
 import Common (Typevar,Typename)
 import Syntax.Typed.Types (Ty)
 
-import Prelude (bind,pure, ($))
-import Data.Map (Map,empty,insert)
+import Prelude (bind,pure, ($),(<$>),(<>),show)
+import Data.Map (Map,empty,insert,toUnfoldable)
 import Data.Tuple (Tuple(..))
-import Data.List (List(..))
+import Data.List (List(..),intercalate)
 import Data.Unit (Unit,unit)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe (..))
@@ -44,6 +45,14 @@ runSolveM :: forall a.ConstraintSet -> SolverM a -> Either SolverError (Tuple a 
 runSolveM constrs m = case runExcept (runStateT m (initialSolverState constrs) ) of 
   Left err -> Left err 
   Right (Tuple x (MkSolverState st)) -> Right (Tuple x st.slvTyVars)
+
+showSubst :: Map Typevar Ty -> String
+showSubst varmap = do
+  let substList :: List (Tuple Typevar Ty) 
+      substList = toUnfoldable varmap
+  let shownSubsts :: List String
+      shownSubsts = (\(Tuple v ty) -> show v <> " -> " <> show ty) <$> substList
+  intercalate "\n\t" shownSubsts
 
 getNextConstr :: SolverM (Maybe Constr)
 getNextConstr = do 

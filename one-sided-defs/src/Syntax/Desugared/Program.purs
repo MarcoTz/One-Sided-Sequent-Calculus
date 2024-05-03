@@ -18,7 +18,8 @@ import Syntax.Desugared.Terms (Term,Command)
 import Prelude (class Show,show,(<>), (<$>), (==))
 import Data.List (List, null, intercalate)
 import Data.Maybe (Maybe(..),fromMaybe)
-import Data.Map (Map,insert,empty)
+import Data.Map (Map,insert,empty,toUnfoldable)
+import Data.Tuple (snd)
 
 data XtorSig = XtorSig {sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
 instance HasLoc XtorSig where 
@@ -64,14 +65,20 @@ data Program = Program {
 }  
 instance Show Program where 
   show (Program prog) | Nothing == prog.progMain = 
-    "Module " <> show prog.progName <> "\n" <>
-    "Decalations: " <> show prog.progDecls <> "\n" <> 
-    "Variables: " <> show  prog.progVars <> "\n" 
+    "\tModule " <> show prog.progName <> "\n" <>
+    "\tDecalations:\n\t\t" <> showMap prog.progDecls <> "\n" <> 
+    "\tVariables:\n\t\t" <> showMap  prog.progVars <> "\n" 
   show (Program prog) = 
-    "Module " <> show prog.progName <> "\n" <>
-    "Decalations: " <> show prog.progDecls <> "\n" <> 
-    "Variables: " <> show  prog.progVars <> "\n" <> 
-    "Main : " <> show prog.progMain
+    "\tModule " <> show prog.progName <> "\n" <>
+    "\tDecalations:\n\t\t" <> showMap prog.progDecls <> "\n" <> 
+    "\tVariables:\n\t\t" <> showMap  prog.progVars <> "\n" <> 
+    "\tMain : " <> show prog.progMain
+
+showMap :: forall a b.Show b => Map a b -> String 
+showMap declMap = do
+   let decls :: List b
+       decls = snd <$> toUnfoldable declMap
+   intercalate "\n\t\t" (show <$> decls)
 
 emptyProg :: Modulename -> String -> Program 
 emptyProg nm src = Program {progName:nm,progDecls:empty,progVars:empty,progMain:Nothing,progSrc:src}

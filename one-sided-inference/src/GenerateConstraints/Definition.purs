@@ -38,25 +38,26 @@ data GenerateState = MkGenState{
   varEnv :: (Map Variable Ty),
   tyVarCnt :: Int,
   kVarCnt :: Int,
-  constrSet :: ConstraintSet 
+  constrSet :: ConstraintSet ,
+  genTyvars :: List Typevar
 }
 
 initialGenState :: GenerateState 
-initialGenState = MkGenState {varEnv:empty, tyVarCnt:0, kVarCnt:0, constrSet:Nil}
+initialGenState = MkGenState {varEnv:empty, tyVarCnt:0, kVarCnt:0, constrSet:Nil, genTyvars:Nil }
 
 type GenM a = ReaderT Environment (StateT GenerateState (Except GenerateError)) a 
 
-runGenM :: forall a.Environment -> GenM a -> Either GenerateError (Tuple a ConstraintSet)
+runGenM :: forall a.Environment -> GenM a -> Either GenerateError (Tuple a (Tuple (List Typevar) ConstraintSet))
 runGenM env m = case runExcept (runStateT (runReaderT m env) initialGenState) of
   Left err -> Left err 
-  Right (Tuple x (MkGenState st)) ->  Right (Tuple x st.constrSet)
+  Right (Tuple x (MkGenState st)) ->  Right (Tuple x (Tuple st.genTyvars st.constrSet))
 
 -- Fresh Variables 
 freshTyVar :: GenM Ty
 freshTyVar = do 
   cnt <- gets (\(MkGenState st) -> st.tyVarCnt)
   let newVar = Typevar ("X" <> show cnt)
-  _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=cnt+1}) 
+  _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=cnt+1, genTyvars=Cons newVar s.genTyvars}) 
   pure (TyVar newVar)
 
 freshTyVarsDecl :: List VariantVar -> GenM (Tuple (List Ty) (Map Typevar Ty))

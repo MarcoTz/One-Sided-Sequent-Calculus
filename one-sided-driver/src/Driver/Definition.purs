@@ -1,5 +1,6 @@
 module Driver.Definition (
   DriverM,
+  DriverState (..),
   runDriverM,
   liftErr,
   debug,
@@ -8,7 +9,7 @@ module Driver.Definition (
   initialDriverState,
   inEnv,
   getProg,
-  DriverState (..)
+  withDebug
 ) where 
 
 import Common (Modulename)
@@ -28,10 +29,10 @@ import Control.Monad.State (State, modify,runState,gets)
 import Control.Monad.Except (ExceptT, throwError, runExceptT)
 
 
-data DriverState = MkDriverState { drvEnv :: Environment, drvDebug :: List String} 
+data DriverState = MkDriverState { drvEnv :: Environment, drvDebug :: List String, drvDebugOn :: Boolean} 
 
 initialDriverState :: DriverState
-initialDriverState = MkDriverState {drvEnv:emptyEnv, drvDebug:Nil}
+initialDriverState = MkDriverState {drvEnv:emptyEnv, drvDebug:Nil, drvDebugOn:true}
 
 type DriverM a = ExceptT DriverError (State DriverState) a 
 
@@ -66,5 +67,17 @@ liftErr (Right a) _ _ = pure a
 
 debug :: String -> DriverM Unit
 debug st = do
-  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebug = snoc s.drvDebug st })
-  pure unit
+  dbOn <- gets (\(MkDriverState s) -> s.drvDebugOn)
+  if dbOn then do
+    _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebug = snoc s.drvDebug st })
+    pure unit
+  else pure unit
+
+withDebug :: forall a b.Boolean -> (a -> DriverM b) -> a -> DriverM b
+withDebug newDb f a = do 
+  currDebug <- gets (\(MkDriverState s) -> s.drvDebugOn)
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebugOn=newDb})
+  b <- f a 
+  _ <- modify (\(MkDriverState s) -> MkDriverState s{drvDebugOn=currDebug})
+  pure b
+

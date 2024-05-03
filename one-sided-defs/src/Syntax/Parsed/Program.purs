@@ -74,7 +74,7 @@ data Import = Import    {importPos :: Loc, importName :: Modulename }
 derive instance eqImport :: Eq Import 
 derive instance ordImport :: Ord Import 
 instance Show Import where 
-  show (Import imp) = "import " <> show imp.importName
+  show (Import imp) = show imp.importName
 instance HasLoc Import where 
   getLoc (Import imp) = imp.importPos
   setLoc loc (Import imp) = Import (imp {importPos=loc}) 
@@ -92,18 +92,21 @@ derive instance ordProgram :: Ord Program
 
 instance Show Program where 
   show (Program prog) | Nil == prog.progMain = 
-    "module " <> show prog.progName  <>
-    "\nImports: " <> intercalate "," (show <$> prog.progImports) <> 
-    "\nDeclarations: " <> show prog.progDecls <> 
-    "\nVariables: " <> show prog.progVars <> 
-    "\nAnnotations: " <> show prog.progVars
+    "\tmodule " <> show prog.progName  <>
+    "\n\tImports:\n\t\t" <> showList prog.progImports <> 
+    "\n\tDeclarations:\n\t\t" <> showList prog.progDecls <> 
+    "\n\tVariables:\n\t\t" <> showList prog.progVars <> 
+    "\n\tAnnotations:\n\t\t" <> showList prog.progVars
   show (Program prog) = 
-    "module " <> show prog.progName  <>
-    "\nImports: " <> intercalate "," (show <$> prog.progImports) <> 
-    "\nDeclarations: " <> show prog.progDecls <> 
-    "\nVariables: " <> show prog.progVars <> 
-    "\nAnnotations: " <> show prog.progVars <> 
-    "\nMain: "<> show prog.progMain
+    "\tmodule " <> show prog.progName  <>
+    "\n\tImports:\n\t\t" <> showList prog.progImports <> 
+    "\n\tDeclarations:\n\t\t" <> showList prog.progDecls <> 
+    "\n\tVariables:\n\t\t" <> showList prog.progVars <> 
+    "\n\tAnnotations:\n\t\t" <> showList prog.progAnnots <> 
+    "\n\tMain: "<> show prog.progMain
+
+showList :: forall a. Show a => List a -> String
+showList ls = intercalate "\n\t\t" (show<$>ls)
 
 emptyProg :: Modulename -> String -> Program 
 emptyProg mn src = Program {

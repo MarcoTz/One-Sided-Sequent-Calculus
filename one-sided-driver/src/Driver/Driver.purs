@@ -5,7 +5,7 @@ module Driver.Driver (
 ) where 
 
 
-import Driver.Definition (DriverM, DriverState(..), liftErr, debug, addDecl, addVarDecl, inEnv, getProg)
+import Driver.Definition (DriverM, DriverState(..), liftErr, debug, addDecl, addVarDecl, inEnv, getProg, withDebug)
 import Driver.Errors (DriverError(..))
 import Common (Modulename, Variable)
 import Loc (defaultLoc)
@@ -16,8 +16,9 @@ import Syntax.Parsed.Program (Program(..),Import(..))                  as P
 import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
 import Syntax.Desugared.Terms (Command)                                as D
 import Syntax.Typed.Types (isSubsumed)                                 as T
-import Syntax.Kinded.Types (embedType)                                 as K
-import Syntax.Kinded.Terms (Command(..),getType)                       as K
+import Syntax.Typed.Terms (getType)                                    as T
+import Syntax.Typed.Program (VarDecl(..))                              as T
+import Syntax.Kinded.Terms (Command(..))                               as K
 import Syntax.Kinded.Program (Program(..),DataDecl, VarDecl(..))       as K
 
 import Syntax.Typed.Substitution (substTyvars)
@@ -37,10 +38,11 @@ import Desugar.Program (desugarProgram)
 
 import InferDecl (runDeclM, inferDecl)
 
+import Constraints (showConstrs)
 import GenerateConstraints.Definition (runGenM) 
 import GenerateConstraints.Program (genConstraintsVarDecl)
 import GenerateConstraints.Terms (genConstraintsCmd)
-import SolveConstraints.Definition (runSolveM)
+import SolveConstraints.Definition (runSolveM,showSubst)
 import SolveConstraints.Solver (solve)
 
 import TypeCheck.Definition (runCheckM)
@@ -67,36 +69,19 @@ import Control.Monad.Except (throwError)
 
 runStr :: Modulename -> String -> Boolean -> DriverM (Either K.Command EvalTrace) 
 runStr mn progText withTrace = do 
-  progParsed' <- parseProg mn progText 
-  _ <- debug ("sucessfully parsed program, inferring variables and declarations")
-  prog <- inferProgram progParsed'
+  progParsed' <- parseProg mn progText
+  prog <- inferProgram progParsed' 
   if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
-
-runProgram :: K.Program -> DriverM K.Command
-runProgram (K.Program prog) | isNothing prog.progMain = pure (K.Done defaultLoc) 
-runProgram (K.Program prog) = do
-  let main = fromMaybe (K.Done defaultLoc) prog.progMain
-  env <- gets (\(MkDriverState s) -> s.drvEnv)
-  _ <- debug ("evaluating main " <> show main) 
-  let evaled = runEvalM env (eval main)
-  liftErr evaled prog.progName "evaluation"
-
-runProgramTrace :: K.Program -> DriverM EvalTrace 
-runProgramTrace (K.Program prog) | isNothing prog.progMain = pure $ emptyTrace (K.Done defaultLoc)
-runProgramTrace (K.Program prog) = do 
-  let main = fromMaybe (K.Done defaultLoc) prog.progMain
-  env <- gets (\(MkDriverState s) -> s.drvEnv )
-  _ <- debug ("evaluating " <> show main)
-  let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
-  liftErr evaled prog.progName "evaluation (with trace)"
 
 parseProg :: Modulename -> String -> DriverM P.Program 
 parseProg mn src = do 
+  _ <- debug "------ Parsing ------"
   let srcStripped = trim src
   let progTextShort = take (fromMaybe 10 (indexOf (Pattern "\n") srcStripped)) srcStripped
-  _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"")
+  _ <- debug ("parsing program from string \"" <> progTextShort <> "...\"") 
   let progParsed = runSourceParser src (parseProgram src)
   prog <- liftErr progParsed mn "parsing"
+  _ <- debug ("parsed program \n" <> show prog <> "\n") 
   pure prog
 
 getImports :: P.Program -> DriverM (List P.Program)
@@ -107,10 +92,8 @@ getImports (P.Program prog) = do
   let (Tuple notFoundImps foundImps) = splitImps maybeSrcs
   _ <- unless (null notFoundImps) $ throwError (ErrNotStdLib notFoundImps)
   let impNames = fst <$> foundImps
-  _ <- debug ("loading imports " <> intercalate ", " (show <$> impNames))
-  impsParsed <- for foundImps (\(Tuple nm src) -> do 
-     _ <- debug ("loading import " <> show nm)
-     parseProg nm src)
+  _ <- debug ("Imports to load: " <> intercalate ", " (show <$> impNames))
+  impsParsed <- for foundImps (\(Tuple nm src) -> withDebug false (parseProg nm) src)
   pure impsParsed
   where 
     splitImps :: List (Tuple Modulename (Maybe String)) -> Tuple (List Modulename) (List (Tuple Modulename String))
@@ -120,17 +103,26 @@ getImports (P.Program prog) = do
 
 inferProgram :: P.Program -> DriverM K.Program
 inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progName) (do
+  _ <- debug "------ Loading Imports ------"
   imports  <- getImports p
   impsOrdered <- getInferOrder p imports
   _ <- inferImportsOrdered impsOrdered
+  _ <- debug ""
+  _ <- debug "------ Desugaring Program ------"
   p'@(D.Program prog') <- desugarProg p
-  _ <- debug ("inferring declarations in " <> show prog'.progName)
+  _ <- debug ("Succcessfully desugared program\n" <> show p')
+  _ <- debug ""
+  _ <- debug "------ Type inference ------"
+  _ <- debug ("checking type declarations in " <> show prog'.progName) 
   decls' <- for prog'.progDecls (inferDataDecl prog'.progName)
+  _ <- debug ""
   progOrder <- getVarOrder p'
   let indexFun (D.VarDecl var1) (D.VarDecl var2) = compare (elemIndex var1.varName progOrder) (elemIndex var2.varName progOrder)
   let varsSorted = sortBy indexFun (snd <$> toUnfoldable prog'.progVars)
-  _ <- debug ("infering variables in " <> show prog'.progName)
-  kindedVars <- for varsSorted (inferVarDecl prog'.progName)
+  _ <- debug "inferring types of variables\n"
+  typedVars <- for varsSorted (inferVarDecl prog'.progName)
+  _ <- debug "------ Kind inference ------"
+  kindedVars <- for typedVars (kindVarDecl prog'.progName)
   let varmap = fromFoldable ((\d@(K.VarDecl var) -> Tuple var.varName d) <$> kindedVars)
   main' <- for prog'.progMain (inferCommand prog.progName)
   pure $ K.Program {
@@ -142,8 +134,8 @@ inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progNa
 
 inferAndRun :: P.Program -> DriverM K.Command
 inferAndRun p = do 
-  p' <- inferProgram p
-  runProgram p'
+  p' <- inferProgram p 
+  runProgram p' 
 
 getInferOrder :: P.Program -> List P.Program -> DriverM (List P.Program)
 getInferOrder (P.Program prog) Nil = 
@@ -155,18 +147,19 @@ getInferOrder p@(P.Program prog) progs = do
   order' <- liftErr order prog.progName "dependency order (modules)"
   let indexFun (P.Program p1) (P.Program p2) = compare (elemIndex p1.progName order') (elemIndex p2.progName order')
   let impsSorted = sortBy indexFun progs
-  _ <- debug ("ordered imports" <> intercalate ", " ((\(P.Program p') -> show p'.progName) <$> impsSorted))
+  _ <- debug ("ordered imports: " <> intercalate ", " ((\(P.Program p') -> show p'.progName) <$> impsSorted))
   pure impsSorted
 
 inferImportsOrdered :: List P.Program -> DriverM Unit
 inferImportsOrdered Nil =
-  debug "No imports to infer, skipping inference" *> pure unit
+  debug "No imports to infer" *> pure unit
 inferImportsOrdered imports = do 
-  _ <- debug ("inferring imports")
   (Environment env) <- gets (\(MkDriverState s) -> s.drvEnv)
   let imports' = filter (\(P.Program prog') -> isNothing $ lookup prog'.progName env) imports 
-  _ <- debug "inferring imports"
-  _ <- for imports' (\x -> inferProgram x)
+  let impNames = (\(P.Program prog) -> prog.progName) <$> imports'
+  _ <- debug ("Loading imports not found in environment: " <> intercalate ", " (show <$> impNames))
+  _ <- for imports' (\x -> withDebug false inferProgram x)
+  _ <- debug ("Successfully loaded imports")
   pure unit
 
 getVarOrder :: D.Program -> DriverM (List Variable)
@@ -195,49 +188,75 @@ inferDataDecl mn d@(D.DataDecl decl) = do
   _ <- addDecl mn decl''
   pure decl''
 
-inferVarDecl :: Modulename -> D.VarDecl -> DriverM K.VarDecl
+inferVarDecl :: Modulename -> D.VarDecl -> DriverM T.VarDecl
 inferVarDecl mn v@(D.VarDecl var@{varPos:_,varName:_, varBody:_, varTy:Just ty}) = do 
   _<-debug ("type checking variable " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let v' = runCheckM env (checkVarDecl v)
   case v' of 
       Left _ -> do
-        _ <- debug ("type checking failed, inferring type instead")
+        _ <- debug ("type checking for variable " <> show var.varName <> " failed, inferring type instead")
         let annotTy = runCheckM env (checkType var.varPos ty) 
         annotTy' <- liftErr annotTy mn "checking type annotation" 
-        kv@(K.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
-        let inferTy =  K.embedType (K.getType var'.varBody)
-        if T.isSubsumed annotTy' inferTy then pure kv 
+        kv@(T.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
+        let inferTy =  T.getType var'.varBody
+        if T.isSubsumed annotTy' inferTy then do
+          _ <- debug ("Annotated type " <> show annotTy' <> " is correctly subsumed by inferred type " <> show inferTy <> "\n")
+          pure kv 
         else throwError (ErrAnnotMismatch var.varPos var.varName annotTy' inferTy)
-      Right v'' -> do
-        let vk = runKindM env (kindVariable v'')
-        vk' <- liftErr vk mn "kind vardecl"
-        _ <- addVarDecl mn vk'
-        pure vk'
+      Right v''@(T.VarDecl var') -> do
+        _ <- debug ("Successfully checked type "  <> show (T.getType var'.varBody) <> " for " <> show var.varName <> "\n")
+        pure v''
 
 inferVarDecl mn v@(D.VarDecl var) = do 
   _ <- debug ("inferring type for " <> show var.varName)
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let constr = runGenM env (genConstraintsVarDecl v) 
-  (Tuple v' constrs) <- liftErr constr mn "generate constraints"
-  _ <- debug ("generated constraints " <> show constrs)
+  (Tuple v' (Tuple tyvars constrs)) <- liftErr constr mn "generate constraints"
+  _ <- debug ("generated typevars\n\t" <> intercalate ", " (show <$> tyvars))
+  _ <- debug ("generated constraints\n" <> showConstrs constrs)
   let slv = runSolveM constrs solve
   (Tuple _ varmap) <- liftErr slv mn "solve constraints"
-  _ <- debug ("solved constraints and got substitution " <> show varmap)
-  let v'' = substTyvars varmap v'
-  let vk = runKindM env (kindVariable v'')
-  vk' <- liftErr vk mn "kind vardecl"
-  _ <- addVarDecl mn vk'
-  pure vk'
+  _ <- debug ("solved constraints and got substitution\n " <> showSubst varmap)
+  let v''@(T.VarDecl var') = substTyvars varmap v'
+  _ <- debug ("Final type for variable " <> show var.varName <> ": " <> show (T.getType var'.varBody) <> "\n")
+  pure v''
 
+kindVarDecl :: Modulename -> T.VarDecl -> DriverM K.VarDecl 
+kindVarDecl mn v@(T.VarDecl var) = do
+  _ <- debug ("inferring kind of variable " <> show var.varName)
+  env <- gets (\(MkDriverState s) -> s.drvEnv)
+  let var' = runKindM env (kindVariable v)
+  var'' <- liftErr var' mn "kind vardecl"
+  _ <- addVarDecl mn var''
+  pure var''
 
 inferCommand :: Modulename -> D.Command -> DriverM K.Command
 inferCommand mn c = do 
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let ctr = runGenM env (genConstraintsCmd c)
-  Tuple c' constrs <- liftErr ctr mn "generate constraints command"
+  Tuple c' (Tuple _ constrs) <- liftErr ctr mn "generate constraints command"
   let vm = runSolveM constrs solve 
   Tuple _ varmap <- liftErr vm mn "solving constraints command"
   let c'' = substTyvars varmap c'
   let ck = runKindM env (kindCommand c'')
   liftErr ck mn "kinding command (after infer)"
+
+runProgram :: K.Program -> DriverM K.Command
+runProgram (K.Program prog) | isNothing prog.progMain = pure (K.Done defaultLoc) 
+runProgram (K.Program prog) = do
+  let main = fromMaybe (K.Done defaultLoc) prog.progMain
+  env <- gets (\(MkDriverState s) -> s.drvEnv)
+  _ <- debug ("evaluating main " <> show main) 
+  let evaled = runEvalM env (eval main)
+  liftErr evaled prog.progName "evaluation"
+
+runProgramTrace :: K.Program -> DriverM EvalTrace 
+runProgramTrace (K.Program prog) | isNothing prog.progMain = pure $ emptyTrace (K.Done defaultLoc)
+runProgramTrace (K.Program prog) = do 
+  let main = fromMaybe (K.Done defaultLoc) prog.progMain
+  env <- gets (\(MkDriverState s) -> s.drvEnv )
+  _ <- debug ("evaluating " <> show main)
+  let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
+  liftErr evaled prog.progName "evaluation (with trace)"
+

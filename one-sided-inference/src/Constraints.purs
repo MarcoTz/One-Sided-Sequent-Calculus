@@ -1,13 +1,14 @@
 module Constraints (
   ConstraintSet (..),
-  Constr (..)
+  Constr (..),
+  showConstrs
 ) where 
 
 import Common (Kind)
 import Syntax.Typed.Types (Ty)
 
-import Prelude (class Show, show, (<>))
-import Data.List (List(..))
+import Prelude (class Show, show, (<>),(<$>))
+import Data.List (List,intercalate)
 
 data Constr = 
   MkTyEq Ty Ty
@@ -19,3 +20,6 @@ instance Show Constr where
   show (MkKindNeq knd1 knd2) = show knd1 <> "!="<> show knd2
 
 type ConstraintSet = List Constr
+
+showConstrs :: ConstraintSet -> String 
+showConstrs cs = intercalate "\n\t" (show <$> cs)

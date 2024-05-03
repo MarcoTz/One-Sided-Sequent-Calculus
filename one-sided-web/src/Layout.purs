@@ -6,19 +6,15 @@ import StandardLib (libMap)
 
 import Prelude (($),(<>),(<$>),show)
 import Data.Map (toUnfoldable)
---import Data.String (Pattern(..), split)
---import Data.Array(concatMap)
 import Data.Tuple (Tuple(..))
+import Data.Array (length)
+import Data.String (split,Pattern(..))
 import Web.HTML.Common (ClassName(..))
 import Halogen.HTML (HTML,text)
 import Halogen.HTML.Elements (body,div,div_,textarea,button,h1_, h2_,br_, select,option_)
-import Halogen.HTML.Properties (class_,id, readOnly,value)
+import Halogen.HTML.Properties (class_,id, readOnly,value,style)
 import Halogen.HTML.Events (onClick,onValueChange)
 
---strToText :: forall w. String -> Array (HTML w Input)
---strToText str = do
---  let lines = split (Pattern "\n") str
---  concatMap (\l -> [text l,br_]) lines
 
 render :: forall w. State -> HTML w Input
 render {progSrc:src,runRes:res} = layout src res
@@ -32,32 +28,38 @@ progDiv src = div
     button [id "runButton", onClick runSrc] [text "Run"]
   ]
 
+
+getArea :: forall w. String -> ClassName -> String -> HTML w Input 
+getArea contents cl htmlId = 
+  let nlines = length (split (Pattern "\n") contents) in
+  textarea [class_ cl,id htmlId, readOnly true, value contents, style $ "height:"<>show nlines<>"em;" ]
+
 resDiv :: forall w.RunResult -> HTML w Input 
 resDiv (ResErr {errMsg:err, errDebug:debug, errTypes:tys}) = div [ class_ $ ClassName "results"]
   [
     h1_ [text "Results"],
     h2_ [text "Output"],
-    textarea [class_ $ ClassName "evalError", id "evalRes", readOnly true, value ("Error: " <> err)],
+    getArea ("Error: " <> err) (ClassName "evalError") "evalRes",
     br_,
     h2_ [text "Inferred Types"],
-    textarea [id "typesStr", readOnly true, value tys],
+    getArea tys (ClassName "results") "typesStr",
     h2_ [text "Debug Trace"],
-    textarea [id "debugStr", readOnly true, value debug]
+    getArea debug (ClassName "results") "debugStr"
   ]
 resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug, succTypes:tys}) = div 
   [ class_ $ ClassName "results" ]
   [ 
     h1_ [text "Results"],
     h2_ [text "Output"],
-    textarea [class_ $ ClassName "evalSucc", id "evalRes", readOnly true, id "resultStr", value cmd],
+    getArea cmd (ClassName "evalSucc") "evalRes",
     br_,
     h2_ [text "Inferred Types"],
-    textarea [id "typesStr", readOnly true, value tys],
+    getArea tys (ClassName "results") "typesStr",
     h2_ [text "Evaluation Trace"],
     br_,
     textarea [id "traceStr", readOnly true, value tr],
     h2_ [text "Debug Trace"],
-    textarea [id "debugStr", readOnly true, value debug]
+    getArea debug (ClassName "results") "debugStr"
   ]
 
 exSelect :: forall w. HTML w Input
