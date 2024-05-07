@@ -7,6 +7,7 @@ module GenerateConstraints.Definition (
   freshKVar,
   freshTyVar,
   freshTyVarsDecl,
+  addTyvar,
   addConstraint,
   addConstraintsXtor
 ) where 
@@ -23,9 +24,9 @@ import Common (Variable, Typevar(..), VariantVar(..),Kind(..),Kindvar(..), Xtorn
 import Environment (Environment)
 import Syntax.Typed.Types (Ty(..))
 
-import Prelude (bind, (<>), show,pure,(+),(<$>))
+import Prelude (bind, (<>), show,pure,(+),(<$>),(*>))
 import Data.Map (Map,empty,fromFoldable,insert)
-import Data.List (List(..))
+import Data.List (List(..),elem)
 import Data.Tuple (Tuple(..), fst,snd)
 import Data.Either (Either(..))
 import Data.Unit (Unit,unit)
@@ -52,13 +53,15 @@ runGenM env m = case runExcept (runStateT (runReaderT m env) initialGenState) of
   Left err -> Left err 
   Right (Tuple x (MkGenState st)) ->  Right (Tuple x (Tuple st.genTyvars st.constrSet))
 
--- Fresh Variables 
 freshTyVar :: GenM Ty
 freshTyVar = do 
-  cnt <- gets (\(MkGenState st) -> st.tyVarCnt)
-  let newVar = Typevar ("X" <> show cnt)
-  _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=cnt+1, genTyvars=Cons newVar s.genTyvars}) 
+  (Tuple cnt vars) <- gets (\(MkGenState st) -> Tuple st.tyVarCnt st.genTyvars)
+  let (Tuple newVar newCnt) = getNewVar vars cnt 
+  _ <- modify (\(MkGenState s) -> MkGenState s{tyVarCnt=newCnt, genTyvars=Cons newVar s.genTyvars}) 
   pure (TyVar newVar)
+  where 
+    getNewVar :: List Typevar -> Int -> (Tuple Typevar Int)
+    getNewVar vars' i = let newVar = Typevar ("X" <> show i) in if newVar `elem` vars' then  getNewVar vars' (i+1) else Tuple newVar i
 
 freshTyVarsDecl :: List VariantVar -> GenM (Tuple (List Ty) (Map Typevar Ty))
 freshTyVarsDecl vars = do
@@ -69,6 +72,9 @@ freshTyVarsDecl vars = do
   let newVars = fst <$> varL
   let newMap = fromFoldable (snd <$> varL)
   pure (Tuple newVars newMap)
+
+addTyvar :: Typevar -> GenM Unit
+addTyvar var = modify (\(MkGenState s) -> MkGenState s{genTyvars=Cons var s.genTyvars}) *> pure unit
 
 freshKVar :: GenM Kind
 freshKVar = do 
@@ -91,7 +97,6 @@ addGenVar v ty = do
   vars <- gets (\(MkGenState s) -> s.varEnv)
   _ <- modify (\(MkGenState s) -> MkGenState s{varEnv=insert v ty vars})
   pure unit
-
 
 addConstraintsXtor :: Loc -> Xtorname -> List Ty -> List Ty -> GenM Unit
 addConstraintsXtor _ _ Nil Nil = pure unit

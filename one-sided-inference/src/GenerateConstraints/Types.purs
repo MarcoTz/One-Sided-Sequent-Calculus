@@ -3,7 +3,7 @@ module GenerateConstraints.Types (
   genConstraintsKindedTy
 )where 
 
-import GenerateConstraints.Definition (GenM)
+import GenerateConstraints.Definition (GenM,addTyvar)
 import GenerateConstraints.Errors (GenerateError(..))
 import Loc (Loc)
 import Common (VariantVar(..),Kind(..),varianceEvalOrder, defaultEo)
@@ -19,7 +19,9 @@ import Data.Traversable (for)
 import Control.Monad.Except (throwError)
 
 genConstraintsTy :: Loc -> D.Ty -> GenM T.Ty
-genConstraintsTy _ (D.TyVar v) = pure $ T.TyVar v
+genConstraintsTy _ (D.TyVar v) = do
+  _ <- addTyvar v 
+  pure $ T.TyVar v
 genConstraintsTy loc (D.TyDecl tyn args) = do 
   (K.DataDecl decl) <- lookupDecl loc tyn 
   let argPols = (\(VariantVar v) -> MkKind (varianceEvalOrder v.variantVariance (defaultEo decl.declType))) <$> decl.declArgs

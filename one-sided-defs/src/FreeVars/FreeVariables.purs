@@ -5,8 +5,9 @@ module FreeVars.FreeVariables (
   ) where
 
 import Common (Variable(..),freshVarN) 
-import Syntax.Kinded.Terms (Term(..),Pattern(..),Command(..)) as K
-import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..)) as P
+import Syntax.Kinded.Terms (Term(..),Pattern(..),Command(..))     as K
+import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..))  as D
+import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..))     as P
 
 import Prelude ((<$>))
 import Data.List (List,foldr)
@@ -67,3 +68,21 @@ instance FreeVariables P.Command where
 instance FreeVariables P.Pattern where 
   freeVars (P.Pattern pt) = foldr delete (freeVars pt.ptcmd) pt.ptv
 
+instance FreeVariables D.Term where
+  freeVars (D.Var _ v)              = singleton v
+  freeVars (D.Mu _ v c)             = delete v (freeVars c)
+  freeVars (D.Xtor _ _ args)        = unions (freeVars <$> args)
+  freeVars (D.XCase _ pts)          = unions (freeVars <$> pts)
+  freeVars (D.ShiftCBV _ t)         = freeVars t 
+  freeVars (D.ShiftCBN _ t)         = freeVars t 
+
+instance FreeVariables D.Command where
+  freeVars (D.Cut _ t1 _ t2) = union (freeVars t1) (freeVars t2) 
+  freeVars (D.CutAnnot _ t1 _ _ t2) = union (freeVars t1) (freeVars t2) 
+  freeVars (D.Done _) = empty
+  freeVars (D.Err _ _)  = empty
+  freeVars (D.Print _ t) = freeVars t
+  freeVars (D.PrintAnnot _ t _) = freeVars t
+
+instance FreeVariables D.Pattern where 
+  freeVars (D.Pattern pt) = foldr delete (freeVars pt.ptcmd) pt.ptv

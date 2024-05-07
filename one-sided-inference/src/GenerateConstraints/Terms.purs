@@ -9,7 +9,9 @@ import GenerateConstraints.Types (genConstraintsTy)
 import Constraints (Constr(..))
 import Loc (Loc) 
 import Environment (lookupXtorDecl, lookupXtor)
+import FreeVars.FreeVariables (freshVar)
 import Syntax.Desugared.Terms (Term(..), Pattern(..),Command(..)) as D
+import Syntax.Desugared.Substitution (substVars)  as D
 import Syntax.Typed.Terms (Command(..),getType,Term(..),Pattern(..)) as T
 import Syntax.Typed.Substitution (substTyvars) as T
 import Syntax.Typed.Types (Ty(..)) as T
@@ -20,10 +22,9 @@ import Prelude (bind,pure, (<$>),($),not,(&&))
 import Data.List (List(..),elem,null,filter, zip)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
-import Data.Map (lookup)
+import Data.Map (lookup, fromFoldable)
 import Data.Traversable (for)
 import Control.Monad.Except (throwError)
-
 
 checkPts :: Loc -> List D.Pattern -> GenM (Maybe K.DataDecl)
 checkPts _ Nil = pure Nothing 
@@ -70,10 +71,19 @@ genConstraintsTerm (D.Var loc v) = do
      Just ty -> pure (T.Var loc v ty)
 
 genConstraintsTerm (D.Mu loc v  c) = do 
-  tyV <- freshTyVar
-  _ <- addGenVar v tyV
-  c' <- genConstraintsCmd c
-  pure $ T.Mu loc v c' tyV 
+  vars <- getGenVars 
+  case lookup v vars of 
+      Nothing -> do
+        tyV <- freshTyVar
+        _ <- addGenVar v tyV
+        c' <- genConstraintsCmd c
+        pure $ T.Mu loc v c' tyV 
+      Just _ -> do
+        let newV = freshVar c
+        let varT = D.Var loc newV
+        let varmap = fromFoldable (Cons (Tuple v varT) Nil)
+        let newC = D.substVars varmap c
+        genConstraintsTerm (D.Mu loc newV newC)
 
 genConstraintsTerm (D.Xtor loc nm args) = do 
   (K.DataDecl decl) <- lookupXtorDecl loc nm

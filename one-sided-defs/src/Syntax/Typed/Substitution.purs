@@ -6,13 +6,14 @@ module Syntax.Typed.Substitution (
 import Syntax.Typed.Types  (Ty(..))
 import Syntax.Typed.Program (XtorSig (..),VarDecl(..))
 import Syntax.Typed.Terms (Term (..), Pattern(..), Command(..))
+import FreeVars.FreeTypevars (freeTypevars)
 import Common (Typevar)
 
-import Prelude ((<$>))
+import Prelude ((<$>),($))
 import Data.Map (Map, lookup, delete)
 import Data.List (foldr)
-import Data.Maybe (fromMaybe)
-
+import Data.Set (isEmpty)
+import Data.Maybe (Maybe(..))
 
 --------------------------------
 -- Type Variable Substitution --
@@ -26,7 +27,9 @@ instance SubstituteTypevars XtorSig where
   substTyvars varmap (XtorSig sig) = XtorSig (sig {sigArgs=(substTyvars varmap <$> sig.sigArgs)})
 
 instance SubstituteTypevars Ty where 
-  substTyvars varmap ty@(TyVar v) = fromMaybe ty (lookup v varmap)
+  substTyvars varmap ty@(TyVar v) = case lookup v varmap of 
+    Nothing -> ty 
+    Just ty' -> if isEmpty $ freeTypevars ty' then ty' else substTyvars varmap ty'
   substTyvars varmap (TyDecl tyn args) = TyDecl tyn (substTyvars varmap <$> args)
   substTyvars varmap (TyShift ty) = TyShift (substTyvars varmap ty)
   substTyvars varmap (TyCo ty) = TyCo (substTyvars varmap ty) 

@@ -10,6 +10,7 @@ module Desugar.Definition (
   getDesDoneProg,
   setDesMain,
   setDesCurrDecl,
+  freshVar,
   addDesVar,
   addDesDecl
 ) where 
@@ -18,15 +19,17 @@ import Desugar.Errors (DesugarError(..))
 import Common (Variable(..),Modulename,Xtorname(..), Typevar(..), Typename(..))
 import Loc (Loc)
 import Environment (Environment,lookupMXtor)
+import FreeVars.FreeVariables (freeVars,class FreeVariables)
 import Syntax.Kinded.Program    (embedXtorSig) as K
 import Syntax.Typed.Program (embedXtorSig) as T
 import Syntax.Desugared.Program (Program(..),emptyProg,XtorSig(..),VarDecl,DataDecl(..),addDeclProgram, addVarProgram, setMainProgram) as D
 import Syntax.Desugared.Terms  (Command) as D
 import Syntax.Parsed.Program (DataDecl(..)) as P
 
-import Prelude (bind, (<$>),pure,(==),($))
+import Prelude (bind, (<$>),pure,(==),($),show,(+),(<>))
 import Data.Map (toUnfoldable,lookup) 
-import Data.List (List(..), find, concatMap)
+import Data.Set (toUnfoldable) as S
+import Data.List (List(..), find, concatMap,elem)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..),fst,snd)
 import Data.Either (Either(..))
@@ -35,10 +38,10 @@ import Control.Monad.State (StateT, runStateT, gets, modify)
 import Control.Monad.Except (Except, runExcept,throwError)
 import Control.Monad.Reader (ReaderT, runReaderT)
 
-data DesugarState = MkDesugarState { desCurrDecl :: (Maybe P.DataDecl), desDone :: D.Program} 
+data DesugarState = MkDesugarState { desCurrDecl :: (Maybe P.DataDecl), desDone :: D.Program, desVars :: List Variable} 
 
 initialDesugarState :: Modulename -> DesugarState 
-initialDesugarState nm = MkDesugarState {desCurrDecl:Nothing, desDone:(D.emptyProg nm "")}
+initialDesugarState nm = MkDesugarState {desCurrDecl:Nothing, desDone:(D.emptyProg nm ""), desVars:Nil}
 
 type DesugarM a = ReaderT Environment (StateT DesugarState (Except DesugarError)) a
 
@@ -53,6 +56,21 @@ varToXtor (Variable v) = Xtorname v
 
 tyvarToTyName :: Typevar -> Typename
 tyvarToTyName (Typevar v) = Typename v 
+
+freshVar :: forall a. FreeVariables a => a -> DesugarM Variable 
+freshVar t = do 
+  desVars <- gets (\(MkDesugarState s) -> s.desVars)
+  let frVars = S.toUnfoldable $ freeVars t
+  let allVars = desVars <> frVars
+  let newV = newVar 0 allVars 
+  _ <- modify (\(MkDesugarState s) -> MkDesugarState s{desVars = Cons newV s.desVars})
+  pure newV
+  where 
+    newVar :: Int -> List Variable -> Variable 
+    newVar i vars = 
+      let freshV = Variable (show i) in 
+      if freshV `elem` vars then newVar (i+1) vars 
+      else freshV
 
 getDesDoneProg :: DesugarM D.Program
 getDesDoneProg = gets (\(MkDesugarState s) -> s.desDone)

@@ -4,18 +4,18 @@ module Desugar.Terms (
 ) where 
 
 import Common (Xtorname(..),EvaluationOrder(..),Variable(..))
-import Desugar.Definition(DesugarM,varToXtor,getDesMXtor)
+import Desugar.Definition(DesugarM,varToXtor,getDesMXtor,freshVar)
 import Desugar.Errors (DesugarError(..))
 import Desugar.Types (desugarTy)
 import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..)) as P
 import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D
-import FreeVars.FreeVariables (freshVar)
 
 import Prelude (bind,($),pure,(<$>))
 import Data.Traversable (for)
 import Data.List (List(..),uncons)
 import Data.Maybe (Maybe(..))
 import Control.Monad.Except (throwError)
+
 
 desugarTerm :: P.Term -> DesugarM D.Term
 desugarTerm (P.Var loc v) = do
@@ -42,19 +42,19 @@ desugarTerm (P.ShiftCBN loc t) = do
 desugarTerm t@(P.App loc t1 t2) = do
   t1' <- desugarTerm t1 
   t2' <- desugarTerm t2
-  let v = freshVar t
+  v <- freshVar t
   let args = Cons t2' (Cons (D.Var loc v) Nil)
   let cut = D.Cut loc t1' CBV (D.Xtor loc (Xtorname "Ap") args) 
   pure $ D.Mu loc v cut
 desugarTerm t@(P.Lam loc v t') = do
-  let v' = freshVar t
+  v' <- freshVar t
   let ptVars = Cons v (Cons v' Nil)
   t'' <- desugarTerm t'
   let cut = D.Cut loc t'' CBV (D.Var loc v')
   let pt = D.Pattern {ptxt:Xtorname "Ap", ptv:ptVars, ptcmd:cut }
   pure $ D.XCase loc (Cons pt Nil) 
 desugarTerm t@(P.Seq loc t1 t2) = do 
-  let v = freshVar t
+  v <- freshVar t
   desugarTerm $ P.App loc (P.Lam loc v t2) t1
 desugarTerm (P.Tup loc ts) = case uncons ts of 
   Nothing -> throwError (ErrEmptyPair loc)
