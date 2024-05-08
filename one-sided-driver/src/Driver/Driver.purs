@@ -17,6 +17,7 @@ import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
 import Syntax.Desugared.Terms (Command)                                as D
 import Syntax.Typed.Types (isSubsumed)                                 as T
 import Syntax.Typed.Terms (getType)                                    as T
+import Syntax.Typed.Generalize (generalizeTy)                          as T 
 import Syntax.Typed.Program (VarDecl(..))                              as T
 import Syntax.Kinded.Terms (Command(..))                               as K
 import Syntax.Kinded.Program (Program(..),DataDecl, VarDecl(..))       as K
@@ -219,7 +220,7 @@ inferVarDecl mn v@(D.VarDecl var) = do
   let slv = runSolveM constrs solve
   (Tuple _ varmap) <- liftErr slv mn "solve constraints"
   _ <- debug ("solved constraints and got substitution\n\t " <> showSubst varmap)
-  let v''@(T.VarDecl var') = substTyvars varmap v'
+  let v''@(T.VarDecl var') = T.generalizeTy (substTyvars varmap v')
   _ <- debug ("Final type for variable " <> show var.varName <> ": " <> show (T.getType var'.varBody) <> "\n")
   pure v''
 
