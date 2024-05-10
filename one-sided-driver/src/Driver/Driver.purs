@@ -219,7 +219,7 @@ inferVarDecl mn v@(D.VarDecl var) = do
   _ <- debug ("generated constraints\n\t" <> showConstrs constrs)
   let slv = runSolveM constrs solve
   (Tuple _ varmap) <- liftErr slv mn "solve constraints"
-  _ <- debug ("solved constraints and got substitution\n\t " <> showSubst varmap)
+  _ <- debug ("Solved constraints and got substitution\n\t" <> showSubst varmap)
   let v''@(T.VarDecl var') = T.generalizeTy (substTyvars varmap v')
   _ <- debug ("Final type for variable " <> show var.varName <> ": " <> show (T.getType var'.varBody) <> "\n")
   pure v''
@@ -240,7 +240,7 @@ inferCommand mn c = do
   Tuple c' (Tuple _ constrs) <- liftErr ctr mn "generate constraints command"
   let vm = runSolveM constrs solve 
   Tuple _ varmap <- liftErr vm mn "solving constraints command"
-  _ <- debug ("Solved constraints and got substitution\n\t " <> showSubst varmap)
+  _ <- debug ("Solved constraints and got substitution\n\t" <> showSubst varmap)
   let c'' = substTyvars varmap c'
   let ck = runKindM env (kindCommand c'')
   liftErr ck mn "kinding command (after infer)"

@@ -38,7 +38,7 @@ unifyTypeConstraint (TyVar v1) (TyVar v2) = do
       pure unit
     (Tuple Nothing (Just ty)) -> addSlvTyVar v1 ty
     (Tuple (Just ty) Nothing) -> addSlvTyVar v2 ty
-    (Tuple Nothing Nothing) -> pure unit
+    (Tuple Nothing Nothing) -> addSlvTyVar v2 (TyVar v1) 
 unifyTypeConstraint (TyVar v) ty = do
   vars <- getSlvTyVars 
   case lookup v vars of 

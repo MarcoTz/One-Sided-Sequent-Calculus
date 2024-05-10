@@ -79,17 +79,9 @@ or := case { Ap(b1,a) =>
   } | CBV | a> 
 }
 
-ifthenelse :: forall X. Bool -> X -> X 
-ifthenelse := case { Ap(b1,a) => 
-  < case { Ap(t1,b) => 
-    < case { Ap(t2,c) =>  
-      < case { 
-        True => <t1 | CBV | b>,
-        False => <t2 | CBV | c> 
-        } | CBV | b1> 
-    } | CBV | b>
-  } | CBV | a>
-}
+ifthenelse :: forall X. Bool -> X -> X -> X
+ifthenelse :=\\b. \\t1.\\t2. mu a. <case { True => <t1|CBV|a>, False => <t2|CBV|a> } |CBV|b> 
+
 
 printCons :: Forall X. X
 printCons := mu x.Print x
