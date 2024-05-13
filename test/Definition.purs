@@ -16,6 +16,7 @@ import Driver.Definition (runDriverM, initialDriverState)
 import Driver.Driver (parseProg,inferAndRun) 
 import Syntax.Parsed.Program (Program)
 
+
 data Example = CounterExample Int | StdLib Modulename
 instance Show Example where 
   show (CounterExample i) = "Counterexample " <> showNr (i+1)

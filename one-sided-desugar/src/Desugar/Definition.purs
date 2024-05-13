@@ -68,7 +68,7 @@ freshVar t = do
   where 
     newVar :: Int -> List Variable -> Variable 
     newVar i vars = 
-      let freshV = Variable (show i) in 
+      let freshV = Variable ("x" <> show i) in 
       if freshV `elem` vars then newVar (i+1) vars 
       else freshV
 

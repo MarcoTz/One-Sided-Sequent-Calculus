@@ -1134,7 +1134,7 @@
   var intercalate = function(dictFoldable) {
     var foldl22 = foldl(dictFoldable);
     return function(dictMonoid) {
-      var append9 = append(dictMonoid.Semigroup0());
+      var append8 = append(dictMonoid.Semigroup0());
       var mempty2 = mempty(dictMonoid);
       return function(sep) {
         return function(xs) {
@@ -1149,7 +1149,7 @@
               ;
               return {
                 init: false,
-                acc: append9(v.acc)(append9(sep)(v1))
+                acc: append8(v.acc)(append8(sep)(v1))
               };
             };
           };
@@ -1212,12 +1212,12 @@
   var foldMapDefaultR = function(dictFoldable) {
     var foldr22 = foldr(dictFoldable);
     return function(dictMonoid) {
-      var append9 = append(dictMonoid.Semigroup0());
+      var append8 = append(dictMonoid.Semigroup0());
       var mempty2 = mempty(dictMonoid);
       return function(f) {
         return foldr22(function(x) {
           return function(acc) {
-            return append9(f(x))(acc);
+            return append8(f(x))(acc);
           };
         })(mempty2);
       };
@@ -3252,7 +3252,7 @@
     },
     foldMap: function(dictMonoid) {
       var mempty2 = mempty(dictMonoid);
-      var append13 = append(dictMonoid.Semigroup0());
+      var append14 = append(dictMonoid.Semigroup0());
       return function(f) {
         var go2 = function(v) {
           if (v instanceof Leaf) {
@@ -3260,7 +3260,7 @@
           }
           ;
           if (v instanceof Node) {
-            return append13(go2(v.value4))(append13(f(v.value3))(go2(v.value5)));
+            return append14(go2(v.value4))(append14(f(v.value3))(go2(v.value5)));
           }
           ;
           throw new Error("Failed pattern match at Data.Map.Internal (line 181, column 10 - line 184, column 28): " + [v.constructor.name]);
@@ -3314,7 +3314,7 @@
     },
     foldMapWithIndex: function(dictMonoid) {
       var mempty2 = mempty(dictMonoid);
-      var append13 = append(dictMonoid.Semigroup0());
+      var append14 = append(dictMonoid.Semigroup0());
       return function(f) {
         var go2 = function(v) {
           if (v instanceof Leaf) {
@@ -3322,7 +3322,7 @@
           }
           ;
           if (v instanceof Node) {
-            return append13(go2(v.value4))(append13(f(v.value2)(v.value3))(go2(v.value5)));
+            return append14(go2(v.value4))(append14(f(v.value2)(v.value3))(go2(v.value5)));
           }
           ;
           throw new Error("Failed pattern match at Data.Map.Internal (line 201, column 10 - line 204, column 30): " + [v.constructor.name]);
@@ -6007,7 +6007,7 @@
       }
       ;
       if (v instanceof Mu) {
-        return "mu " + (show10(v.value1) + (", " + show(showCommand)(v.value2)));
+        return "mu " + (show10(v.value1) + (". " + show(showCommand)(v.value2)));
       }
       ;
       if (v instanceof Xtor && $$null(v.value2)) {
@@ -9889,7 +9889,7 @@
   var show40 = /* @__PURE__ */ show(showInt);
   var elem7 = /* @__PURE__ */ elem(foldableList)(eqVariable);
   var toUnfoldable1 = /* @__PURE__ */ toUnfoldable3(unfoldableList);
-  var append4 = /* @__PURE__ */ append(semigroupList);
+  var append12 = /* @__PURE__ */ append(semigroupList);
   var MkDesugarState = /* @__PURE__ */ function() {
     function MkDesugarState2(value0) {
       this.value0 = value0;
@@ -10033,9 +10033,9 @@
           var $tco_done = false;
           var $tco_result;
           function $tco_loop(i2, vars) {
-            var freshV = new Variable(show40(i2));
-            var $106 = elem7(freshV)(vars);
-            if ($106) {
+            var freshV = new Variable("x" + show40(i2));
+            var $107 = elem7(freshV)(vars);
+            if ($107) {
               $tco_var_i = i2 + 1 | 0;
               $copy_vars = vars;
               return;
@@ -10056,7 +10056,7 @@
         return v.value0.desVars;
       }))(function(desVars) {
         var frVars = toUnfoldable1(freeVars2(t));
-        var allVars = append4(desVars)(frVars);
+        var allVars = append12(desVars)(frVars);
         var newV = newVar(0)(allVars);
         return bind7(modify7(function(v) {
           return new MkDesugarState({
@@ -10098,7 +10098,7 @@
   var bind8 = /* @__PURE__ */ bind(/* @__PURE__ */ bindReaderT(/* @__PURE__ */ bindStateT(monadExceptT6)));
   var getTypeNames2 = /* @__PURE__ */ getTypeNames(errorDesugarError)(/* @__PURE__ */ monadErrorReaderT(/* @__PURE__ */ monadErrorStateT(/* @__PURE__ */ monadErrorExceptT(monadIdentity))))(/* @__PURE__ */ monadReaderReaderT(/* @__PURE__ */ monadStateT(monadExceptT6)));
   var elem8 = /* @__PURE__ */ elem(foldableList)(eqTypename);
-  var append5 = /* @__PURE__ */ append(semigroupList);
+  var append4 = /* @__PURE__ */ append(semigroupList);
   var applicativeReaderT5 = /* @__PURE__ */ applicativeReaderT(/* @__PURE__ */ applicativeStateT(monadExceptT6));
   var pure7 = /* @__PURE__ */ pure(applicativeReaderT5);
   var $$for5 = /* @__PURE__ */ $$for(applicativeReaderT5)(traversableList);
@@ -10108,7 +10108,7 @@
       var vty = tyvarToTyName(v.value0);
       return bind8(getTypeNames2)(function(declTys) {
         return bind8(getDesDefNames)(function(currNames) {
-          var $27 = elem8(vty)(append5(declTys)(currNames));
+          var $27 = elem8(vty)(append4(declTys)(currNames));
           if ($27) {
             return pure7(new TyDecl(vty, Nil.value));
           }
@@ -10552,7 +10552,7 @@
   // output/Eval.Definition/index.js
   var show41 = /* @__PURE__ */ show(showCommand);
   var show117 = /* @__PURE__ */ show(showXtorname);
-  var append12 = /* @__PURE__ */ append(semigroupList);
+  var append13 = /* @__PURE__ */ append(semigroupList);
   var MkTrace = /* @__PURE__ */ function() {
     function MkTrace2(value0, value1) {
       this.value0 = value0;
@@ -10713,7 +10713,7 @@
   };
   var appendTrace = function(v) {
     return function(c$prime) {
-      return new MkTrace(c$prime, append12(v.value1)(new Cons(v.value0, Nil.value)));
+      return new MkTrace(c$prime, append13(v.value1)(new Cons(v.value0, Nil.value)));
     };
   };
 
@@ -31553,7 +31553,7 @@ rec len := case { Ap(ls,a) =>
 }
 
 printCons :: Forall X. X
-printCons := mu x. Print x;mu x.Done
+printCons := mu x. Print x
 
 main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
 `;
@@ -36072,13 +36072,13 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var empty7 = /* @__PURE__ */ function() {
     return CatNil.value;
   }();
-  var append6 = link;
+  var append5 = link;
   var semigroupCatList = {
-    append: append6
+    append: append5
   };
   var snoc4 = function(cat) {
     return function(a2) {
-      return append6(cat)(new CatCons(a2, empty6));
+      return append5(cat)(new CatCons(a2, empty6));
     };
   };
 
@@ -36097,7 +36097,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       return val;
     };
   };
-  var append7 = /* @__PURE__ */ append(semigroupCatList);
+  var append6 = /* @__PURE__ */ append(semigroupCatList);
   var Free = /* @__PURE__ */ function() {
     function Free2(value0, value1) {
       this.value0 = value0;
@@ -36143,7 +36143,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       };
       var concatF = function(v22) {
         return function(r) {
-          return new Free(v22.value0, append7(v22.value1)(r));
+          return new Free(v22.value0, append6(v22.value1)(r));
         };
       };
       if (v.value0 instanceof Return) {
@@ -36272,7 +36272,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   // output/Halogen.Subscription/index.js
   var $$void4 = /* @__PURE__ */ $$void(functorEffect);
   var bind34 = /* @__PURE__ */ bind(bindEffect);
-  var append8 = /* @__PURE__ */ append(semigroupArray);
+  var append7 = /* @__PURE__ */ append(semigroupArray);
   var traverse_2 = /* @__PURE__ */ traverse_(applicativeEffect);
   var traverse_1 = /* @__PURE__ */ traverse_2(foldableArray);
   var unsubscribe = function(v) {
@@ -36296,7 +36296,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       emitter: function(k) {
         return function __do2() {
           modify_(function(v) {
-            return append8(v)([k]);
+            return append7(v)([k]);
           })(subscribers)();
           return modify_(deleteBy(unsafeRefEq)(k))(subscribers);
         };

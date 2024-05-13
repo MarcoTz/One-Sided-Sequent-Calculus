@@ -54,7 +54,7 @@ data Term =
 derive instance eqTerm :: Eq Term
 instance Show Term where 
   show (Var _ v _)        = show v 
-  show (Mu _ v c _)       = "mu " <> show v <> ", " <> show c 
+  show (Mu _ v c _)       = "mu " <> show v <> ". " <> show c 
   show (Xtor _ nm args _) | null args = show nm
   show (Xtor _ nm args _) = show nm <> "(" <> intercalate ", " (show <$> args) <> ")"
   show (XCase _ pts _)    = "case { " <> intercalate ", " (show <$> pts) <> " }" 
