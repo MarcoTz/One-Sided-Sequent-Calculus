@@ -57,7 +57,7 @@ instance HasLoc VarDecl where
 instance Show VarDecl where 
   show (VarDecl decl) = do
     let recStr = if decl.varIsRec then "rec " else ""
-    recStr <> show decl.varName <> " : " <> show decl.varTy <> " := " <> show decl.varBody
+    recStr <> show decl.varName <> " :: " <> show decl.varTy <> " := " <> show decl.varBody
 
 data Program = Program {
   progName  :: Modulename, 

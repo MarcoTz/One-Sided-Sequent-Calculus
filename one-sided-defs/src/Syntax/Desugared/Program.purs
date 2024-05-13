@@ -52,7 +52,7 @@ instance HasLoc VarDecl where
 instance Show VarDecl where 
   show (VarDecl var) = do
     let recPref = if var.varIsRec then "rec " else ""
-    let tyStr = fromMaybe "" (show <$> var.varTy)
+    let tyStr = fromMaybe "" ((\x -> " :: " <> show x) <$> var.varTy)
     recPref <> show var.varName <> tyStr <> " := " <> show var.varBody
 
 

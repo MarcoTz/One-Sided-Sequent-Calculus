@@ -3,11 +3,12 @@ module Syntax.Kinded.Types (
   embedType
 ) where 
 
-import Common (Typevar,Kind, Typename, class GetKind, getKind, shiftEvalOrder, class ContainsKindvar, containsKindvar, class ShiftEvalOrder)
+import Common (Typevar,Kind, Typename(..), shiftEvalOrder,
+  class GetKind, getKind, class ContainsKindvar, containsKindvar, class ShiftEvalOrder)
 import Syntax.Typed.Types (Ty(..)) as T
 
 import Prelude (class Eq, (<$>), ($), class Show, show, (<>))
-import Data.List (List,null,intercalate)
+import Data.List (List(..),null,intercalate)
 
 data Ty =
   TyVar      Typevar Kind 
@@ -17,13 +18,14 @@ data Ty =
   | TyForall (List Typevar)  Ty
 derive instance eqTy :: Eq Ty
 instance Show Ty where 
-  show (TyVar v knd) = show v <> " : " <> show knd 
-  show (TyDecl tyn args knd) | null args = show tyn <> ": " <> show knd
-  show (TyDecl tyn args knd) = show tyn <> "(" <> intercalate ", " (show <$> args) <> ") :" <> show knd
-  show (TyShift ty knd) = "{" <> show ty <> "}" <> ":" <> show knd
-  show (TyCo ty) = "co " <> show ty
+  show (TyVar v knd) = "(" <> show v <> " : " <> show knd <> ")"
+  show (TyDecl (Typename "Fun") (Cons ty1 (Cons ty2 Nil)) knd) = "(" <> show ty1 <> " -> " <> show ty2 <> " : " <> show knd <> ")"
+  show (TyDecl tyn args knd) | null args = "(" <> show tyn <> ": " <> show knd <> ")"
+  show (TyDecl tyn args knd) = "(" <> show tyn <> "(" <> intercalate ", " (show <$> args) <> ") :" <> show knd <> ")"
+  show (TyShift ty knd) = "({" <> show ty <> "}" <> ":" <> show knd <> ")"
+  show (TyCo ty) = "(co " <> show ty<>")"
   show (TyForall args ty) | null args = show ty
-  show (TyForall args ty) = "forall " <> intercalate ", " (show <$> args) <> ", " <> show ty
+  show (TyForall args ty) = "(forall " <> intercalate ", " (show <$> args) <> ", " <> show ty <>")"
 
 
 instance GetKind Ty where 

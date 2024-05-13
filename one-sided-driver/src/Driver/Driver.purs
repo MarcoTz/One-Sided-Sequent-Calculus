@@ -70,11 +70,12 @@ import Control.Monad.Except (throwError)
 
 
 
-runStr :: Modulename -> String -> Boolean -> DriverM (Either K.Command EvalTrace) 
-runStr mn progText withTrace = do 
+runStr :: Modulename -> String -> DriverM (Tuple K.Program EvalTrace)
+runStr mn progText = do 
   progParsed' <- parseProg mn progText
   prog <- inferProgram progParsed' 
-  if withTrace then Right <$> runProgramTrace prog else Left <$> runProgram prog
+  runRes <- runProgramTrace prog
+  pure (Tuple prog runRes)
 
 parseProg :: Modulename -> String -> DriverM P.Program 
 parseProg mn src = do 

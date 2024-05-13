@@ -6,10 +6,10 @@ module Syntax.Typed.Types (
 ) where 
 
 import Prelude (class Eq, (==), (<$>), (<>), (&&), class Show, show)
-import Data.List (List, null, zip, intercalate,foldr)
+import Data.List (List(..), null, zip, intercalate,foldr)
 import Data.Tuple (Tuple(..))
 
-import Common (Typevar, Typename, Kind)
+import Common (Typevar, Typename(..), Kind)
 import Syntax.Desugared.Types (Ty(..)) as D
 
 data Ty = 
@@ -21,6 +21,7 @@ data Ty =
 derive instance eqTy :: Eq Ty
 instance Show Ty where
   show (TyVar v) = show v
+  show (TyDecl (Typename "Fun") (Cons ty1 (Cons ty2 Nil))) = show ty1 <> " -> " <> show ty2
   show (TyDecl tyn args) | null args = show tyn
   show (TyDecl tyn args) = show tyn <> " (" <> intercalate ", " (show <$> args) <> ")"
   show (TyShift ty) = "{" <> show ty <> "}"
