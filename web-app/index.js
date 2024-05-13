@@ -299,7 +299,7 @@
       return function(dictIsSymbol) {
         var reflectSymbol2 = reflectSymbol(dictIsSymbol);
         return function(dictEq) {
-          var eq37 = eq(dictEq);
+          var eq38 = eq(dictEq);
           return {
             eqRecord: function(v) {
               return function(ra) {
@@ -307,7 +307,7 @@
                   var tail2 = eqRecord1($$Proxy.value)(ra)(rb);
                   var key = reflectSymbol2($$Proxy.value);
                   var get4 = unsafeGet(key);
-                  return eq37(get4(ra))(get4(rb)) && tail2;
+                  return eq38(get4(ra))(get4(rb)) && tail2;
                 };
               };
             }
@@ -317,10 +317,10 @@
     };
   };
   var notEq = function(dictEq) {
-    var eq37 = eq(dictEq);
+    var eq38 = eq(dictEq);
     return function(x) {
       return function(y) {
-        return eq2(eq37(x)(y))(false);
+        return eq2(eq38(x)(y))(false);
       };
     };
   };
@@ -398,11 +398,11 @@
 
   // output/Data.Ord/foreign.js
   var unsafeCompareImpl = function(lt) {
-    return function(eq37) {
+    return function(eq38) {
       return function(gt) {
         return function(x) {
           return function(y) {
-            return x < y ? lt : x === y ? eq37 : gt;
+            return x < y ? lt : x === y ? eq38 : gt;
           };
         };
       };
@@ -704,7 +704,7 @@
     };
   };
   var eqMaybe = function(dictEq) {
-    var eq37 = eq(dictEq);
+    var eq38 = eq(dictEq);
     return {
       eq: function(x) {
         return function(y) {
@@ -713,7 +713,7 @@
           }
           ;
           if (x instanceof Just && y instanceof Just) {
-            return eq37(x.value0)(y.value0);
+            return eq38(x.value0)(y.value0);
           }
           ;
           return false;
@@ -1771,7 +1771,7 @@
   };
   var eq1List = {
     eq1: function(dictEq) {
-      var eq37 = eq(dictEq);
+      var eq38 = eq(dictEq);
       return function(xs) {
         return function(ys) {
           var go2 = function($copy_v) {
@@ -1795,7 +1795,7 @@
                   if (v instanceof Cons && v1 instanceof Cons) {
                     $tco_var_v = v.value1;
                     $tco_var_v1 = v1.value1;
-                    $copy_v2 = v2 && eq37(v1.value0)(v.value0);
+                    $copy_v2 = v2 && eq38(v1.value0)(v.value0);
                     return;
                   }
                   ;
@@ -3547,11 +3547,11 @@
     }
   };
   var eqSet = function(dictEq) {
-    var eq37 = eq(eqMap(dictEq)(eqUnit));
+    var eq38 = eq(eqMap(dictEq)(eqUnit));
     return {
       eq: function(v) {
         return function(v1) {
-          return eq37(v)(v1);
+          return eq38(v)(v1);
         };
       }
     };
@@ -8062,11 +8062,11 @@
     return v;
   };
   var getVertex = function(dictEq) {
-    var eq37 = eq(dictEq);
+    var eq38 = eq(dictEq);
     return function(lb) {
       return function(v) {
         return find3(function(v1) {
-          return eq37(lb)(v1);
+          return eq38(lb)(v1);
         })(v.value0.grVerts);
       };
     };
@@ -8078,31 +8078,31 @@
     return v.value1;
   };
   var eqVertex = function(dictEq) {
-    var eq37 = eq(dictEq);
+    var eq38 = eq(dictEq);
     return {
       eq: function(x) {
         return function(y) {
-          return eq37(x)(y);
+          return eq38(x)(y);
         };
       }
     };
   };
   var getEdgesEndingAt = function(dictEq) {
-    var eq37 = eq(eqVertex(dictEq));
+    var eq38 = eq(eqVertex(dictEq));
     return function(vert) {
       return function(v) {
         return filter(function(e) {
-          return eq37(getEndingVert(e))(vert);
+          return eq38(getEndingVert(e))(vert);
         })(v.value0.grEdges);
       };
     };
   };
   var getEdgesStartingAt = function(dictEq) {
-    var eq37 = eq(eqVertex(dictEq));
+    var eq38 = eq(eqVertex(dictEq));
     return function(vert) {
       return function(v) {
         return filter(function(e) {
-          return eq37(getStartingVert(e))(vert);
+          return eq38(getStartingVert(e))(vert);
         })(v.value0.grEdges);
       };
     };
@@ -8122,11 +8122,11 @@
     };
   };
   var eqEdge = function(dictEq) {
-    var eq37 = eq(eqVertex(dictEq));
+    var eq38 = eq(eqVertex(dictEq));
     return {
       eq: function(x) {
         return function(y) {
-          return eq37(x.value0)(y.value0) && eq37(x.value1)(y.value1);
+          return eq38(x.value0)(y.value0) && eq38(x.value1)(y.value1);
         };
       }
     };
@@ -31246,10 +31246,11 @@
       return val;
     };
   };
+  var eq31 = /* @__PURE__ */ eq(eqTypevar);
   var monadExceptT15 = /* @__PURE__ */ monadExceptT(monadIdentity);
+  var pure26 = /* @__PURE__ */ pure(/* @__PURE__ */ applicativeStateT(monadExceptT15));
   var bind27 = /* @__PURE__ */ bind(/* @__PURE__ */ bindStateT(monadExceptT15));
   var lookup9 = /* @__PURE__ */ lookup(ordTypevar);
-  var pure26 = /* @__PURE__ */ pure(/* @__PURE__ */ applicativeStateT(monadExceptT15));
   var notEq4 = /* @__PURE__ */ notEq(eqTypename);
   var throwError15 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowStateT(/* @__PURE__ */ monadThrowExceptT(monadIdentity)));
   var unifyTypeConstraint = function($copy_v) {
@@ -31258,6 +31259,11 @@
       var $tco_done = false;
       var $tco_result;
       function $tco_loop(v, v1) {
+        if (v instanceof TyVar2 && (v1 instanceof TyVar2 && eq31(v.value0)(v1.value0))) {
+          $tco_done = true;
+          return pure26(unit);
+        }
+        ;
         if (v instanceof TyVar2 && v1 instanceof TyVar2) {
           $tco_done = true;
           return bind27(getSlvTyVars)(function(vars) {
@@ -31280,7 +31286,7 @@
               return addSlvTyVar(v1.value0)(new TyVar2(v.value0));
             }
             ;
-            throw new Error("Failed pattern match at SolveConstraints.Solver (line 35, column 3 - line 41, column 57): " + [v3.constructor.name]);
+            throw new Error("Failed pattern match at SolveConstraints.Solver (line 36, column 3 - line 42, column 57): " + [v3.constructor.name]);
           });
         }
         ;
@@ -31296,7 +31302,7 @@
               return addConstraint2(new MkTyEq(v3.value0, v1));
             }
             ;
-            throw new Error("Failed pattern match at SolveConstraints.Solver (line 44, column 3 - line 46, column 46): " + [v3.constructor.name]);
+            throw new Error("Failed pattern match at SolveConstraints.Solver (line 45, column 3 - line 47, column 46): " + [v3.constructor.name]);
           });
         }
         ;
@@ -32304,7 +32310,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var lookupXtorDecl3 = /* @__PURE__ */ lookupXtorDecl(errorCheckerError)(monadErrorReaderT7)(monadReaderReaderT5);
   var lookupXtor3 = /* @__PURE__ */ lookupXtor(errorCheckerError)(monadErrorReaderT7)(monadReaderReaderT5);
   var unless3 = /* @__PURE__ */ unless(applicativeReaderT16);
-  var eq31 = /* @__PURE__ */ eq(eqTypename);
+  var eq37 = /* @__PURE__ */ eq(eqTypename);
   var map210 = /* @__PURE__ */ map(functorList);
   var zipWithErrorM4 = /* @__PURE__ */ zipWithErrorM(errorCheckerError)(monadErrorReaderT7);
   var substTyvars4 = /* @__PURE__ */ substTyvars(substituteTypevarsTy);
@@ -32378,7 +32384,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       if (v instanceof Xtor2 && v1 instanceof TyDecl2) {
         return bind30(lookupXtorDecl3(v.value0)(v.value1))(function(v2) {
           return bind30(lookupXtor3(v.value0)(v.value1))(function(v3) {
-            return bind30(unless3(eq31(v1.value0)(v2.value0.declName))(throwError18(new ErrNotTyDecl(v.value0, v2.value0.declName, v1, v))))(function() {
+            return bind30(unless3(eq37(v1.value0)(v2.value0.declName))(throwError18(new ErrNotTyDecl(v.value0, v2.value0.declName, v1, v))))(function() {
               var argVars = map210(function(v4) {
                 return v4.value0.variantVar;
               })(v2.value0.declArgs);
@@ -32424,7 +32430,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
           };
         };
         return bind30(lookupXtorDecl3(v.value0)(v.value1.value0.value0.ptxt))(function(v2) {
-          return bind30(unless3(eq31(v1.value0)(v2.value0.declName))(throwError18(new ErrNotTyDecl(v.value0, v2.value0.declName, v1, v))))(function() {
+          return bind30(unless3(eq37(v1.value0)(v2.value0.declName))(throwError18(new ErrNotTyDecl(v.value0, v2.value0.declName, v1, v))))(function() {
             var ptxtns = map210(function(v3) {
               return v3.value0.ptxt;
             })(v.value1);
@@ -32654,7 +32660,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
     }))(function(env) {
       return bind32(debug("evaluating " + show56(main3)))(function() {
         var evaled = runEvalM(env)(evalWithTrace(main3)(emptyTrace(main3)));
-        return liftErr2(evaled)(v.value0.progName)("evaluation (with trace)");
+        return liftErr2(evaled)(v.value0.progName)("evaluating main");
       });
     });
   };
@@ -32744,7 +32750,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
               });
             }
             ;
-            throw new Error("Failed pattern match at Driver.Driver (line 198, column 3 - line 211, column 17): " + [v$prime.constructor.name]);
+            throw new Error("Failed pattern match at Driver.Driver (line 199, column 3 - line 212, column 17): " + [v$prime.constructor.name]);
           });
         });
       }
@@ -32867,7 +32873,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         return new Tuple(v2.value0, new Cons(new Tuple(v1.value0.value0, v1.value0.value1.value0), v2.value1));
       }
       ;
-      throw new Error("Failed pattern match at Driver.Driver (line 101, column 5 - line 101, column 116): " + [v1.constructor.name]);
+      throw new Error("Failed pattern match at Driver.Driver (line 102, column 5 - line 102, column 116): " + [v1.constructor.name]);
     };
     return bind32(debug("loading standard library imports"))(function() {
       var imps = map48(function(v12) {

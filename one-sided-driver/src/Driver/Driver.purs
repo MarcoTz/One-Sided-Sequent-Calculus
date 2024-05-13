@@ -69,6 +69,7 @@ import Control.Monad.State (gets)
 import Control.Monad.Except (throwError)
 
 
+
 runStr :: Modulename -> String -> Boolean -> DriverM (Either K.Command EvalTrace) 
 runStr mn progText withTrace = do 
   progParsed' <- parseProg mn progText
@@ -261,5 +262,4 @@ runProgramTrace (K.Program prog) = do
   env <- gets (\(MkDriverState s) -> s.drvEnv )
   _ <- debug ("evaluating " <> show main)
   let evaled = runEvalM env (evalWithTrace main (emptyTrace main)) 
-  liftErr evaled prog.progName "evaluation (with trace)"
-
+  liftErr evaled prog.progName "evaluating main" 

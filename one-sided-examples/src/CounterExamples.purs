@@ -60,7 +60,7 @@ cex05 = ["module cex05",
   "doubleCns :: Unit",
   "doubleCns := case {MkUnit => Done}",
   "",
-  "main := <wrongPol | CBV | wrongPol>"]
+  "main := <doubleCns | CBV | doubleCns>"]
 
 -- pattern without all xtors present
 cex06 :: Array String
@@ -92,20 +92,11 @@ cex09 = ["module cex09",
   "  MkX(Forall X.X)",
   "}"]
 
--- cut has no type annotation but x does
 cex10 :: Array String
 cex10 = ["module cex10",
-  "data X{",
-  "  MkX",
-  "}",
-  "" ,
-  "data Y{",
-  "  MkY",
-  "}",
-  "",
-  "x :: X",
-  "x := case { MkX => < MkY| CBV | case { MkY => Done }>} "]
-
+  "x :: Unit",
+  "x := MkUnit"
+]
 -- shift term cannot have co type, needs shifted type
 cex11 :: Array String
 cex11 = ["module cex11",

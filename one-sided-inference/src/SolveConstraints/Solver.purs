@@ -9,7 +9,7 @@ import Constraints (Constr(..))
 import Loc (defaultLoc)
 import Syntax.Typed.Types (Ty(..))
 
-import Prelude (bind,pure, (/=), otherwise) 
+import Prelude (bind,pure,(==), (/=), otherwise) 
 import Data.Unit (Unit,unit)
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
@@ -30,6 +30,7 @@ solve = do
 
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM Unit
+unifyTypeConstraint (TyVar v1) (TyVar v2) | v1 == v2 = pure unit
 unifyTypeConstraint (TyVar v1) (TyVar v2) = do 
   vars <- getSlvTyVars 
   case (Tuple (lookup v1 vars) (lookup v2 vars)) of 
