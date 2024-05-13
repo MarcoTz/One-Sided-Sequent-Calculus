@@ -10,7 +10,6 @@ import Prelude (show,($),(<$>),(<>))
 import Data.Either (Either(..))
 import Data.Tuple (Tuple(..),snd)
 import Data.List (List,intercalate)
-import Data.Maybe (fromMaybe)
 import Data.Map (lookup,toUnfoldable)
 
 import Driver.Definition (DriverState(..),initialDriverState, runDriverM)
@@ -21,7 +20,7 @@ import Errors (showInSrc)
 import Syntax.Kinded.Types (Ty)
 import Syntax.Kinded.Terms (getType)
 import Syntax.Kinded.Program (Program(..),VarDecl(..),emptyProg)
-import Eval.Definition (EvalTrace)
+import Eval.Definition (EvalTrace(..))
 import StandardLib (libMap)
 
 data Input = ProgramInput String | RunProg
@@ -43,10 +42,10 @@ toRunResult :: String -> Tuple (Either DriverError (Tuple Program EvalTrace)) Dr
 toRunResult src (Tuple (Left err) st) = 
   let {debugTr:db,typesTr:tys} = stateOutput st (emptyProg (Modulename "") "") in
   ResErr {errMsg:showInSrc err src, errDebug:db, errTypes:tys}
-toRunResult _ (Tuple (Right (Tuple p@(Program prog) tr)) st) =
+toRunResult _ (Tuple (Right (Tuple p (MkTrace c tr))) st) =
   let {debugTr:db,typesTr:tys} = stateOutput st p in
   ResSucc {
-    succCmd:fromMaybe "" (show <$> prog.progMain),
+    succCmd:show c,
     succTrace:show tr, 
     succDebug:db, 
     succTypes:tys} 
