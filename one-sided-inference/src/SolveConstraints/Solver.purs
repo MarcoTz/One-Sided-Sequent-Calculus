@@ -30,6 +30,8 @@ solve = do
 
   
 unifyTypeConstraint :: Ty -> Ty -> SolverM Unit
+unifyTypeConstraint (TyForall _ ty1) ty2 = unifyTypeConstraint ty1 ty2 
+unifyTypeConstraint ty1 (TyForall _ ty2) = unifyTypeConstraint ty1 ty2
 unifyTypeConstraint (TyVar v1) (TyVar v2) | v1 == v2 = pure unit
 unifyTypeConstraint (TyVar v1) (TyVar v2) = do 
   vars <- getSlvTyVars 

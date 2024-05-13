@@ -69,10 +69,10 @@
     return dict.map;
   };
   var mapFlipped = function(dictFunctor) {
-    var map119 = map(dictFunctor);
+    var map120 = map(dictFunctor);
     return function(fa) {
       return function(f) {
-        return map119(f)(fa);
+        return map120(f)(fa);
       };
     };
   };
@@ -80,10 +80,10 @@
     return map(dictFunctor)($$const(unit));
   };
   var voidLeft = function(dictFunctor) {
-    var map119 = map(dictFunctor);
+    var map120 = map(dictFunctor);
     return function(f) {
       return function(x) {
-        return map119($$const(x))(f);
+        return map120($$const(x))(f);
       };
     };
   };
@@ -1670,11 +1670,11 @@
   var traversableList = {
     traverse: function(dictApplicative) {
       var Apply0 = dictApplicative.Apply0();
-      var map119 = map(Apply0.Functor0());
+      var map120 = map(Apply0.Functor0());
       var lift22 = lift2(Apply0);
       var pure111 = pure(dictApplicative);
       return function(f) {
-        var $301 = map119(foldl2(flip(Cons.create))(Nil.value));
+        var $301 = map120(foldl2(flip(Cons.create))(Nil.value));
         var $302 = foldl2(function(acc) {
           var $304 = lift22(flip(Cons.create))(acc);
           return function($305) {
@@ -2429,11 +2429,11 @@
     return function(dictAlternative) {
       var Alt0 = dictAlternative.Plus1().Alt0();
       var alt11 = alt(Alt0);
-      var map119 = map(Alt0.Functor0());
+      var map120 = map(Alt0.Functor0());
       var pure39 = pure(dictAlternative.Applicative0());
       return function(p2) {
         var go2 = function(acc) {
-          return bind113(alt11(map119(Loop.create)(p2))(pure39(new Done(unit))))(function(aa) {
+          return bind113(alt11(map120(Loop.create)(p2))(pure39(new Done(unit))))(function(aa) {
             return pure39(bimap2(function(v) {
               return new Cons(v, acc);
             })(function(v) {
@@ -3348,7 +3348,7 @@
       var pure39 = pure(dictApplicative);
       var Apply0 = dictApplicative.Apply0();
       var apply3 = apply(Apply0);
-      var map119 = map(Apply0.Functor0());
+      var map120 = map(Apply0.Functor0());
       return function(f) {
         var go2 = function(v) {
           if (v instanceof Leaf) {
@@ -3356,7 +3356,7 @@
           }
           ;
           if (v instanceof Node) {
-            return apply3(apply3(map119(function(l$prime) {
+            return apply3(apply3(map120(function(l$prime) {
               return function(v$prime) {
                 return function(r$prime) {
                   return new Node(v.value0, v.value1, v.value2, v$prime, l$prime, r$prime);
@@ -4118,10 +4118,10 @@
     };
   };
   var functorExceptT = function(dictFunctor) {
-    var map119 = map(dictFunctor);
+    var map120 = map(dictFunctor);
     return {
       map: function(f) {
-        return mapExceptT(map119(map6(f)));
+        return mapExceptT(map120(map6(f)));
       }
     };
   };
@@ -7350,12 +7350,12 @@
   var lookupMVar = function(dictError) {
     var getVars1 = getVars(dictError);
     return function(dictMonadError) {
-      var map119 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
+      var map120 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
       var getVars2 = getVars1(dictMonadError);
       return function(dictMonadReader) {
         var getVars3 = getVars2(dictMonadReader);
         return function(v) {
-          return map119(lookup2(v))(getVars3);
+          return map120(lookup2(v))(getVars3);
         };
       };
     };
@@ -7382,7 +7382,7 @@
                 return pure39(mvar.value0);
               }
               ;
-              throw new Error("Failed pattern match at Environment (line 104, column 3 - line 106, column 25): " + [mvar.constructor.name]);
+              throw new Error("Failed pattern match at Environment (line 105, column 3 - line 107, column 25): " + [mvar.constructor.name]);
             });
           };
         };
@@ -7392,13 +7392,13 @@
   var lookupBody = function(dictError) {
     var lookupVar1 = lookupVar(dictError);
     return function(dictMonadError) {
-      var map119 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
+      var map120 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
       var lookupVar2 = lookupVar1(dictMonadError);
       return function(dictMonadReader) {
         var lookupVar3 = lookupVar2(dictMonadReader);
         return function(loc) {
           return function(v) {
-            return map119(function(v1) {
+            return map120(function(v1) {
               return v1.value0.varBody;
             })(lookupVar3(loc)(v));
           };
@@ -7512,7 +7512,7 @@
                 return pure39(mxt.value0);
               }
               ;
-              throw new Error("Failed pattern match at Environment (line 126, column 3 - line 128, column 23): " + [mxt.constructor.name]);
+              throw new Error("Failed pattern match at Environment (line 127, column 3 - line 129, column 23): " + [mxt.constructor.name]);
             });
           };
         };
@@ -7522,12 +7522,12 @@
   var lookupMDecl = function(dictError) {
     var getDecls1 = getDecls(dictError);
     return function(dictMonadError) {
-      var map119 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
+      var map120 = map(dictMonadError.MonadThrow0().Monad0().Bind1().Apply0().Functor0());
       var getDecls2 = getDecls1(dictMonadError);
       return function(dictMonadReader) {
         var getDecls3 = getDecls2(dictMonadReader);
         return function(tyn) {
-          return map119(lookup22(tyn))(getDecls3);
+          return map120(lookup22(tyn))(getDecls3);
         };
       };
     };
@@ -7577,7 +7577,7 @@
                 return pure39(decl.value0);
               }
               ;
-              throw new Error("Failed pattern match at Environment (line 142, column 3 - line 144, column 29): " + [decl.constructor.name]);
+              throw new Error("Failed pattern match at Environment (line 143, column 3 - line 145, column 29): " + [decl.constructor.name]);
             });
           };
         };
@@ -7615,7 +7615,7 @@
                 return pure39(mdecl.value0);
               }
               ;
-              throw new Error("Failed pattern match at Environment (line 94, column 3 - line 96, column 27): " + [mdecl.constructor.name]);
+              throw new Error("Failed pattern match at Environment (line 95, column 3 - line 97, column 27): " + [mdecl.constructor.name]);
             });
           };
         };
@@ -7635,7 +7635,7 @@
           return insert5(nm)(addVarProgram2($$var2)(v1.value0))(v);
         }
         ;
-        throw new Error("Failed pattern match at Environment (line 68, column 3 - line 70, column 70): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at Environment (line 69, column 3 - line 71, column 70): " + [v1.constructor.name]);
       };
     };
   };
@@ -7652,7 +7652,7 @@
           return insert5(nm)(addDeclProgram2(decl)(v1.value0))(v);
         }
         ;
-        throw new Error("Failed pattern match at Environment (line 62, column 3 - line 64, column 72): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at Environment (line 63, column 3 - line 65, column 72): " + [v1.constructor.name]);
       };
     };
   };
@@ -11115,16 +11115,18 @@
 
   // output/GenerateConstraints.Definition/index.js
   var monadExceptT9 = /* @__PURE__ */ monadExceptT(monadIdentity);
+  var bind12 = /* @__PURE__ */ bind(/* @__PURE__ */ bindReaderT(/* @__PURE__ */ bindStateT(monadExceptT9)));
+  var map33 = /* @__PURE__ */ map(functorMap);
   var monadStateReaderT4 = /* @__PURE__ */ monadStateReaderT(/* @__PURE__ */ monadStateStateT(monadExceptT9));
   var gets5 = /* @__PURE__ */ gets(monadStateReaderT4);
-  var show46 = /* @__PURE__ */ show(showInt);
-  var elem10 = /* @__PURE__ */ elem(foldableList)(eqTypevar);
-  var bind12 = /* @__PURE__ */ bind(/* @__PURE__ */ bindReaderT(/* @__PURE__ */ bindStateT(monadExceptT9)));
-  var modify8 = /* @__PURE__ */ modify2(monadStateReaderT4);
   var applicativeReaderT9 = /* @__PURE__ */ applicativeReaderT(/* @__PURE__ */ applicativeStateT(monadExceptT9));
   var pure11 = /* @__PURE__ */ pure(applicativeReaderT9);
+  var union4 = /* @__PURE__ */ union(ordVariable);
+  var show46 = /* @__PURE__ */ show(showInt);
+  var elem10 = /* @__PURE__ */ elem(foldableList)(eqTypevar);
+  var modify8 = /* @__PURE__ */ modify2(monadStateReaderT4);
   var $$for8 = /* @__PURE__ */ $$for(applicativeReaderT9)(traversableList);
-  var map33 = /* @__PURE__ */ map(functorList);
+  var map112 = /* @__PURE__ */ map(functorList);
   var fromFoldable5 = /* @__PURE__ */ fromFoldable(ordTypevar)(foldableList);
   var applySecond2 = /* @__PURE__ */ applySecond(/* @__PURE__ */ applyReaderT(/* @__PURE__ */ applyStateT(monadExceptT9)));
   var insert6 = /* @__PURE__ */ insert(ordVariable);
@@ -11159,11 +11161,18 @@
         return new Right(new Tuple(v.value0.value0, new Tuple(v.value0.value1.value0.genTyvars, v.value0.value1.value0.constrSet)));
       }
       ;
-      throw new Error("Failed pattern match at GenerateConstraints.Definition (line 52, column 17 - line 54, column 88): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at GenerateConstraints.Definition (line 55, column 17 - line 57, column 88): " + [v.constructor.name]);
     };
   };
-  var getGenVars = /* @__PURE__ */ gets5(function(v) {
-    return v.value0.varEnv;
+  var getGenVars = /* @__PURE__ */ bind12(/* @__PURE__ */ getVars(errorGenerateError)(/* @__PURE__ */ monadErrorReaderT(/* @__PURE__ */ monadErrorStateT(/* @__PURE__ */ monadErrorExceptT(monadIdentity))))(/* @__PURE__ */ monadReaderReaderT(/* @__PURE__ */ monadStateT(monadExceptT9))))(function(envVars) {
+    var envTys = map33(function(v) {
+      return embedType2(getType(v.value0.varBody));
+    })(envVars);
+    return bind12(gets5(function(v) {
+      return v.value0.varEnv;
+    }))(function(genVars) {
+      return pure11(union4(envTys)(genVars));
+    });
   });
   var freshTyVar = /* @__PURE__ */ function() {
     var getNewVar = function($copy_vars$prime) {
@@ -11173,8 +11182,8 @@
         var $tco_result;
         function $tco_loop(vars$prime, i2) {
           var newVar = new Typevar("X" + show46(i2));
-          var $59 = elem10(newVar)(vars$prime);
-          if ($59) {
+          var $72 = elem10(newVar)(vars$prime);
+          if ($72) {
             $tco_var_vars$prime = vars$prime;
             $copy_i = i2 + 1 | 0;
             return;
@@ -11215,8 +11224,8 @@
         return pure11(new Tuple(v$prime, varpair));
       });
     }))(function(varL) {
-      var newVars = map33(fst)(varL);
-      var newMap = fromFoldable5(map33(snd)(varL));
+      var newVars = map112(fst)(varL);
+      var newMap = fromFoldable5(map112(snd)(varL));
       return pure11(new Tuple(newVars, newMap));
     });
   };
@@ -11287,7 +11296,7 @@
             });
           }
           ;
-          throw new Error("Failed pattern match at GenerateConstraints.Definition (line 101, column 1 - line 101, column 73): " + [v.constructor.name, v1.constructor.name, v2.constructor.name, v3.constructor.name]);
+          throw new Error("Failed pattern match at GenerateConstraints.Definition (line 108, column 1 - line 108, column 73): " + [v.constructor.name, v1.constructor.name, v2.constructor.name, v3.constructor.name]);
         };
       };
     };
@@ -11303,7 +11312,7 @@
   var zipWithError2 = /* @__PURE__ */ zipWithError(errorGenerateError);
   var throwError10 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowReaderT(/* @__PURE__ */ monadThrowStateT(/* @__PURE__ */ monadThrowExceptT(monadIdentity))));
   var $$for9 = /* @__PURE__ */ $$for(applicativeReaderT10)(traversableList);
-  var map112 = /* @__PURE__ */ map(/* @__PURE__ */ functorReaderT(/* @__PURE__ */ functorStateT(/* @__PURE__ */ functorExceptT(functorIdentity))));
+  var map113 = /* @__PURE__ */ map(/* @__PURE__ */ functorReaderT(/* @__PURE__ */ functorStateT(/* @__PURE__ */ functorExceptT(functorIdentity))));
   var genConstraintsTy = function(v) {
     return function(v1) {
       if (v1 instanceof TyVar) {
@@ -11345,7 +11354,7 @@
       }
       ;
       if (v1 instanceof TyForall) {
-        return map112(TyForall2.create(v1.value0))(genConstraintsTy(v)(v1.value1));
+        return map113(TyForall2.create(v1.value0))(genConstraintsTy(v)(v1.value1));
       }
       ;
       throw new Error("Failed pattern match at GenerateConstraints.Types (line 21, column 1 - line 21, column 45): " + [v.constructor.name, v1.constructor.name]);
@@ -11594,7 +11603,6 @@
           varPos: v.value0.varPos,
           varName: v.value0.varName,
           varIsRec: v.value0.varIsRec,
-          varTy: v.value0.varTy,
           varBody: substTyvars2(varmap)(v.value0.varBody)
         });
       };
@@ -11829,7 +11837,6 @@
         varPos: v.value0.varPos,
         varIsRec: v.value0.varIsRec,
         varName: v.value0.varName,
-        varTy: getType2(bd$prime),
         varBody: bd$prime
       }));
     });
@@ -11852,7 +11859,7 @@
   var throwError12 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowStateT(/* @__PURE__ */ monadThrowExceptT(monadIdentity)));
   var $$for11 = /* @__PURE__ */ $$for(applicativeStateT2)(traversableList);
   var lookup13 = /* @__PURE__ */ lookup(ordTypename);
-  var map113 = /* @__PURE__ */ map(/* @__PURE__ */ functorStateT(/* @__PURE__ */ functorExceptT(functorIdentity)));
+  var map114 = /* @__PURE__ */ map(/* @__PURE__ */ functorStateT(/* @__PURE__ */ functorExceptT(functorIdentity)));
   var shiftEvalOrder4 = /* @__PURE__ */ shiftEvalOrder(shiftEvalOrderTy);
   var ErrUndefinedTyVar = /* @__PURE__ */ function() {
     function ErrUndefinedTyVar3(value0, value1) {
@@ -12057,11 +12064,11 @@
       }
       ;
       if (v1 instanceof TyCo) {
-        return map113(TyCo3.create)(inferType(v)(v1.value0));
+        return map114(TyCo3.create)(inferType(v)(v1.value0));
       }
       ;
       if (v1 instanceof TyShift) {
-        return map113(shiftEvalOrder4)(inferType(v)(v1.value0));
+        return map114(shiftEvalOrder4)(inferType(v)(v1.value0));
       }
       ;
       if (v1 instanceof TyForall) {
@@ -12288,16 +12295,13 @@
   var applicativeReaderT14 = /* @__PURE__ */ applicativeReaderT(/* @__PURE__ */ applicativeExceptT(monadIdentity));
   var pure18 = /* @__PURE__ */ pure(applicativeReaderT14);
   var kindVariable = function(v) {
-    return bind19(kindType(v.value0.varTy))(function(ty$prime) {
-      return bind19(kindTerm(v.value0.varBody))(function(bd$prime) {
-        return pure18(new VarDecl3({
-          varPos: v.value0.varPos,
-          varName: v.value0.varName,
-          varIsRec: v.value0.varIsRec,
-          varBody: bd$prime,
-          varTy: ty$prime
-        }));
-      });
+    return bind19(kindTerm(v.value0.varBody))(function(bd$prime) {
+      return pure18(new VarDecl3({
+        varPos: v.value0.varPos,
+        varName: v.value0.varName,
+        varIsRec: v.value0.varIsRec,
+        varBody: bd$prime
+      }));
     });
   };
 
@@ -31279,6 +31283,18 @@
       var $tco_done = false;
       var $tco_result;
       function $tco_loop(v, v1) {
+        if (v instanceof TyForall2) {
+          $tco_var_v = v.value1;
+          $copy_v1 = v1;
+          return;
+        }
+        ;
+        if (v1 instanceof TyForall2) {
+          $tco_var_v = v;
+          $copy_v1 = v1.value1;
+          return;
+        }
+        ;
         if (v instanceof TyVar2 && (v1 instanceof TyVar2 && eq31(v.value0)(v1.value0))) {
           $tco_done = true;
           return pure26(unit);
@@ -31306,7 +31322,7 @@
               return addSlvTyVar(v1.value0)(new TyVar2(v.value0));
             }
             ;
-            throw new Error("Failed pattern match at SolveConstraints.Solver (line 36, column 3 - line 42, column 57): " + [v3.constructor.name]);
+            throw new Error("Failed pattern match at SolveConstraints.Solver (line 38, column 3 - line 44, column 57): " + [v3.constructor.name]);
           });
         }
         ;
@@ -31322,7 +31338,7 @@
               return addConstraint2(new MkTyEq(v3.value0, v1));
             }
             ;
-            throw new Error("Failed pattern match at SolveConstraints.Solver (line 45, column 3 - line 47, column 46): " + [v3.constructor.name]);
+            throw new Error("Failed pattern match at SolveConstraints.Solver (line 47, column 3 - line 49, column 46): " + [v3.constructor.name]);
           });
         }
         ;
@@ -31634,14 +31650,14 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
 
   // output/Syntax.Typed.Generalize/index.js
   var freeTypevars3 = /* @__PURE__ */ freeTypevars(freeTypevarsTy);
-  var union5 = /* @__PURE__ */ union2(ordTypevar);
+  var union6 = /* @__PURE__ */ union2(ordTypevar);
   var fromFoldable11 = /* @__PURE__ */ fromFoldable2(foldableList)(ordTypevar);
   var toUnfoldable12 = /* @__PURE__ */ toUnfoldable3(unfoldableList);
   var generalizeTyTy = {
     generalizeTy: function(v) {
       if (v instanceof TyForall2) {
         var frVs = freeTypevars3(v.value1);
-        var newVs = union5(frVs)(fromFoldable11(v.value0));
+        var newVs = union6(frVs)(fromFoldable11(v.value0));
         return new TyForall2(toUnfoldable12(newVs), v.value1);
       }
       ;
@@ -31671,7 +31687,6 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         varPos: v.value0.varPos,
         varName: v.value0.varName,
         varIsRec: v.value0.varIsRec,
-        varTy: v.value0.varTy,
         varBody: newBody
       });
     }
@@ -32137,7 +32152,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var pure27 = /* @__PURE__ */ pure(/* @__PURE__ */ applicativeReaderT(/* @__PURE__ */ applicativeStateT(monadExceptT16)));
   var throwError16 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowReaderT(/* @__PURE__ */ monadThrowStateT(/* @__PURE__ */ monadThrowExceptT(monadIdentity))));
   var modify11 = /* @__PURE__ */ modify2(monadStateReaderT5);
-  var union6 = /* @__PURE__ */ union(ordVariable);
+  var union7 = /* @__PURE__ */ union(ordVariable);
   var insert9 = /* @__PURE__ */ insert(ordVariable);
   var MkCheckState = /* @__PURE__ */ function() {
     function MkCheckState2(value0) {
@@ -32166,7 +32181,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         return new Right(v.value0.value0);
       }
       ;
-      throw new Error("Failed pattern match at TypeCheck.Definition (line 42, column 19 - line 44, column 31): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at TypeCheck.Definition (line 43, column 19 - line 45, column 31): " + [v.constructor.name]);
     };
   };
   var getCheckerVars = /* @__PURE__ */ gets8(function(v) {
@@ -32185,10 +32200,10 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         }
         ;
         if (v1.value1 instanceof Just) {
-          return pure27(new Just(embedType2(v1.value1.value0.value0.varTy)));
+          return pure27(new Just(embedType2(getType(v1.value1.value0.value0.varBody))));
         }
         ;
-        throw new Error("Failed pattern match at TypeCheck.Definition (line 74, column 3 - line 77, column 76): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at TypeCheck.Definition (line 75, column 3 - line 78, column 88): " + [v1.constructor.name]);
       });
     });
   };
@@ -32203,7 +32218,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
           return pure27(mty.value0);
         }
         ;
-        throw new Error("Failed pattern match at TypeCheck.Definition (line 82, column 3 - line 84, column 23): " + [mty.constructor.name]);
+        throw new Error("Failed pattern match at TypeCheck.Definition (line 83, column 3 - line 85, column 23): " + [mty.constructor.name]);
       });
     };
   };
@@ -32213,7 +32228,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         return bind28(modify11(function(v) {
           return new MkCheckState({
             checkTyVars: v.value0.checkTyVars,
-            checkVars: union6(currVars)(newVars)
+            checkVars: union7(currVars)(newVars)
           });
         }))(function() {
           return bind28(fun)(function(res) {
@@ -32325,7 +32340,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var monadErrorReaderT7 = /* @__PURE__ */ monadErrorReaderT(/* @__PURE__ */ monadErrorStateT(/* @__PURE__ */ monadErrorExceptT(monadIdentity)));
   var monadReaderReaderT5 = /* @__PURE__ */ monadReaderReaderT(/* @__PURE__ */ monadStateT(monadExceptT18));
   var lookupMVar4 = /* @__PURE__ */ lookupMVar(errorCheckerError)(monadErrorReaderT7)(monadReaderReaderT5);
-  var map114 = /* @__PURE__ */ map(functorMaybe);
+  var map115 = /* @__PURE__ */ map(functorMaybe);
   var throwError18 = /* @__PURE__ */ throwError(/* @__PURE__ */ monadThrowReaderT(/* @__PURE__ */ monadThrowStateT(/* @__PURE__ */ monadThrowExceptT(monadIdentity))));
   var lookupXtorDecl3 = /* @__PURE__ */ lookupXtorDecl(errorCheckerError)(monadErrorReaderT7)(monadReaderReaderT5);
   var lookupXtor3 = /* @__PURE__ */ lookupXtor(errorCheckerError)(monadErrorReaderT7)(monadReaderReaderT5);
@@ -32363,8 +32378,8 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       if (v instanceof Var2) {
         return bind30(map48(lookup11(v.value1))(getCheckerVars))(function(checkerTy) {
           return bind30(lookupMVar4(v.value1))(function(vardecl) {
-            var mvarty = map114(function(v3) {
-              return embedType2(v3.value0.varTy);
+            var mvarty = map115(function(v3) {
+              return embedType2(getType(v3.value0.varBody));
             })(vardecl);
             return bind30(function() {
               var v3 = new Tuple(checkerTy, mvarty);
@@ -32380,7 +32395,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
                 return pure29(v3.value0.value0);
               }
               ;
-              throw new Error("Failed pattern match at TypeCheck.Terms (line 51, column 10 - line 54, column 41): " + [v3.constructor.name]);
+              throw new Error("Failed pattern match at TypeCheck.Terms (line 52, column 10 - line 55, column 41): " + [v3.constructor.name]);
             }())(function(ty$prime) {
               var $83 = isSubsumed(v1)(ty$prime);
               if ($83) {
@@ -32515,7 +32530,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
             return throwError18(new ErrUnclearType(v.value0, v));
           }
           ;
-          throw new Error("Failed pattern match at TypeCheck.Terms (line 119, column 3 - line 123, column 156): " + [v3.constructor.name]);
+          throw new Error("Failed pattern match at TypeCheck.Terms (line 120, column 3 - line 124, column 156): " + [v3.constructor.name]);
         });
       });
     }
@@ -32578,7 +32593,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       });
     }
     ;
-    throw new Error("Failed pattern match at TypeCheck.Terms (line 115, column 1 - line 115, column 46): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at TypeCheck.Terms (line 116, column 1 - line 116, column 46): " + [v.constructor.name]);
   };
 
   // output/TypeCheck.Program/index.js
@@ -32612,13 +32627,13 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
           return pure30(unit);
         }())(function() {
           return bind31(checkTerm(v.value0.varBody)(ty$prime))(function(t$prime) {
-            return pure30(new VarDecl2({
+            var typedDecl = new VarDecl2({
               varPos: v.value0.varPos,
               varName: v.value0.varName,
               varIsRec: v.value0.varIsRec,
-              varBody: t$prime,
-              varTy: ty$prime
-            }));
+              varBody: t$prime
+            });
+            return pure30(typedDecl);
           });
         });
       });
@@ -32735,10 +32750,16 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
                     varTy: Nothing.value
                   })))(function(v3) {
                     var inferTy = getType2(v3.value0.varBody);
-                    var $117 = isSubsumed(annotTy$prime)(inferTy);
-                    if ($117) {
+                    var $118 = isSubsumed(annotTy$prime)(inferTy);
+                    if ($118) {
                       return bind32(debug("Annotated type " + (show313(annotTy$prime) + (" is correctly subsumed by inferred type " + (show313(inferTy) + "\n")))))(function() {
-                        return pure31(v3);
+                        var finalVar = new VarDecl2({
+                          varPos: v3.value0.varPos,
+                          varName: v3.value0.varName,
+                          varIsRec: v3.value0.varIsRec,
+                          varBody: setType(v3.value0.varBody)(annotTy$prime)
+                        });
+                        return pure31(finalVar);
                       });
                     }
                     ;
@@ -32754,7 +32775,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
               });
             }
             ;
-            throw new Error("Failed pattern match at Driver.Driver (line 200, column 3 - line 213, column 17): " + [v$prime.constructor.name]);
+            throw new Error("Failed pattern match at Driver.Driver (line 200, column 3 - line 214, column 17): " + [v$prime.constructor.name]);
           });
         });
       }
@@ -32771,7 +32792,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
                 return bind32(liftErr5(slv)(v)("solve constraints"))(function(v4) {
                   return bind32(debug("Solved constraints and got substitution\n	" + showSubst(v4.value1)))(function() {
                     var v5 = generalizeTy3(substTyvars5(v4.value1)(v3.value0));
-                    return bind32(debug("Final type for variable " + (show220(v1.value0.varName) + (": " + (show313(getType2(v5.value0.varBody)) + "\n")))))(function() {
+                    return bind32(debug("Final type for variable " + (show220(v5.value0.varName) + (": " + (show313(getType2(v5.value0.varBody)) + "\n")))))(function() {
                       return pure31(v5);
                     });
                   });
@@ -32802,12 +32823,16 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       }))(function(env) {
         var ctr = runGenM(env)(genConstraintsCmd(c));
         return bind32(liftErr4(ctr)(mn)("generate constraints command"))(function(v) {
-          var vm = runSolveM(v.value1.value1)(solve);
-          return bind32(liftErr5(vm)(mn)("solving constraints command"))(function(v1) {
-            return bind32(debug("Solved constraints and got substitution\n	" + showSubst(v1.value1)))(function() {
-              var c$prime$prime = substTyvars13(v1.value1)(v.value0);
-              var ck = runKindM(env)(kindCommand(c$prime$prime));
-              return liftErr22(ck)(mn)("kinding command (after infer)");
+          return bind32(debug("generated typevars\n	" + intercalate21(", ")(map49(show412)(v.value1.value0))))(function() {
+            return bind32(debug("generated constraints\n	" + showConstrs(v.value1.value1)))(function() {
+              var vm = runSolveM(v.value1.value1)(solve);
+              return bind32(liftErr5(vm)(mn)("solving constraints command"))(function(v1) {
+                return bind32(debug("Solved constraints and got substitution\n	" + showSubst(v1.value1)))(function() {
+                  var c$prime$prime = substTyvars13(v1.value1)(v.value0);
+                  var ck = runKindM(env)(kindCommand(c$prime$prime));
+                  return liftErr22(ck)(mn)("kinding command (after infer)");
+                });
+              });
             });
           });
         });
@@ -32877,7 +32902,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
         return new Tuple(v2.value0, new Cons(new Tuple(v1.value0.value0, v1.value0.value1.value0), v2.value1));
       }
       ;
-      throw new Error("Failed pattern match at Driver.Driver (line 103, column 5 - line 103, column 116): " + [v1.constructor.name]);
+      throw new Error("Failed pattern match at Driver.Driver (line 102, column 5 - line 102, column 116): " + [v1.constructor.name]);
     };
     return bind32(debug("loading standard library imports"))(function() {
       var imps = map49(function(v12) {
@@ -32937,14 +32962,23 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
                                         var varmap = fromFoldable13(map49(function(v2) {
                                           return new Tuple(v2.value0.varName, v2);
                                         })(kindedVars));
-                                        return bind32(for3(v1.value0.progMain)(inferCommand(v.value0.progName)))(function(main$prime) {
-                                          return pure31(new Program2({
-                                            progName: v.value0.progName,
-                                            progDecls: decls$prime,
-                                            progVars: varmap,
-                                            progMain: main$prime,
-                                            progSrc: v.value0.progSrc
-                                          }));
+                                        return bind32(debug(function() {
+                                          var $210 = isNothing(v1.value0.progMain);
+                                          if ($210) {
+                                            return "";
+                                          }
+                                          ;
+                                          return "\nType checking main command";
+                                        }()))(function() {
+                                          return bind32(for3(v1.value0.progMain)(inferCommand(v.value0.progName)))(function(main$prime) {
+                                            return pure31(new Program2({
+                                              progName: v.value0.progName,
+                                              progDecls: decls$prime,
+                                              progVars: varmap,
+                                              progMain: main$prime,
+                                              progSrc: v.value0.progSrc
+                                            }));
+                                          });
                                         });
                                       });
                                     });
@@ -33009,7 +33043,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var show128 = /* @__PURE__ */ show(showTy3);
   var intercalate22 = /* @__PURE__ */ intercalate(foldableList)(monoidString);
   var showInSrc2 = /* @__PURE__ */ showInSrc(errorDriverError);
-  var map115 = /* @__PURE__ */ map(functorMaybe);
+  var map116 = /* @__PURE__ */ map(functorMaybe);
   var show221 = /* @__PURE__ */ show(showCommand);
   var show314 = /* @__PURE__ */ show(showEvalTrace);
   var intercalate1 = /* @__PURE__ */ intercalate(foldableMaybe)(monoidString);
@@ -33056,7 +33090,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       var getEnvTrace = function(v1) {
         var progVars = map50(snd)(toUnfoldable14(v1.value0.progVars));
         var varsTys = map50(function(v2) {
-          return new Tuple(v2.value0.varName, v2.value0.varTy);
+          return new Tuple(v2.value0.varName, getType(v2.value0.varBody));
         })(progVars);
         var varsShown = map50(function(v2) {
           return show58(v2.value0) + (" :: " + show128(v2.value1));
@@ -33083,14 +33117,14 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       if (v1.value0 instanceof Right) {
         var v2 = stateOutput(v1.value1)(v1.value0.value0.value0);
         return new ResSucc({
-          succCmd: fromMaybe("")(map115(show221)(v1.value0.value0.value0.value0.progMain)),
+          succCmd: fromMaybe("")(map116(show221)(v1.value0.value0.value0.value0.progMain)),
           succTrace: show314(v1.value0.value0.value1),
           succDebug: v2.debugTr,
           succTypes: v2.typesTr
         });
       }
       ;
-      throw new Error("Failed pattern match at Definitions (line 41, column 1 - line 41, column 103): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Definitions (line 42, column 1 - line 42, column 103): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var runProg = function(progSource) {
@@ -34055,7 +34089,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var functorAff = {
     map: _map
   };
-  var map116 = /* @__PURE__ */ map(functorAff);
+  var map117 = /* @__PURE__ */ map(functorAff);
   var forkAff = /* @__PURE__ */ _fork(true);
   var ffiUtil = /* @__PURE__ */ function() {
     var unsafeFromRight = function(v) {
@@ -34198,7 +34232,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var functorFiber = {
     map: function(f) {
       return function(t) {
-        return unsafePerformEffect(makeFiber(map116(f)(joinFiber(t))));
+        return unsafePerformEffect(makeFiber(map117(f)(joinFiber(t))));
       };
     }
   };
@@ -34655,7 +34689,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
 
   // output/Halogen.VDom.Types/index.js
   var map55 = /* @__PURE__ */ map(functorArray);
-  var map117 = /* @__PURE__ */ map(functorTuple);
+  var map118 = /* @__PURE__ */ map(functorTuple);
   var Text = /* @__PURE__ */ function() {
     function Text2(value0) {
       this.value0 = value0;
@@ -34771,7 +34805,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       }
       ;
       if (v2 instanceof Keyed) {
-        return new Keyed(v2.value0, v2.value1, v.value0(v2.value2), map55(map117(go2))(v2.value3));
+        return new Keyed(v2.value0, v2.value1, v.value0(v2.value2), map55(map118(go2))(v2.value3));
       }
       ;
       if (v2 instanceof Widget) {
@@ -36212,18 +36246,18 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   };
   var foldFree = function(dictMonadRec) {
     var Monad0 = dictMonadRec.Monad0();
-    var map119 = map(Monad0.Bind1().Apply0().Functor0());
+    var map120 = map(Monad0.Bind1().Apply0().Functor0());
     var pure111 = pure(Monad0.Applicative0());
     var tailRecM5 = tailRecM(dictMonadRec);
     return function(k) {
       var go2 = function(f) {
         var v = toView(f);
         if (v instanceof Return) {
-          return map119(Done.create)(pure111(v.value0));
+          return map120(Done.create)(pure111(v.value0));
         }
         ;
         if (v instanceof Bind) {
-          return map119(function($199) {
+          return map120(function($199) {
             return Loop.create(v.value1($199));
           })(k(v.value0));
         }
@@ -36773,7 +36807,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var pure36 = /* @__PURE__ */ pure(applicativeAff);
   var map58 = /* @__PURE__ */ map(functorCoyoneda);
   var parallel3 = /* @__PURE__ */ parallel(parallelAff);
-  var map118 = /* @__PURE__ */ map(functorAff);
+  var map119 = /* @__PURE__ */ map(functorAff);
   var sequential2 = /* @__PURE__ */ sequential(parallelAff);
   var map211 = /* @__PURE__ */ map(functorMaybe);
   var insert13 = /* @__PURE__ */ insert(ordSubscriptionId);
@@ -36864,7 +36898,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
                     })(dsx);
                   }));
                 };
-                return map118(v2.value2)(sequential2(v2.value0(applicativeParAff)(evalChild)(v1.children)));
+                return map119(v2.value2)(sequential2(v2.value0(applicativeParAff)(evalChild)(v1.children)));
               })(cqb);
             });
           };

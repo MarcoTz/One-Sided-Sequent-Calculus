@@ -19,6 +19,7 @@ import Driver.Errors (DriverError)
 import Common (Modulename(..),Variable)
 import Errors (showInSrc)
 import Syntax.Kinded.Types (Ty)
+import Syntax.Kinded.Terms (getType)
 import Syntax.Kinded.Program (Program(..),VarDecl(..),emptyProg)
 import Eval.Definition (EvalTrace)
 import StandardLib (libMap)
@@ -58,7 +59,7 @@ stateOutput (MkDriverState {drvDebug:db, drvEnv:_}) prog = {debugTr:intercalate 
       let progVars :: List VarDecl
           progVars = snd <$> toUnfoldable prog'.progVars
       let varsTys :: List (Tuple Variable Ty)
-          varsTys = (\(VarDecl var) -> Tuple var.varName var.varTy) <$> progVars
+          varsTys = (\(VarDecl var) -> Tuple var.varName (getType var.varBody)) <$> progVars
       let varsShown :: List String
           varsShown = (\(Tuple v ty) -> show v <> " :: " <> show ty) <$> varsTys
       intercalate "\n" varsShown

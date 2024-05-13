@@ -16,7 +16,7 @@ module Syntax.Kinded.Program (
 import Loc (Loc, class HasLoc) 
 import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename)
 import Syntax.Kinded.Types (Ty,embedType)
-import Syntax.Kinded.Terms (Term, Command)
+import Syntax.Kinded.Terms (Term, Command,getType)
 import Syntax.Typed.Program (XtorSig(..)) as T
 
 import Prelude ((&&), (==), class Show, show, (<>), (<$>))
@@ -50,14 +50,14 @@ instance Show DataDecl where
     let argsString = if null decl.declArgs then "" else "(" <> intercalate ", " (show <$> decl.declArgs) <> ")"
     show decl.declType <> " " <> show decl.declName <> argsString <> "{" <> intercalate ", " (show <$> decl.declXtors)
 
-data VarDecl = VarDecl {varPos::Loc, varName::Variable, varIsRec::Boolean, varTy::Ty, varBody::Term}
+data VarDecl = VarDecl {varPos::Loc, varName::Variable, varIsRec::Boolean, varBody::Term}
 instance HasLoc VarDecl where 
   getLoc (VarDecl decl) = decl.varPos
   setLoc loc (VarDecl decl) = VarDecl (decl {varPos=loc})
 instance Show VarDecl where 
   show (VarDecl decl) = do
     let recStr = if decl.varIsRec then "rec " else ""
-    recStr <> show decl.varName <> " :: " <> show decl.varTy <> " := " <> show decl.varBody
+    recStr <> show decl.varName <> " :: " <> show (getType decl.varBody) <> " := " <> show decl.varBody
 
 data Program = Program {
   progName  :: Modulename, 

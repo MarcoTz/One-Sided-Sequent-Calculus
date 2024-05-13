@@ -12,7 +12,7 @@ import Syntax.Desugared.Program (VarDecl (..)) as D
 import Syntax.Desugared.Types (Ty) as D 
 import Syntax.Typed.Program (VarDecl(..)) as T
 
-import Prelude (bind,pure,($)) 
+import Prelude (bind,pure) 
 import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Control.Monad.Except (throwError)
@@ -27,4 +27,5 @@ checkVarDecl (D.VarDecl var) =  do
   ty' <- checkType var.varPos ty 
   _ <- if var.varIsRec then addCheckerVar var.varName ty' else pure unit
   t' <- checkTerm var.varBody ty'
-  pure $ T.VarDecl var {varBody=t',varTy=ty'}
+  let typedDecl = T.VarDecl {varPos:var.varPos, varName:var.varName, varIsRec:var.varIsRec, varBody:t'}
+  pure typedDecl 

@@ -21,11 +21,14 @@ import GenerateConstraints.Errors (GenerateError(..))
 import Constraints (ConstraintSet, Constr(..))
 import Loc (Loc)
 import Common (Variable, Typevar(..), VariantVar(..),Kind(..),Kindvar(..), Xtorname)
-import Environment (Environment)
+import Environment (Environment,getVars)
 import Syntax.Typed.Types (Ty(..))
+import Syntax.Kinded.Types (embedType)
+import Syntax.Kinded.Terms (getType)
+import Syntax.Kinded.Program (VarDecl(..))
 
 import Prelude (bind, (<>), show,pure,(+),(<$>),(*>))
-import Data.Map (Map,empty,fromFoldable,insert)
+import Data.Map (Map,empty,fromFoldable,insert,union)
 import Data.List (List(..),elem)
 import Data.Tuple (Tuple(..), fst,snd)
 import Data.Either (Either(..))
@@ -90,7 +93,11 @@ addConstraint ctr = do
   pure unit
 
 getGenVars :: GenM (Map Variable Ty)
-getGenVars = gets (\(MkGenState s) -> s.varEnv)
+getGenVars = do
+  envVars <- getVars
+  let envTys = (\(VarDecl var) -> embedType (getType var.varBody)) <$> envVars
+  genVars <- gets (\(MkGenState s) -> s.varEnv)
+  pure (union envTys genVars)
 
 addGenVar :: Variable -> Ty -> GenM Unit
 addGenVar v ty = do 

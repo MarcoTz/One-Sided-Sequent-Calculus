@@ -16,7 +16,7 @@ import Syntax.Parsed.Program (Program(..),Import(..))                  as P
 import Syntax.Desugared.Program (Program(..),DataDecl(..),VarDecl(..)) as D
 import Syntax.Desugared.Terms (Command)                                as D
 import Syntax.Typed.Types (isSubsumed)                                 as T
-import Syntax.Typed.Terms (getType)                                    as T
+import Syntax.Typed.Terms (getType,setType)                            as T
 import Syntax.Typed.Generalize (generalizeTy)                          as T 
 import Syntax.Typed.Program (VarDecl(..))                              as T
 import Syntax.Kinded.Terms (Command(..))                               as K
@@ -67,7 +67,6 @@ import Control.Bind (ifM)
 import Control.Monad(unless)
 import Control.Monad.State (gets)
 import Control.Monad.Except (throwError)
-
 
 
 runStr :: Modulename -> String -> DriverM (Tuple K.Program EvalTrace)
@@ -128,6 +127,7 @@ inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progNa
   _ <- debug "------ Kind inference ------"
   kindedVars <- for typedVars (kindVarDecl prog'.progName)
   let varmap = fromFoldable ((\d@(K.VarDecl var) -> Tuple var.varName d) <$> kindedVars)
+  _ <- debug (if isNothing prog'.progMain then "" else "\nType checking main command")
   main' <- for prog'.progMain (inferCommand prog.progName)
   pure $ K.Program {
        progName:prog.progName, 
@@ -202,11 +202,12 @@ inferVarDecl mn v@(D.VarDecl var@{varPos:_,varName:_, varBody:_, varTy:Just ty})
         _ <- debug ("type checking for variable " <> show var.varName <> " failed, inferring type instead")
         let annotTy = runCheckM env (checkType var.varPos ty) 
         annotTy' <- liftErr annotTy mn "checking type annotation" 
-        kv@(T.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
+        (T.VarDecl var') <- inferVarDecl mn (D.VarDecl var{varTy=Nothing})
         let inferTy =  T.getType var'.varBody
         if T.isSubsumed annotTy' inferTy then do
           _ <- debug ("Annotated type " <> show annotTy' <> " is correctly subsumed by inferred type " <> show inferTy <> "\n")
-          pure kv 
+          let finalVar = T.VarDecl var'{varBody = T.setType var'.varBody annotTy'}
+          pure finalVar
         else throwError (ErrAnnotMismatch var.varPos var.varName annotTy' inferTy)
       Right v''@(T.VarDecl var') -> do
         _ <- debug ("Successfully checked type "  <> show (T.getType var'.varBody) <> " for " <> show var.varName <> "\n")
@@ -223,7 +224,7 @@ inferVarDecl mn v@(D.VarDecl var) = do
   (Tuple _ varmap) <- liftErr slv mn "solve constraints"
   _ <- debug ("Solved constraints and got substitution\n\t" <> showSubst varmap)
   let v''@(T.VarDecl var') = T.generalizeTy (substTyvars varmap v')
-  _ <- debug ("Final type for variable " <> show var.varName <> ": " <> show (T.getType var'.varBody) <> "\n")
+  _ <- debug ("Final type for variable " <> show var'.varName <> ": " <> show (T.getType var'.varBody) <> "\n")
   pure v''
 
 kindVarDecl :: Modulename -> T.VarDecl -> DriverM K.VarDecl 
@@ -239,7 +240,9 @@ inferCommand :: Modulename -> D.Command -> DriverM K.Command
 inferCommand mn c = do 
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let ctr = runGenM env (genConstraintsCmd c)
-  Tuple c' (Tuple _ constrs) <- liftErr ctr mn "generate constraints command"
+  Tuple c' (Tuple tyvars constrs) <- liftErr ctr mn "generate constraints command"
+  _ <- debug ("generated typevars\n\t" <> intercalate ", " (show <$> tyvars))
+  _ <- debug ("generated constraints\n\t" <> showConstrs constrs)
   let vm = runSolveM constrs solve 
   Tuple _ varmap <- liftErr vm mn "solving constraints command"
   _ <- debug ("Solved constraints and got substitution\n\t" <> showSubst varmap)

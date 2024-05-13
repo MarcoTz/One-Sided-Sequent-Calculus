@@ -17,6 +17,7 @@ import Environment (Environment,lookupMVar)
 import Syntax.Typed.Types (Ty) as T
 import Syntax.Kinded.Types (embedType)
 import Syntax.Kinded.Program (VarDecl(..))
+import Syntax.Kinded.Terms (getType)
 import TypeCheck.Errors (CheckerError(..))
 
 import Prelude (bind,pure)
@@ -74,7 +75,7 @@ getMTypeVar v = do
   case Tuple (lookup v vars) mvar of 
     (Tuple Nothing Nothing) -> pure Nothing 
     (Tuple (Just ty) _) -> pure (Just ty)
-    (Tuple _ (Just (VarDecl vdecl))) -> pure (Just (embedType vdecl.varTy))
+    (Tuple _ (Just (VarDecl vdecl))) -> pure (Just (embedType (getType vdecl.varBody)))
 
 getTypeVar :: Loc -> Variable -> CheckM T.Ty 
 getTypeVar loc v = do 

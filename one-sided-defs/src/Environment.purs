@@ -6,6 +6,7 @@ module Environment (
   lookupMVar,
   lookupBody,
   lookupDecl,
+  getVars,
   getTypeNames,
   getXtorNames,
   getTypes,
@@ -21,7 +22,7 @@ import Syntax.Kinded.Program (
   Program(..),DataDecl(..), VarDecl(..),XtorSig(..),
   addDeclProgram, addVarProgram, emptyProg)
 import Syntax.Kinded.Types (Ty)
-import Syntax.Kinded.Terms (Term)
+import Syntax.Kinded.Terms (Term,getType)
 
 import Prelude (class Show, show, (<$>), (<>), bind, pure, ($), (==))
 import Data.List (List(..), find, elem, intercalate, concatMap)
@@ -55,7 +56,7 @@ getTypes mn (Environment env) =
     Just (Program prog) -> do
       let varDecls :: List VarDecl 
           varDecls = snd <$> toUnfoldable prog.progVars
-      (\(VarDecl v) -> Tuple v.varName v.varTy) <$> varDecls
+      (\(VarDecl v) -> Tuple v.varName (getType v.varBody)) <$> varDecls
 
 addDeclEnv :: Modulename -> DataDecl -> Environment -> Environment 
 addDeclEnv nm decl (Environment env) = 

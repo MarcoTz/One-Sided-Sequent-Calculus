@@ -11,12 +11,13 @@ import Common (Typevar,VariantVar(..))
 import Loc (getLoc)
 import Environment (lookupMVar,lookupXtorDecl, lookupXtor)
 import Errors (zipWithErrorM)
-import Syntax.Kinded.Program (VarDecl(..),DataDecl(..),XtorSig(..)) as K
+import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..))                as D 
+import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..))  as T
+import Syntax.Typed.Types (Ty(..),isSubsumed)                                   as T 
+import Syntax.Typed.Substitution (substTyvars)                                  as T
+import Syntax.Kinded.Program (VarDecl(..),DataDecl(..),XtorSig(..))             as K
 import Syntax.Kinded.Types (embedType)
-import Syntax.Desugared.Terms (Term(..),Pattern(..),Command(..)) as D 
-import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..)) as T
-import Syntax.Typed.Types (Ty(..),isSubsumed) as T 
-import Syntax.Typed.Substitution (substTyvars) as T
+import Syntax.Kinded.Terms (getType)
 
 import Prelude (bind,pure,($),(<$>), (==))
 import Data.List (List(..),foldr)
@@ -47,7 +48,7 @@ checkTerm t (T.TyCo ty) = do
 checkTerm (D.Var loc v) ty = do
   checkerTy <- lookup v <$> getCheckerVars 
   vardecl <- lookupMVar v
-  let mvarty = (\(K.VarDecl d) -> embedType d.varTy) <$> vardecl
+  let mvarty = (\(K.VarDecl d) -> embedType (getType d.varBody)) <$> vardecl
   ty' <- case Tuple checkerTy mvarty of 
       (Tuple Nothing Nothing) -> throwError (ErrUndefinedVar loc v)
       (Tuple _ (Just ty'')) -> pure ty'' 
