@@ -28,12 +28,12 @@ instance FreeKindvars Ty where
   freeKindvars (TyForall _ ty) = freeKindvars ty
 
 instance FreeKindvars Term where
-  freeKindvars (Var _ _ ty)        = freeKindvars ty
-  freeKindvars (Mu _ _ c ty)       = union (freeKindvars ty) (freeKindvars c)
-  freeKindvars (Xtor _ _ args ty)  = unions (Cons (freeKindvars ty) (freeKindvars <$> args))
-  freeKindvars (XCase _ pts ty)    = unions (Cons (freeKindvars ty) (freeKindvars <$> pts))
-  freeKindvars (ShiftCBV _ t ty)   = union (freeKindvars t) (freeKindvars ty)
-  freeKindvars (ShiftCBN _ t ty)   = union (freeKindvars t) (freeKindvars ty)
+  freeKindvars (Var _ _ _ ty)        = freeKindvars ty
+  freeKindvars (Mu _ _ _ c ty)       = union (freeKindvars ty) (freeKindvars c)
+  freeKindvars (Xtor _ _ _ args ty)  = unions (Cons (freeKindvars ty) (freeKindvars <$> args))
+  freeKindvars (XCase _ _ pts ty)    = unions (Cons (freeKindvars ty) (freeKindvars <$> pts))
+  freeKindvars (ShiftCBV _ _ t ty)   = union (freeKindvars t) (freeKindvars ty)
+  freeKindvars (ShiftCBN _ _ t ty)   = union (freeKindvars t) (freeKindvars ty)
 
 instance FreeKindvars Pattern where 
   freeKindvars (Pattern pt) = freeKindvars pt.ptcmd 

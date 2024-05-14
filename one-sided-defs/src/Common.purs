@@ -75,6 +75,9 @@ instance Show Variable where
 data PrdCns = Prd | Cns 
 derive instance eqPrdCns :: Eq PrdCns
 derive instance ordPrdCns :: Ord PrdCns
+instance Show PrdCns where 
+  show Prd = "prd"
+  show Cns = "cns"
 
 data Kindvar = Kindvar String
 derive instance eqKindvar :: Eq Kindvar

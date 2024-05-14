@@ -23,12 +23,12 @@ freshVar :: forall a.FreeVariables a => a -> Variable
 freshVar a = let frV = freeVars a in freshVarN 0 "x" Variable frV
 
 instance FreeVariables K.Term where 
-  freeVars (K.Var _ v _)          = singleton v
-  freeVars (K.Mu _ v c _)         = delete v (freeVars c)
-  freeVars (K.Xtor _ _ args _)    = unions (freeVars <$> args)
-  freeVars (K.XCase _ pts _)      = unions (freeVars <$> pts)
-  freeVars (K.ShiftCBV _ t _)     = freeVars t 
-  freeVars (K.ShiftCBN _ t _)     = freeVars t 
+  freeVars (K.Var _ _ v _)          = singleton v
+  freeVars (K.Mu _ _ v c _)         = delete v (freeVars c)
+  freeVars (K.Xtor _ _ _ args _)    = unions (freeVars <$> args)
+  freeVars (K.XCase _ _ pts _)      = unions (freeVars <$> pts)
+  freeVars (K.ShiftCBV _ _ t _)     = freeVars t 
+  freeVars (K.ShiftCBN _ _ t _)     = freeVars t 
 
 instance FreeVariables K.Pattern where 
   freeVars (K.Pattern pt) = foldr delete (freeVars pt.ptcmd) pt.ptv
