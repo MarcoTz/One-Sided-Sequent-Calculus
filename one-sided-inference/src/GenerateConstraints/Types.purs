@@ -6,7 +6,7 @@ module GenerateConstraints.Types (
 import GenerateConstraints.Definition (GenM,addTyvar)
 import GenerateConstraints.Errors (GenerateError(..))
 import Loc (Loc)
-import Common (VariantVar(..),Kind(..),varianceEvalOrder, defaultEo)
+import Common (VariantVar(..),varianceEvalOrder, defaultEo)
 import Errors (zipWithError)
 import Environment (lookupDecl)
 import Syntax.Typed.Types (Ty(..),KindedTy(..)) as T 
@@ -24,7 +24,7 @@ genConstraintsTy _ (D.TyVar v) = do
   pure $ T.TyVar v
 genConstraintsTy loc (D.TyDecl tyn args) = do 
   (K.DataDecl decl) <- lookupDecl loc tyn 
-  let argPols = (\(VariantVar v) -> MkKind (varianceEvalOrder v.variantVariance (defaultEo decl.declType))) <$> decl.declArgs
+  let argPols = (\(VariantVar v) -> (varianceEvalOrder v.variantVariance (defaultEo decl.declType))) <$> decl.declArgs
   let argsZipped = zipWithError args argPols (ErrTyArity loc tyn)
   case argsZipped of 
     Right err -> throwError err

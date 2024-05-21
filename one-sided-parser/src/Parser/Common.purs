@@ -3,7 +3,6 @@ module Parser.Common (
   parseTypename,
   parseVariantVar,
   parseEvaluationOrder,
-  parseKind,
   parseVariable,
   parseXtorname,
   parseModulename,
@@ -11,14 +10,14 @@ module Parser.Common (
 ) where 
 
 import Common (
-  EvaluationOrder(..),Variance(..),  Kind(..), Modulename(..),Variable(..),
-  Typename(..),Typevar(..), DeclTy(..), Kindvar(..), Xtorname(..), VariantVar(..))
+  EvaluationOrder(..),Variance(..),  Modulename(..),Variable(..),
+  Typename(..),Typevar(..), DeclTy(..), Xtorname(..), VariantVar(..))
 import Parser.Definition (SrcParser)
 import Parser.Lexer (sc, parseKeyword, parseSymbol, parseIdentifier)
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 
-import Prelude (bind,pure,(<$>), ($))
+import Prelude (bind,pure,($))
 import Control.Alt ((<|>))
 
 parseEvaluationOrder :: SrcParser EvaluationOrder 
@@ -51,13 +50,6 @@ parseVariance =
  _ <- parseSymbol SymMinus 
  pure Contravariant)
 
-parseKind :: SrcParser Kind 
-parseKind = 
-  (MkKind <$> parseEvaluationOrder) 
-  <|> 
-  (do
-  nm <- parseIdentifier
-  pure $ MkKindVar (Kindvar nm))
 
 parseModulename :: SrcParser Modulename
 parseModulename = do

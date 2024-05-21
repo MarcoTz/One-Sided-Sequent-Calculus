@@ -1,23 +1,36 @@
 module Kinding.Types ( 
-  kindType
+  checkKindType
 )where 
 
-import Common (Kind(..),EvaluationOrder(..))
+import Loc (defaultLoc)
+import Common (EvaluationOrder(..), VariantVar(..), Variance(..),shiftEvalOrder)
 import Kinding.Definition (KindM)
-import Syntax.Typed.Types (Ty(..)) as T
-import Syntax.Kinded.Types (Ty(..)) as K
+import Kinding.Errors (KindError(..))
+import Syntax.Typed.Types (Ty(..))          as T
+import Syntax.Kinded.Types (Ty(..))         as K
+import Syntax.Kinded.Program (DataDecl(..)) as K
+import Environment (lookupDecl)
+import Errors (zipWithErrorM)
 
-import Prelude (($),(<$>),pure,bind)
+import Prelude (($),(<$>),(==),pure,bind)
 import Data.Traversable (for)
+import Data.Tuple (Tuple(..))
 
-defaultKind :: Kind 
-defaultKind = MkKind CBV
 
-kindType :: T.Ty -> KindM K.Ty
-kindType (T.TyVar v) = pure $ K.TyVar v defaultKind 
-kindType (T.TyDecl nm tyArgs) = do
-  tyArgs' <- for tyArgs kindType
-  pure $ K.TyDecl nm tyArgs' defaultKind
-kindType (T.TyShift ty) = (\x -> K.TyShift x defaultKind) <$> kindType ty
-kindType (T.TyCo ty) = K.TyCo <$> kindType ty 
-kindType (T.TyForall args ty) = K.TyForall args <$> kindType ty
+checkKindType :: T.Ty -> EvaluationOrder -> KindM K.Ty 
+checkKindType (T.TyVar v) eo = pure $ K.TyVar v eo
+checkKindType (T.TyDecl nm tyArgs) eo = do
+  (K.DataDecl decl) <- lookupDecl defaultLoc nm
+  let getArgEo (VariantVar var) = if var.variantVariance == Covariant then pure eo else pure $ shiftEvalOrder eo
+  argKinds <- for decl.declArgs getArgEo
+  argsZipped <- zipWithErrorM tyArgs argKinds (ErrTyArity defaultLoc nm)
+  tyArgs' <- for argsZipped (\(Tuple var eo') -> checkKindType var eo')
+  pure $ K.TyDecl nm tyArgs'  CBV
+checkKindType (T.TyShift ty) eo = do
+  ty' <- checkKindType ty (shiftEvalOrder eo)
+  pure $ K.TyShift ty' eo
+checkKindType (T.TyCo ty) eo = do
+  ty' <- checkKindType ty eo
+  pure $ K.TyCo ty' 
+checkKindType (T.TyForall args ty) eo = K.TyForall args <$> checkKindType ty eo
+

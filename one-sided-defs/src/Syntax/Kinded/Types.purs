@@ -4,10 +4,10 @@ module Syntax.Kinded.Types (
 ) where 
 
 import Common (Typevar,Kind, Typename(..), shiftEvalOrder,
-  class GetKind, getKind, class ContainsKindvar, containsKindvar, class ShiftEvalOrder)
+  class GetKind, getKind, class ShiftEvalOrder)
 import Syntax.Typed.Types (Ty(..)) as T
 
-import Prelude (class Eq, (<$>), ($), class Show, show, (<>))
+import Prelude (class Eq, (<$>), class Show, show, (<>))
 import Data.List (List(..),null,intercalate)
 
 data Ty =
@@ -35,8 +35,6 @@ instance GetKind Ty where
   getKind (TyCo ty)         = shiftEvalOrder (getKind ty)
   getKind (TyForall _ ty)   = getKind ty
 
-instance ContainsKindvar Ty where 
-  containsKindvar ty = containsKindvar (getKind  $ ty)
 
 instance ShiftEvalOrder Ty where 
   shiftEvalOrder (TyVar v knd) = TyVar v (shiftEvalOrder knd)

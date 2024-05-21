@@ -6,7 +6,8 @@ module Kinding.Program (
 
 import Kinding.Definition (KindM)
 import Kinding.Terms (kindTerm,kindCommand)
-import Kinding.Types (kindType)
+import Kinding.Types (checkKindType)
+import Common (EvaluationOrder(..), PrdCns(..), defaultEo)
 import Syntax.Typed.Program (Program(..),DataDecl(..),VarDecl(..),XtorSig(..)) as T
 import Syntax.Typed.Terms (Command) as T
 import Syntax.Kinded.Program (Program(..),DataDecl(..),VarDecl(..),XtorSig(..)) as K
@@ -32,16 +33,16 @@ kindProgram (T.Program prog) = do
 
 kindDeclaration :: T.DataDecl -> KindM K.DataDecl
 kindDeclaration (T.DataDecl decl) = do
-  xtors' <- for decl.declXtors kindXtorSig
+  let declEo = defaultEo decl.declType
+  xtors' <- for decl.declXtors (kindXtorSig declEo)
   pure $ K.DataDecl decl{declXtors=xtors'} 
 
 kindVariable :: T.VarDecl -> KindM K.VarDecl
 kindVariable (T.VarDecl var) = do
-  bd' <- kindTerm var.varBody
+  bd' <- kindTerm var.varBody Prd CBV
   pure $ K.VarDecl var{varBody=bd'} 
 
-kindXtorSig :: T.XtorSig -> KindM K.XtorSig
-kindXtorSig (T.XtorSig sig) = do
-  args' <- for sig.sigArgs kindType
-  pure $ K.XtorSig {sigPos:sig.sigPos,sigName:sig.sigName, sigArgs:args'}  
-
+kindXtorSig :: EvaluationOrder -> T.XtorSig -> KindM K.XtorSig
+kindXtorSig eo (T.XtorSig sig) = do
+  args' <- for sig.sigArgs (\x -> checkKindType x eo)
+  pure $ K.XtorSig {sigPos:sig.sigPos,sigName:sig.sigName, sigArgs:args'}

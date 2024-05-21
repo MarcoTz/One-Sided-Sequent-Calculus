@@ -4,7 +4,6 @@ module GenerateConstraints.Definition (
   runGenM,
   addGenVar,
   getGenVars,
-  freshKVar,
   freshTyVar,
   freshTyVarsDecl,
   addTyvar,
@@ -20,7 +19,7 @@ module GenerateConstraints.Definition (
 import GenerateConstraints.Errors (GenerateError(..))
 import Constraints (ConstraintSet, Constr(..))
 import Loc (Loc)
-import Common (Variable, Typevar(..), VariantVar(..),Kind(..),Kindvar(..), Xtorname)
+import Common (Variable, Typevar(..), VariantVar(..),Xtorname)
 import Environment (Environment,getVars)
 import Syntax.Typed.Types (Ty(..))
 import Syntax.Kinded.Types (embedType)
@@ -41,13 +40,12 @@ import Control.Monad.Except (Except, runExcept, throwError)
 data GenerateState = MkGenState{
   varEnv :: (Map Variable Ty),
   tyVarCnt :: Int,
-  kVarCnt :: Int,
   constrSet :: ConstraintSet ,
   genTyvars :: List Typevar
 }
 
 initialGenState :: GenerateState 
-initialGenState = MkGenState {varEnv:empty, tyVarCnt:0, kVarCnt:0, constrSet:Nil, genTyvars:Nil }
+initialGenState = MkGenState {varEnv:empty, tyVarCnt:0, constrSet:Nil, genTyvars:Nil }
 
 type GenM a = ReaderT Environment (StateT GenerateState (Except GenerateError)) a 
 
@@ -79,12 +77,6 @@ freshTyVarsDecl vars = do
 addTyvar :: Typevar -> GenM Unit
 addTyvar var = modify (\(MkGenState s) -> MkGenState s{genTyvars=Cons var s.genTyvars}) *> pure unit
 
-freshKVar :: GenM Kind
-freshKVar = do 
-  cnt <- gets (\(MkGenState s) -> s.kVarCnt )
-  let newVar = Kindvar ("k" <> show cnt)
-  _ <- modify (\(MkGenState s) -> MkGenState s{kVarCnt=cnt+1})
-  pure (MkKindVar newVar)
 
 -- modify environment
 addConstraint :: Constr -> GenM Unit 

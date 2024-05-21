@@ -4,8 +4,6 @@ module Common (
   getKind,
   class ShiftEvalOrder,
   shiftEvalOrder,
-  class ContainsKindvar,
-  containsKindvar,
   Typevar (..),
   Typename (..),
   Variable (..),
@@ -18,12 +16,11 @@ module Common (
   VariantVar (..),
   varianceEvalOrder,
   Modulename (..),
-  Kindvar (..),
   Kind (..),
   freshVarN
 ) where 
 
-import Prelude (class Eq, class Ord, class Show, (<>), show, (+), ($), identity)
+import Prelude (class Eq, class Ord, class Show, (<>), show, (+), identity)
 import Data.List (List(..))
 import Data.Maybe (Maybe(..))
 import Data.Set (Set, member) 
@@ -72,18 +69,13 @@ derive instance ordVariable :: Ord Variable
 instance Show Variable where 
   show (Variable v) = v 
 
-data PrdCns = Prd | Cns 
+data PrdCns = Prd | Cns | PrdCns
 derive instance eqPrdCns :: Eq PrdCns
 derive instance ordPrdCns :: Ord PrdCns
 instance Show PrdCns where 
   show Prd = "prd"
   show Cns = "cns"
-
-data Kindvar = Kindvar String
-derive instance eqKindvar :: Eq Kindvar
-derive instance ordKindvar :: Ord Kindvar
-instance Show Kindvar where 
- show (Kindvar kv) = kv 
+  show PrdCns = "prdcns"
 
 --------------------------------------------------------
 -------------- Classes for Free Variables --------------
@@ -118,30 +110,14 @@ instance Show EvaluationOrder where
   show CBV = "CBV"
   show CBN = "CBN"
 
-data Kind = MkKind EvaluationOrder | MkKindVar Kindvar 
-derive instance eqKind :: Eq Kind 
-derive instance ordKind :: Ord Kind
-instance Show Kind where 
-  show (MkKind p) = show p
-  show (MkKindVar kv) = show kv
+type Kind = EvaluationOrder 
+
 class ShiftEvalOrder a where
  shiftEvalOrder :: a -> a  
 
 instance ShiftEvalOrder EvaluationOrder where 
   shiftEvalOrder CBV = CBN
   shiftEvalOrder CBN = CBV
-
-instance ShiftEvalOrder Kind where 
-  shiftEvalOrder (MkKind eo) = MkKind $ shiftEvalOrder eo
-  shiftEvalOrder v@(MkKindVar _)  = v
-
-class ContainsKindvar a where 
-  containsKindvar :: a -> Boolean
-
-instance ContainsKindvar Kind where 
-  containsKindvar (MkKind _) = false
-  containsKindvar (MkKindVar _) = true
-
 
 class GetKind a where 
   getKind :: a -> Kind

@@ -10,7 +10,7 @@ import Parser.Definition (SrcParser)
 import Parser.Lexer (parseSymbol, parseKeyword, sc, parseCommaSep)
 import Parser.Symbols (Sym(..))
 import Parser.Keywords (Keyword(..))
-import Parser.Common (parseTypevar, parseTypename, parseVariantVar, parseKind)
+import Parser.Common (parseTypevar, parseTypename, parseVariantVar, parseEvaluationOrder)
 
 import Prelude (bind, pure, ($))
 import Data.List (List(..))
@@ -104,5 +104,5 @@ parseKindedTy = do
   _ <- sc
   _ <- parseSymbol SymColon
   _ <- sc
-  knd <- parseKind
+  knd <- parseEvaluationOrder
   pure $ KindedTy {kindedTy:ty,kindedKind:knd}
