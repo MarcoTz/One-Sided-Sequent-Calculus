@@ -52,10 +52,6 @@ select {
   border: none;
 }
 
-#debugStr {
-  height: 50em;
-}
-
 .boldText {
   font-weight:bold
 }
@@ -66,8 +62,4 @@ select {
 
 .evalError {
   color: var(--red-color); 
-}
-
-.prog {
-  height:40em
 }

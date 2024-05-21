@@ -4,7 +4,7 @@ import Definitions (RunResult(..),Input, State)
 import Events (runSrc, selectExample,getSrc)
 import StandardLib (libMap)
 
-import Prelude (($),(<>),(<$>),show)
+import Prelude (($),(<>),(<$>),(+),show)
 import Data.Map (toUnfoldable)
 import Data.Tuple (Tuple(..))
 import Data.Array (length)
@@ -16,6 +16,10 @@ import Halogen.HTML.Properties (class_,id, readOnly,value,style)
 import Halogen.HTML.Events (onClick,onValueChange)
 
 
+getHTMLHeight :: String -> String 
+getHTMLHeight str = let nlines = length (split (Pattern "\n") str)  in 
+  "height: " <> show (nlines +3) <> "em;"
+
 render :: forall w. State -> HTML w Input
 render {progSrc:src,runRes:res} = layout src res
 
@@ -23,7 +27,7 @@ progDiv :: forall w. String -> HTML w Input
 progDiv src = div 
   [ class_ $ ClassName "prog" ]
   [
-    textarea [id "progInput", value src, onValueChange getSrc],
+    textarea [id "progInput", value src, onValueChange getSrc, style  $ getHTMLHeight src],
     br_,
     button [id "runButton", onClick runSrc] [text "Run"]
   ]
@@ -31,8 +35,7 @@ progDiv src = div
 
 getArea :: forall w. String -> ClassName -> String -> HTML w Input 
 getArea contents cl htmlId = 
-  let nlines = length (split (Pattern "\n") contents) in
-  textarea [class_ cl,id htmlId, readOnly true, value contents, style $ "height:"<>show nlines<>"em;" ]
+  textarea [class_ cl,id htmlId, readOnly true, value contents, style $ getHTMLHeight contents]
 
 resDiv :: forall w.RunResult -> HTML w Input 
 resDiv (ResErr {errMsg:err, errDebug:debug, errTypes:tys}) = div [ class_ $ ClassName "results"]
@@ -57,7 +60,7 @@ resDiv (ResSucc{succCmd:cmd,succTrace:tr,succDebug:debug, succTypes:tys}) = div
     getArea tys (ClassName "results") "typesStr",
     h2_ [text "Evaluation Trace"],
     br_,
-    textarea [id "traceStr", readOnly true, value tr],
+    textarea [id "traceStr", readOnly true, value tr, style $ getHTMLHeight tr],
     h2_ [text "Debug Trace"],
     getArea debug (ClassName "results") "debugStr"
   ]

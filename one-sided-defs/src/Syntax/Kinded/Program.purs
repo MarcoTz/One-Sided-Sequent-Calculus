@@ -14,7 +14,7 @@ module Syntax.Kinded.Program (
 
 
 import Loc (Loc, class HasLoc) 
-import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename)
+import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename, class GetKind, getKind)
 import Syntax.Kinded.Types (Ty,embedType)
 import Syntax.Kinded.Terms (Term, Command,getType)
 import Syntax.Typed.Program (XtorSig(..)) as T
@@ -51,6 +51,8 @@ instance Show DataDecl where
     show decl.declType <> " " <> show decl.declName <> argsString <> "{" <> intercalate ", " (show <$> decl.declXtors)
 
 data VarDecl = VarDecl {varPos::Loc, varName::Variable, varIsRec::Boolean, varBody::Term}
+instance GetKind VarDecl where 
+  getKind (VarDecl var) = getKind var.varBody
 instance HasLoc VarDecl where 
   getLoc (VarDecl decl) = decl.varPos
   setLoc loc (VarDecl decl) = VarDecl (decl {varPos=loc})

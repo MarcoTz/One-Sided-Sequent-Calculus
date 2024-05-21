@@ -7,7 +7,7 @@ module Driver.Driver (
 
 import Driver.Definition (DriverM, DriverState(..), liftErr, debug, addDecl, addVarDecl, inEnv, getProg, withDebug)
 import Driver.Errors (DriverError(..))
-import Common (Modulename, Variable)
+import Common (Modulename, Variable,getKind)
 import Loc (defaultLoc)
 import Environment (Environment(..))
 import StandardLib (libMap)
@@ -233,6 +233,7 @@ kindVarDecl mn v@(T.VarDecl var) = do
   env <- gets (\(MkDriverState s) -> s.drvEnv)
   let var' = runKindM env (kindVariable v)
   var'' <- liftErr var' mn "kind vardecl"
+  _ <- debug ("Successfully inferrred kind " <> show (getKind var'') <> " for variable " <> show var.varName)
   _ <- addVarDecl mn var''
   pure var''
 
