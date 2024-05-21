@@ -39,7 +39,7 @@ kindDeclaration (T.DataDecl decl) = do
 
 kindVariable :: T.VarDecl -> KindM K.VarDecl
 kindVariable (T.VarDecl var) = do
-  bd' <- kindTerm var.varBody Prd Any
+  bd' <- kindTerm var.varBody PrdCns Any
   pure $ K.VarDecl var{varBody=bd'} 
 
 kindXtorSig :: EvaluationOrder -> T.XtorSig -> KindM K.XtorSig

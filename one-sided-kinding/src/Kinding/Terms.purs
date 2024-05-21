@@ -55,16 +55,16 @@ kindTerm (T.XCase loc pts ty) pc eo = do
   let ty' = if (decl.declType == Codata && pc==Prd) || (decl.declType == Data && pc==Cns) then ty else T.TyCo ty
   ty'' <- checkKindType ty' eo
   pure $ K.XCase loc Prd pts' ty''
-kindTerm (T.ShiftCBV loc t ty) pc CBV = do
+kindTerm (T.ShiftCBV loc _ _) _ CBN = throwError (ErrShift loc CBN)
+kindTerm (T.ShiftCBV loc t ty) pc _ = do
   t' <- kindTerm t pc CBV
   ty' <- checkKindType ty CBV
   pure $ K.ShiftCBV loc (K.getPrdCns t') t' ty'
-kindTerm (T.ShiftCBV loc _ _) _ eo = throwError (ErrShift loc eo)
-kindTerm (T.ShiftCBN loc t ty) pc CBN = do
+kindTerm (T.ShiftCBN loc _ _) _ CBV = throwError (ErrShift loc CBV)
+kindTerm (T.ShiftCBN loc t ty) pc _ = do
   t' <- kindTerm t pc CBN
   ty' <- checkKindType ty CBN 
   pure $ K.ShiftCBN loc (K.getPrdCns t') t' ty'
-kindTerm (T.ShiftCBN loc _ _) _ eo = throwError (ErrShift loc eo)
 
 kindCommand :: T.Command -> KindM K.Command 
 kindCommand (T.Cut loc t eo u) = do
