@@ -10981,7 +10981,7 @@
             });
           }
           ;
-          throw new Error("Failed pattern match at Eval.Eval (line 76, column 5 - line 76, column 47): " + [v12.constructor.name]);
+          throw new Error("Failed pattern match at Eval.Eval (line 80, column 5 - line 80, column 47): " + [v12.constructor.name]);
         }
         ;
         while (!$tco_done) {
@@ -11006,7 +11006,7 @@
           return new Tuple(newArgs, new Just(new Tuple(frv, v12.value0)));
         }
         ;
-        throw new Error("Failed pattern match at Eval.Eval (line 68, column 5 - line 68, column 77): " + [v12.constructor.name]);
+        throw new Error("Failed pattern match at Eval.Eval (line 72, column 5 - line 72, column 77): " + [v12.constructor.name]);
       };
       var v1 = evalArgs(v.value1.value3);
       if (v1.value1 instanceof Nothing) {
@@ -11018,7 +11018,7 @@
         return pure10(new Cut(v.value0, new Mu(v.value1.value0, v.value1.value1, v1.value1.value0.value0, new Cut(v.value1.value0, xtt, v.value2, v1.value1.value0.value1), getType(v1.value1.value0.value1)), v.value2, v.value3));
       }
       ;
-      throw new Error("Failed pattern match at Eval.Eval (line 60, column 3 - line 66, column 80): " + [v1.value1.constructor.name]);
+      throw new Error("Failed pattern match at Eval.Eval (line 64, column 3 - line 70, column 80): " + [v1.value1.constructor.name]);
     }
     ;
     if (v instanceof Cut && (v.value1 instanceof XCase && v.value3 instanceof Xtor)) {
@@ -12521,7 +12521,7 @@
           });
         }
         ;
-        throw new Error("Failed pattern match at Kinding.Terms (line 45, column 1 - line 45, column 64): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
+        throw new Error("Failed pattern match at Kinding.Terms (line 49, column 1 - line 49, column 64): " + [v.constructor.name, v1.constructor.name, v2.constructor.name]);
       };
     };
   };
@@ -12546,7 +12546,7 @@
       return map115(Print.create(v.value0))(kindTerm(v.value1)(Prd.value)(CBV.value));
     }
     ;
-    throw new Error("Failed pattern match at Kinding.Terms (line 86, column 1 - line 86, column 44): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Kinding.Terms (line 90, column 1 - line 90, column 44): " + [v.constructor.name]);
   };
   var checkPatterns = function(v) {
     return function(v1) {
@@ -12565,12 +12565,20 @@
               }));
             });
           }))(function(pts$prime) {
-            return pure17(new Tuple(d, pts$prime));
+            return bind18(bind18(kindCommand(v1.value0.value0.ptcmd))(function(c$prime) {
+              return pure17(new Pattern({
+                ptxt: v1.value0.value0.ptxt,
+                ptv: v1.value0.value0.ptv,
+                ptcmd: c$prime
+              }));
+            }))(function(pt$prime) {
+              return pure17(new Tuple(d, new Cons(pt$prime, pts$prime)));
+            });
           });
         });
       }
       ;
-      throw new Error("Failed pattern match at Kinding.Terms (line 24, column 1 - line 24, column 84): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Kinding.Terms (line 25, column 1 - line 25, column 84): " + [v.constructor.name, v1.constructor.name]);
     };
   };
 

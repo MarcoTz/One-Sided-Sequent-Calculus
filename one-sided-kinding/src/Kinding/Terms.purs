@@ -21,6 +21,7 @@ import Data.Traversable (for)
 import Data.List(List(..))
 import Data.Tuple (Tuple(..))
 
+
 checkPatterns :: Loc -> List T.Pattern -> KindM (Tuple K.DataDecl (List K.Pattern))
 checkPatterns loc Nil = throwError (ErrBadPattern loc)
 checkPatterns loc (Cons (T.Pattern pt) pts) = do
@@ -28,7 +29,10 @@ checkPatterns loc (Cons (T.Pattern pt) pts) = do
   pts' <- for pts (\(T.Pattern pt') -> do
      c' <- kindCommand pt'.ptcmd
      pure $ K.Pattern pt'{ptcmd=c'})
-  pure (Tuple d pts')
+  pt' <- (do 
+     c' <- kindCommand pt.ptcmd
+     pure $ K.Pattern pt{ptcmd=c'})
+  pure (Tuple d (Cons pt' pts'))
 
 data TermTy = XTor | XCase 
 getCo :: TermTy -> DeclTy -> PrdCns -> T.Ty -> Tuple T.Ty PrdCns

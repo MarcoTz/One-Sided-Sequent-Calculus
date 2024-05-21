@@ -43,18 +43,22 @@ evalOnce :: Command -> EvalM Command
 evalOnce (Err loc err) = pure $ Err loc err
 evalOnce (Done loc)    = pure $ Done loc
 evalOnce (Print loc t) = pure $ Print loc t 
+
 evalOnce (Cut loc (ShiftCBV _ _ t _) eo u) = pure $ Cut loc t eo u
 evalOnce (Cut loc (ShiftCBN _ _ t _) eo u) = pure $ Cut loc t eo u
 evalOnce (Cut loc t eo (ShiftCBV _ _ u _)) = pure $ Cut loc t eo u
 evalOnce (Cut loc t eo (ShiftCBN _ _ u _)) = pure $ Cut loc t eo u
+
 evalOnce (Cut loc (Var loc' _ v _) eo u) = do 
   t <- lookupBody loc v 
   pure $ Cut loc (setLoc loc' t) eo u 
 evalOnce (Cut loc t eo (Var loc' _ v _)) = do
   u <- lookupBody loc v 
   pure $ Cut loc t eo (setLoc loc' u)
+
 evalOnce (Cut _ t _ (Mu _ _ v c _)) = pure $ substituteVariable v t c 
 evalOnce (Cut _ (Mu _ _ v c _) _ u) = pure $ substituteVariable v u c
+
 evalOnce (Cut loc (Xtor loc1 pc nm args ty) eo xc@(XCase _ _ pats _)) = do
   let (Tuple args' mv) = evalArgs args
   case mv of 
@@ -80,6 +84,7 @@ evalOnce (Cut loc (Xtor loc1 pc nm args ty) eo xc@(XCase _ _ pats _)) = do
        argsZipped <- zipWithErrorM pt.ptv args (ErrMissingPt loc nm)
        let varmap = fromFoldable argsZipped
        pure $ substVars varmap pt.ptcmd
+
 evalOnce (Cut loc xc@(XCase _ _ _ _) eo xt@(Xtor _ _ _ _ _)) = pure (Cut loc xt (shiftEvalOrder eo) xc)
 evalOnce c@(Cut loc (XCase _ _ _ _) _ (XCase _ _ _ _)) = throwError (ErrTwoCase loc c)
 evalOnce c@(Cut loc (Xtor _ _ _ _ _) _ (Xtor _ _ _ _ _)) = throwError (ErrTwoXtor loc c)
