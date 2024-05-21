@@ -15,10 +15,10 @@ import Data.Map (lookup,toUnfoldable)
 import Driver.Definition (DriverState(..),initialDriverState, runDriverM)
 import Driver.Driver (runStr)
 import Driver.Errors (DriverError)
-import Common (Modulename(..),Variable)
+import Common (Modulename(..),Variable,PrdCns)
 import Errors (showInSrc)
 import Syntax.Kinded.Types (Ty)
-import Syntax.Kinded.Terms (getType)
+import Syntax.Kinded.Terms (getType,getPrdCns)
 import Syntax.Kinded.Program (Program(..),VarDecl(..),emptyProg)
 import Eval.Definition (EvalTrace(..))
 import StandardLib (libMap)
@@ -57,8 +57,8 @@ stateOutput (MkDriverState {drvDebug:db, drvEnv:_}) prog = {debugTr:intercalate 
     getEnvTrace (Program prog') = do
       let progVars :: List VarDecl
           progVars = snd <$> toUnfoldable prog'.progVars
-      let varsTys :: List (Tuple Variable Ty)
-          varsTys = (\(VarDecl var) -> Tuple var.varName (getType var.varBody)) <$> progVars
+      let varsTys :: List (Tuple (Tuple PrdCns Variable) Ty)
+          varsTys = (\(VarDecl var) -> Tuple (Tuple (getPrdCns var.varBody) var.varName) (getType var.varBody)) <$> progVars
       let varsShown :: List String
-          varsShown = (\(Tuple v ty) -> show v <> " :: " <> show ty) <$> varsTys
+          varsShown = (\(Tuple (Tuple pc v) ty) -> show pc <> " " <> show v <> " :: " <> show ty) <$> varsTys
       intercalate "\n" varsShown

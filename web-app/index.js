@@ -33338,12 +33338,13 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   // output/Definitions/index.js
   var map49 = /* @__PURE__ */ map(functorList);
   var toUnfoldable14 = /* @__PURE__ */ toUnfoldable2(unfoldableList);
-  var show60 = /* @__PURE__ */ show(showVariable);
-  var show128 = /* @__PURE__ */ show(showTy3);
+  var show60 = /* @__PURE__ */ show(showPrdCns);
+  var show128 = /* @__PURE__ */ show(showVariable);
+  var show222 = /* @__PURE__ */ show(showTy3);
   var intercalate21 = /* @__PURE__ */ intercalate(foldableList)(monoidString);
   var showInSrc2 = /* @__PURE__ */ showInSrc(errorDriverError);
-  var show222 = /* @__PURE__ */ show(showCommand);
-  var show313 = /* @__PURE__ */ show(/* @__PURE__ */ showList(showCommand));
+  var show313 = /* @__PURE__ */ show(showCommand);
+  var show413 = /* @__PURE__ */ show(/* @__PURE__ */ showList(showCommand));
   var intercalate1 = /* @__PURE__ */ intercalate(foldableMaybe)(monoidString);
   var lookup15 = /* @__PURE__ */ lookup(ordModulename);
   var ResErr = /* @__PURE__ */ function() {
@@ -33388,10 +33389,10 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       var getEnvTrace = function(v1) {
         var progVars = map49(snd)(toUnfoldable14(v1.value0.progVars));
         var varsTys = map49(function(v2) {
-          return new Tuple(v2.value0.varName, getType(v2.value0.varBody));
+          return new Tuple(new Tuple(getPrdCns(v2.value0.varBody), v2.value0.varName), getType(v2.value0.varBody));
         })(progVars);
         var varsShown = map49(function(v2) {
-          return show60(v2.value0) + (" :: " + show128(v2.value1));
+          return show60(v2.value0.value0) + (" " + (show128(v2.value0.value1) + (" :: " + show222(v2.value1))));
         })(varsTys);
         return intercalate21("\n")(varsShown);
       };
@@ -33415,8 +33416,8 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
       if (v1.value0 instanceof Right) {
         var v2 = stateOutput(v1.value1)(v1.value0.value0.value0);
         return new ResSucc({
-          succCmd: show222(v1.value0.value0.value1.value0),
-          succTrace: show313(v1.value0.value0.value1.value1),
+          succCmd: show313(v1.value0.value0.value1.value0),
+          succTrace: show413(v1.value0.value0.value1.value1),
           succDebug: v2.debugTr,
           succTypes: v2.typesTr
         });
