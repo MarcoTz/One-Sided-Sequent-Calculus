@@ -4,17 +4,16 @@ module Syntax.Typed.Terms (
   Pattern (..),
   TypedVar,
   getType,
-  setType,
-  isValue
+  setType
 ) where 
 
 import Syntax.Typed.Types (Ty)
-import Common (Variable, EvaluationOrder (..), Xtorname)
+import Common (Variable, EvaluationOrder, Xtorname)
 import Loc (Loc, class HasLoc)
 
-import Prelude (class Eq, map, identity, class Show, show, (<$>), (<>))
+import Prelude (class Eq, class Show, show, (<$>), (<>))
 import Data.Tuple (Tuple)
-import Data.List (List, null, filter,intercalate)
+import Data.List (List, null, intercalate)
 
 type TypedVar = Tuple Variable Ty
 
@@ -92,11 +91,3 @@ setType (Xtor loc nm args _) ty = Xtor loc nm args ty
 setType (XCase loc pts _) ty = XCase loc pts ty
 setType (ShiftCBV loc t _) ty = ShiftCBV loc t ty
 setType (ShiftCBN loc t _) ty = ShiftCBN loc t ty
-
-isValue :: EvaluationOrder -> Term -> Boolean
-isValue CBV (Var _ _ _) = true 
-isValue CBV (Xtor _ _ args _) = null (filter identity (map (isValue CBV) args))
-isValue CBV (XCase _ _ _) = true
-isValue CBV (ShiftCBV _ _ _) = true
-isValue CBV _ = false 
-isValue CBN _ = true

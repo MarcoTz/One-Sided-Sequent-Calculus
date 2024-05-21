@@ -19,6 +19,7 @@ import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Data.String.CodeUnits (singleton)
+import Parsing (fail)
 import Parsing.Combinators (try, sepBy, many, optionMaybe)
 import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
@@ -174,6 +175,7 @@ parseShift = do
   case eo of 
     CBV -> pure (ShiftCBV loc t)
     CBN -> pure (ShiftCBN loc t)
+    Any -> fail "Can only shift CBV or CBN"
 
 parseXtor :: SrcParser Term
 parseXtor = do

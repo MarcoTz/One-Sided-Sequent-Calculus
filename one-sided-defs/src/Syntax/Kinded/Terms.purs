@@ -110,3 +110,4 @@ isValue CBV (XCase _ _ _ _) = true
 isValue CBV (ShiftCBV _ _ _ _) = true
 isValue CBV _ = false 
 isValue CBN _ = true
+isValue Any _ = true

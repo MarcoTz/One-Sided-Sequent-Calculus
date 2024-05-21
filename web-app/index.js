@@ -1107,13 +1107,13 @@
     return dict.foldr;
   };
   var traverse_ = function(dictApplicative) {
-    var applySecond6 = applySecond(dictApplicative.Apply0());
+    var applySecond7 = applySecond(dictApplicative.Apply0());
     var pure39 = pure(dictApplicative);
     return function(dictFoldable) {
       var foldr22 = foldr(dictFoldable);
       return function(f) {
         return foldr22(function($454) {
-          return applySecond6(f($454));
+          return applySecond7(f($454));
         })(pure39(unit));
       };
     };
@@ -3684,6 +3684,13 @@
     CBN2.value = new CBN2();
     return CBN2;
   }();
+  var Any = /* @__PURE__ */ function() {
+    function Any3() {
+    }
+    ;
+    Any3.value = new Any3();
+    return Any3;
+  }();
   var Data = /* @__PURE__ */ function() {
     function Data2() {
     }
@@ -3770,7 +3777,11 @@
         return "CBN";
       }
       ;
-      throw new Error("Failed pattern match at Common (line 109, column 1 - line 111, column 19): " + [v.constructor.name]);
+      if (v instanceof Any) {
+        return "Any";
+      }
+      ;
+      throw new Error("Failed pattern match at Common (line 109, column 1 - line 112, column 19): " + [v.constructor.name]);
     }
   };
   var showDeclTy = {
@@ -3783,7 +3794,7 @@
         return "codata";
       }
       ;
-      throw new Error("Failed pattern match at Common (line 135, column 1 - line 137, column 25): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Common (line 137, column 1 - line 139, column 25): " + [v.constructor.name]);
     }
   };
   var shiftEvalOrderEvaluationO = {
@@ -3796,7 +3807,11 @@
         return CBV.value;
       }
       ;
-      throw new Error("Failed pattern match at Common (line 118, column 1 - line 120, column 27): " + [v.constructor.name]);
+      if (v instanceof Any) {
+        return Any.value;
+      }
+      ;
+      throw new Error("Failed pattern match at Common (line 119, column 1 - line 122, column 27): " + [v.constructor.name]);
     }
   };
   var shiftEvalOrder = function(dict) {
@@ -3812,7 +3827,7 @@
       return shiftEvalOrder1;
     }
     ;
-    throw new Error("Failed pattern match at Common (line 125, column 1 - line 125, column 68): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Common (line 127, column 1 - line 127, column 68): " + [v.constructor.name]);
   };
   var getKind = function(dict) {
     return dict.getKind;
@@ -3967,6 +3982,10 @@
           return true;
         }
         ;
+        if (x instanceof Any && y instanceof Any) {
+          return true;
+        }
+        ;
         return false;
       };
     }
@@ -3995,7 +4014,7 @@
       return CBN.value;
     }
     ;
-    throw new Error("Failed pattern match at Common (line 139, column 1 - line 139, column 39): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Common (line 141, column 1 - line 141, column 39): " + [v.constructor.name]);
   };
 
   // output/Effect.Exception/foreign.js
@@ -6228,6 +6247,10 @@
         return true;
       }
       ;
+      if (v instanceof Any) {
+        return true;
+      }
+      ;
       throw new Error("Failed pattern match at Syntax.Kinded.Terms (line 106, column 1 - line 106, column 46): " + [v.constructor.name, v1.constructor.name]);
     };
   };
@@ -7159,7 +7182,7 @@
         return "{" + (show(showTerm3)(v.value1) + (":CBM} : " + show19(v.value2)));
       }
       ;
-      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 57, column 1 - line 63, column 66): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 56, column 1 - line 62, column 66): " + [v.constructor.name]);
     }
   };
   var showPattern3 = {
@@ -7189,7 +7212,7 @@
         return "Print " + show(showTerm3)(v.value1);
       }
       ;
-      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 27, column 1 - line 31, column 39): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 26, column 1 - line 30, column 39): " + [v.constructor.name]);
     }
   };
   var setType = function(v) {
@@ -7218,7 +7241,7 @@
         return new ShiftCBN3(v.value0, v.value1, v1);
       }
       ;
-      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 88, column 1 - line 88, column 30): " + [v.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Syntax.Typed.Terms (line 87, column 1 - line 87, column 30): " + [v.constructor.name, v1.constructor.name]);
     };
   };
   var getType2 = function(v) {
@@ -7246,7 +7269,7 @@
       return v.value2;
     }
     ;
-    throw new Error("Failed pattern match at Syntax.Typed.Terms (line 80, column 1 - line 80, column 22): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Syntax.Typed.Terms (line 79, column 1 - line 79, column 22): " + [v.constructor.name]);
   };
 
   // output/Syntax.Typed.Program/index.js
@@ -12520,7 +12543,7 @@
   var applicativeReaderT14 = /* @__PURE__ */ applicativeReaderT(/* @__PURE__ */ applicativeExceptT(monadIdentity));
   var pure18 = /* @__PURE__ */ pure(applicativeReaderT14);
   var kindVariable = function(v) {
-    return bind19(kindTerm(v.value0.varBody)(Prd.value)(CBV.value))(function(bd$prime) {
+    return bind19(kindTerm(v.value0.varBody)(Prd.value)(Any.value))(function(bd$prime) {
       return pure18(new VarDecl3({
         varPos: v.value0.varPos,
         varName: v.value0.varName,
@@ -13012,6 +13035,13 @@
     KwCBN2.value = new KwCBN2();
     return KwCBN2;
   }();
+  var KwAny = /* @__PURE__ */ function() {
+    function KwAny2() {
+    }
+    ;
+    KwAny2.value = new KwAny2();
+    return KwAny2;
+  }();
   var Kwmu = /* @__PURE__ */ function() {
     function Kwmu2() {
     }
@@ -13202,6 +13232,10 @@
         return "CBN";
       }
       ;
+      if (v instanceof KwAny) {
+        return "ANY";
+      }
+      ;
       if (v instanceof KwMu) {
         return "Mu";
       }
@@ -13298,11 +13332,11 @@
         return "of";
       }
       ;
-      throw new Error("Failed pattern match at Parser.Keywords (line 40, column 1 - line 69, column 23): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Parser.Keywords (line 41, column 1 - line 71, column 23): " + [v.constructor.name]);
     }
   };
   var allKws = /* @__PURE__ */ function() {
-    return new Cons(KwModule.value, new Cons(KwData.value, new Cons(Kwmu.value, new Cons(KwMu.value, new Cons(KwCase.value, new Cons(Kwcase.value, new Cons(KwDone.value, new Cons(KwForall.value, new Cons(Kwforall.value, new Cons(KwCo.value, new Cons(Kwco.value, new Cons(KwImport.value, new Cons(KwMain.value, new Cons(Kwmain.value, new Cons(KwError.value, new Cons(KwRec.value, new Cons(KwCBV.value, new Cons(KwCBN.value, new Cons(KwCodata.value, new Cons(KwIf.value, new Cons(Kwif.value, new Cons(KwThen.value, new Cons(Kwthen.value, new Cons(KwElse.value, new Cons(Kwelse.value, new Cons(KwOf.value, new Cons(Kwof.value, Nil.value)))))))))))))))))))))))))));
+    return new Cons(KwModule.value, new Cons(KwData.value, new Cons(Kwmu.value, new Cons(KwMu.value, new Cons(KwCase.value, new Cons(Kwcase.value, new Cons(KwDone.value, new Cons(KwForall.value, new Cons(Kwforall.value, new Cons(KwCo.value, new Cons(Kwco.value, new Cons(KwImport.value, new Cons(KwMain.value, new Cons(Kwmain.value, new Cons(KwError.value, new Cons(KwRec.value, new Cons(KwCBV.value, new Cons(KwCBN.value, new Cons(KwAny.value, new Cons(KwCodata.value, new Cons(KwIf.value, new Cons(Kwif.value, new Cons(KwThen.value, new Cons(Kwthen.value, new Cons(KwElse.value, new Cons(Kwelse.value, new Cons(KwOf.value, new Cons(Kwof.value, Nil.value))))))))))))))))))))))))))));
   }();
 
   // output/Partial.Unsafe/foreign.js
@@ -30053,6 +30087,7 @@
   var bind22 = /* @__PURE__ */ bind(bindParserT);
   var pure21 = /* @__PURE__ */ pure(applicativeParserT);
   var alt4 = /* @__PURE__ */ alt(altParserT);
+  var applySecond5 = /* @__PURE__ */ applySecond(applyParserT);
   var parseXtorname = /* @__PURE__ */ bind22(parseIdentifier)(function(nm) {
     return pure21(new Xtorname(nm));
   });
@@ -30090,11 +30125,7 @@
     return pure21(new Modulename(nm));
   });
   var parseEvaluationOrder = /* @__PURE__ */ function() {
-    return alt4(bind22(parseKeyword(KwCBV.value))(function() {
-      return pure21(CBV.value);
-    }))(bind22(parseKeyword(KwCBN.value))(function() {
-      return pure21(CBN.value);
-    }));
+    return alt4(applySecond5(parseKeyword(KwCBV.value))(pure21(CBV.value)))(alt4(applySecond5(parseKeyword(KwCBN.value))(pure21(CBN.value)))(applySecond5(parseKeyword(KwAny.value))(pure21(Any.value))));
   }();
   var parseDataCodata = /* @__PURE__ */ function() {
     return alt4(bind22(parseKeyword(KwData.value))(function() {
@@ -30260,7 +30291,7 @@
         return singleton6(v.value0) + charlsToStr(v.value1);
       }
       ;
-      throw new Error("Failed pattern match at Parser.Terms (line 295, column 5 - line 295, column 39): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Parser.Terms (line 297, column 5 - line 297, column 39): " + [v.constructor.name]);
     };
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseKeyword(KwError.value))(function() {
@@ -30303,7 +30334,7 @@
       return bind24(getCurrPos)(function(startPos) {
         return bind24(parseSymbol(SymSemi.value))(function() {
           return bind24(sc)(function() {
-            return bind24($lazy_parseTerm(38))(function(t2) {
+            return bind24($lazy_parseTerm(39))(function(t2) {
               return bind24(getCurrLoc(startPos))(function(loc) {
                 return pure23(new Seq(loc, t1, t2));
               });
@@ -30319,7 +30350,7 @@
         return bind24(parseSymbol(SymBar.value))(function() {
           return bind24(parseSymbol(SymBar.value))(function() {
             return bind24(sc)(function() {
-              return bind24($lazy_parseTerm(72))(function(t2) {
+              return bind24($lazy_parseTerm(73))(function(t2) {
                 return bind24(getCurrLoc(startPos))(function(loc) {
                   return pure23(new OrBool(loc, t1, t2));
                 });
@@ -30335,7 +30366,7 @@
       return bind24(getCurrPos)(function(startPos) {
         return bind24(parseSymbol(SymSqBrackO.value))(function() {
           return bind24(sc)(function() {
-            return bind24($lazy_parseTerm(48))(function(t2) {
+            return bind24($lazy_parseTerm(49))(function(t2) {
               return bind24(sc)(function() {
                 return bind24(parseSymbol(SymSqBrackC.value))(function() {
                   return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30355,7 +30386,7 @@
         return bind24(parseSymbol(SymAmper.value))(function() {
           return bind24(parseSymbol(SymAmper.value))(function() {
             return bind24(sc)(function() {
-              return bind24($lazy_parseTerm(61))(function(t2) {
+              return bind24($lazy_parseTerm(62))(function(t2) {
                 return bind24(getCurrLoc(startPos))(function(loc) {
                   return pure23(new AndBool(loc, t1, t2));
                 });
@@ -30372,7 +30403,7 @@
         return bind24(sc)(function() {
           return bind24(parseSymbol(SymParensO.value))(function() {
             return bind24(sc)(function() {
-              return bind24(sepBy($lazy_parseTerm(185))(parseCommaSep))(function(args) {
+              return bind24(sepBy($lazy_parseTerm(187))(parseCommaSep))(function(args) {
                 return bind24(sc)(function() {
                   return bind24(parseSymbol(SymParensC.value))(function() {
                     return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30393,30 +30424,30 @@
     }(unit))(alt6(/* @__PURE__ */ function(v) {
       return parseDone;
     }(unit))(alt6(function(v) {
-      return $lazy_parseCut(232);
+      return $lazy_parseCut(234);
     }(unit))(alt6(function(v) {
-      return $lazy_parseCaseOf(233);
+      return $lazy_parseCaseOf(235);
     }(unit))(alt6(function(v) {
-      return $$try2($lazy_parseCutCBV(234));
+      return $$try2($lazy_parseCutCBV(236));
     }(unit))(alt6(function(v) {
-      return $$try2($lazy_parseCutCBN(235));
+      return $$try2($lazy_parseCutCBN(237));
     }(unit))(alt6(function(v) {
-      return $$try2($lazy_parsePrint(236));
+      return $$try2($lazy_parsePrint(238));
     }(unit))(function(v) {
-      return $$try2($lazy_parsePrintAnnot(237));
+      return $$try2($lazy_parsePrintAnnot(239));
     }(unit))))))));
   });
   var $lazy_parseCaseOf = /* @__PURE__ */ $runtime_lazy6("parseCaseOf", "Parser.Terms", function() {
     return bind24(getCurrPos)(function(startPos) {
       return bind24(alt6(parseKeyword(KwCase.value))(parseKeyword(Kwcase.value)))(function() {
         return bind24(sc1)(function() {
-          return bind24($lazy_parseTerm(244))(function(t) {
+          return bind24($lazy_parseTerm(246))(function(t) {
             return bind24(sc1)(function() {
               return bind24(alt6(parseKeyword(KwOf.value))(parseKeyword(Kwof.value)))(function() {
                 return bind24(sc)(function() {
                   return bind24(parseSymbol(SymBrackO.value))(function() {
                     return bind24(sc)(function() {
-                      return bind24(sepBy($lazy_parsePattern(250))(parseCommaSep))(function(pts) {
+                      return bind24(sepBy($lazy_parsePattern(252))(parseCommaSep))(function(pts) {
                         return bind24(sc)(function() {
                           return bind24(parseSymbol(SymBrackC.value))(function() {
                             return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30437,16 +30468,16 @@
   });
   var $lazy_parseCommand = /* @__PURE__ */ $runtime_lazy6("parseCommand", "Parser.Terms", function() {
     return alt6(parseParens(function(v) {
-      return $lazy_parseC(226);
+      return $lazy_parseC(228);
     }(unit)))(function(v) {
-      return $lazy_parseC(226);
+      return $lazy_parseC(228);
     }(unit));
   });
   var $lazy_parseCut = /* @__PURE__ */ $runtime_lazy6("parseCut", "Parser.Terms", function() {
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseAngO)(function() {
         return bind24(sc)(function() {
-          return bind24($lazy_parseTerm(261))(function(t) {
+          return bind24($lazy_parseTerm(263))(function(t) {
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymBar.value))(function() {
                 return bind24(sc)(function() {
@@ -30454,7 +30485,7 @@
                     return bind24(sc)(function() {
                       return bind24(parseSymbol(SymBar.value))(function() {
                         return bind24(sc)(function() {
-                          return bind24($lazy_parseTerm(269))(function(u2) {
+                          return bind24($lazy_parseTerm(271))(function(u2) {
                             return bind24(sc)(function() {
                               return bind24(parseAngC)(function() {
                                 return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30466,7 +30497,7 @@
                                     return pure23(new CutAnnot2(loc, t, v.value1.value0, v.value0, u2));
                                   }
                                   ;
-                                  throw new Error("Failed pattern match at Parser.Terms (line 273, column 3 - line 275, column 46): " + [v.value1.constructor.name]);
+                                  throw new Error("Failed pattern match at Parser.Terms (line 275, column 3 - line 277, column 46): " + [v.value1.constructor.name]);
                                 });
                               });
                             });
@@ -30485,7 +30516,7 @@
   });
   var $lazy_parseCutCBN = /* @__PURE__ */ $runtime_lazy6("parseCutCBN", "Parser.Terms", function() {
     return bind24(getCurrPos)(function(startPos) {
-      return bind24($lazy_parseTerm(348))(function(t) {
+      return bind24($lazy_parseTerm(350))(function(t) {
         return bind24(sc)(function() {
           return bind24(parseAngO)(function() {
             return bind24(parseAngO)(function() {
@@ -30501,7 +30532,7 @@
                     });
                   });
                 }))))(function(mty) {
-                  return bind24($lazy_parseTerm(360))(function(u2) {
+                  return bind24($lazy_parseTerm(362))(function(u2) {
                     return bind24(getCurrLoc(startPos))(function(loc) {
                       if (mty instanceof Nothing) {
                         return pure23(new Cut4(loc, t, CBN.value, u2));
@@ -30511,7 +30542,7 @@
                         return pure23(new CutAnnot2(loc, t, mty.value0, CBN.value, u2));
                       }
                       ;
-                      throw new Error("Failed pattern match at Parser.Terms (line 362, column 3 - line 364, column 46): " + [mty.constructor.name]);
+                      throw new Error("Failed pattern match at Parser.Terms (line 364, column 3 - line 366, column 46): " + [mty.constructor.name]);
                     });
                   });
                 });
@@ -30524,7 +30555,7 @@
   });
   var $lazy_parseCutCBV = /* @__PURE__ */ $runtime_lazy6("parseCutCBV", "Parser.Terms", function() {
     return bind24(getCurrPos)(function(startPos) {
-      return bind24($lazy_parseTerm(327))(function(t) {
+      return bind24($lazy_parseTerm(329))(function(t) {
         return bind24(sc)(function() {
           return bind24(parseAngC)(function() {
             return bind24(parseAngC)(function() {
@@ -30540,7 +30571,7 @@
                     });
                   });
                 }))))(function(mty) {
-                  return bind24($lazy_parseTerm(339))(function(u2) {
+                  return bind24($lazy_parseTerm(341))(function(u2) {
                     return bind24(getCurrLoc(startPos))(function(loc) {
                       if (mty instanceof Nothing) {
                         return pure23(new Cut4(loc, t, CBV.value, u2));
@@ -30550,7 +30581,7 @@
                         return pure23(new CutAnnot2(loc, t, mty.value0, CBV.value, u2));
                       }
                       ;
-                      throw new Error("Failed pattern match at Parser.Terms (line 341, column 5 - line 343, column 48): " + [mty.constructor.name]);
+                      throw new Error("Failed pattern match at Parser.Terms (line 343, column 5 - line 345, column 48): " + [mty.constructor.name]);
                     });
                   });
                 });
@@ -30565,15 +30596,15 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(alt6(parseKeyword(KwIf.value))(parseKeyword(Kwif.value)))(function() {
         return bind24(sc1)(function() {
-          return bind24($lazy_parseTerm(94))(function(b2) {
+          return bind24($lazy_parseTerm(95))(function(b2) {
             return bind24(sc1)(function() {
               return bind24(alt6(parseKeyword(KwThen.value))(parseKeyword(Kwthen.value)))(function() {
                 return bind24(sc1)(function() {
-                  return bind24($lazy_parseTerm(98))(function(t1) {
+                  return bind24($lazy_parseTerm(99))(function(t1) {
                     return bind24(sc1)(function() {
                       return bind24(alt6(parseKeyword(KwElse.value))(parseKeyword(Kwelse.value)))(function() {
                         return bind24(sc1)(function() {
-                          return bind24($lazy_parseTerm(102))(function(t2) {
+                          return bind24($lazy_parseTerm(103))(function(t2) {
                             return bind24(getCurrLoc(startPos))(function(loc) {
                               return pure23(new IfThenElse(loc, b2, t1, t2));
                             });
@@ -30597,7 +30628,7 @@
           return bind24(sc)(function() {
             return bind24(parseSymbol(SymDot.value))(function() {
               return bind24(sc)(function() {
-                return bind24($lazy_parseTerm(199))(function(t) {
+                return bind24($lazy_parseTerm(201))(function(t) {
                   return bind24(getCurrLoc(startPos))(function(loc) {
                     return pure23(new Lam(loc, v, t));
                   });
@@ -30613,7 +30644,7 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseSymbol(SymSqBrackO.value))(function() {
         return bind24(sc)(function() {
-          return bind24(sepBy($lazy_parseTerm(130))(parseCommaSep))(function(ts) {
+          return bind24(sepBy($lazy_parseTerm(131))(parseCommaSep))(function(ts) {
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymSqBrackC.value))(function() {
                 return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30634,7 +30665,7 @@
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymDot.value))(function() {
                 return bind24(sc)(function() {
-                  return bind24($lazy_parseCommand(145))(function(c) {
+                  return bind24($lazy_parseCommand(146))(function(c) {
                     return bind24(getCurrLoc(startPos))(function(loc) {
                       return pure23(new Mu4(loc, v, c));
                     });
@@ -30650,7 +30681,7 @@
   var $lazy_parseNot = /* @__PURE__ */ $runtime_lazy6("parseNot", "Parser.Terms", function() {
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseSymbol(SymExcl.value))(function() {
-        return bind24($lazy_parseTerm(110))(function(t) {
+        return bind24($lazy_parseTerm(111))(function(t) {
           return bind24(getCurrLoc(startPos))(function(loc) {
             return pure23(new NotBool(loc, t));
           });
@@ -30666,7 +30697,7 @@
             return bind24(parseSymbol(SymEq.value))(function() {
               return bind24(parseAngC)(function() {
                 return bind24(sc)(function() {
-                  return bind24($lazy_parseCommand(220))(function(c) {
+                  return bind24($lazy_parseCommand(222))(function(c) {
                     if (args instanceof Nothing) {
                       return pure23(new Pattern4({
                         ptxt: nm,
@@ -30683,7 +30714,7 @@
                       }));
                     }
                     ;
-                    throw new Error("Failed pattern match at Parser.Terms (line 221, column 3 - line 223, column 61): " + [args.constructor.name]);
+                    throw new Error("Failed pattern match at Parser.Terms (line 223, column 3 - line 225, column 61): " + [args.constructor.name]);
                   });
                 });
               });
@@ -30697,7 +30728,7 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(alt6(parseKeyword(KwPrint.value))(parseKeyword(Kwprint.value)))(function() {
         return bind24(sc)(function() {
-          return bind24($lazy_parseTerm(319))(function(t) {
+          return bind24($lazy_parseTerm(321))(function(t) {
             return bind24(sc)(function() {
               return bind24(getCurrLoc(startPos))(function(loc) {
                 return pure23(new Print4(loc, t));
@@ -30712,7 +30743,7 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(alt6(parseKeyword(KwPrint.value))(parseKeyword(Kwprint.value)))(function() {
         return bind24(sc)(function() {
-          return bind24($lazy_parseTerm(305))(function(t) {
+          return bind24($lazy_parseTerm(307))(function(t) {
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymColon.value))(function() {
                 return bind24(parseSymbol(SymColon.value))(function() {
@@ -30735,7 +30766,7 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseSymbol(SymBrackO.value))(function() {
         return bind24(sc)(function() {
-          return bind24($lazy_parseTerm(167))(function(t) {
+          return bind24($lazy_parseTerm(168))(function(t) {
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymColon.value))(function() {
                 return bind24(sc)(function() {
@@ -30750,7 +30781,11 @@
                           return pure23(new ShiftCBN4(loc, t));
                         }
                         ;
-                        throw new Error("Failed pattern match at Parser.Terms (line 174, column 3 - line 176, column 33): " + [eo.constructor.name]);
+                        if (eo instanceof Any) {
+                          return fail("Can only shift CBV or CBN");
+                        }
+                        ;
+                        throw new Error("Failed pattern match at Parser.Terms (line 175, column 3 - line 178, column 44): " + [eo.constructor.name]);
                       });
                     });
                   });
@@ -30764,32 +30799,32 @@
   });
   var $lazy_parseT = /* @__PURE__ */ $runtime_lazy6("parseT", "Parser.Terms", function() {
     return alt6(function(v) {
-      return $lazy_parseMu(78);
+      return $lazy_parseMu(79);
     }(unit))(alt6(function(v) {
-      return $lazy_parseXCase(79);
+      return $lazy_parseXCase(80);
     }(unit))(alt6(function(v) {
-      return $lazy_parseShift(80);
+      return $lazy_parseShift(81);
     }(unit))(alt6(function(v) {
-      return $lazy_parseLam(81);
+      return $lazy_parseLam(82);
     }(unit))(alt6(function(v) {
-      return $lazy_parseLst(82);
+      return $lazy_parseLst(83);
     }(unit))(alt6(function(v) {
-      return $lazy_parseNot(83);
+      return $lazy_parseNot(84);
     }(unit))(alt6(function(v) {
-      return $lazy_parseIf(84);
+      return $lazy_parseIf(85);
     }(unit))(alt6(function(v) {
-      return $$try2($lazy_parseTup(85));
+      return $$try2($lazy_parseTup(86));
     }(unit))(alt6(function(v) {
-      return $$try2($lazy_parseXtor(86));
+      return $$try2($lazy_parseXtor(87));
     }(unit))(/* @__PURE__ */ function(v) {
       return parseVar;
     }(unit))))))))));
   });
   var $lazy_parseTerm = /* @__PURE__ */ $runtime_lazy6("parseTerm", "Parser.Terms", function() {
     return bind24(alt6(function(v) {
-      return $lazy_parseT(29);
+      return $lazy_parseT(30);
     }(unit))(parseParens(function(v) {
-      return $lazy_parseT(29);
+      return $lazy_parseT(30);
     }(unit))))(function(t) {
       return alt6($$try2(parseSeq(t)))(alt6($$try2(parseApp(t)))(alt6($$try2(parseAnd(t)))(alt6($$try2(parseOr(t)))(pure23(t)))));
     });
@@ -30798,7 +30833,7 @@
     return bind24(getCurrPos)(function(startPos) {
       return bind24(parseSymbol(SymParensO.value))(function() {
         return bind24(sc)(function() {
-          return bind24(sepBy($lazy_parseTerm(119))(parseCommaSep))(function(ts) {
+          return bind24(sepBy($lazy_parseTerm(120))(parseCommaSep))(function(ts) {
             return bind24(sc)(function() {
               return bind24(parseSymbol(SymParensC.value))(function() {
                 return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30817,7 +30852,7 @@
         return bind24(sc)(function() {
           return bind24(parseSymbol(SymBrackO.value))(function() {
             return bind24(sc)(function() {
-              return bind24(sepBy($lazy_parsePattern(156))(parseCommaSep))(function(pts) {
+              return bind24(sepBy($lazy_parsePattern(157))(parseCommaSep))(function(pts) {
                 return bind24(sc)(function() {
                   return bind24(parseSymbol(SymBrackC.value))(function() {
                     return bind24(getCurrLoc(startPos))(function(loc) {
@@ -30832,8 +30867,8 @@
       });
     });
   });
-  var parseCommand = /* @__PURE__ */ $lazy_parseCommand(225);
-  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(27);
+  var parseCommand = /* @__PURE__ */ $lazy_parseCommand(227);
+  var parseTerm = /* @__PURE__ */ $lazy_parseTerm(28);
 
   // output/Syntax.Parsed.Program/index.js
   var show51 = /* @__PURE__ */ show(showXtorname);
@@ -32884,7 +32919,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var substTyvars13 = /* @__PURE__ */ substTyvars(substituteTypevarsCommand);
   var show65 = /* @__PURE__ */ show(showModulename);
   var liftErr7 = /* @__PURE__ */ liftErr(errorDepError);
-  var applySecond5 = /* @__PURE__ */ applySecond(/* @__PURE__ */ applyExceptT(monadStateT4));
+  var applySecond6 = /* @__PURE__ */ applySecond(/* @__PURE__ */ applyExceptT(monadStateT4));
   var compare4 = /* @__PURE__ */ compare(/* @__PURE__ */ ordMaybe(ordInt));
   var elemIndex4 = /* @__PURE__ */ elemIndex(eqModulename);
   var lookup14 = /* @__PURE__ */ lookup(ordModulename);
@@ -33077,7 +33112,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   var getInferOrder = function(v) {
     return function(v1) {
       if (v1 instanceof Nil) {
-        return applySecond5(debug("No imports for " + (show65(v.value0.progName) + ", skipping import order")))(pure31(Nil.value));
+        return applySecond6(debug("No imports for " + (show65(v.value0.progName) + ", skipping import order")))(pure31(Nil.value));
       }
       ;
       return bind32(debug("Ordering Imports for " + show65(v.value0.progName)))(function() {
@@ -33217,7 +33252,7 @@ cutCBN := Mu y. (MkUnit << Unit << Mu x. Done)
   };
   var inferImportsOrdered = function(v) {
     if (v instanceof Nil) {
-      return applySecond5(debug("No imports to infer"))(pure31(unit));
+      return applySecond6(debug("No imports to infer"))(pure31(unit));
     }
     ;
     return bind32(gets9(function(v1) {

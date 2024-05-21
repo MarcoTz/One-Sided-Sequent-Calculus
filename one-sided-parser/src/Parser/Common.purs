@@ -17,18 +17,16 @@ import Parser.Lexer (sc, parseKeyword, parseSymbol, parseIdentifier)
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 
-import Prelude (bind,pure,($))
+import Prelude (bind,pure,($),(*>))
 import Control.Alt ((<|>))
 
 parseEvaluationOrder :: SrcParser EvaluationOrder 
 parseEvaluationOrder = 
-  (do
-  _ <- parseKeyword KwCBV
-  pure CBV) 
-  <|> 
-  (do
-  _ <- parseKeyword KwCBN 
-  pure CBN)
+  parseKeyword KwCBV *> pure CBV
+  <|>
+  parseKeyword KwCBN *> pure CBN
+  <|>
+  parseKeyword KwAny *> pure Any
 
 parseDataCodata :: SrcParser DeclTy
 parseDataCodata = 
