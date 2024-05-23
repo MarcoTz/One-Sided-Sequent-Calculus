@@ -8,15 +8,12 @@ data Nat{
 }
 
 
-succ :: Fun(Nat,Nat)
-succ := case { Ap(n,a) => <S(n) | CBV | a> }
+succ :: Nat -> Nat  
+succ := \n. S(n) 
 
-pred :: Fun(Nat,Nat)
-rec pred := case { Ap(n,a) => 
+pred :: Nat -> Nat 
+pred := \n. mu a.
   <  case {
-    Z => <Z|CBV|a>,
-    S(m) => <mu b. <pred | CBV | Ap(m,b)> |CBV|a>
+    Z    => error "Cannot take predecessor of 0",
+    S(m) => <m|CBV|a> 
   } | CBV | n> 
-}
-
-main := <pred | CBV | Ap(S(S(S(Z))),mu x.Print x)>

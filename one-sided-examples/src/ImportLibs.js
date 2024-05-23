@@ -54,18 +54,15 @@ data Nat{
 }
 
 
-succ :: Fun(Nat,Nat)
-succ := case { Ap(n,a) => <S(n) | CBV | a> }
+succ :: Nat -> Nat  
+succ := \\n. S(n) 
 
-pred :: Fun(Nat,Nat)
-rec pred := case { Ap(n,a) => 
+pred :: Nat -> Nat 
+pred := \\n. mu a.
   <  case {
-    Z => <Z|CBV|a>,
-    S(m) => <mu b. <pred | CBV | Ap(m,b)> |CBV|a>
+    Z    => error "Cannot take predecessor of 0",
+    S(m) => <m|CBV|a> 
   } | CBV | n> 
-}
-
-main := <pred | CBV | Ap(S(S(S(Z))),mu x.Print x)>
 `;
 
 export const boolSrc = `
@@ -78,50 +75,28 @@ data Bool{
   False
 }
 
-not :: Fun(Bool,Bool)
-not := case { Ap(b,a) => 
-  <case {
+not :: Bool -> Bool 
+not := \\b. mu a.<b |CBV |  
+  case {
     True  => <False | CBV | a>,
     False => <True  | CBV | a>
-  } | CBV | b>
-}
+  }>
 
-and :: Fun(Bool,Fun(Bool,Bool))
-and := case { Ap(b1,a) =>
-  < case { Ap(b2,b) => 
-    < case {
+and :: Bool -> Bool -> Bool
+and := \\b1. \\b2. mu b.< case {
       True => <b2|CBV|b>,
       False => <False|CBV|b>
     } | CBV | b1 > 
-  } | CBV | a>
-}
- 
-or :: Fun(Bool,Fun(Bool,Bool))
-or := case { Ap(b1,a) => 
-  < case { Ap(b2, b) => 
+   
+or :: Bool -> Bool -> Bool
+or := \\b1. \\b2. mu b.
     < case { 
       True  => <True|CBV|b>,
       False => <b2  |CBV|b> 
     } | CBV | b1> 
-  } | CBV | a> 
-}
 
 ifthenelse :: forall X. Bool -> X -> X -> X
 ifthenelse :=\\b. \\t1.\\t2. mu a. <case { True => <t1|CBV|a>, False => <t2|CBV|a> } |CBV|b> 
-
-andEx :: Bool
-andEx := True && False 
-
-orEx :: Bool
-orEx := True || True 
-
-notEx :: Bool
-notEx := !True 
-
-ifTrue :: Bool
-ifTrue := if True then True else False
-
-main := case True of { True => Done, False => error ""} 
 `;
 
 export const lpairSrc = `
@@ -139,49 +114,48 @@ module List
 import Fun
 import Nat
 import Unit
+import Prelude
 
--- Lists
 data List(a:+){
   Cons(a,List(a)),
   Nil
 }
 
-brackEx :: List(Unit)
-brackEx := [MkUnit,MkUnit,MkUnit]
-
-brackEx2 :: List(Unit)
-brackEx2 := [MkUnit,MkUnit,MkUnit,MkUnit,MkUnit]
-
-tail :: forall X. Fun(List(X),List(X))
-tail := case { Ap(ls,a) => 
+tail :: forall X. List(X)->List(X) 
+tail := \\ls. mu a. 
   < case { 
-    Nil         => <Nil | CBV | a>,
+    Nil         => error "Cannot take tail of empty list",
     Cons(hd,rs) => <rs  | CBV | a>
   } | CBV | ls> 
-}
 
-head :: forall X. Fun(List(X),X)
-head := case { Ap(ls,a) => 
+head :: forall X. List(X) -> X 
+head := \\ls. mu a. 
   < case { 
     Nil         => error "cannot take head of empty list",
     Cons(hd,rs) => <hd  | CBV | a>
-  } | CBV | ls> 
-}
+  } | CBV | ls>
 
 
-len :: forall X. Fun(List(X),Nat)
-rec len := case { Ap(ls,a) => 
+len :: forall X. List(X) -> Nat 
+rec len := \\ls. mu a.  
   < case {
     Nil => <Z|CBV|a>,
-    Cons(l1,lrs) => 
-     <len | CBV | Ap(lrs,mu x.<S(x)|CBV|a>)>
+    Cons(l1,lrs) => <len [lrs] | CBV| a>
   } | CBV | ls>
-}
 
-printCons :: Forall X. X
-printCons := mu x. Print x
+-- fix this
+--take :: forall X. Nat -> List(X) -> List(X)
+--take := \\n.\\ls. mu a.<n | CBV | 
+--  case { 
+--    Z    => <Nil|CBV|a>,
+--    S(m) => <ls | CBV | 
+--      case { 
+--        Nil        => error "Cannot take nonzero elements from empty list",
+--        Cons(x,xs) => < take [m] | CBV | a> 
+--      }>
+--  }>
 
-main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
+main := <len [Cons(Z,Nil)] | CBV | printT>
 `;
 
 export const preludeSrc = `
@@ -204,14 +178,8 @@ data Pair(a:+,b:+) {
   Tup(a,b)
 }
 
-diag :: forall X. Fun(X,Pair(X,X))
-diag := case { Ap(x,a) => <Tup(x,x) | CBV | a> }
-
-pairSugar :: Pair(Unit,Pair(Unit,Pair(Unit,Unit)))
-pairSugar := (MkUnit,MkUnit,MkUnit,MkUnit)
-
-pairSugar2 :: Pair(Unit,Pair(Unit,Unit))
-pairSugar2 := (MkUnit,MkUnit,MkUnit)
+diag :: forall X. X -> Pair(X,X) 
+diag := \\x. (x,x) 
 `;
 
 export const funSrc = `
@@ -223,29 +191,12 @@ codata Fun(a:+,b:-){
   Ap(a,b)
 }
 
-id :: forall X. Fun(X,X)
-id := case { Ap(x,a) => <x | CBV | a> }
-
-id2 :: Forall X. Fun(X,X)
-id2 := \\x. x
-
-main := <id2 [MkUnit] | CBV | mu x.Print x>
+id :: forall X. X -> X  
+id := \\x.x 
 `;
 
 export const unitSrc = `
 module Unit
 
 data Unit { MkUnit }
-
-cbvU :: {Unit}
-cbvU := {MkUnit:CBV}
-
-cbnU :: {Unit}
-cbnU := {MkUnit:CBN} 
-
-cutCBV :: Unit 
-cutCBV := Mu y. (MkUnit >> Unit >> Mu x. Done)
-
-cutCBN :: Unit
-cutCBN := Mu y. (MkUnit << Unit << Mu x. Done) 
 `;

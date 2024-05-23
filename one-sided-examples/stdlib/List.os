@@ -3,46 +3,45 @@ module List
 import Fun
 import Nat
 import Unit
+import Prelude
 
--- Lists
 data List(a:+){
   Cons(a,List(a)),
   Nil
 }
 
-brackEx :: List(Unit)
-brackEx := [MkUnit,MkUnit,MkUnit]
-
-brackEx2 :: List(Unit)
-brackEx2 := [MkUnit,MkUnit,MkUnit,MkUnit,MkUnit]
-
-tail :: forall X. Fun(List(X),List(X))
-tail := case { Ap(ls,a) => 
+tail :: forall X. List(X)->List(X) 
+tail := \ls. mu a. 
   < case { 
-    Nil         => <Nil | CBV | a>,
+    Nil         => error "Cannot take tail of empty list",
     Cons(hd,rs) => <rs  | CBV | a>
   } | CBV | ls> 
-}
 
-head :: forall X. Fun(List(X),X)
-head := case { Ap(ls,a) => 
+head :: forall X. List(X) -> X 
+head := \ls. mu a. 
   < case { 
     Nil         => error "cannot take head of empty list",
     Cons(hd,rs) => <hd  | CBV | a>
-  } | CBV | ls> 
-}
+  } | CBV | ls>
 
 
-len :: forall X. Fun(List(X),Nat)
-rec len := case { Ap(ls,a) => 
+len :: forall X. List(X) -> Nat 
+rec len := \ls. mu a.  
   < case {
     Nil => <Z|CBV|a>,
-    Cons(l1,lrs) => 
-     <len | CBV | Ap(lrs,mu x.<S(x)|CBV|a>)>
+    Cons(l1,lrs) => <len [lrs] | CBV| a>
   } | CBV | ls>
-}
 
-printCons :: Forall X. X
-printCons := mu x. Print x
+-- fix this
+--take :: forall X. Nat -> List(X) -> List(X)
+--take := \n.\ls. mu a.<n | CBV | 
+--  case { 
+--    Z    => <Nil|CBV|a>,
+--    S(m) => <ls | CBV | 
+--      case { 
+--        Nil        => error "Cannot take nonzero elements from empty list",
+--        Cons(x,xs) => < take [m] | CBV | a> 
+--      }>
+--  }>
 
-main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
+main := <len [Cons(Z,Nil)] | CBV | printT>
