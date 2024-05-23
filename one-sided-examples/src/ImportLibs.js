@@ -187,8 +187,11 @@ main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
 export const preludeSrc = `
 module Prelude
 
-import Bool
-import Maybe 
+printT :: forall a. a
+printT := mu x. Print x
+
+exitSucc :: forall a. a
+exitSucc := mu x. Done
 `;
 
 export const pairSrc = `
