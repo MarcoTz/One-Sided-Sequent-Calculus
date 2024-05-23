@@ -38,10 +38,6 @@ or := case { Ap(b1,a) =>
 ifthenelse :: forall X. Bool -> X -> X -> X
 ifthenelse :=\b. \t1.\t2. mu a. <case { True => <t1|CBV|a>, False => <t2|CBV|a> } |CBV|b> 
 
-
-printCons :: Forall X. X
-printCons := mu x.Print x
-
 andEx :: Bool
 andEx := True && False 
 

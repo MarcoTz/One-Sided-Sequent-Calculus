@@ -16,18 +16,20 @@ import Syntax.Typed.Terms (Term(..),Pattern(..),getType, setType, Command(..))  
 import Syntax.Typed.Types (Ty(..),isSubsumed)                                   as T 
 import Syntax.Typed.Substitution (substTyvars)                                  as T
 import Syntax.Kinded.Program (VarDecl(..),DataDecl(..),XtorSig(..))             as K
-import Syntax.Kinded.Types (embedType)
+import Syntax.Kinded.Types (embedType)                                          as K
 import Syntax.Kinded.Terms (getType)
+import FreeVars.FreeTypevars (freeTypevars,freshTypevar)
 
 import Prelude (bind,pure,($),(<$>), (==))
 import Data.List (List(..),foldr)
 import Data.Traversable (for)
 import Data.Map (Map,lookup,fromFoldable,insert)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..),fromMaybe)
 import Data.Tuple (Tuple(..))
-import Data.Set (fromFoldable) as S
+import Data.Set (fromFoldable,intersection,unions,toUnfoldable) as S
 import Control.Monad (unless)
 import Control.Monad.Except (throwError)
+
 
 -----------------------------------------------------------------------------
 ----------------------------------- Terms -----------------------------------
@@ -48,7 +50,7 @@ checkTerm t (T.TyCo ty) = do
 checkTerm (D.Var loc v) ty = do
   checkerTy <- lookup v <$> getCheckerVars 
   vardecl <- lookupMVar v
-  let mvarty = (\(K.VarDecl d) -> embedType (getType d.varBody)) <$> vardecl
+  let mvarty = (\(K.VarDecl d) -> K.embedType (getType d.varBody)) <$> vardecl
   ty' <- case Tuple checkerTy mvarty of 
       (Tuple Nothing Nothing) -> throwError (ErrUndefinedVar loc v)
       (Tuple _ (Just ty'')) -> pure ty'' 
@@ -65,9 +67,15 @@ checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs) = do
   K.XtorSig sig  <- lookupXtor loc xtn
   _ <- unless (tyn == decl.declName) $  throwError (ErrNotTyDecl loc decl.declName ty xtt) 
   -- substitute type variables in xtor signature
-  let argVars = (\(VariantVar d) -> d.variantVar) <$> decl.declArgs
-  varSubsts <- zipWithErrorM argVars tyargs (ErrTypeArity loc tyn)
-  let argsEmbedded = embedType <$> sig.sigArgs
+  let argVars :: List Typevar 
+      argVars = (\(VariantVar d) -> d.variantVar) <$> decl.declArgs
+  let commonVars :: List Typevar 
+      commonVars = S.toUnfoldable (S.intersection (S.unions (S.fromFoldable (freeTypevars <$> tyargs))) (S.fromFoldable argVars))
+  let commonSubst :: Map Typevar Typevar 
+      commonSubst = fromFoldable ((\v -> Tuple v (freshTypevar ty)) <$> commonVars)
+  let argVars' = (\v -> fromMaybe v (lookup v commonSubst)) <$> argVars
+  varSubsts <- zipWithErrorM argVars' tyargs (ErrTypeArity loc tyn)
+  let argsEmbedded = K.embedType <$> sig.sigArgs
   let xtArgTys = T.substTyvars (fromFoldable varSubsts) <$> argsEmbedded 
   -- check xtor arguments
   argsToCheck <- zipWithErrorM xtargs xtArgTys (ErrXtorArity loc xtn) 
@@ -82,14 +90,21 @@ checkTerm xct@(D.XCase loc pts@(Cons (D.Pattern pt1) _)) ty@(T.TyDecl tyn tyargs
   let ptxtns = (\(D.Pattern pt) -> pt.ptxt) <$> pts
   let declxtns = (\(K.XtorSig sig) -> sig.sigName) <$> decl.declXtors 
   _ <- unless (S.fromFoldable ptxtns == S.fromFoldable declxtns) $ throwError (ErrBadPattern loc ptxtns declxtns xct)
-  varmap <- zipWithErrorM ((\(VariantVar v) -> v.variantVar) <$> decl.declArgs) tyargs (ErrTypeArity loc tyn)
+  let declVars :: List Typevar 
+      declVars = (\(VariantVar v) -> v.variantVar) <$> decl.declArgs
+  let commonVars :: List Typevar 
+      commonVars = S.toUnfoldable (S.intersection (S.unions (S.fromFoldable (freeTypevars <$> tyargs))) (S.fromFoldable declVars))
+  let commonSubst :: Map Typevar Typevar 
+      commonSubst = fromFoldable ((\v -> Tuple v (freshTypevar ty) ) <$> commonVars)
+  let declVars' = (\v -> fromMaybe v (lookup v commonSubst)) <$> declVars
+  varmap <- zipWithErrorM declVars' tyargs (ErrTypeArity loc tyn)
   pts' <- for pts (\x -> x `checkPattern` fromFoldable varmap)
   pure $ T.XCase loc pts' ty
   where 
     checkPattern :: D.Pattern -> Map Typevar T.Ty -> CheckM T.Pattern
     checkPattern (D.Pattern pt) varmap = do
       K.XtorSig sig <- lookupXtor loc pt.ptxt
-      let argsEmbedded = embedType <$> sig.sigArgs
+      let argsEmbedded = K.embedType <$> sig.sigArgs
       let xtargs' = T.substTyvars varmap <$> argsEmbedded
       argsZipped <- zipWithErrorM pt.ptv xtargs' (ErrXtorArity loc sig.sigName)
       currVars <- getCheckerVars 

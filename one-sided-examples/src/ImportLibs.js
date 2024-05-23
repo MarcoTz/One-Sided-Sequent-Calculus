@@ -16,6 +16,20 @@ rec constTrue := mu a.
 
 `;
 
+export const maybeSrc = `
+module Maybe
+
+import Fun 
+
+data Maybe(a:+) { 
+  Nothing,
+  Just(a)
+  }
+
+maybe :: forall a b. b -> (a -> b) -> Maybe(a) -> b
+maybe := \\b. \\f. \\a. mu c. < a | CBV | case { Nothing => <b|CBV|c>, Just(a) => <f [a]|CBV|c> }>
+`;
+
 export const natSrc = `
 module Nat 
 
@@ -81,10 +95,6 @@ or := case { Ap(b1,a) =>
 
 ifthenelse :: forall X. Bool -> X -> X -> X
 ifthenelse :=\\b. \\t1.\\t2. mu a. <case { True => <t1|CBV|a>, False => <t2|CBV|a> } |CBV|b> 
-
-
-printCons :: Forall X. X
-printCons := mu x.Print x
 
 andEx :: Bool
 andEx := True && False 
@@ -159,6 +169,13 @@ printCons :: Forall X. X
 printCons := mu x. Print x
 
 main := <len | Fun(List(Nat),Nat):CBV | Ap(Cons(Z,Nil),printCons)>
+`;
+
+export const preludeSrc = `
+module Prelude
+
+import Bool
+import Maybe 
 `;
 
 export const pairSrc = `

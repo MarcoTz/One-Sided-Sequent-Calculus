@@ -17,6 +17,7 @@ import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Control.Monad.Except (throwError)
 
+
 getTypeAnnot :: Loc -> Variable -> Maybe D.Ty -> CheckM D.Ty
 getTypeAnnot loc var Nothing = throwError (ErrNoAnnot loc var)
 getTypeAnnot _ _ (Just ty) = pure ty

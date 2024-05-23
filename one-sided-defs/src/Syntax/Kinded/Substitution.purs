@@ -1,11 +1,14 @@
 module Syntax.Kinded.Substitution (
   class SubstituteVariables,
   substVars,
-  substituteVariable
+  substituteVariable,
+  class SubstituteTypevariables,
+  substTyvars
 ) where 
 
 import Syntax.Kinded.Terms (Term(..),Command(..),Pattern(..))
-import Common (Variable)
+import Syntax.Kinded.Types (Ty(..))
+import Common (Variable,Typevar)
 
 import Prelude ((<$>))
 import Data.Map (Map, lookup, delete, fromFoldable)
@@ -39,3 +42,6 @@ instance SubstituteVariables Command where
 
 substituteVariable :: forall a.SubstituteVariables a => Variable -> Term -> a -> a
 substituteVariable substVar substT a = let varmap = fromFoldable [Tuple substVar substT] in substVars varmap a 
+
+class SubstituteTypevariables a where 
+  substTyvars :: Map Typevar Ty -> a -> a 
