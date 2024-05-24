@@ -9,52 +9,56 @@ import Parser.Common (parseVariable, parseXtorname, parseEvaluationOrder)
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 import Parser.Types (parseTy)
+import Loc (getLoc)
 import Common (EvaluationOrder(..))
 import Syntax.Parsed.Terms (Term(..),Command(..),Pattern(..))
 import Syntax.Parsed.Types (Ty)
 
-import Prelude (bind, ($), pure, (<>))
-import Data.List (List(..))
+import Prelude (bind, ($),pure, (<>))
+import Data.List (List(..)) 
+import Data.List.NonEmpty (toList) 
 import Data.Tuple (Tuple(..))
 import Data.Maybe (Maybe(..))
 import Data.Unit (unit)
 import Data.String.CodeUnits (singleton)
 import Parsing (fail)
-import Parsing.Combinators (try, sepBy, many, optionMaybe)
+import Parsing.Combinators (try, sepBy,sepBy1, many, optionMaybe)
 import Parsing.String.Basic (noneOf)
 import Control.Alt ((<|>))
 
 
 parseTerm :: SrcParser Term 
 parseTerm = do 
-  t <- (\_ -> parseT) unit  <|> parseParens ((\_ -> parseT) unit) 
-  try (parseSeq t) <|> try (parseApp t) <|> try (parseAnd t) <|> try (parseOr t) <|> pure t
+  t1 <- (parseT <|> parseParens parseT)
+  _ <- sc
+  t1' <- try (parseSeq t1 <|> parseAnd t1 <|> parseOr t1 <|> parseApp t1) <|> pure t1
+  pure t1'
+  where 
+    appTerm :: Term -> List Term -> Term 
+    appTerm t1 Nil = t1 
+    appTerm t1 (Cons t2 ts) = appTerm (App (getLoc t1) t1 t2) ts
+
+parseApp :: Term -> SrcParser Term
+parseApp t1 = do 
+  ts <- parseTerm `sepBy1` parseCommaSep
+  pure $ appTerm t1 (toList ts)
+  where 
+    appTerm :: Term -> List Term -> Term
+    appTerm t Nil = t
+    appTerm t (Cons t2 ts) = appTerm (App (getLoc t2) t t2) ts
 
 parseSeq :: Term -> SrcParser Term
 parseSeq t1 = do
-  _ <- sc
   startPos <- getCurrPos 
+  _ <- parseSymbol SymSemi
   _ <- parseSymbol SymSemi
   _ <- sc 
   t2 <- parseTerm
   loc <- getCurrLoc startPos
   pure $ Seq loc t1 t2
 
-parseApp :: Term -> SrcParser Term 
-parseApp t1 = do 
-  _ <- sc
-  startPos <- getCurrPos 
-  _ <- parseSymbol SymSqBrackO
-  _ <- sc
-  t2 <- parseTerm 
-  _ <- sc 
-  _ <- parseSymbol SymSqBrackC
-  loc <- getCurrLoc startPos 
-  pure $ App loc t1 t2 
-
 parseAnd :: Term -> SrcParser Term 
 parseAnd t1 = do
-  _ <- sc 
   startPos <- getCurrPos
   _ <- parseSymbol SymAmper
   _ <- parseSymbol SymAmper
@@ -117,11 +121,15 @@ parseTup = do
   startPos <- getCurrPos 
   _ <- parseSymbol SymParensO 
   _ <- sc
-  ts <- parseTerm `sepBy` parseCommaSep
+  t1 <- parseTerm
+  _ <- sc 
+  _ <- parseSymbol SymComma
+  _ <- sc
+  ts <- parseTerm `sepBy` parseCommaSep 
   _ <- sc
   _ <- parseSymbol SymParensC
-  loc <- getCurrLoc startPos 
-  pure (Tup loc ts)
+  loc <- getCurrLoc startPos
+  pure $ Tup loc (Cons t1 ts)
 
 parseLst :: SrcParser Term
 parseLst = do 
@@ -154,7 +162,7 @@ parseXCase = do
   _ <- sc
   _ <- parseSymbol SymBrackO
   _ <- sc
-  pts <- parsePattern `sepBy` parseCommaSep 
+  pts <- parsePattern `sepBy` parseCommaSep
   _ <- sc
   _ <- parseSymbol SymBrackC
   loc <- getCurrLoc startPos

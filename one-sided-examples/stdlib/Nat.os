@@ -1,6 +1,6 @@
 module Nat 
 
-import Fun
+import Fun;
 
 data Nat{ 
   Z,
@@ -8,12 +8,12 @@ data Nat{
 }
 
 
-succ :: Nat -> Nat  
-succ := \n. S(n) 
+succ :: Nat -> Nat;
+succ := \n. S(n);
 
-pred :: Nat -> Nat 
+pred :: Nat -> Nat;
 pred := \n. mu a.
   <  case {
     Z    => error "Cannot take predecessor of 0",
     S(m) => <m|CBV|a> 
-  } | CBV | n> 
+  } | CBV | n>;

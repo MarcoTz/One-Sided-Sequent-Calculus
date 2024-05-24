@@ -20,7 +20,6 @@ import Parsing.Combinators (manyTill, try, sepBy, optionMaybe)
 import Parsing.String (eof)
 import Control.Alt ((<|>))
 
-
 parseModuleDecl :: SrcParser Modulename
 parseModuleDecl = (do 
   _ <- sc
@@ -44,8 +43,8 @@ parseProgram src = do
     foldFun :: ParseDecl -> Program -> Program 
     foldFun (MkD d)     = addDeclProgram d
     foldFun (MkV v)     = addVarProgram v 
-    foldFun (MkA annot) =  addAnnotProgram annot 
-    foldFun (MkI imp)   =  addImportProgram imp 
+    foldFun (MkA annot) = addAnnotProgram annot 
+    foldFun (MkI imp)   = addImportProgram imp 
     foldFun (MkM mn)    = addMainProgram mn 
 
 parseDecl :: SrcParser ParseDecl 
@@ -65,6 +64,7 @@ parseMain = do
   _ <- sc 
   c <- parseCommand
   _ <- sc
+  _ <- parseSymbol SymSemi
   pure c
   
 parseImport :: SrcParser Import
@@ -75,6 +75,7 @@ parseImport = do
   mn <- parseModulename
   _ <- sc
   loc <- getCurrLoc startPos
+  _ <- parseSymbol SymSemi
   pure $ Import {importPos:loc, importName:mn}
 
 parseTypeAnnot :: SrcParser AnnotDecl 
@@ -88,6 +89,7 @@ parseTypeAnnot = do
   ty <- parseTy
   _ <- sc
   loc <- getCurrLoc startPos
+  _ <- parseSymbol SymSemi
   pure $ AnnotDecl {annotPos:loc, annotName:nm, annotType:ty}
 
 parseVarDecl :: SrcParser VarDecl 
@@ -103,6 +105,7 @@ parseVarDecl = do
   t <- parseTerm
   _ <- sc
   loc <- getCurrLoc startPos
+  _ <- parseSymbol SymSemi
   pure $ VarDecl {varPos:loc, varName:nm, varIsRec:isJust isRec, varBody:t}
 
 parseDataDecl :: SrcParser DataDecl 

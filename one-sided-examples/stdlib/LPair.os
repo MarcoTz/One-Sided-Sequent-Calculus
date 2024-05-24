@@ -1,4 +1,4 @@
-module LPair 
+module LPair
 
 codata LPair(a:-,b:-){ 
   fst(a),
