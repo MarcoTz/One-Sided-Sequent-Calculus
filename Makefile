@@ -10,7 +10,9 @@ examples:
 
 build: examples  
 	echo "building web app"
-	$(SPAGO) bundle -p $(PACKAGE) 
+	$(SPAGO) bundle-app -t ./web-app/index.js -p browser
+#Command for spago@next, currently not working
+#	$(SPAGO) bundle -p $(PACKAGE) 
 
 test: examples
 	echo "running test suite"
