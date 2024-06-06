@@ -2,6 +2,7 @@ SPAGO = spago
 PACKAGE = one-sided-sc
 FFISH = one-sided-examples/stdlib/libToJs.sh
 
+.SILENT: examples build test 
 .PHONY: examples build test  
 
 examples: 

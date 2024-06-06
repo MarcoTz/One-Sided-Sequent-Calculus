@@ -29,14 +29,10 @@ import Control.Alt ((<|>))
 
 parseTerm :: SrcParser Term 
 parseTerm = do 
-  t1 <- (parseT <|> parseParens parseT)
+  t1 <- (\_-> parseT) unit <|> (\_->parseParens parseT) unit
   _ <- sc
   t1' <- try (parseSeq t1 <|> parseAnd t1 <|> parseOr t1 <|> parseApp t1) <|> pure t1
   pure t1'
-  where 
-    appTerm :: Term -> List Term -> Term 
-    appTerm t1 Nil = t1 
-    appTerm t1 (Cons t2 ts) = appTerm (App (getLoc t1) t1 t2) ts
 
 parseApp :: Term -> SrcParser Term
 parseApp t1 = do 
@@ -45,6 +41,7 @@ parseApp t1 = do
   where 
     appTerm :: Term -> List Term -> Term
     appTerm t Nil = t
+    appTerm t (Cons (App loc t2 t2') ts) = appTerm (App loc t t2) (Cons t2' ts)
     appTerm t (Cons t2 ts) = appTerm (App (getLoc t2) t t2) ts
 
 parseSeq :: Term -> SrcParser Term
