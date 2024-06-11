@@ -1,6 +1,50 @@
 # Grammar 
 
+## Definitions 
+
+Modules have to start with a line defining the module name, which is then used for imports
+
+```
+module modulename
+``` 
+
+Modules can be imported with an import statement.
+
+```
+import modulename
+```
+
+In order for a module to be successfully imported, it needs to be in the standard library (`one-sided-examples/stdlib`).
+
+Variables are defined with the `var` keyword, followed by `:=` and a term `t` and finished with `;`. 
+When a variable is recursive, it also has a `rec` keyword.
+
+```
+(rec) var := t;
+```
+
+Additionally, a `main` function can be defined, which is the only definition with right-hand side a command instead of a term.
+
+```
+main := c;
+```
+
+### Type Definitions 
+
+Type definitions are used to define all algebraic data types that can be used within a program. 
+
+```
+(co)data tyn(x1:+/-,...,xn:+/-) { xtni(tyi1,...,tyin) } 
+```
+
+Both data and codata types can be defined with the `codata` and `data` keywords, followed by the type name `tyn`, which is then used to refer to the type.
+A type can have any number of type arguments `xi` that are all either covariant (`+`) or contravariant (`-`). 
+The last part of the definition is then a list of xtors (constructors/destructors) with a list of argument types for the xtor. 
+The previously defined type variables can be used in these types.
+
 ## Kinds 
+
+Kinds are just the calling conventions, call-by-any is used for terms that can be used with either.
 
 ```
 K :: =          Kinds
@@ -11,13 +55,14 @@ K :: =          Kinds
 
 ## Terms 
 
-All defined types define a set of xtor names `xtn`. 
-We additionally assume a finite set of variables `x`.
+Patterns have an xtor with variables as arguemnt on the left-hand side, and a command in which these variables can be used on the right hand side.
 
 ```
 p ::=   xtn(x,...) => c   Patterns
 ```
 
+Using these patterns, we have the following terms
+ 
 ```
 t ::=                           Terms 
           x                     Variables 
@@ -29,7 +74,7 @@ t ::=                           Terms
 
 ## Commands 
 
-Error messages are simply strings `str`
+Commands representing computations have the following syntax
 
 ```
 c ::=                       Commands 
@@ -40,10 +85,11 @@ c ::=                       Commands
 
 ```
 
+Error messages in the `error` command are simply strings `str`.
+
 ## Types 
 
-All defined types are defined by their type name `tyn`
-
+The following types are possible for terms
 ```
 ty ::=                          Types 
         tyn(ty,...)             Declared Types 
@@ -52,13 +98,3 @@ ty ::=                          Types
         | {ty}                  Shifts           
         | co ty                 Cotypes
 ```
-
-
-## Definitions 
-
-module modulename
-import modulename
-(co)data tyn(x1:+/-,...,xn:+/-) { xtn(xi1,...,xin) } 
-main := c
-var := t
-v
