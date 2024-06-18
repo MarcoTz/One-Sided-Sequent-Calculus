@@ -103,13 +103,13 @@ instance Show VariantVar where
 -----------
 -- Kinds --
 -----------
-data EvaluationOrder = CBV | CBN | Any
+data EvaluationOrder = CBV | CBN | CBA
 derive instance eqEvaluationOrder :: Eq EvaluationOrder
 derive instance ordEvaluationOrder :: Ord EvaluationOrder 
 instance Show EvaluationOrder where 
   show CBV = "CBV"
   show CBN = "CBN"
-  show Any = "Any"
+  show CBA = "CBA"
 
 type Kind = EvaluationOrder 
 
@@ -119,7 +119,7 @@ class ShiftEvalOrder a where
 instance ShiftEvalOrder EvaluationOrder where 
   shiftEvalOrder CBV = CBN
   shiftEvalOrder CBN = CBV
-  shiftEvalOrder Any = Any
+  shiftEvalOrder CBA = CBA
 
 class GetKind a where 
   getKind :: a -> Kind

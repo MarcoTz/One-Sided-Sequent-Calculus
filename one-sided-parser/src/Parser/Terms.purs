@@ -180,7 +180,7 @@ parseShift = do
   case eo of 
     CBV -> pure (ShiftCBV loc t)
     CBN -> pure (ShiftCBN loc t)
-    Any -> fail "Can only shift CBV or CBN"
+    CBA -> fail "Can only shift CBV or CBN"
 
 parseXtor :: SrcParser Term
 parseXtor = do

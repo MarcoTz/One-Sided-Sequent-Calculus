@@ -12,7 +12,7 @@ data Keyword =
   | KwCodata
   | KwCBV
   | KwCBN
-  | KwAny
+  | KwCBA
   | Kwmu
   | KwMu
   | KwCase
@@ -46,7 +46,7 @@ instance Show Keyword where
   show KwCodata = "codata"
   show KwCBV    = "CBV"
   show KwCBN    = "CBN"
-  show KwAny    = "ANY"
+  show KwCBA    = "CBA"
   show KwMu     = "Mu"
   show Kwmu     = "mu"
   show KwCase   = "Case"
@@ -93,7 +93,7 @@ allKws = Cons KwModule
   (Cons KwRec
   (Cons KwCBV
   (Cons KwCBN
-  (Cons KwAny
+  (Cons KwCBA
   (Cons KwCodata 
   (Cons KwIf
   (Cons Kwif

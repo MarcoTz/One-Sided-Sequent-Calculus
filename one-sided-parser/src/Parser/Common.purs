@@ -26,7 +26,7 @@ parseEvaluationOrder =
   <|>
   parseKeyword KwCBN *> pure CBN
   <|>
-  parseKeyword KwAny *> pure Any
+  parseKeyword KwCBA *> pure CBA
 
 parseDataCodata :: SrcParser DeclTy
 parseDataCodata = 
