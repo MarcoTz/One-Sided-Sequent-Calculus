@@ -13,9 +13,10 @@ import Syntax.Typed.Terms (Command) as T
 import Syntax.Kinded.Program (Program(..),DataDecl(..),VarDecl(..),XtorSig(..)) as K
 import Syntax.Kinded.Terms (Command) as K
 
-import Prelude(pure, bind, ($))
+import Prelude(pure, bind, ($),(<$>))
 import Data.Traversable (for)
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 
 
 kindProgram :: T.Program -> KindM K.Program
@@ -44,5 +45,5 @@ kindVariable (T.VarDecl var) = do
 
 kindXtorSig :: EvaluationOrder -> T.XtorSig -> KindM K.XtorSig
 kindXtorSig eo (T.XtorSig sig) = do
-  args' <- for sig.sigArgs (\x -> checkKindType x eo)
+  args' <- for sig.sigArgs (\(Tuple pc ty) -> Tuple pc <$> checkKindType ty eo)
   pure $ K.XtorSig {sigPos:sig.sigPos,sigName:sig.sigName, sigArgs:args'}

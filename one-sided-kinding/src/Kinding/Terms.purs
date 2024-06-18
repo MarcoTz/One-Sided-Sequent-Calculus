@@ -15,11 +15,11 @@ import Syntax.Typed.Types (Ty(..)) as T
 import Syntax.Kinded.Terms (Term(..),Pattern(..),Command(..), getPrdCns)  as K
 import Syntax.Kinded.Program (DataDecl(..), XtorSig(..))                  as K
 
-import Prelude ((<$>),($), bind,pure)
+import Prelude ((<$>),($), bind,pure, (>>>))
 import Control.Monad.Except (throwError)
 import Data.Traversable (for)
 import Data.List(List(..))
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..),snd)
 
 
 checkPatterns :: Loc -> List T.Pattern -> KindM (Tuple K.DataDecl (List K.Pattern))
@@ -62,7 +62,7 @@ kindTerm (T.Xtor loc nm args ty) pc eo = do
   ty'' <- checkKindType ty' eo
   (K.XtorSig sig) <- lookupXtor loc nm
   let argKnds :: List Kind 
-      argKnds = getKind <$> sig.sigArgs
+      argKnds = snd >>> getKind <$> sig.sigArgs
   let kndFun eo' = pure eo'
   argKnds' <- for argKnds kndFun 
   argsZipped <- zipWithErrorM args argKnds' (ErrXtorArity loc nm)

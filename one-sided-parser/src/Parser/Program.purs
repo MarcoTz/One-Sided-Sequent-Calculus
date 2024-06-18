@@ -6,7 +6,7 @@ import Parser.Common (parseModulename, parseVariable, parseDataCodata, parseXtor
 import Parser.Keywords (Keyword(..))
 import Parser.Symbols (Sym(..))
 import Parser.Terms (parseCommand,parseTerm)
-import Parser.Types (parseTy, parseTyArgs)
+import Parser.Types (parseTy, parseTyArgs,parsePrdCnsArg)
 import Common (Modulename(..))
 import Syntax.Parsed.Program (
   Program, DataDecl(..), Import (..), AnnotDecl(..), VarDecl(..), XtorSig(..),
@@ -130,7 +130,7 @@ parseXtorSig :: SrcParser XtorSig
 parseXtorSig = do 
   startPos <- getCurrPos
   nm <- parseXtorname 
-  args <- optionMaybe (parseParens (parseTy `sepBy` parseCommaSep))
+  args <- optionMaybe (parseParens (parsePrdCnsArg `sepBy` parseCommaSep))
   loc <- getCurrLoc startPos
   case args of 
     Nothing -> pure $ XtorSig {sigPos:loc, sigName:nm, sigArgs:Nil}

@@ -11,17 +11,17 @@ module Syntax.Desugared.Program (
 ) where 
 
 import Loc (Loc, class HasLoc)
-import Common (Xtorname,Variable,Typename,VariantVar,DeclTy, Modulename)
+import Common (Xtorname,Variable,Typename,VariantVar,DeclTy, Modulename,PrdCns)
 import Syntax.Desugared.Types (Ty)
 import Syntax.Desugared.Terms (Term,Command)
 
 import Prelude (class Show,show,(<>), (<$>), (==))
 import Data.List (List, null, intercalate)
+import Data.Tuple (Tuple,snd)
 import Data.Maybe (Maybe(..),fromMaybe)
 import Data.Map (Map,insert,empty,toUnfoldable)
-import Data.Tuple (snd)
 
-data XtorSig = XtorSig {sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
+data XtorSig = XtorSig {sigPos :: Loc, sigName :: Xtorname, sigArgs :: List (Tuple PrdCns Ty)} 
 instance HasLoc XtorSig where 
   getLoc (XtorSig sig) = sig.sigPos
   setLoc loc (XtorSig sig) = XtorSig (sig {sigPos=loc})

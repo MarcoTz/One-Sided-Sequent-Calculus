@@ -27,6 +27,7 @@ import Data.Map (Map,lookup,fromFoldable,insert)
 import Data.Maybe (Maybe(..),fromMaybe)
 import Data.Tuple (Tuple(..))
 import Data.Set (fromFoldable,intersection,unions,toUnfoldable) as S
+import Data.Bifunctor (rmap)
 import Control.Monad (unless)
 import Control.Monad.Except (throwError)
 
@@ -75,11 +76,11 @@ checkTerm xtt@(D.Xtor loc xtn xtargs) ty@(T.TyDecl tyn tyargs) = do
       commonSubst = fromFoldable ((\v -> Tuple v (freshTypevar ty)) <$> commonVars)
   let argVars' = (\v -> fromMaybe v (lookup v commonSubst)) <$> argVars
   varSubsts <- zipWithErrorM argVars' tyargs (ErrTypeArity loc tyn)
-  let argsEmbedded = K.embedType <$> sig.sigArgs
+  let argsEmbedded = rmap K.embedType <$> sig.sigArgs
   let xtArgTys = T.substTyvars (fromFoldable varSubsts) <$> argsEmbedded 
   -- check xtor arguments
   argsToCheck <- zipWithErrorM xtargs xtArgTys (ErrXtorArity loc xtn) 
-  argsChecked <- for argsToCheck (\(Tuple x y) -> checkTerm x y)
+  argsChecked <- for argsToCheck (\(Tuple x (Tuple _ y)) -> checkTerm x y)
   pure $ T.Xtor loc xtn argsChecked ty
 
 
@@ -104,11 +105,11 @@ checkTerm xct@(D.XCase loc pts@(Cons (D.Pattern pt1) _)) ty@(T.TyDecl tyn tyargs
     checkPattern :: D.Pattern -> Map Typevar T.Ty -> CheckM T.Pattern
     checkPattern (D.Pattern pt) varmap = do
       K.XtorSig sig <- lookupXtor loc pt.ptxt
-      let argsEmbedded = K.embedType <$> sig.sigArgs
+      let argsEmbedded = rmap K.embedType <$> sig.sigArgs
       let xtargs' = T.substTyvars varmap <$> argsEmbedded
       argsZipped <- zipWithErrorM pt.ptv xtargs' (ErrXtorArity loc sig.sigName)
       currVars <- getCheckerVars 
-      let newVars = foldr (\(Tuple v ty') m -> insert v ty' m)  currVars argsZipped
+      let newVars = foldr (\(Tuple v (Tuple _ ty')) m -> insert v ty' m)  currVars argsZipped
       c' <- withCheckerVars newVars (checkCommand pt.ptcmd)
       pure $ T.Pattern {ptxt:pt.ptxt, ptv:pt.ptv, ptcmd:c'}
 

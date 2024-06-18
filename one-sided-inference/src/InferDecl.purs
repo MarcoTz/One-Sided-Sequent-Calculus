@@ -80,7 +80,7 @@ inferDecl (D.DataDecl decl) = do
 
 inferXtorSig :: D.XtorSig -> DeclM K.XtorSig
 inferXtorSig (D.XtorSig sig) = do 
-  args' <- for sig.sigArgs (inferType sig.sigPos)
+  args' <- for sig.sigArgs (\(Tuple pc ty) -> Tuple pc <$> inferType sig.sigPos ty)
   pure $ K.XtorSig {sigPos:sig.sigPos, sigName:sig.sigName, sigArgs:args'}
 
 inferType :: Loc -> D.Ty -> DeclM K.Ty

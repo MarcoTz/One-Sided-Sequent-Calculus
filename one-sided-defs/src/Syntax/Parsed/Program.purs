@@ -15,15 +15,16 @@ module Syntax.Parsed.Program (
 ) where 
 
 import Loc (Loc, class HasLoc)
-import Common (Xtorname, Typename, VariantVar,DeclTy,Variable, Modulename)
+import Common (Xtorname, Typename, VariantVar,DeclTy,Variable, Modulename,PrdCns)
 
 import Prelude (class Eq, class Ord, class Show, show, (<>), (<$>), (==))
 import Data.List (List(..), null, intercalate)
+import Data.Tuple (Tuple)
 import Syntax.Parsed.Terms (Term,Command)
 import Syntax.Parsed.Types (Ty)
 
 
-data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
+data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List (Tuple PrdCns Ty) } 
 derive instance eqXtorSig :: Eq XtorSig 
 derive instance ordXtorSig :: Ord XtorSig
 instance Show XtorSig where 

@@ -7,13 +7,15 @@ import Syntax.Typed.Types  (Ty(..))
 import Syntax.Typed.Program (XtorSig (..),VarDecl(..))
 import Syntax.Typed.Terms (Term (..), Pattern(..), Command(..))
 import FreeVars.FreeTypevars (freeTypevars)
-import Common (Typevar)
+import Common (Typevar,PrdCns)
 
 import Prelude ((<$>),($))
 import Data.Map (Map, lookup, delete)
 import Data.List (foldr)
 import Data.Set (isEmpty)
 import Data.Maybe (Maybe(..))
+import Data.Bifunctor (rmap)
+import Data.Tuple (Tuple(..))
 
 --------------------------------
 -- Type Variable Substitution --
@@ -24,7 +26,7 @@ class SubstituteTypevars a where
 instance SubstituteTypevars VarDecl where 
   substTyvars varmap (VarDecl v) = VarDecl v{varBody=substTyvars varmap v.varBody}
 instance SubstituteTypevars XtorSig where 
-  substTyvars varmap (XtorSig sig) = XtorSig (sig {sigArgs=(substTyvars varmap <$> sig.sigArgs)})
+  substTyvars varmap (XtorSig sig) = XtorSig (sig {sigArgs=(rmap (substTyvars varmap) <$> sig.sigArgs)})
 
 instance SubstituteTypevars Ty where 
   substTyvars varmap ty@(TyVar v) = case lookup v varmap of 
@@ -34,6 +36,9 @@ instance SubstituteTypevars Ty where
   substTyvars varmap (TyShift ty) = TyShift (substTyvars varmap ty)
   substTyvars varmap (TyCo ty) = TyCo (substTyvars varmap ty) 
   substTyvars varmap (TyForall vars ty) = let newmap = foldr delete varmap vars in TyForall vars (substTyvars newmap ty)
+
+instance SubstituteTypevars (Tuple PrdCns Ty) where 
+  substTyvars varmap (Tuple pc ty) = Tuple pc (substTyvars varmap ty)
 
 instance SubstituteTypevars Term where 
   substTyvars varmap (Var loc v ty) = Var loc v (substTyvars varmap ty)

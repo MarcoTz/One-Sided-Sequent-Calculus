@@ -3,7 +3,7 @@ module Desugar.Program (
 ) where 
 
 import Loc (getLoc)
-import Common (Typename, Xtorname)
+import Common (Typename, Xtorname,PrdCns)
 import Environment (getTypeNames,getXtorNames)
 import Desugar.Definition (DesugarM,setDesCurrDecl, getDesDoneProg, addDesDecl, addDesVar, getDesDoneVar, setDesMain)
 import Desugar.Terms (desugarTerm,desugarCommand)
@@ -11,13 +11,16 @@ import Desugar.Types (desugarTy)
 import Desugar.Errors (DesugarError(..))
 import Syntax.Parsed.Program (Program(..),DataDecl(..),VarDecl(..),XtorSig(..), AnnotDecl(..)) as P
 import Syntax.Parsed.Terms (Command) as P
+import Syntax.Parsed.Types (Ty) as P
 import Syntax.Desugared.Program (Program,DataDecl(..),VarDecl(..),XtorSig(..)) as D
+import Syntax.Desugared.Types (Ty) as D
 
 import Prelude (bind,pure, (<$>), (||),(==),($))
 import Data.List (List(..),elem, concatMap)
 import Data.Unit (Unit,unit)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for)
+import Data.Tuple(Tuple(..))
 import Control.Monad.Except (throwError)
 
 checkTypeNames :: List Typename -> List P.DataDecl -> DesugarM Unit
@@ -68,8 +71,13 @@ desugarAnnot (P.AnnotDecl annot) = do
 
 desugarXtorSig :: P.XtorSig -> DesugarM D.XtorSig
 desugarXtorSig (P.XtorSig sig) = do
-  args' <- for sig.sigArgs desugarTy
+  args' <- for sig.sigArgs desugarArg
   pure (D.XtorSig {sigPos:sig.sigPos,sigName:sig.sigName, sigArgs:args'})
+  where 
+    desugarArg :: Tuple PrdCns P.Ty -> DesugarM (Tuple PrdCns D.Ty)
+    desugarArg (Tuple pc ty) = do 
+       ty' <- desugarTy ty 
+       pure (Tuple pc ty')
 
 desugarMain :: List P.Command -> DesugarM  Unit
 desugarMain Nil = pure unit

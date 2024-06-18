@@ -91,7 +91,7 @@ genConstraintsTerm (D.Xtor loc nm args) = do
   (Tuple newVars varmap) <- freshTyVarsDecl decl.declArgs 
   args' <- for args genConstraintsTerm
   let argTys = T.getType <$> args'
-  let varsSubst = (\ty -> T.substTyvars varmap (embedType ty)) <$> sig.sigArgs
+  let varsSubst = (\(Tuple _ ty) -> T.substTyvars varmap (embedType ty)) <$> sig.sigArgs
   _ <- addConstraintsXtor loc nm argTys varsSubst
   let newT = T.TyDecl decl.declName newVars 
   pure (T.Xtor loc nm args' newT)

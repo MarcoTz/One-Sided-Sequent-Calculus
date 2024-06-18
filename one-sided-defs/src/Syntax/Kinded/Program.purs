@@ -14,7 +14,7 @@ module Syntax.Kinded.Program (
 
 
 import Loc (Loc, class HasLoc) 
-import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename, class GetKind, getKind)
+import Common (Xtorname,Typename,Variable, VariantVar, DeclTy, Modulename, PrdCns, class GetKind, getKind)
 import Syntax.Kinded.Types (Ty,embedType)
 import Syntax.Kinded.Terms (Term, Command,getType)
 import Syntax.Typed.Program (XtorSig(..)) as T
@@ -23,8 +23,10 @@ import Prelude ((&&), (==), class Show, show, (<>), (<$>))
 import Data.List (List, null, intercalate)
 import Data.Map (Map,insert, empty,isEmpty)
 import Data.Maybe (Maybe(..),isNothing)
+import Data.Tuple (Tuple(..))
+import Data.Bifunctor (rmap)
 
-data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List Ty} 
+data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List (Tuple PrdCns Ty)} 
 instance HasLoc XtorSig where 
   getLoc (XtorSig sig) = sig.sigPos
   setLoc loc (XtorSig sig) = XtorSig (sig {sigPos=loc}) 
@@ -33,7 +35,7 @@ instance Show XtorSig where
   show (XtorSig sig) = show sig.sigName <> "(" <> intercalate ", " (show <$> sig.sigArgs)
 
 embedXtorSig :: XtorSig -> T.XtorSig
-embedXtorSig (XtorSig sig) = T.XtorSig {sigPos:sig.sigPos, sigName:sig.sigName, sigArgs:embedType <$> sig.sigArgs}
+embedXtorSig (XtorSig sig) = T.XtorSig {sigPos:sig.sigPos, sigName:sig.sigName, sigArgs:rmap embedType <$> sig.sigArgs}
 
 data DataDecl = DataDecl {
   declPos   :: Loc, 

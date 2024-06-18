@@ -1,10 +1,11 @@
 module Parser.Types (
   parseKindedTy,
   parseTy,
-  parseTyArgs
+  parseTyArgs,
+  parsePrdCnsArg
 ) where 
 
-import Common (VariantVar)
+import Common (VariantVar,PrdCns(..))
 import Syntax.Parsed.Types (Ty(..), KindedTy(..))
 import Parser.Definition (SrcParser)
 import Parser.Lexer (parseSymbol, parseKeyword, sc, parseCommaSep)
@@ -15,8 +16,10 @@ import Parser.Common (parseTypevar, parseTypename, parseVariantVar, parseEvaluat
 import Prelude (bind, pure, ($))
 import Data.List (List(..))
 import Data.Unit (unit)
+import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe(..))
 import Parsing.String.Basic (space)
-import Parsing.Combinators (try, sepBy, many1)
+import Parsing.Combinators (try, sepBy, many1,optionMaybe)
 import Control.Alt ((<|>))
 
 parseTy :: SrcParser Ty 
@@ -106,3 +109,13 @@ parseKindedTy = do
   _ <- sc
   knd <- parseEvaluationOrder
   pure $ KindedTy {kindedTy:ty,kindedKind:knd}
+
+
+parsePrdCnsArg :: SrcParser (Tuple PrdCns Ty)
+parsePrdCnsArg = do 
+  isCns <- optionMaybe (parseKeyword KwReturn <|> parseKeyword Kwreturn)
+  _ <- sc
+  ty <- parseTy 
+  case isCns of 
+      Nothing -> pure (Tuple Prd ty)
+      Just _ -> pure (Tuple Cns ty)

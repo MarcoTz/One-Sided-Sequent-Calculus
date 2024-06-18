@@ -37,6 +37,8 @@ data Keyword =
   | Kwelse
   | KwOf 
   | Kwof
+  | KwReturn
+  | Kwreturn
 
 instance Show Keyword where 
   show KwModule = "module"
@@ -69,6 +71,8 @@ instance Show Keyword where
   show Kwelse   = "else"
   show KwOf     = "Of"
   show Kwof     = "of"
+  show KwReturn = "Return"
+  show Kwreturn = "return"
 
 allKws :: List Keyword
 allKws = Cons KwModule 
@@ -98,4 +102,6 @@ allKws = Cons KwModule
   (Cons KwElse
   (Cons Kwelse 
   (Cons KwOf
-  (Cons Kwof Nil)))))))))))))))))))))))))))
+  (Cons Kwof 
+  (Cons KwReturn
+  (Cons Kwreturn Nil)))))))))))))))))))))))))))))
