@@ -4,7 +4,7 @@ module Desugar.Terms (
 ) where 
 
 import Common (Xtorname(..),EvaluationOrder(..),Variable(..))
-import Desugar.Definition(DesugarM,varToXtor,getDesMXtor,freshVar)
+import Desugar.Definition(DesugarM,varToXtor,xtorToVar,getDesMXtor,freshVar)
 import Desugar.Errors (DesugarError(..))
 import Desugar.Types (desugarTy)
 import Syntax.Parsed.Terms (Term(..),Pattern(..),Command(..)) as P
@@ -28,8 +28,18 @@ desugarTerm (P.Mu loc v c) = do
   c' <- desugarCommand c
   pure $ D.Mu loc v c'
 desugarTerm (P.Xtor loc xtn args) = do 
-  args' <- for args desugarTerm
-  pure $ D.Xtor loc xtn args'
+  mxt <- getDesMXtor xtn
+  case mxt of 
+      Nothing -> do
+         let varT = P.Var loc (xtorToVar xtn)
+         desugarTerm (getAppT varT args)
+      Just _ -> do
+        args' <- for args desugarTerm
+        pure $ D.Xtor loc xtn args'
+  where 
+    getAppT :: P.Term -> List P.Term -> P.Term
+    getAppT t1 Nil = t1 
+    getAppT t1 (Cons t2 ts) = getAppT (P.App loc t1 t2) ts
 desugarTerm (P.XCase loc pts) = do
   pts' <- for pts desugarPattern
   pure $ D.XCase loc pts'

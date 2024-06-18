@@ -9,10 +9,10 @@ import Syntax.Typed.Terms (Term (..), Pattern(..), Command(..))
 import FreeVars.FreeTypevars (freeTypevars)
 import Common (Typevar,PrdCns)
 
-import Prelude ((<$>),($))
+import Prelude ((<$>),(||))
 import Data.Map (Map, lookup, delete)
 import Data.List (foldr)
-import Data.Set (isEmpty)
+import Data.Set (isEmpty,member)
 import Data.Maybe (Maybe(..))
 import Data.Bifunctor (rmap)
 import Data.Tuple (Tuple(..))
@@ -31,7 +31,9 @@ instance SubstituteTypevars XtorSig where
 instance SubstituteTypevars Ty where 
   substTyvars varmap ty@(TyVar v) = case lookup v varmap of 
     Nothing -> ty 
-    Just ty' -> if isEmpty $ freeTypevars ty' then ty' else substTyvars varmap ty'
+    Just ty' -> do
+      let frV = freeTypevars ty'
+      if isEmpty frV || v `member` frV then ty' else substTyvars varmap ty'
   substTyvars varmap (TyDecl tyn args) = TyDecl tyn (substTyvars varmap <$> args)
   substTyvars varmap (TyShift ty) = TyShift (substTyvars varmap ty)
   substTyvars varmap (TyCo ty) = TyCo (substTyvars varmap ty) 

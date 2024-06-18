@@ -4,6 +4,7 @@ module Desugar.Definition (
   runDesugarM,
   tyvarToTyName,
   varToXtor,
+  xtorToVar,
   getDesDefNames,
   getDesMXtor,
   getDesDoneVar,
@@ -53,6 +54,9 @@ runDesugarM env nm m = case runExcept (runStateT (runReaderT m env) (initialDesu
 
 varToXtor :: Variable -> Xtorname
 varToXtor (Variable v) = Xtorname v 
+
+xtorToVar :: Xtorname -> Variable 
+xtorToVar (Xtorname nm) = Variable nm
 
 tyvarToTyName :: Typevar -> Typename
 tyvarToTyName (Typevar v) = Typename v 

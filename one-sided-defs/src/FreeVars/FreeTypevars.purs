@@ -21,7 +21,7 @@ freshTypevar a = let frV = freeTypevars a in freshVarN 0 "X" Typevar frV
 
 instance FreeTypevars Ty where 
   freeTypevars (TyVar v) = singleton v 
-  freeTypevars (TyDecl _ args) =  unions (freeTypevars <$> args)
+  freeTypevars (TyDecl _ args) = unions (freeTypevars <$> args)
   freeTypevars (TyShift ty) = freeTypevars ty
   freeTypevars (TyCo ty) = freeTypevars ty
   freeTypevars (TyForall args ty) = difference (freeTypevars ty) (fromFoldable args)
