@@ -23,7 +23,7 @@ import Prelude ((&&), (==), class Show, show, (<>), (<$>))
 import Data.List (List, null, intercalate)
 import Data.Map (Map,insert, empty,isEmpty)
 import Data.Maybe (Maybe(..),isNothing)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple)
 import Data.Bifunctor (rmap)
 
 data XtorSig = XtorSig{sigPos :: Loc, sigName :: Xtorname, sigArgs :: List (Tuple PrdCns Ty)} 

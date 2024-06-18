@@ -7,7 +7,7 @@ module Syntax.Kinded.Substitution (
 ) where 
 
 import Syntax.Kinded.Terms (Term(..),Command(..),Pattern(..))
-import Syntax.Kinded.Types (Ty(..))
+import Syntax.Kinded.Types (Ty)
 import Common (Variable,Typevar)
 
 import Prelude ((<$>))

@@ -9,17 +9,17 @@ import Kinding.Types (checkKindType)
 import Environment (lookupXtorDecl,lookupXtor)
 import Errors (zipWithErrorM)
 import Loc (Loc)
-import Common (PrdCns(..),EvaluationOrder(..), getKind,Kind, DeclTy(..))
+import Common (PrdCns(..),EvaluationOrder(..), getKind,Kind, DeclTy(..),multPrdCns)
 import Syntax.Typed.Terms (Term(..),Pattern(..),Command(..))              as T 
 import Syntax.Typed.Types (Ty(..)) as T
 import Syntax.Kinded.Terms (Term(..),Pattern(..),Command(..), getPrdCns)  as K
 import Syntax.Kinded.Program (DataDecl(..), XtorSig(..))                  as K
 
-import Prelude ((<$>),($), bind,pure, (>>>))
+import Prelude ((<$>),($), bind,pure)
 import Control.Monad.Except (throwError)
 import Data.Traversable (for)
 import Data.List(List(..))
-import Data.Tuple (Tuple(..),snd)
+import Data.Tuple (Tuple(..))
 
 
 checkPatterns :: Loc -> List T.Pattern -> KindM (Tuple K.DataDecl (List K.Pattern))
@@ -61,12 +61,12 @@ kindTerm (T.Xtor loc nm args ty) pc eo = do
   let Tuple ty' pc' = getCo XTor decl.declType pc ty  
   ty'' <- checkKindType ty' eo
   (K.XtorSig sig) <- lookupXtor loc nm
-  let argKnds :: List Kind 
-      argKnds = snd >>> getKind <$> sig.sigArgs
+  let argKnds :: List (Tuple PrdCns Kind)
+      argKnds = (\(Tuple pc'' ty) ->  Tuple (multPrdCns pc' pc'') (getKind ty))<$> sig.sigArgs
   let kndFun eo' = pure eo'
   argKnds' <- for argKnds kndFun 
   argsZipped <- zipWithErrorM args argKnds' (ErrXtorArity loc nm)
-  args' <- for argsZipped (\(Tuple arg knd)  -> kindTerm arg pc knd)
+  args' <- for argsZipped (\(Tuple arg (Tuple pc'' knd))  -> kindTerm arg pc'' knd)
   pure $ K.Xtor loc pc' nm args' ty''
 
 kindTerm (T.XCase loc pts ty) pc eo = do

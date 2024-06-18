@@ -10,6 +10,7 @@ module Common (
   Xtorname (..),
   Variance (..),
   PrdCns (..),
+  multPrdCns,
   EvaluationOrder (..),
   defaultEo,
   DeclTy (..),
@@ -76,6 +77,14 @@ instance Show PrdCns where
   show Prd = "prd"
   show Cns = "cns"
   show PrdCns = "prdcns"
+
+multPrdCns :: PrdCns -> PrdCns -> PrdCns
+multPrdCns Prd Prd   = Prd 
+multPrdCns Cns Cns   = Cns 
+multPrdCns Prd Cns   = Cns
+multPrdCns Cns Prd   = Cns 
+multPrdCns PrdCns pc = pc
+multPrdCns pc PrdCns = pc
 
 --------------------------------------------------------
 -------------- Classes for Free Variables --------------
