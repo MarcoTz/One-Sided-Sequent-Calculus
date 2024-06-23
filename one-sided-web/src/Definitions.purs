@@ -11,6 +11,7 @@ import Data.Either (Either(..))
 import Data.Tuple (Tuple(..),snd)
 import Data.List (List,intercalate)
 import Data.Map (lookup,toUnfoldable)
+import Data.Maybe (Maybe(..))
 
 import Driver.Definition (DriverState(..),initialDriverState, runDriverM)
 import Driver.Driver (runStr)
@@ -22,17 +23,19 @@ import Syntax.Kinded.Terms (getType,getPrdCns)
 import Syntax.Kinded.Program (Program(..),VarDecl(..),emptyProg)
 import Eval.Definition (EvalTrace(..))
 import StandardLib (libMap)
+import Types (Editor)
 
-data Input = ProgramInput String | RunProg
+data Input = ProgramInput String | RunProg | InitEditor
 data RunResult = 
   ResErr {errMsg :: String,  errDebug::String, errTypes::String} 
   | ResSucc {succCmd::String, succTrace::String, succDebug::String, succTypes::String}
-type State = {progSrc::String, runRes::RunResult}
+type State = {progSrc::String, runRes::RunResult, monEditor:: Maybe Editor}
 
 initialState :: Input -> State
 initialState _ = {
   progSrc:intercalate "\n" (lookup (Modulename "Bool") libMap), 
-  runRes:ResSucc {succCmd:"", succTrace:"", succDebug:"", succTypes:""}
+  runRes:ResSucc {succCmd:"", succTrace:"", succDebug:"", succTypes:""},
+  monEditor: Nothing
   }
 
 runProg :: String -> RunResult  
