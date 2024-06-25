@@ -230,16 +230,21 @@
     };
   };
 
-  // output/Data.Eq/foreign.js
-  var refEq = function(r1) {
-    return function(r2) {
-      return r1 === r2;
+  // output/Data.Semigroup/foreign.js
+  var concatString = function(s1) {
+    return function(s2) {
+      return s1 + s2;
     };
   };
-  var eqBooleanImpl = refEq;
-  var eqIntImpl = refEq;
-  var eqCharImpl = refEq;
-  var eqStringImpl = refEq;
+  var concatArray = function(xs) {
+    return function(ys) {
+      if (xs.length === 0)
+        return ys;
+      if (ys.length === 0)
+        return xs;
+      return xs.concat(ys);
+    };
+  };
 
   // output/Data.Symbol/index.js
   var reflectSymbol = function(dict) {
@@ -252,6 +257,57 @@
       return rec[label5];
     };
   };
+
+  // output/Data.Semigroup/index.js
+  var semigroupString = {
+    append: concatString
+  };
+  var semigroupArray = {
+    append: concatArray
+  };
+  var append = function(dict) {
+    return dict.append;
+  };
+
+  // output/Control.Alt/index.js
+  var alt = function(dict) {
+    return dict.alt;
+  };
+
+  // output/Data.Bounded/foreign.js
+  var topInt = 2147483647;
+  var bottomInt = -2147483648;
+  var topChar = String.fromCharCode(65535);
+  var bottomChar = String.fromCharCode(0);
+  var topNumber = Number.POSITIVE_INFINITY;
+  var bottomNumber = Number.NEGATIVE_INFINITY;
+
+  // output/Data.Ord/foreign.js
+  var unsafeCompareImpl = function(lt) {
+    return function(eq37) {
+      return function(gt) {
+        return function(x) {
+          return function(y) {
+            return x < y ? lt : x === y ? eq37 : gt;
+          };
+        };
+      };
+    };
+  };
+  var ordIntImpl = unsafeCompareImpl;
+  var ordStringImpl = unsafeCompareImpl;
+  var ordCharImpl = unsafeCompareImpl;
+
+  // output/Data.Eq/foreign.js
+  var refEq = function(r1) {
+    return function(r2) {
+      return r1 === r2;
+    };
+  };
+  var eqBooleanImpl = refEq;
+  var eqIntImpl = refEq;
+  var eqCharImpl = refEq;
+  var eqStringImpl = refEq;
 
   // output/Data.Eq/index.js
   var eqUnit = {
@@ -330,93 +386,6 @@
       };
     };
   };
-
-  // output/Data.Foldable/foreign.js
-  var foldrArray = function(f) {
-    return function(init3) {
-      return function(xs) {
-        var acc = init3;
-        var len = xs.length;
-        for (var i2 = len - 1; i2 >= 0; i2--) {
-          acc = f(xs[i2])(acc);
-        }
-        return acc;
-      };
-    };
-  };
-  var foldlArray = function(f) {
-    return function(init3) {
-      return function(xs) {
-        var acc = init3;
-        var len = xs.length;
-        for (var i2 = 0; i2 < len; i2++) {
-          acc = f(acc)(xs[i2]);
-        }
-        return acc;
-      };
-    };
-  };
-
-  // output/Data.Semigroup/foreign.js
-  var concatString = function(s1) {
-    return function(s2) {
-      return s1 + s2;
-    };
-  };
-  var concatArray = function(xs) {
-    return function(ys) {
-      if (xs.length === 0)
-        return ys;
-      if (ys.length === 0)
-        return xs;
-      return xs.concat(ys);
-    };
-  };
-
-  // output/Data.Semigroup/index.js
-  var semigroupString = {
-    append: concatString
-  };
-  var semigroupArray = {
-    append: concatArray
-  };
-  var append = function(dict) {
-    return dict.append;
-  };
-
-  // output/Control.Alt/index.js
-  var alt = function(dict) {
-    return dict.alt;
-  };
-
-  // output/Control.Plus/index.js
-  var empty = function(dict) {
-    return dict.empty;
-  };
-
-  // output/Data.Bounded/foreign.js
-  var topInt = 2147483647;
-  var bottomInt = -2147483648;
-  var topChar = String.fromCharCode(65535);
-  var bottomChar = String.fromCharCode(0);
-  var topNumber = Number.POSITIVE_INFINITY;
-  var bottomNumber = Number.NEGATIVE_INFINITY;
-
-  // output/Data.Ord/foreign.js
-  var unsafeCompareImpl = function(lt) {
-    return function(eq37) {
-      return function(gt) {
-        return function(x) {
-          return function(y) {
-            return x < y ? lt : x === y ? eq37 : gt;
-          };
-        };
-      };
-    };
-  };
-  var ordIntImpl = unsafeCompareImpl;
-  var ordStringImpl = unsafeCompareImpl;
-  var ordCharImpl = unsafeCompareImpl;
 
   // output/Data.Ordering/index.js
   var LT = /* @__PURE__ */ function() {
@@ -795,6 +764,37 @@
     Apply0: function() {
       return applyMaybe;
     }
+  };
+
+  // output/Data.Foldable/foreign.js
+  var foldrArray = function(f) {
+    return function(init3) {
+      return function(xs) {
+        var acc = init3;
+        var len = xs.length;
+        for (var i2 = len - 1; i2 >= 0; i2--) {
+          acc = f(xs[i2])(acc);
+        }
+        return acc;
+      };
+    };
+  };
+  var foldlArray = function(f) {
+    return function(init3) {
+      return function(xs) {
+        var acc = init3;
+        var len = xs.length;
+        for (var i2 = 0; i2 < len; i2++) {
+          acc = f(acc)(xs[i2]);
+        }
+        return acc;
+      };
+    };
+  };
+
+  // output/Control.Plus/index.js
+  var empty = function(dict) {
+    return dict.empty;
   };
 
   // output/Data.Either/index.js
@@ -35540,7 +35540,7 @@ data Unit { MkUnit }
       return new ProgramInput("");
     }
     ;
-    throw new Error("Failed pattern match at Events (line 28, column 20 - line 30, column 29): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Events (line 25, column 20 - line 27, column 29): " + [v.constructor.name]);
   };
   var runSrc = function(v) {
     return RunProg.value;
@@ -35553,7 +35553,7 @@ data Unit { MkUnit }
       var gets10 = gets(dictMonadState);
       return function(inp) {
         if (inp instanceof ProgramInput) {
-          var x = setEditorValue(inp.value0);
+          var v = setEditorValue(inp.value0);
           return modify_3(function(st) {
             var $19 = {};
             for (var $20 in st) {
@@ -35591,7 +35591,7 @@ data Unit { MkUnit }
             return st.progSrc;
           }))(function(src10) {
             var editorInst = create(src10)("container");
-            return bind37(liftAff2(editorInst))(function(x2) {
+            return bind37(liftAff2(editorInst))(function(x) {
               return modify_3(function(st) {
                 var $26 = {};
                 for (var $27 in st) {
@@ -35601,19 +35601,16 @@ data Unit { MkUnit }
                   ;
                 }
                 ;
-                $26.monEditor = new Just(x2);
+                $26.monEditor = new Just(x);
                 return $26;
               });
             });
           });
         }
         ;
-        throw new Error("Failed pattern match at Events (line 33, column 20 - line 48, column 45): " + [inp.constructor.name]);
+        throw new Error("Failed pattern match at Events (line 30, column 20 - line 45, column 45): " + [inp.constructor.name]);
       };
     };
-  };
-  var createEditor = function(v) {
-    return InitEditor.value;
   };
 
   // output/Web.DOM.ParentNode/foreign.js
@@ -38965,7 +38962,7 @@ data Unit { MkUnit }
     return option_([text5(show129(v.value0))]);
   })(/* @__PURE__ */ toUnfoldable2(unfoldableArray)(libMap))), br_]);
   var layout = function(res) {
-    return body([])([h1_([text5("One Sided Sequent Calculus")]), button([id2("createEditor"), onClick(createEditor)])([text5("Create Editor")]), exSelect, progDiv, button([id2("runButton"), onClick(runSrc)])([text5("Run")]), resDiv(res)]);
+    return body([])([h1_([text5("One Sided Sequent Calculus")]), exSelect, progDiv, button([id2("runButton"), onClick(runSrc)])([text5("Run")]), resDiv(res)]);
   };
   var render = function(v) {
     return layout(v.runRes);
@@ -38976,9 +38973,9 @@ data Unit { MkUnit }
     return mkEval({
       handleQuery: defaultEval.handleQuery,
       receive: defaultEval.receive,
-      initialize: defaultEval.initialize,
       finalize: defaultEval.finalize,
-      handleAction: handleAction(monadAffHalogenM(dictMonadAff))(monadStateHalogenM)
+      handleAction: handleAction(monadAffHalogenM(dictMonadAff))(monadStateHalogenM),
+      initialize: new Just(InitEditor.value)
     });
   };
   var component = function(dictMonadAff) {
