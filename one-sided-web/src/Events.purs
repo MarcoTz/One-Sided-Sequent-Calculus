@@ -1,4 +1,4 @@
-module Events (runSrc, selectExample, getSrc, handleAction, createEditor) where 
+module Events (runSrc, selectExample, getSrc, handleAction) where 
 
 import Definitions (Input(..),State, runProg)
 import StandardLib (libMap) 
@@ -21,9 +21,6 @@ getSrc newSrc = ProgramInput newSrc
 runSrc::forall ev. ev->Input
 runSrc = \_ -> RunProg
 
-createEditor::forall ev. ev->Input
-createEditor = \_ -> InitEditor
-
 selectExample :: String -> Input
 selectExample nm = case lookup (Modulename nm) libMap of 
   Just src -> ProgramInput src 
@@ -34,10 +31,10 @@ handleAction inp = case inp of
   ProgramInput src -> do
     -- dont know how to call the setEditorValue function by itself (without using let or something)
     -- setEditorValue has no return and only needs to be called for the editor value to change
-    let x = setEditorValue src 
+    let _ = setEditorValue src 
     modify_ (\st -> st {progSrc=src})
   RunProg -> do
-    -- instead of reading from progSrc, read directly from the editor and write it in the state after
+    -- read directly from the editor and write it in the state after
     let src = unsafePerformEffect readEditorValue
     let res = runProg src
     modify_ (\st -> st {runRes=res, progSrc=src})

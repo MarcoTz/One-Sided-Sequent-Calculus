@@ -1,7 +1,7 @@
 module Layout (render) where 
 
 import Definitions (RunResult(..),Input, State)
-import Events (runSrc, selectExample, createEditor)
+import Events (runSrc, selectExample)
 import StandardLib (libMap)
 
 import Prelude (($),(<>),(<$>),(+),show)
@@ -73,8 +73,6 @@ layout :: forall w. RunResult -> HTML w Input
 layout res = body  []
   [
     h1_ [text "One Sided Sequent Calculus"],
-    -- temporary Button to create Editor until i find a way to create the editor after loading
-    button [id "createEditor", onClick createEditor] [text "Create Editor"],
     exSelect,
     progDiv ,
     button [id "runButton", onClick runSrc] [text "Run"],

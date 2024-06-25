@@ -3,6 +3,7 @@ module Runner where
 import Prelude (bind)
 import Data.Unit (Unit)
 import Effect (Effect)
+import Data.Maybe (Maybe(..))
 
 import Halogen (Component,mkComponent,mkEval, defaultEval)
 import Halogen.Aff (awaitBody,runHalogenAff)
@@ -19,7 +20,7 @@ component :: forall output m t. MonadAff m => Component t Input output m
 component = mkComponent { initialState:initialState, render:render, eval:eval}
 
 eval :: forall slots output m a t t2. MonadAff m => HalogenQ t Input t2 a -> HalogenM State Input slots output m a
-eval = mkEval defaultEval {handleAction=handleAction}
+eval = mkEval defaultEval {handleAction=handleAction, initialize = Just InitEditor}
 
 uiRunner :: Effect Unit
 uiRunner = runHalogenAff do
