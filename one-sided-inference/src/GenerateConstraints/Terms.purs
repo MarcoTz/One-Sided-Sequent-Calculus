@@ -60,6 +60,7 @@ genConstraintsCmd (D.PrintAnnot loc t ty) = do
   ty' <- genConstraintsTy loc ty
   _ <- addConstraint (MkTyEq (T.getType t') ty')
   pure $ T.Print loc t'
+
 genConstraintsTerm :: D.Term -> GenM T.Term 
 genConstraintsTerm (D.Var loc v) = do 
    vars <- getGenVars 

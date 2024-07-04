@@ -27,7 +27,7 @@ import Syntax.Kinded.Terms (getType)
 import Syntax.Kinded.Program (VarDecl(..))
 
 import Prelude (bind, (<>), show,pure,(+),(<$>),(*>))
-import Data.Map (Map,empty,fromFoldable,insert,union)
+import Data.Map (keys,Map,empty,fromFoldable,insert,union)
 import Data.List (List(..),elem)
 import Data.Tuple (Tuple(..), fst,snd)
 import Data.Either (Either(..))
@@ -36,6 +36,7 @@ import Data.Traversable (for)
 import Control.Monad.Reader (ReaderT, runReaderT) 
 import Control.Monad.State (StateT, runStateT, gets, modify)
 import Control.Monad.Except (Except, runExcept, throwError)
+
 
 data GenerateState = MkGenState{
   varEnv :: (Map Variable Ty),

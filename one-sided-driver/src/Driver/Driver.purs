@@ -123,9 +123,10 @@ inferProgram p@(P.Program prog) = ifM (inEnv prog.progName) (getProg prog.progNa
   let indexFun (D.VarDecl var1) (D.VarDecl var2) = compare (elemIndex var1.varName progOrder) (elemIndex var2.varName progOrder)
   let varsSorted = sortBy indexFun (snd <$> toUnfoldable prog'.progVars)
   _ <- debug "inferring types of variables\n"
-  typedVars <- for varsSorted (inferVarDecl prog'.progName)
-  _ <- debug "------ Kind inference ------"
-  kindedVars <- for typedVars (kindVarDecl prog'.progName)
+  kindedVars <- for varsSorted (\var -> do 
+            typed <- inferVarDecl prog'.progName var
+            kinded <- kindVarDecl prog'.progName typed 
+            pure kinded)
   let varmap = fromFoldable ((\d@(K.VarDecl var) -> Tuple var.varName d) <$> kindedVars)
   _ <- debug (if isNothing prog'.progMain then "" else "\nType checking main command")
   main' <- for prog'.progMain (inferCommand prog.progName)
