@@ -35521,7 +35521,7 @@ data Unit { MkUnit }
         wrappingIndent: defaultConstuctorOptions.wrappingIndent,
         value: new Just(textValue),
         language: new Just("one-sided-sequent-calculus"),
-        theme: new Just("vs-dark")
+        theme: new Just("custom-vs-dark")
       };
       var effProm = createImpl(unsafeToForeign(opts))(elementIdString);
       return toAffE(effProm);
