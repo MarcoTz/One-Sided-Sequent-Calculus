@@ -27,7 +27,7 @@ create textValue elementIdString = do
   let opts = defaultConstuctorOptions 
                   { value = Just textValue 
                       , language = Just "one-sided-sequent-calculus"
-                      , theme = Just "vs-dark"
+                      , theme = Just "custom-vs-dark"
                   }
   let effProm = createImpl (unsafeToForeign opts) elementIdString
   toAffE effProm
