@@ -9,13 +9,13 @@ require(['vs/editor/editor.main'], function () {
 // for unicode '\u{"here is number"}' , '\u{3008}' -'\u{3009}' is 〈 〉
 // fix bracket matching
 require(['vs/editor/editor.main'], function () {
-    config = {"surroundingPairs":[{"open":"{","close":"}"},{"open":"(","close":")"},{"open":"[","close":"]"},{"open":"<","close":">"},{"open":'"',"close":'"'},
+    config = {"surroundingPairs":[{"open":"{","close":"}"},{"open":"(","close":")"},{"open":"[","close":"]"},{"open":"<","close":">"},{"open":'"',"close":'"'},{"open":"'","close":"'"},
                     {"open":'\u{3008}',"close":'\u{3009}'}],
-            "autoClosingPairs":[{"open":"{","close":"}"},{"open":"(","close":")"},{"open":"[","close":"]"},{"open":"<","close":">"},{"open":'"',"close":'"'},
+            "autoClosingPairs":[{"open":"{","close":"}"},{"open":"(","close":")"},{"open":"[","close":"]"},{"open":"<","close":">"},{"open":'"',"close":'"'},{"open":"'","close":"'"},
                     {"open":'\u{3008}',"close":'\u{3009}'}],
             "brackets":[["{","}"],["(",")"],["[","]"],
                     ['\u{3008}','\u{3009}']]}
-monaco.languages.setLanguageConfiguration('one-sided-sequent-calculus', config)
+    monaco.languages.setLanguageConfiguration('one-sided-sequent-calculus', config)
 });
 
 // Register a tokens provider for the language
@@ -26,26 +26,33 @@ require(['vs/editor/editor.main'], function () {
                     'CBV', 'CBN', 'CBA',                        //Kinds
                     'error', 'Done', 'Print', 'print',          //Commands
                     'if', 'then', 'else', 'case', 'forall',     //Conditions
-                    'mu', 'co', '\u{03BC}'                      //other, \u{03BC} has some issues with catching it
+                    'mu', 'co'                     //other, \u{03BC} has some issues with catching it
                     ],
+
 
         typeKeywords: ['data', 'codata'],
 
         operators: ['::',':=','=>','|','<<','>>','->','&&', '||'],
 
         // we include these common regular expressions
-        symbols:  /[=><!~?:&|+\-*\/\^%\,;.\\]+/,
+        symbols:  /[=><!~?:&|+\-*\/\^%\,;.\\]{1,2}/,
 
-        /*
-        //seems like this is not needed with setLanguageConfiguration...
-        brackets: [['{','}','delimiter.curly'],
-                    ['[',']','delimiter.square'],
-                    ['(',')','delimiter.parenthesis'],
-                    ['<','>','delimiter.angle']],
-        */
         
         tokenizer:{
             root:[
+
+                ["module" , 'moduleDeclaration', 'moduleState'],
+                ["import" , 'imports', 'moduleState'],
+
+
+                //mu \u03BC abstraction
+                [/((mu|\u03BC) [a-z])[\w]*[.]/, 'mu abstraction'],
+
+                //lambda \u03BB abstraction
+                [/(\\|\u03BB )[a-z][\w]*[.]/, 'lambda abstraction'],
+
+                //unicode keyword
+                [/(\u03BC|\u03BB)/, 'keyword'],
 
                 // identifiers and keywords A-Z
                 [/@?[A-Z][\w$]*/, { 
@@ -67,9 +74,9 @@ require(['vs/editor/editor.main'], function () {
                     cases: {
                         '@typeKeywords': 'keyword.type',
                         '@keywords': {cases:{
-                            'mu' : 'mu abstraction',
-                            'module' : 'moduleDeclaration', 
-                            'import' : 'imports',  
+                            //'mu' : 'mu abstraction',
+                            //'module' : 'moduleDeclaration', 
+                            //'import' : 'imports',  
                             'main' : 'main',      
                             '@default' : 'keyword'
                         }},                          
@@ -77,8 +84,8 @@ require(['vs/editor/editor.main'], function () {
                     }
                 }],
 
-                //lambda abstraction
-                [/[\\][a-z][0-9a-z]*[.]/, 'lambda abstraction'],
+                //numbers
+                [/[\d]+/, 'numbers'],
 
                 //comments
                 [/(^\-\-.*$)/, 'comment'],
@@ -86,17 +93,22 @@ require(['vs/editor/editor.main'], function () {
                 //operators
                 [/@symbols/, {
                     cases: {
+                        '<<|>>' : 'Kinds',
                         '@operators': 'operator',
                         '@default'  : 'symbol'
                     }
                 }],
 
-                //brackets - seems like its not needed
+                //brackets
                 [/[{}()\[\]<>]/, '@brackets'],
 
 
                 //string
                 [/".*?"/, 'string'],
+                [/'.*?'/, 'string'],
+            ],
+            moduleState:[
+                [/[A-Z][a-zA-Z0-9]*/, "moduleName", 'root']
             ]
         }
     });
@@ -112,14 +124,13 @@ require(['vs/editor/editor.main'], function () {
         inherit: true,
         rules: [
             { token: "Kinds", foreground: "66dfed" },
-            //{ token: "identifier", foreground: "ffffff" },
             { token: "operator", foreground: "7381bf" },
             { token: "lambda abstraction", foreground: "b2cc5c" },
             { token: "mu abstraction", foreground: "d19a56" },
             { token: "moduleDeclaration", foreground: "cf56d1" },
             { token: "main", foreground: "cf56d1" },
             { token: "imports", foreground: "e8e86f" },
-            //{ token: "symbol", foreground: "ffffff" },
+            { token: "moduleName", foreground: "b2b2d6" },
         ],
         colors: {
             "editor.foreground": "#ffffff",
@@ -153,14 +164,21 @@ require(['vs/editor/editor.main'], function () {
                     documentation: "Call by name \n  \u{3008} t1 | CBN | t2 \u{3009} \nwhere t1 and t2 are terms",
                     insertText: '\u{3008} _ | CBN | _ \u{3009}',
                 },
-                /*
-                {   //mu abstraction, some issues with catching the symbol
+                
+                {   //mu abstraction
                     label: 'mu-abstraction',
-                    kind: monaco.languages.CompletionItemKind.Function,
+                    kind: monaco.languages.CompletionItemKind.Keyword,
                     documentation: "\u{03BC}-abstraction \n  \u{03BC} x. c \nwhere x is a variable and c is a command",
-                    insertText: '\u{03BC} _.',
+                    insertText: '\u{03BC} ',
                 },
-                */
+                {   //angle brackets
+                    label: 'angle Brackets \u{3008} \u{3009}',
+                    kind: monaco.languages.CompletionItemKind.Keyword,
+                    documentation: "\u{3008} ... \u{3009}",
+                    insertText: '\u{3008}\u{3009}',
+                },
+                
+                
 
             ]
 
