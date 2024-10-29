@@ -43,6 +43,10 @@ select {
   height:90%;
 }
 
+#container{
+  height: 500px;
+}
+
 #runButton {
   width:5em;
   height: 5em;

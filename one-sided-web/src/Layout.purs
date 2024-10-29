@@ -1,7 +1,7 @@
 module Layout (render) where 
 
 import Definitions (RunResult(..),Input, State)
-import Events (runSrc, selectExample,getSrc)
+import Events (runSrc, selectExample)
 import StandardLib (libMap)
 
 import Prelude (($),(<>),(<$>),(+),show)
@@ -21,16 +21,12 @@ getHTMLHeight str = let nlines = length (split (Pattern "\n") str)  in
   "height: " <> show (nlines +3) <> "em;"
 
 render :: forall w. State -> HTML w Input
-render {progSrc:src,runRes:res} = layout src res
+render {runRes:res} = layout res
 
-progDiv :: forall w. String -> HTML w Input
-progDiv src = div 
-  [ class_ $ ClassName "prog" ]
-  [
-    textarea [id "progInput", value src, onValueChange getSrc, style  $ getHTMLHeight src],
-    br_,
-    button [id "runButton", onClick runSrc] [text "Run"]
-  ]
+progDiv :: forall w. HTML w Input
+progDiv = div 
+  [ id "container", class_ $ ClassName "prog"]
+  []
 
 
 getArea :: forall w. String -> ClassName -> String -> HTML w Input 
@@ -73,11 +69,13 @@ exSelect = div_ [
   br_
   ]
 
-layout :: forall w. String -> RunResult -> HTML w Input
-layout src res = body  []
+layout :: forall w. RunResult -> HTML w Input
+layout res = body  []
   [
     h1_ [text "One Sided Sequent Calculus"],
     exSelect,
-    progDiv src,
+    progDiv ,
+    button [id "runButton", onClick runSrc] [text "Run"],
     resDiv res
   ]
+
